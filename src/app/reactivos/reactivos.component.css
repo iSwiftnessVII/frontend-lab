@@ -1,0 +1,199 @@
+/* Contenedor principal */
+.container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 15px;
+  font-family: Arial, sans-serif;
+}
+
+/* Títulos */
+h2, h3 {
+  color: #333;
+}
+
+/* Secciones del formulario */
+.form-section {
+  border: 1px solid #ccc;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.form-section h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+/* Filas del formulario */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.form-row label {
+  width: 180px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+}
+
+.form-row textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+/* Botón de envío */
+.form-submit {
+  text-align: right;
+}
+
+.form-submit button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.form-submit button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+.form-submit button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+/* Tabla de reactivos */
+.reactivos-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 0.95rem;
+}
+
+.reactivos-table th,
+.reactivos-table td {
+  border: 1px solid #ccc;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.reactivos-table th {
+  background-color: #007bff;
+  color: #fff;
+  position: sticky;
+  top: 0;
+}
+
+.reactivos-table tbody tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* Badge para clasificaciones */
+.badge {
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .form-row label {
+    width: 100%;
+    margin-bottom: 4px;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+}
+
+/* Contenedor con scroll horizontal */
+.reactivos-table-container {
+  overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 5px;
+  margin-top: 15px;
+  scroll-behavior: smooth;
+}
+
+/* Scroll personalizado */
+.reactivos-table-container::-webkit-scrollbar {
+  height: 8px;
+}
+.reactivos-table-container::-webkit-scrollbar-thumb {
+  background: #007bff;
+  border-radius: 4px;
+}
+.reactivos-table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+/* Tabla */
+.reactivos-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1200px; /* Ajusta según columnas */
+}
+
+.reactivos-table th,
+.reactivos-table td {
+  border: 1px solid #ccc;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.reactivos-table th {
+  background-color: #007bff;
+  color: white;
+  position: sticky;
+  top: 0;
+}
+
+.reactivos-table tbody tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* Badges de clasificación */
+.badge {
+  padding: 3px 8px;
+  color: white;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Fila vencida */
+.vencido {
+  background-color: #f8d7da !important; /* rojo suave */
+  color: red;
+}
+
+/* Fila por vencer */
+.por-vencer {
+  background-color: #fff3cd !important; /* amarillo suave */
+  color: #856404;
+}
+

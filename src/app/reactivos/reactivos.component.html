@@ -1,0 +1,178 @@
+<div class="container">
+  <h2>Registro de Reactivos</h2>
+
+  <!-- Formulario -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-reactivo">
+
+    <div class="form-section">
+      <h3>Información básica</h3>
+      <div class="form-row">
+        <label>Código:</label>
+        <input type="text" formControlName="codigo" />
+      </div>
+      <div class="form-row">
+        <label>Nombre del reactivo:</label>
+        <input type="text" formControlName="reactivo" />
+      </div>
+      <div class="form-row">
+        <label>Presentación:</label>
+        <input type="text" formControlName="presentacion" />
+      </div>
+      <div class="form-row">
+        <label>Cantidad por envase:</label>
+        <input type="text" formControlName="cantidad_envase" />
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Fechas</h3>
+      <div class="form-row">
+        <label>Fecha de adquisición:</label>
+        <input type="date" formControlName="fecha_adquisicion" />
+      </div>
+      <div class="form-row">
+        <label>Fecha de vencimiento:</label>
+        <input type="date" formControlName="fecha_vencimiento" />
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Clasificación y propiedades</h3>
+      <div class="form-row">
+        <label>Tipo de reactivo:</label>
+        <select formControlName="tipo_id">
+          <option value="">Seleccione tipo</option>
+          <option *ngFor="let t of tipos" [value]="t.id">{{ t.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Clasificación SGA:</label>
+        <select formControlName="clasificacion_id">
+          <option value="">Seleccione clasificación</option>
+          <option *ngFor="let c of clasificaciones" [value]="c.id" [ngStyle]="{'background-color': clasificacionColors[c.nombre]}">
+            {{ c.nombre }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Unidad:</label>
+        <select formControlName="unidad_id">
+          <option value="">Seleccione unidad</option>
+          <option *ngFor="let u of unidades" [value]="u.id">{{ u.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Estado físico:</label>
+        <select formControlName="estado_id">
+          <option value="">Seleccione estado</option>
+          <option *ngFor="let e of estados" [value]="e.id">{{ e.nombre }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Información adicional</h3>
+      <div class="form-row">
+        <label>Marca:</label>
+        <input type="text" formControlName="marca" />
+      </div>
+      <div class="form-row">
+        <label>Lote:</label>
+        <input type="text" formControlName="lote" />
+      </div>
+      <div class="form-row">
+        <label>ID de referencia:</label>
+        <input type="text" formControlName="id_referencia" />
+      </div>
+      <div class="form-row">
+        <label>Hoja de seguridad:</label>
+        <input type="text" formControlName="hoja_seguridad" />
+      </div>
+      <div class="form-row">
+        <label>Almacenamiento:</label>
+        <select formControlName="almacenamiento_id">
+          <option value="">Seleccione almacenamiento</option>
+          <option *ngFor="let a of almacenamientos" [value]="a.id">{{ a.nombre }}</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Tipo de recipiente:</label>
+        <select formControlName="tipo_recipiente_id">
+          <option value="">Seleccione tipo de recipiente</option>
+          <option *ngFor="let tr of tiposRecipiente" [value]="tr.id">{{ tr.nombre }}</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Observaciones:</label>
+        <textarea formControlName="observaciones"></textarea>
+      </div>
+    </div>
+
+    <div class="form-row form-submit">
+      <button type="submit" [disabled]="form.invalid">Agregar Reactivo</button>
+    </div>
+  </form>
+
+  <hr />
+
+ <!-- Tabla de Reactivos -->
+<h3>Reactivos Registrados</h3>
+<div class="reactivos-table-container">
+  <table class="reactivos-table">
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Nombre</th>
+        <th>Presentación</th>
+        <th>Cantidad</th>
+        <th>Unidad</th>
+        <th>Tipo</th>
+        <th>Clasificación</th>
+        <th>Estado</th>
+        <th>Marca</th>
+        <th>Lote</th>
+        <th>ID Ref.</th>
+        <th>Hoja Seguridad</th>
+        <th>Almacenamiento</th>
+        <th>Tipo Recipiente</th>
+        <th>Observaciones</th>
+        <th>Fecha Adquisición</th>
+        <th>Fecha Vencimiento</th>
+      </tr>
+    </thead>
+    <tbody>
+<tr *ngFor="let r of reactivos"
+    [ngClass]="{
+      'vencido': isVencido(r.fecha_vencimiento),
+      'por-vencer': isPorVencer(r.fecha_vencimiento)
+    }">
+  <td>{{ r.codigo }}</td>
+  <td>{{ r.reactivo }}</td>
+  <td>{{ r.presentacion }}</td>
+  <td>{{ r.cantidad_envase }}</td>
+  <td>{{ r.unidad_id ? getUnidadNombre(r.unidad_id) : '' }}</td>
+  <td>{{ r.tipo_id ? getTipoNombre(r.tipo_id) : '' }}</td>
+  <td>
+    <span class="badge" [ngStyle]="{'background-color': getClasificacionColor(getClasificacionNombre(r.clasificacion_id))}">
+      {{ getClasificacionNombre(r.clasificacion_id) }}
+    </span>
+  </td>
+  <td>{{ r.estado_id ? getEstadoNombre(r.estado_id) : '' }}</td>
+  <td>{{ r.marca }}</td>
+  <td>{{ r.lote }}</td>
+  <td>{{ r.id_referencia }}</td>
+  <td>{{ r.hoja_seguridad }}</td>
+  <td>{{ r.almacenamiento_id ? getAlmacenamientoNombre(r.almacenamiento_id) : '' }}</td>
+  <td>{{ r.tipo_recipiente_id ? getTipoRecipienteNombre(r.tipo_recipiente_id) : '' }}</td>
+  <td>{{ r.observaciones }}</td>
+  <td>{{ r.fecha_adquisicion | date }}</td>
+  <td>{{ r.fecha_vencimiento | date }}</td>
+</tr>
+
+    </tbody>
+  </table>
+</div>
+</div>
