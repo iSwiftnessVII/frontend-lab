@@ -40,7 +40,7 @@
       </div>
 
       <div class="form-field xs">
-        <label>Cantidad por envase</label>
+        <label>Cantidad x Presentación</label>
         <input type="text" formControlName="cantidad_envase" />
       </div>
       <div class="form-field md">
@@ -123,20 +123,41 @@
       </div>
     </div>
 
-    <div class="form-field full-width">
-      <label>Hoja de seguridad
-      </label>
-      <textarea formControlName="hoja_seguridad"></textarea>
-
-      <label>Observaciones</label>
-      <textarea formControlName="observaciones"></textarea>
+<div class="form-field full-width">
+  <label>Hoja de seguridad
+    <span class="tooltip-icon" title="Suba el archivo PDF de la hoja de seguridad">?</span>
+  </label>
+  
+  <div class="file-upload-container">
+    <input type="file" 
+           #fileInput
+           (change)="onFileSelected($event)"
+           accept=".pdf"
+           style="display: none;">
+    
+    <button type="button" class="upload-btn" (click)="fileInput.click()">
+      <span class="upload-icon">📄</span>
+      Seleccionar PDF
+    </button>
+    
+    <div class="file-info" *ngIf="selectedFileName">
+      <span class="file-name">{{ selectedFileName }}</span>
+      <button type="button" class="remove-btn" (click)="removeFile()">×</button>
     </div>
   </div>
 
-  <!-- Botón -->
-  <div class="form-actions">
-    <button type="submit" [disabled]="form.invalid">Agregar Reactivo</button>
+  <label>Observaciones</label>
+  <textarea formControlName="observaciones"></textarea>
+</div>
   </div>
+
+  <!-- Botón -->
+<div class="form-actions">
+  <button type="submit" [disabled]="form.invalid || uploading">
+    <span *ngIf="!uploading">Agregar Reactivo</span>
+    <span *ngIf="uploading">Subiendo PDF...</span>
+  </button>
+</div>
 </form>
 
   </div>
@@ -164,10 +185,10 @@
             <th>Tipo Reactivo</th>
             <th>Clasificación SGA</th>
             <th>Nombre Reactivo</th>
-            <th>Cantidad Envasada</th>
+            <th>Cantidad x Presentación</th>
             <th>Presentacion</th>
             <th>Estado</th>
-            <th>Tipo de envase</th>
+            <th>Tipo de recipiente</th>
             <th>Seguridad</th>
           </tr>
         </thead>
@@ -206,7 +227,18 @@
               </div>
             </td>
             <td>{{ r.tipo_recipiente_id ? getTipoRecipienteNombre(r.tipo_recipiente_id) : '' }}</td>
-            <td>{{ r.hoja_seguridad }}</td>
+<td>
+  <div class="pdf-container">
+    <div *ngFor="let pdf of getPdfsForReactivo(r.codigo)" class="pdf-item">
+      <button class="view-pdf-btn" (click)="viewPdf(pdf.hoja_seguridad)">
+        📄 {{ pdf.fecha_subida | date:'short' }}
+      </button>
+    </div>
+    <button *ngIf="getPdfsForReactivo(r.codigo).length === 0" class="no-pdf" (click)="loadPdfsForReactivo(r.codigo)">
+      Cargar PDFs
+    </button>
+  </div>
+</td>
           </tr>
         </tbody>
       </table>

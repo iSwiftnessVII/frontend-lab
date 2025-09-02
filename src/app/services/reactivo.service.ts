@@ -16,7 +16,6 @@ export interface Reactivo {
   marca?: string;
   lote?: string;
   id_referencia?: string;
-  hoja_seguridad?: string;
   almacenamiento_id?: number;
   tipo_recipiente_id?: number;
   observaciones?: string;
@@ -24,40 +23,44 @@ export interface Reactivo {
 
 @Injectable({ providedIn: 'root' })
 export class ReactivoService {
-  private apiUrl = 'http://localhost:3000/api/reactivos'; // Endpoint principal
+  private apiUrl = 'http://localhost:3000/api';
 
   constructor(private http: HttpClient) {}
 
   getReactivos(): Observable<Reactivo[]> {
-    return this.http.get<Reactivo[]>(this.apiUrl);
+    return this.http.get<Reactivo[]>(`${this.apiUrl}/reactivos`);
   }
 
   addReactivo(data: Reactivo): Observable<any> {
-    return this.http.post(this.apiUrl, data);
+    return this.http.post(`${this.apiUrl}/reactivos`, data);
   }
 
   getTipos(): Observable<{id: number, nombre: string}[]> {
-    return this.http.get<{id:number, nombre:string}[]>(`http://localhost:3000/api/tipos`);
+    return this.http.get<{id:number, nombre:string}[]>(`${this.apiUrl}/tipos`);
   }
 
   getClasificaciones(): Observable<{id: number, nombre: string}[]> {
-    return this.http.get<{id:number, nombre:string}[]>(`http://localhost:3000/api/clasificaciones`);
+    return this.http.get<{id:number, nombre:string}[]>(`${this.apiUrl}/clasificaciones`);
   }
 
   getUnidades(): Observable<{id: number, nombre: string}[]> {
-    return this.http.get<{id:number, nombre:string}[]>(`http://localhost:3000/api/unidades`);
+    return this.http.get<{id:number, nombre:string}[]>(`${this.apiUrl}/unidades`);
   }
 
   getEstados(): Observable<{id: number, nombre: string}[]> {
-    return this.http.get<{id:number, nombre:string}[]>(`http://localhost:3000/api/estados`);
+    return this.http.get<{id:number, nombre:string}[]>(`${this.apiUrl}/estados`);
   }
 
   getTiposRecipiente(): Observable<{id: number, nombre: string}[]> {
-    return this.http.get<{id:number, nombre:string}[]>(`http://localhost:3000/api/tipos_recipiente`);
+    return this.http.get<{id:number, nombre:string}[]>(`${this.apiUrl}/tipos_recipiente`);
   }
 
-  // Cambié descripcion a nombre para que coincida con tu backend
   getAlmacenamientos(): Observable<{id: number, nombre: string}[]> {
-    return this.http.get<{id:number, nombre:string}[]>(`http://localhost:3000/api/almacenamiento`);
+    return this.http.get<{id:number, nombre:string}[]>(`${this.apiUrl}/almacenamiento`);
+  }
+
+  // Nuevo método para obtener PDFs por reactivo
+  getPdfsByReactivo(codigo: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/reactivos/${codigo}/pdf`);
   }
 }

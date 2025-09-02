@@ -498,3 +498,124 @@ tbody tr:hover {
   visibility: visible;
   opacity: 1;
 }
+
+
+
+
+
+
+
+/* ========================================================================== */
+/* ============================== SUBIR PDF ================================ */
+/* ========================================================================== */
+
+
+/* Estilos para contenedor de PDFs */
+.pdf-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 120px;
+}
+
+.pdf-item {
+  margin-bottom: 4px;
+}
+
+.view-pdf-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background-color 0.2s;
+  width: 100%;
+  text-align: left;
+}
+
+.view-pdf-btn:hover {
+  background: #388E3C;
+}
+
+.no-pdf {
+  background: #2196F3;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background-color 0.2s;
+}
+
+.no-pdf:hover {
+  background: #1976D2;
+}
+
+/* Estilos para subida de archivos */
+.file-upload-container {
+  margin-bottom: 15px;
+  border: 2px dashed #ccc;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.upload-btn:hover {
+  background-color: #1976D2;
+}
+
+.upload-icon {
+  font-size: 16px;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.file-name {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #f44336;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-btn:hover {
+  color: #d32f2f;
+}
