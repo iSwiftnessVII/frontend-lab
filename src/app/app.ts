@@ -7,7 +7,6 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, RouterOutlet],
   template: `
-    <h1>Inventario de Reactivos</h1>
     <router-outlet></router-outlet>
   `
 })

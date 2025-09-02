@@ -1,178 +1,215 @@
 <div class="container">
-  <h2>Registro de Reactivos</h2>
+  <!-- Contenedor principal con sombra -->
+<div class="card">
+  <h2>Inventario de Reactivos</h2>
+  <div class="acciones">
+    <!-- Botón para abrir -->
+    <button class="btn crear" (click)="abrirModal()">Nuevo Reactivo</button>
+    <button class="btn consumo">Consumo Reactivo</button>
+  </div>
+</div>
 
-  <!-- Formulario -->
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-reactivo">
+<!-- Modal -->
+<div class="modal" [class.show]="mostrarModal" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <span class="close" (click)="cerrarModal()">&times;</span>
+    <h3>Nuevo Reactivo</h3>
 
-    <div class="form-section">
-      <h3>Información básica</h3>
-      <div class="form-row">
-        <label>Código:</label>
+    <!-- Formulario dentro del modal -->
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-reactivo">
+
+  <!-- Información básica -->
+  <div class="form-section">
+    <div class="form-grid">
+      <div class="form-field sm">
+        <label>Código
+        <span class="tooltip-icon" title="Código único del reactivo">?</span>
+        </label>
         <input type="text" formControlName="codigo" />
       </div>
-      <div class="form-row">
-        <label>Nombre del reactivo:</label>
+      <div class="form-field lg">
+        <label>Nombre del reactivo</label>
         <input type="text" formControlName="reactivo" />
       </div>
-      <div class="form-row">
-        <label>Presentación:</label>
-        <input type="text" formControlName="presentacion" />
-      </div>
-      <div class="form-row">
-        <label>Cantidad por envase:</label>
-        <input type="text" formControlName="cantidad_envase" />
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h3>Fechas</h3>
-      <div class="form-row">
-        <label>Fecha de adquisición:</label>
-        <input type="date" formControlName="fecha_adquisicion" />
-      </div>
-      <div class="form-row">
-        <label>Fecha de vencimiento:</label>
-        <input type="date" formControlName="fecha_vencimiento" />
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h3>Clasificación y propiedades</h3>
-      <div class="form-row">
-        <label>Tipo de reactivo:</label>
+      <div class="form-field sm">
+        <label>Tipo Reactivo</label>
         <select formControlName="tipo_id">
-          <option value="">Seleccione tipo</option>
+          <option value="">Seleccione</option>
           <option *ngFor="let t of tipos" [value]="t.id">{{ t.nombre }}</option>
         </select>
       </div>
 
-      <div class="form-row">
-        <label>Clasificación SGA:</label>
+      <div class="form-field xs">
+        <label>Cantidad por envase</label>
+        <input type="text" formControlName="cantidad_envase" />
+      </div>
+      <div class="form-field md">
+        <label>Presentación
+        <span class="tooltip-icon" title="Presentacion del producto">?</span>
+        </label>
+        <input type="text" formControlName="presentacion" />
+      </div>
+      <div class="form-field xs">
+        <label>Unidad</label>
+        <select formControlName="unidad_id">
+          <option value="">-</option>
+          <option *ngFor="let u of unidades" [value]="u.id">{{ u.nombre }}</option>
+        </select>
+      </div>
+        <div class="form-field sm">
+        <label>Tipo recipiente</label>
+        <select formControlName="tipo_recipiente_id">
+          <option value="">Seleccione</option>
+          <option *ngFor="let tr of tiposRecipiente" [value]="tr.id">{{ tr.nombre }}</option>
+        </select>
+      </div>
+      <div class="form-field sm">
+        <label>Clasificación SGA</label>
         <select formControlName="clasificacion_id">
-          <option value="">Seleccione clasificación</option>
-          <option *ngFor="let c of clasificaciones" [value]="c.id" [ngStyle]="{'background-color': clasificacionColors[c.nombre]}">
+          <option value="">Seleccione</option>
+          <option *ngFor="let c of clasificaciones" [value]="c.id"
+                  [ngStyle]="{'background-color': clasificacionColors[c.nombre]}">
             {{ c.nombre }}
           </option>
         </select>
       </div>
 
-      <div class="form-row">
-        <label>Unidad:</label>
-        <select formControlName="unidad_id">
-          <option value="">Seleccione unidad</option>
-          <option *ngFor="let u of unidades" [value]="u.id">{{ u.nombre }}</option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <label>Estado físico:</label>
+      <div class="form-field sm">
+        <label>Estado físico</label>
         <select formControlName="estado_id">
-          <option value="">Seleccione estado</option>
+          <option value="">Seleccione</option>
           <option *ngFor="let e of estados" [value]="e.id">{{ e.nombre }}</option>
         </select>
       </div>
     </div>
+  </div>
 
-    <div class="form-section">
-      <h3>Información adicional</h3>
-      <div class="form-row">
-        <label>Marca:</label>
+  <!-- Fechas -->
+  <div class="form-section">
+    <div class="form-grid">
+      <div class="form-field md">
+        <label>Adquisición</label>
+        <input type="date" formControlName="fecha_adquisicion" />
+      </div>
+      <div class="form-field md">
+        <label>Vencimiento</label>
+        <input type="date" formControlName="fecha_vencimiento" />
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Información adicional -->
+  <div class="form-section">
+    <div class="form-grid">
+      <div class="form-field md">
+        <label>Marca</label>
         <input type="text" formControlName="marca" />
       </div>
-      <div class="form-row">
-        <label>Lote:</label>
+      <div class="form-field sm">
+        <label>Lote</label>
         <input type="text" formControlName="lote" />
       </div>
-      <div class="form-row">
-        <label>ID de referencia:</label>
+      <div class="form-field sm">
+        <label>ID referencia</label>
         <input type="text" formControlName="id_referencia" />
       </div>
-      <div class="form-row">
-        <label>Hoja de seguridad:</label>
-        <input type="text" formControlName="hoja_seguridad" />
-      </div>
-      <div class="form-row">
-        <label>Almacenamiento:</label>
+      <div class="form-field sm">
+        <label>Almacenamiento</label>
         <select formControlName="almacenamiento_id">
-          <option value="">Seleccione almacenamiento</option>
+          <option value="">Seleccione</option>
           <option *ngFor="let a of almacenamientos" [value]="a.id">{{ a.nombre }}</option>
         </select>
       </div>
-      <div class="form-row">
-        <label>Tipo de recipiente:</label>
-        <select formControlName="tipo_recipiente_id">
-          <option value="">Seleccione tipo de recipiente</option>
-          <option *ngFor="let tr of tiposRecipiente" [value]="tr.id">{{ tr.nombre }}</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>Observaciones:</label>
-        <textarea formControlName="observaciones"></textarea>
-      </div>
     </div>
 
-    <div class="form-row form-submit">
-      <button type="submit" [disabled]="form.invalid">Agregar Reactivo</button>
+    <div class="form-field full-width">
+      <label>Hoja de seguridad
+      </label>
+      <textarea formControlName="hoja_seguridad"></textarea>
+
+      <label>Observaciones</label>
+      <textarea formControlName="observaciones"></textarea>
     </div>
-  </form>
+  </div>
 
-  <hr />
+  <!-- Botón -->
+  <div class="form-actions">
+    <button type="submit" [disabled]="form.invalid">Agregar Reactivo</button>
+  </div>
+</form>
 
- <!-- Tabla de Reactivos -->
-<h3>Reactivos Registrados</h3>
-<div class="reactivos-table-container">
-  <table class="reactivos-table">
-    <thead>
-      <tr>
-        <th>Código</th>
-        <th>Nombre</th>
-        <th>Presentación</th>
-        <th>Cantidad</th>
-        <th>Unidad</th>
-        <th>Tipo</th>
-        <th>Clasificación</th>
-        <th>Estado</th>
-        <th>Marca</th>
-        <th>Lote</th>
-        <th>ID Ref.</th>
-        <th>Hoja Seguridad</th>
-        <th>Almacenamiento</th>
-        <th>Tipo Recipiente</th>
-        <th>Observaciones</th>
-        <th>Fecha Adquisición</th>
-        <th>Fecha Vencimiento</th>
-      </tr>
-    </thead>
-    <tbody>
-<tr *ngFor="let r of reactivos"
-    [ngClass]="{
-      'vencido': isVencido(r.fecha_vencimiento),
-      'por-vencer': isPorVencer(r.fecha_vencimiento)
-    }">
-  <td>{{ r.codigo }}</td>
-  <td>{{ r.reactivo }}</td>
-  <td>{{ r.presentacion }}</td>
-  <td>{{ r.cantidad_envase }}</td>
-  <td>{{ r.unidad_id ? getUnidadNombre(r.unidad_id) : '' }}</td>
-  <td>{{ r.tipo_id ? getTipoNombre(r.tipo_id) : '' }}</td>
-  <td>
-    <span class="badge" [ngStyle]="{'background-color': getClasificacionColor(getClasificacionNombre(r.clasificacion_id))}">
-      {{ getClasificacionNombre(r.clasificacion_id) }}
-    </span>
-  </td>
-  <td>{{ r.estado_id ? getEstadoNombre(r.estado_id) : '' }}</td>
-  <td>{{ r.marca }}</td>
-  <td>{{ r.lote }}</td>
-  <td>{{ r.id_referencia }}</td>
-  <td>{{ r.hoja_seguridad }}</td>
-  <td>{{ r.almacenamiento_id ? getAlmacenamientoNombre(r.almacenamiento_id) : '' }}</td>
-  <td>{{ r.tipo_recipiente_id ? getTipoRecipienteNombre(r.tipo_recipiente_id) : '' }}</td>
-  <td>{{ r.observaciones }}</td>
-  <td>{{ r.fecha_adquisicion | date }}</td>
-  <td>{{ r.fecha_vencimiento | date }}</td>
-</tr>
-
-    </tbody>
-  </table>
+  </div>
 </div>
+
+  <!-- ================== FIN MODAL ================== -->
+
+  <!-- ================== TABLA ================== -->
+  <div class="container">
+    <h2>Reactivos Almacenados</h2>
+
+    <!-- Filtros -->
+    <div class="filtros">
+      <input type="text" placeholder="Buscar por código o nombre...">
+      <input type="email" placeholder="Suscripcion por email">
+      <input type="submit" value="Suscribirse">
+    </div>
+
+    <!-- Tabla -->
+    <div class="tabla-container">
+      <table class="reactivos-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Tipo Reactivo</th>
+            <th>Clasificación SGA</th>
+            <th>Nombre Reactivo</th>
+            <th>Cantidad Envasada</th>
+            <th>Presentacion</th>
+            <th>Estado</th>
+            <th>Tipo de envase</th>
+            <th>Seguridad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of reactivos"
+              [ngClass]="{
+                'vencido': isVencido(r.fecha_vencimiento),
+                'por-vencer': isPorVencer(r.fecha_vencimiento)
+              }"
+              class="tooltip-row">
+
+            <td>{{ r.codigo }}</td>
+            <td>{{ r.tipo_id ? getTipoNombre(r.tipo_id) : '' }}</td>
+            <td>
+              <span class="badge"
+                    [ngStyle]="{'background-color': getClasificacionColor(getClasificacionNombre(r.clasificacion_id))}">
+                {{ getClasificacionNombre(r.clasificacion_id) }}
+              </span>
+            </td> 
+            <td>{{ r.reactivo }}</td>
+            <td>{{ r.cantidad_envase }}</td>
+            <td>{{ r.presentacion }} {{ r.unidad_id ? getUnidadNombre(r.unidad_id) : '' }}</td>
+            <td>
+              {{ r.estado_id ? getEstadoNombre(r.estado_id) : '' }}
+
+              <!-- Tooltip dentro de la celda -->
+              <div class="tooltip-box">
+                <p><strong class="tooltip-tittle">Marca:</strong> {{ r.marca }}</p>
+                <p><strong class="tooltip-tittle">Lote:</strong> {{ r.lote }}</p>
+                <p><strong class="tooltip-tittle">ID referencia:</strong> {{ r.id_referencia }}</p>
+                <p><strong class="tooltip-tittle">Fecha Adquisición:</strong> {{ r.fecha_adquisicion | date }}</p>
+                <p><strong class="tooltip-tittle">Fecha Vencimiento:</strong> {{ r.fecha_vencimiento | date }}</p>
+                <p><strong class="tooltip-tittle">Almacenamiento:</strong> {{ r.almacenamiento_id ? getAlmacenamientoNombre(r.almacenamiento_id) : '' }}</p>
+                <p><strong class="tooltip-tittle">Observaciones:</strong> {{ r.observaciones }}</p>
+
+              </div>
+            </td>
+            <td>{{ r.tipo_recipiente_id ? getTipoRecipienteNombre(r.tipo_recipiente_id) : '' }}</td>
+            <td>{{ r.hoja_seguridad }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>

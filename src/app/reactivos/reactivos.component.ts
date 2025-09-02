@@ -12,8 +12,9 @@ import { ReactivoService, Reactivo } from '../services/reactivo.service';
 })
 export class ReactivosComponent implements OnInit {
   reactivos: Reactivo[] = [];
+  activeTooltip: string | null = null;
   form!: FormGroup;
-
+  mostrarModal: boolean = false;
   tipos: any[] = [];
   clasificaciones: any[] = [];
   unidades: any[] = [];
@@ -23,18 +24,29 @@ export class ReactivosComponent implements OnInit {
 
   // Colores oficiales NFPA/GHS para cada clasificación
   clasificacionColors: { [key: string]: string } = {
-    'Irritación cutánea y otros': '#FFA500',
-    'Inflamables': '#FF0000',
-    'Corrosivo': '#00FF00',
-    'Peligro para la respiración': '#FFFF00',
-    'No peligro': '#87CEEB',
-    'Tóxico': '#800080',
-    'Peligro para el medio ambiente': '#008080',
-    'Comburente': '#FF8C00'
+    'Irritación cutánea y otros': '#488FD0',      // Azul
+    'Inflamables': '#FF0000',                     // Rojo (se mantiene igual)
+    'Corrosivo': '#FFC000',                       // Amarillo anaranjado
+    'Peligro para la respiración': '#7030A0',     // Púrpura oscuro
+    'No peligro': '#D9D9D9',                      // Gris claro
+    'Tóxico': '#00B050',                          // Verde
+    'Peligro para el medio ambiente': '#7030A0',  // Púrpura oscuro (igual que respiración)
+    'Comburente': '#FFFF00'                       // Amarillo puro
   };
+
 
   constructor(private reactivoService: ReactivoService, private fb: FormBuilder) {}
 
+  abrirModal() {
+    this.mostrarModal = true;
+  }
+
+  cerrarModal() {
+    this.mostrarModal = false;
+  }
+
+  
+  
   ngOnInit() {
     this.form = this.fb.group({
       codigo: ['', Validators.required],
@@ -69,20 +81,33 @@ export class ReactivosComponent implements OnInit {
     this.reactivoService.getTiposRecipiente().subscribe(d => this.tiposRecipiente = d);
   }
 
-  isVencido(fecha?: string): boolean {
+isVencido(fecha?: string): boolean {
   if (!fecha) return false;
+  
   const hoy = new Date();
   const vencimiento = new Date(fecha);
-  return vencimiento < hoy;
+  
+  // Calcular fecha límite de 2 meses antes del vencimiento
+  const dosMesesAntes = new Date(vencimiento);
+  dosMesesAntes.setMonth(vencimiento.getMonth() - 2);
+  
+  return hoy >= dosMesesAntes && hoy < vencimiento;
 }
 
 isPorVencer(fecha?: string): boolean {
   if (!fecha) return false;
+  
   const hoy = new Date();
   const vencimiento = new Date(fecha);
-  const diffTime = vencimiento.getTime() - hoy.getTime();
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  return diffDays >= 0 && diffDays <= 7; // dentro de 7 días
+  
+  // Si ya está en estado "vencido", no mostrar como "por vencer"
+  if (this.isVencido(fecha)) return false;
+  
+  // Calcular fecha límite de 6 meses antes del vencimiento
+  const seisMesesAntes = new Date(vencimiento);
+  seisMesesAntes.setMonth(vencimiento.getMonth() - 6);
+  
+  return hoy >= seisMesesAntes && hoy < vencimiento;
 }
 
 

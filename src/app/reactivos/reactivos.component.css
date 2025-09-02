@@ -1,199 +1,500 @@
+/* ========================================================================== */
+/* ========================== FUENTES Y BASE ================================ */
+/* ========================================================================== */
+
+/* Fuente moderna */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+/* Estilo general del body */
+body {
+  background: #f9fafc;
+  margin: 0;
+  padding: 20px;
+  color: #333;
+  font-family: "Poppins", sans-serif;
+}
+
 /* Contenedor principal */
 .container {
   max-width: 1200px;
-  margin: 20px auto;
-  padding: 15px;
-  font-family: Arial, sans-serif;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* Títulos */
-h2, h3 {
+h2 {
+  color: #1a3e72;
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ========================================================================== */
+/* ========================= TARJETA PRINCIPAL ============================== */
+/* ========================================================================== */
+
+.card {
+  background: #fff;
+  padding: 3.5rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+
+  width: 90%;
+  max-width: 1200px;
+  min-height: 280px;
+  margin: 2rem auto;
+  text-align: center;
+}
+
+.card h2 {
+  margin-bottom: 10px;
+  color: #002b5c;
+  font-weight: 600;
+  font-size: 2.5rem;
+}
+
+.card p {
+  color: #555;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+/* ========================================================================== */
+/* ============================ BOTONES ===================================== */
+/* ========================================================================== */
+
+.acciones {
+  display: flex;
+  justify-content: center;
+  gap: 35px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 22px 55px;
+  border-radius: 14px;
+  border: none;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  letter-spacing: 0.5px;
+}
+
+/* Botón Crear (gradiente azul claro) */
+.btn.crear {
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  color: #fff;
+}
+
+/* Botón Consumo (gradiente azul oscuro) */
+.btn.consumo {
+  background: linear-gradient(90deg, #001f54, #003f88);
+  color: #fff;
+}
+
+/* Hover y Active */
+.btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+.btn:active {
+  transform: scale(0.95);
+}
+
+/* ========================================================================== */
+/* ============================== BADGE ===================================== */
+/* ========================================================================== */
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  text-transform: capitalize;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+  white-space: nowrap;
+}
+.badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* ========================================================================== */
+/* ============================== MODAL ===================================== */
+/* ========================================================================== */
+
+.modal {
+  display: none; /* oculto por defecto */
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal.show {
+  display: flex;
+}
+
+.modal-content {
+  background: #fff;
+  font-family: 'Poppins', sans-serif;
+  padding: 30px 40px;
+  border-radius: 16px;
+  max-width: 900px; /* antes 550px */
+  width: 95%;       /* que ocupe casi toda la pantalla */
+  text-align: center;
+  position: relative;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  animation: modalFade 0.3s ease;
+}
+
+
+@keyframes modalFade {
+  from {
+    transform: translateY(-40px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.close {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  font-size: 26px;
+  cursor: pointer;
+  color: #333;
+  transition: color 0.3s ease;
+}
+.close:hover {
+  color: #dc3545;
+}
+
+/* ========================================================================== */
+/* ============================= FILTROS ==================================== */
+/* ========================================================================== */
+
+.filtros {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.filtros input,
+.filtros select {
+  padding: 8px 12px;
+  border: 1px solid #d0d7e6;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.filtros input:focus,
+.filtros select:focus {
+  border-color: #1a3e72;
+  box-shadow: 0px 0px 5px rgba(26, 62, 114, 0.3);
+}
+
+/* ========================================================================== */
+/* ============================== TABLA ===================================== */
+/* ========================================================================== */
+
+.reactivos-table {
+  width: 100%;
+  border: 20px;
+  font-family: 'Poppins', sans-serif;
+
+}
+.reactivos-table th, .reactivos-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+thead {
+  background: #eaf1fb;
+}
+th {
+  color: #1a3e72;
+  font-weight: 600;
+}
+
+tbody tr:hover {
+  background: #f7faff;
+}
+
+/* ========================================================================== */
+/* =========================== ESTADOS (Fila) =============================== */
+/* ========================================================================== */
+
+.vencido {
+  background-color: #ffe5e5;
+  color: #b30000;
+
+}
+
+.por-vencer {
+  background-color: #fff9e5;
+  color: #b36b00;
+}
+
+.vigente {
+  background-color: #e5ffe5;
+  color: #006600;
+}
+
+/* ========================================================================== */
+/* ============================= TOOLTIP ==================================== */
+/* ========================================================================== */
+
+.tooltip-row {
+  position: relative;
+  cursor: pointer;
+}
+
+.tooltip-box {
+  display: none;
+  position: fixed;
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 16px;
+  width: 80%;
+  box-shadow: 0px 6px 20px rgba(0,0,0,0.25);
+  z-index: 9999;
+  font-size: 14px;
+  line-height: 1.5;
+  color: gray;
+  overflow-wrap: break-word;
+}
+
+.tooltip-row:hover .tooltip-box {
+  display: block;
+}
+
+.tooltip-tittle {
+  color: black;
+  font-size: 16px;
+}
+
+
+
+/* ========================================================================== */
+/* ============================== FORMULARIO ================================ */
+/* ========================================================================== */
+
+/* Formulario general */
+.form-reactivo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Secciones */
+
+
+.form-section {
+  padding: 12px 16px;        /* espacio interno */
+  background-color: #fff;    /* fondo blanco para que la sombra se note */
+  border-radius: 8px;        /* esquinas redondeadas */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* sombra suave */
+  margin-bottom: 2px;       /* separación con otras secciones */
+  transition: box-shadow 0.3s ease;
+}
+
+/* Opcional: sombra más intensa al pasar el mouse */
+.form-section:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* Grid convertido a flex */
+.form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px; /* espacio entre campos */
+  align-items: end;
+}
+
+/* Campos generales */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  min-width: 120px;
+}
+
+/* Labels */
+.form-field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+  margin-bottom: 2px;
   color: #333;
 }
 
-/* Secciones del formulario */
-.form-section {
-  border: 1px solid #ccc;
-  padding: 15px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-}
-
-.form-section h3 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1.1rem;
-  color: #555;
-}
-
-/* Filas del formulario */
-.form-row {
-  display: flex;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-  align-items: center;
-}
-
-.form-row label {
-  width: 180px;
-  font-weight: bold;
-  margin-right: 10px;
-}
-
-.form-row input,
-.form-row select,
-.form-row textarea {
-  flex: 1;
+/* Inputs y textarea */
+.form-field input,
+.form-field textarea {
   padding: 6px 10px;
-  border-radius: 4px;
   border: 1px solid #ccc;
-  font-size: 0.95rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  width: 100%; /* ocupan todo el ancho del campo */
+  box-sizing: border-box;
+  transition: border 0.2s, box-shadow 0.2s;
 }
 
-.form-row textarea {
-  min-height: 60px;
+.form-field input:focus,
+.form-field textarea:focus {
+  border-color: #03868F;
+  box-shadow: 0 0 4px rgba(3, 134, 143, 0.3);
+  outline: none;
+}
+
+.form-field textarea {
+  min-height: 50px;
   resize: vertical;
 }
 
-/* Botón de envío */
-.form-submit {
-  text-align: right;
-}
-
-.form-submit button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s;
-}
-
-.form-submit button:disabled {
-  background-color: #999;
-  cursor: not-allowed;
-}
-
-.form-submit button:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-/* Tabla de reactivos */
-.reactivos-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-  font-size: 0.95rem;
-}
-
-.reactivos-table th,
-.reactivos-table td {
-  border: 1px solid #ccc;
-  padding: 8px 10px;
-  text-align: left;
-}
-
-.reactivos-table th {
-  background-color: #007bff;
-  color: #fff;
-  position: sticky;
-  top: 0;
-}
-
-.reactivos-table tbody tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-/* Badge para clasificaciones */
-.badge {
-  color: #fff;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  display: inline-block;
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-  .form-row label {
-    width: 100%;
-    margin-bottom: 4px;
-  }
-
-  .form-row {
-    flex-direction: column;
-  }
-}
-
-/* Contenedor con scroll horizontal */
-.reactivos-table-container {
-  overflow-x: auto;
-  max-width: 100%;
+/* Selects fit-content */
+.form-field select {
+  padding: 6px 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  padding: 5px;
-  margin-top: 15px;
-  scroll-behavior: smooth;
+  font-size: 0.9rem;
+  width: fit-content;  /* solo el ancho necesario */
+  min-width: 60px;     /* ancho mínimo */
 }
 
-/* Scroll personalizado */
-.reactivos-table-container::-webkit-scrollbar {
-  height: 8px;
-}
-.reactivos-table-container::-webkit-scrollbar-thumb {
-  background: #007bff;
-  border-radius: 4px;
-}
-.reactivos-table-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+/* Tamaños específicos */
+.form-field.xs {
+  flex: 0 0 auto;      /* ancho automático */
+  min-width: 50px;
 }
 
-/* Tabla */
-.reactivos-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 1200px; /* Ajusta según columnas */
+.form-field.sm {
+  flex: 0 0 auto;
+  min-width: 100px;
 }
 
-.reactivos-table th,
-.reactivos-table td {
-  border: 1px solid #ccc;
-  padding: 8px 10px;
-  text-align: left;
+.form-field.md {
+  flex: 0 0 180px;
 }
 
-.reactivos-table th {
-  background-color: #007bff;
+.form-field.lg {
+  flex: 1 1 250px;
+}
+
+/* Pegado especial: cantidad + unidad */
+.form-grid.cantidad-unidad {
+  gap: 4px; /* menos separación */
+}
+
+.form-field.cantidad {
+  flex: 0 0 auto;
+  min-width: 60px;
+}
+
+.form-field.unidad {
+  flex: 0 0 auto;
+  min-width: 50px;
+}
+
+/* Campos que ocupan toda la fila */
+.full-width {
+  margin-top: 5px;
+  flex: 1 1 100%;
+}
+
+/* Botones */
+.form-actions {
+  text-align: right;
+  margin-top: 0.5rem;
+}
+
+.form-actions button {
+  background: #03868F;
   color: white;
-  position: sticky;
-  top: 0;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
-.reactivos-table tbody tr:nth-child(even) {
-  background-color: #f2f2f2;
+.form-actions button:hover {
+  background: #02606a;
+  transform: translateY(-1px);
 }
 
-/* Badges de clasificación */
-.badge {
-  padding: 3px 8px;
-  color: white;
-  border-radius: 4px;
+
+/* ---------------------------------------- TOOLTIP AYUDA ---------------------------------*/
+
+.tooltip-container {
+  position: relative;
   display: inline-block;
+  margin-left: 4px; /* separación del label */
+  cursor: pointer;
 }
 
-/* Fila vencida */
-.vencido {
-  background-color: #f8d7da !important; /* rojo suave */
-  color: red;
+.tooltip-icon {
+  background-color: #03868F;
+  color: white;
+  border-radius: 50%;
+  padding: 0 6px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 1.2;
 }
 
-/* Fila por vencer */
-.por-vencer {
-  background-color: #fff3cd !important; /* amarillo suave */
-  color: #856404;
+.tooltip-text {
+  visibility: hidden;
+  width: max-content;
+  max-width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%; /* encima del icono */
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  pointer-events: none;
 }
 
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
