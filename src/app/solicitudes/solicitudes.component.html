@@ -1,0 +1,354 @@
+<h2>Solicitudes</h2>
+
+<!-- Log de parches aplicados -->
+
+
+<section style="margin-bottom:1rem; border:1px solid #eee; padding:0.5rem">
+  <h3>Agregar cliente</h3>
+  <form (submit)="createCliente($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
+      <div>
+        <label for="clienteNombre">Nombre:</label>
+        <input id="clienteNombre" [(ngModel)]="clienteNombre" name="clienteNombre" required style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteNumero">Número:</label>
+        <input id="clienteNumero" type="number" [(ngModel)]="clienteNumero" name="clienteNumero" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteFechaVinc">Fecha vinculación:</label>
+        <input id="clienteFechaVinc" type="date" [(ngModel)]="clienteFechaVinc" name="clienteFechaVinc" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteTipoUsuario">Tipo usuario:</label>
+        <select id="clienteTipoUsuario" [(ngModel)]="clienteTipoUsuario" name="clienteTipoUsuario" style="width:100%">
+          <option value="">Seleccionar tipo de usuario</option>
+          <option value="Emprendedor">Emprendedor</option>
+          <option value="Persona Natural">Persona Natural</option>
+          <option value="Persona Jurídica">Persona Jurídica</option>
+          <option value="Aprendiz SENA">Aprendiz SENA</option>
+          <option value="Instructor SENA">Instructor SENA</option>
+          <option value="Centros SENA">Centros SENA</option>
+        </select>
+      </div>
+      <div>
+        <label for="clienteRazonSocial">Razón social:</label>
+        <input id="clienteRazonSocial" [(ngModel)]="clienteRazonSocial" name="clienteRazonSocial" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteNit">NIT:</label>
+        <input id="clienteNit" [(ngModel)]="clienteNit" name="clienteNit" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteTipoId">Tipo identificación:</label>
+        <select id="clienteTipoId" [(ngModel)]="clienteTipoId" name="clienteTipoId" style="width:100%">
+          <option value="">Seleccionar tipo de identificación</option>
+          <option value="CC">CC - Cédula de Ciudadanía</option>
+          <option value="TI">TI - Tarjeta de Identidad</option>
+          <option value="CE">CE - Cédula de Extranjería</option>
+          <option value="NIT">NIT - Número de Identificación Tributaria</option>
+          <option value="PASAPORTE">Pasaporte</option>
+          <option value="OTRO">Otro</option>
+        </select>
+      </div>
+      <div>
+        <label for="clienteIdNum">Número identificación:</label>
+        <input id="clienteIdNum" [(ngModel)]="clienteIdNum" name="clienteIdNum" required style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteSexo">Sexo:</label>
+        <select id="clienteSexo" [(ngModel)]="clienteSexo" name="clienteSexo" style="width:100%">
+          <option value="">Seleccionar sexo</option>
+          <option value="M">Masculino</option>
+          <option value="F">Femenino</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div>
+        <label for="clienteTipoPobl">Tipo población:</label>
+        <input id="clienteTipoPobl" [(ngModel)]="clienteTipoPobl" name="clienteTipoPobl" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteDireccion">Dirección:</label>
+        <input id="clienteDireccion" [(ngModel)]="clienteDireccion" name="clienteDireccion" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteCiudad">Ciudad:</label>
+        <input id="clienteCiudad" [(ngModel)]="clienteCiudad" name="clienteCiudad" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteDepartamento">Departamento:</label>
+        <input id="clienteDepartamento" [(ngModel)]="clienteDepartamento" name="clienteDepartamento" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteCelular">Celular:</label>
+        <input id="clienteCelular" [(ngModel)]="clienteCelular" name="clienteCelular" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteTelefono">Teléfono:</label>
+        <input id="clienteTelefono" [(ngModel)]="clienteTelefono" name="clienteTelefono" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteEmail">Correo:</label>
+        <input id="clienteEmail" [(ngModel)]="clienteEmail" name="clienteEmail" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteTipoVinc">Tipo vinculación:</label>
+        <input id="clienteTipoVinc" [(ngModel)]="clienteTipoVinc" name="clienteTipoVinc" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteRegistroPor">Registro realizado por:</label>
+        <input id="clienteRegistroPor" [(ngModel)]="clienteRegistroPor" name="clienteRegistroPor" style="width:100%" />
+      </div>
+      <div>
+        <label for="clienteObservaciones">Observaciones:</label>
+        <input id="clienteObservaciones" [(ngModel)]="clienteObservaciones" name="clienteObservaciones" style="width:100%" />
+      </div>
+    </div>
+    <div style="margin-top:0.5rem"><button type="submit">Agregar cliente</button></div>
+  </form>
+  <p *ngIf="clienteMsg">{{ clienteMsg }}</p>
+</section>
+
+<section style="margin-bottom:1rem; border:1px solid #eee; padding:0.5rem">
+  <h3>Agregar solicitud</h3>
+  <form (submit)="createSolicitud($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
+      <div>
+        <label for="solicitudUsuarioId">Cliente:</label>
+        <select id="solicitudUsuarioId" [(ngModel)]="solicitudUsuarioId" name="solicitudUsuarioId" required style="width:100%">
+          <option value="">Seleccionar cliente</option>
+          <option *ngFor="let u of usuarios()" [value]="u.id_usuario">{{ u.nombre_solicitante }} ({{ u.numero_identificacion }})</option>
+        </select>
+      </div>
+      <div>
+        <label for="solicitudTipo">Tipo de solicitud:</label>
+        <select id="solicitudTipo" [(ngModel)]="solicitudTipo" name="solicitudTipo" style="width:100%">
+          <option value="">Seleccionar tipo de solicitud</option>
+          <option value="AF">AF - Apoyo Formación</option>
+          <option value="EN">EN - Ensayos</option>
+          <option value="UI">UI - Uso Infraestructura</option>
+          <option value="IA">IA - Investigación Aplicada</option>
+        </select>
+      </div>
+      <div>
+        <label for="solicitudNombre">Nombre de la muestra o producto:</label>
+        <input id="solicitudNombre" [(ngModel)]="solicitudNombre" name="solicitudNombre" style="width:100%" />
+      </div>
+      <div>
+        <label for="solicitudLote">Lote del producto:</label>
+        <input id="solicitudLote" [(ngModel)]="solicitudLote" name="solicitudLote" style="width:100%" />
+      </div>
+      <div>
+        <label for="solicitudFechaVenc">Fecha de vencimiento:</label>
+        <input id="solicitudFechaVenc" type="date" [(ngModel)]="solicitudFechaVenc" name="solicitudFechaVenc" style="width:100%" />
+      </div>
+      <div>
+        <label for="solicitudTipoMuestra">Tipo de muestra:</label>
+        <input id="solicitudTipoMuestra" [(ngModel)]="solicitudTipoMuestra" name="solicitudTipoMuestra" style="width:100%" />
+      </div>
+      <div>
+        <label for="solicitudCondEmpaque">Condiciones de empaque:</label>
+        <input id="solicitudCondEmpaque" [(ngModel)]="solicitudCondEmpaque" name="solicitudCondEmpaque" style="width:100%" />
+      </div>
+      <div>
+        <label for="solicitudTipoAnalisis">Tipo de análisis requerido:</label>
+        <input id="solicitudTipoAnalisis" [(ngModel)]="solicitudTipoAnalisis" name="solicitudTipoAnalisis" style="width:100%" />
+      </div>
+      <div>
+        <label for="solicitudCantidad">Cantidad de muestras:</label>
+        <input id="solicitudCantidad" type="number" [(ngModel)]="solicitudCantidad" name="solicitudCantidad" style="width:100%" />
+      </div>
+      <div>
+        <label for="solicitudFechaEstimada">Fecha estimada entrega:</label>
+        <input id="solicitudFechaEstimada" type="date" [(ngModel)]="solicitudFechaEstimada" name="solicitudFechaEstimada" style="width:100%" />
+      </div>
+      <div>
+         <label for="solicitudRequiereVarios" style="display:flex; align-items:center; gap:0.5rem;">
+           <input id="solicitudRequiereVarios" type="checkbox" [(ngModel)]="solicitudRequiereVarios" name="solicitudRequiereVarios" />
+           Requiere varios análisis?
+         </label>
+       </div>
+       <div>
+         <label for="solicitudPuedeSuministrar" style="display:flex; align-items:center; gap:0.5rem;">
+           <input id="solicitudPuedeSuministrar" type="checkbox" [(ngModel)]="solicitudPuedeSuministrar" name="solicitudPuedeSuministrar" />
+           Puede suministrar información adicional?
+         </label>
+       </div>
+       <div>
+         <label for="solicitudServicioViable" style="display:flex; align-items:center; gap:0.5rem;">
+           <input id="solicitudServicioViable" type="checkbox" [(ngModel)]="solicitudServicioViable" name="solicitudServicioViable" />
+           ¿El servicio es viable?
+         </label>
+       </div>
+    </div>
+    <div style="margin-top:0.5rem"><button type="submit">Agregar solicitud</button></div>
+  </form>
+  <p *ngIf="solicitudMsg">{{ solicitudMsg }}</p>
+</section>
+
+<section style="margin-bottom:1rem; border:1px solid #eee; padding:0.5rem">
+  <h3>Agregar oferta</h3>
+  <form (submit)="createOferta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
+      <div>
+        <label for="ofertaSolicitudId">Solicitud:</label>
+        <select id="ofertaSolicitudId" [(ngModel)]="ofertaSolicitudId" name="ofertaSolicitudId" required style="width:100%">
+          <option value="">Seleccionar solicitud</option>
+          <option *ngFor="let s of solicitudes()" [value]="s.id_solicitud">
+            {{ s.nombre_solicitante }} - {{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
+          </option>
+        </select>
+      </div>
+      <div>
+        <label for="ofertaValor">Valor:</label>
+        <input id="ofertaValor" type="number" [(ngModel)]="ofertaValor" name="ofertaValor" style="width:100%" placeholder="Valor de la oferta" />
+      </div>
+      <div>
+        <label for="ofertaFechaEnvio">Fecha de envío de la oferta:</label>
+        <input id="ofertaFechaEnvio" type="date" [(ngModel)]="ofertaFechaEnvio" name="ofertaFechaEnvio" style="width:100%" />
+      </div>
+      <div>
+        <label for="ofertaObservacion">Observación:</label>
+        <input id="ofertaObservacion" [(ngModel)]="ofertaObservacion" name="ofertaObservacion" style="width:100%" placeholder="Observaciones sobre la oferta" />
+      </div>
+      <div>
+        <label for="ofertaGeneroCotizacion" style="display:flex; align-items:center; gap:0.5rem;">
+          <input id="ofertaGeneroCotizacion" type="checkbox" [(ngModel)]="ofertaGeneroCotizacion" name="ofertaGeneroCotizacion" />
+          ¿Se generó cotización?
+        </label>
+      </div>
+      <div>
+        <label for="ofertaRealizoSeguimiento" style="display:flex; align-items:center; gap:0.5rem;">
+          <input id="ofertaRealizoSeguimiento" type="checkbox" [(ngModel)]="ofertaRealizoSeguimiento" name="ofertaRealizoSeguimiento" />
+          ¿Se realizó seguimiento a la oferta?
+        </label>
+      </div>
+    </div>
+    <div style="margin-top:0.5rem"><button type="submit">Agregar oferta</button></div>
+  </form>
+  <p *ngIf="ofertaMsg">{{ ofertaMsg }}</p>
+</section>
+
+<section style="margin-bottom:1rem; border:1px solid #eee; padding:0.5rem">
+  <h3>Agregar resultados</h3>
+  <form (submit)="createResultado($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
+      <div>
+        <label for="resultadoSolicitudId">Solicitud:</label>
+        <select id="resultadoSolicitudId" [(ngModel)]="resultadoSolicitudId" name="resultadoSolicitudId" required style="width:100%">
+          <option value="">Seleccionar solicitud</option>
+          <option *ngFor="let s of solicitudes()" [value]="s.id_solicitud">
+            {{ s.nombre_solicitante }} - {{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
+          </option>
+        </select>
+      </div>
+      <div>
+        <label for="resultadoFechaLimite">Fecha límite para la entrega de resultados:</label>
+        <input id="resultadoFechaLimite" type="date" [(ngModel)]="resultadoFechaLimite" name="resultadoFechaLimite" style="width:100%" />
+      </div>
+      <div>
+        <label for="resultadoNumeroInforme">Número del informe de resultados:</label>
+        <input id="resultadoNumeroInforme" [(ngModel)]="resultadoNumeroInforme" name="resultadoNumeroInforme" style="width:100%" placeholder="Número del informe" />
+      </div>
+      <div>
+        <label for="resultadoFechaEnvio">Fecha de envío de resultados:</label>
+        <input id="resultadoFechaEnvio" type="date" [(ngModel)]="resultadoFechaEnvio" name="resultadoFechaEnvio" style="width:100%" />
+      </div>
+    </div>
+    <div style="margin-top:0.5rem"><button type="submit">Agregar resultados</button></div>
+  </form>
+  <p *ngIf="resultadoMsg">{{ resultadoMsg }}</p>
+</section>
+
+<section style="margin-bottom:1rem; border:1px solid #eee; padding:0.5rem">
+  <h3>Agregar encuesta</h3>
+  <form (submit)="createEncuesta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
+      <div>
+        <label for="encuestaSolicitudId">Solicitud:</label>
+        <select id="encuestaSolicitudId" [(ngModel)]="encuestaSolicitudId" name="encuestaSolicitudId" required style="width:100%">
+          <option value="">Seleccionar solicitud</option>
+          <option *ngFor="let s of solicitudes()" [value]="s.id_solicitud">
+            {{ s.nombre_solicitante }} - {{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
+          </option>
+        </select>
+      </div>
+      <div>
+        <label for="encuestaFecha">Fecha de la encuesta:</label>
+        <input id="encuestaFecha" type="date" [(ngModel)]="encuestaFecha" name="encuestaFecha" style="width:100%" />
+      </div>
+      <div>
+        <label for="encuestaPuntuacion">Puntuación de satisfacción (1-10):</label>
+        <input id="encuestaPuntuacion" type="number" min="1" max="10" [(ngModel)]="encuestaPuntuacion" name="encuestaPuntuacion" style="width:100%" placeholder="Puntuación del 1 al 10" />
+      </div>
+      <div>
+        <label for="encuestaComentarios">Comentarios:</label>
+        <textarea id="encuestaComentarios" [(ngModel)]="encuestaComentarios" name="encuestaComentarios" style="width:100%; height:60px;" placeholder="Comentarios del cliente"></textarea>
+      </div>
+      <div>
+        <label for="encuestaRecomendaria" style="display:flex; align-items:center; gap:0.5rem;">
+          <input id="encuestaRecomendaria" type="checkbox" [(ngModel)]="encuestaRecomendaria" name="encuestaRecomendaria" />
+          ¿Recomendaría el servicio?
+        </label>
+      </div>
+      <div>
+        <label for="encuestaClienteRespondio" style="display:flex; align-items:center; gap:0.5rem;">
+          <input id="encuestaClienteRespondio" type="checkbox" [(ngModel)]="encuestaClienteRespondio" name="encuestaClienteRespondio" />
+          ¿El cliente respondió la encuesta?
+        </label>
+      </div>
+      <div>
+        <label for="encuestaSolicitoNueva" style="display:flex; align-items:center; gap:0.5rem;">
+          <input id="encuestaSolicitoNueva" type="checkbox" [(ngModel)]="encuestaSolicitoNueva" name="encuestaSolicitoNueva" />
+          ¿Se solicitó nueva encuesta?
+        </label>
+      </div>
+    </div>
+    <div style="margin-top:0.5rem"><button type="submit">Agregar encuesta</button></div>
+  </form>
+  <p *ngIf="encuestaMsg">{{ encuestaMsg }}</p>
+</section>
+
+<section>
+  <h3>Lista rápida de solicitudes</h3>
+  <div style="margin-bottom:0.5rem">
+    <label for="solicitudesQ">Buscar solicitud (ID, código, nombre, tipo, muestra, análisis o cliente):</label>
+    <input id="solicitudesQ" [(ngModel)]="solicitudesQ" (input)="filtrarSolicitudes()" style="width:100%; margin-top:0.25rem;" />
+  </div>
+  <table style="width:100%; border-collapse:collapse">
+    <thead><tr><th>Cliente</th><th>Solicitud</th><th>Viable</th><th>Oferta</th><th>Encuesta</th><th>Resultados</th><th>Acciones</th></tr></thead>
+    <tbody>
+      <tr *ngFor="let s of solicitudesFiltradas()">
+        <td>{{ s.nombre_solicitante || '—' }}</td>
+        <td>{{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}</td>
+        <td><input type="checkbox" [checked]="!!s.servicio_viable" (change)="toggleCheck(s, 'servicio_viable', $event.target.checked)" /></td>
+        <td><input type="checkbox" [checked]="!!s.genero_cotizacion" (change)="toggleCheck(s, 'genero_cotizacion', $event.target.checked)" /></td>
+        <td><input type="checkbox" [checked]="!!s.cliente_respondio_encuesta" (change)="toggleCheck(s, 'cliente_respondio_encuesta', $event.target.checked)" /></td>
+        <td><input type="checkbox" [checked]="!!s.numero_informe_resultados" (change)="toggleCheck(s, 'numero_informe_resultados', $event.target.checked)" /></td>
+        <td><button (click)="deleteSolicitud(s.id_solicitud)" style="background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Borrar</button></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section style="margin-top:1rem; border:1px solid #eee; padding:0.5rem">
+  <h3>Lista de clientes</h3>
+  <div style="margin-bottom:0.5rem">
+    <label for="clientesQ">Buscar cliente (nombre, correo o identificación):</label>
+    <input id="clientesQ" [(ngModel)]="clientesQ" (input)="filtrarUsuarios()" style="width:100%; margin-top:0.25rem;" />
+  </div>
+  <table style="width:100%; border-collapse:collapse">
+    <thead><tr><th>Nombre</th><th>Identificación</th><th>Correo</th><th>Ciudad</th><th>Celular</th><th>Acciones</th></tr></thead>
+    <tbody>
+      <tr *ngFor="let u of usuariosFiltrados()">
+        <td>{{ u.nombre_solicitante }}</td>
+        <td>{{ u.numero_identificacion }}</td>
+        <td>{{ u.correo_electronico }}</td>
+        <td>{{ u.ciudad }}</td>
+        <td>{{ u.celular || 'Sin celular' }}</td>
+        <td><button (click)="deleteCliente(u.id_usuario)">Borrar</button></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
