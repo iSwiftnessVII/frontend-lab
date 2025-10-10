@@ -1,22 +1,282 @@
-<h2>Reactivos</h2>
+<!-- Catálogo de reactivos -->
+<section>
+  <h3>Catálogo de reactivos</h3>
+  <div>
+    <button type="button" (click)="mostrarTodosCatalogo()" *ngIf="!mostrarTablaCatalogo">Mostrar catálogo</button>
+    <button type="button" (click)="ocultarTablaCatalogo()" *ngIf="mostrarTablaCatalogo">Ocultar catálogo</button>
+  </div>
+  <form (submit)="crearCatalogo($event)">
+    <div>
+      <label for="catCodigo">Código</label>
+      <input id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" required />
+    </div>
+    <div>
+      <label for="catNombre">Nombre</label>
+      <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required />
+    </div>
+    <div>
+      <label for="catTipo">Tipo reactivo</label>
+      <select id="catTipo" [(ngModel)]="catTipo" name="catTipo">
+        <option [ngValue]="''">Seleccione tipo</option>
+        <option *ngFor="let t of tipos" [value]="t.nombre">{{ t.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="catClasificacion">Clasificación SGA</label>
+      <select id="catClasificacion" [(ngModel)]="catClasificacion" name="catClasificacion">
+        <option [ngValue]="''">Seleccione clasificación</option>
+        <option *ngFor="let c of clasif" [value]="c.nombre">{{ c.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="catDescripcion">Descripción</label>
+      <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"></textarea>
+    </div>
+    <div><button type="submit">Agregar al catálogo</button></div>
+  </form>
+  <p *ngIf="catalogoMsg">{{ catalogoMsg }}</p>
 
-<section style="margin-bottom:1rem; border:1px solid #eee; padding:1rem; border-radius:8px;">
-  <h3>Gestión de Reactivos</h3>
-  <p>Bienvenido al módulo de gestión de reactivos. Aquí podrás administrar todos los reactivos del laboratorio.</p>
+  <div *ngIf="mostrarTablaCatalogo">
+    <div>
+      <div>
+        <label for="catalogoCodigoQ">Filtrar por código</label>
+        <input id="catalogoCodigoQ" [(ngModel)]="codigoFiltro" (input)="filtrarCatalogoPorCampos()" />
+      </div>
+      <div>
+        <label for="catalogoNombreQ">Filtrar por nombre</label>
+        <input id="catalogoNombreQ" [(ngModel)]="nombreFiltro" (input)="filtrarCatalogoPorCampos()" />
+      </div>
+    </div>
+    <div>
+      <p *ngIf="catalogoCargando">Cargando catálogo...</p>
+      <table>
+        <thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Clasificación</th><th>Acciones</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let c of catalogoResultadosPaginados">
+            <td>{{ c.codigo }}</td>
+            <td>{{ c.nombre }}</td>
+            <td>{{ c.tipo_reactivo }}</td>
+            <td>{{ c.clasificacion_sga }}</td>
+            <td>
+              <input type="file" accept="application/pdf" (change)="onSubirHojaCatalogo($event, c.codigo)" hidden #hojaInput>
+              <button type="button" (click)="hojaInput.click()">Subir hoja</button>
+              <button type="button" (click)="onVerHojaCatalogo(c.codigo)">Ver hoja</button>
+              <button type="button" (click)="onEliminarHojaCatalogo(c.codigo)">Borrar hoja</button>
+              <input type="file" accept="application/pdf" (change)="onSubirCertCatalogo($event, c.codigo)" hidden #certInput>
+              <button type="button" (click)="certInput.click()">Subir certificado</button>
+              <button type="button" (click)="onVerCertCatalogo(c.codigo)">Ver certificado</button>
+              <button type="button" (click)="onEliminarCertCatalogo(c.codigo)">Borrar certificado</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div>
+        <small>Mostrando {{ catalogoResultadosPaginados.length }} de {{ catalogoResultados.length }}</small>
+        <button type="button" (click)="cargarMasCatalogo()" [disabled]="catalogoResultadosPaginados.length >= catalogoResultados.length">Cargar más</button>
+      </div>
+      <p *ngIf="!catalogoCargando && !catalogoResultados.length">No hay elementos en el catálogo.</p>
+    </div>
+  </div>
+</section>
+<!-- Inventario de reactivos -->
+<section>
+  <h3>Inventario de reactivos</h3>
   
-  <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
-    <h4>Funcionalidades disponibles:</h4>
-    <ul>
-      <li>📋 Inventario de reactivos</li>
-      <li>➕ Agregar nuevos reactivos</li>
-      <li>📊 Control de stock</li>
-      <li>📅 Fechas de vencimiento</li>
-      <li>🔍 Búsqueda y filtros</li>
-    </ul>
+  <!-- Formulario de creación -->
+  <form (submit)="crearReactivo($event)">
+    <div>
+      <label for="lote">Lote</label>
+      <input id="lote" [(ngModel)]="lote" name="lote" required />
+    </div>
+    <div>
+      <label for="codigo">Código (catálogo)</label>
+      <input id="codigo" [(ngModel)]="codigo" name="codigo" (input)="onCodigoInput()" required />
+    </div>
+    <div>
+      <label for="nombre">Nombre (catálogo)</label>
+      <input id="nombre" [(ngModel)]="nombre" name="nombre" (input)="onNombreInput()" required />
+    </div>
+
+    <!-- Panel de catálogo embebido para autocompletar -->
+    <div *ngIf="mostrarCatalogoFormPanel" style="border:1px solid #ddd; padding:0.5rem; margin:0.5rem 0;">
+      <div style="display:flex; gap:0.5rem; align-items:center;">
+        <strong>Catálogo</strong>
+        <button type="button" (click)="cerrarCatalogoFormPanel()">Cerrar</button>
+      </div>
+      <div style="max-height:200px; overflow:auto; margin-top:0.5rem;">
+        <table>
+          <thead>
+            <tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Clasificación</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of catalogoResultados">
+              <td>{{ c.codigo }}</td>
+              <td>{{ c.nombre }}</td>
+              <td>{{ c.tipo_reactivo }}</td>
+              <td>{{ c.clasificacion_sga }}</td>
+              <td><button type="button" (click)="seleccionarCatalogo(c)">Usar</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <label for="marca">Marca</label>
+      <input id="marca" [(ngModel)]="marca" name="marca" />
+    </div>
+    <div>
+      <label for="referencia">Referencia</label>
+      <input id="referencia" [(ngModel)]="referencia" name="referencia" />
+    </div>
+    <div>
+      <label for="cas">CAS</label>
+      <input id="cas" [(ngModel)]="cas" name="cas" />
+    </div>
+
+    <div>
+      <label for="presentacion">Presentación</label>
+      <input id="presentacion" type="number" [(ngModel)]="presentacion" name="presentacion" (input)="calcularCantidadTotal()" />
+    </div>
+    <div>
+      <label for="presentacion_cant">Cantidad por presentación</label>
+      <input id="presentacion_cant" type="number" [(ngModel)]="presentacion_cant" name="presentacion_cant" (input)="calcularCantidadTotal()" />
+    </div>
+    <div>
+      <label for="cantidad_total">Cantidad total</label>
+      <input id="cantidad_total" type="number" [(ngModel)]="cantidad_total" name="cantidad_total" readonly />
+    </div>
+
+    <div>
+      <label for="fecha_adquisicion">Fecha de adquisición</label>
+      <input id="fecha_adquisicion" type="date" [(ngModel)]="fecha_adquisicion" name="fecha_adquisicion" />
+    </div>
+    <div>
+      <label for="fecha_vencimiento">Fecha de vencimiento</label>
+      <input id="fecha_vencimiento" type="date" [(ngModel)]="fecha_vencimiento" name="fecha_vencimiento" />
+    </div>
+    <div>
+      <label for="observaciones">Observaciones</label>
+      <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" rows="2"></textarea>
+    </div>
+
+    <div>
+      <label for="tipo_id">Tipo reactivo</label>
+      <select id="tipo_id" [(ngModel)]="tipo_id" name="tipo_id">
+        <option [ngValue]="''">Seleccione tipo</option>
+        <option *ngFor="let t of tipos" [value]="t.id">{{ t.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="clasificacion_id">Clasificación SGA</label>
+      <select id="clasificacion_id" [(ngModel)]="clasificacion_id" name="clasificacion_id">
+        <option [ngValue]="''">Seleccione clasificación</option>
+        <option *ngFor="let c of clasif" [value]="c.id">{{ c.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="unidad_id">Unidad</label>
+      <select id="unidad_id" [(ngModel)]="unidad_id" name="unidad_id">
+        <option [ngValue]="''">Seleccione unidad</option>
+        <option *ngFor="let u of unidades" [value]="u.id">{{ u.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="estado_id">Estado</label>
+      <select id="estado_id" [(ngModel)]="estado_id" name="estado_id">
+        <option [ngValue]="''">Seleccione estado</option>
+        <option *ngFor="let e of estado" [value]="e.id">{{ e.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="tipo_recipiente_id">Tipo de recipiente</label>
+      <select id="tipo_recipiente_id" [(ngModel)]="tipo_recipiente_id" name="tipo_recipiente_id">
+        <option [ngValue]="''">Seleccione recipiente</option>
+        <option *ngFor="let r of recipiente" [value]="r.id">{{ r.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="almacenamiento_id">Almacenamiento</label>
+      <select id="almacenamiento_id" [(ngModel)]="almacenamiento_id" name="almacenamiento_id">
+        <option [ngValue]="''">Seleccione almacenamiento</option>
+        <option *ngFor="let a of almacen" [value]="a.id">{{ a.nombre }}</option>
+      </select>
+    </div>
+
+    <!-- Adjuntos opcionales al crear reactivo (removidos a solicitud) -->
+
+    <div>
+      <button type="submit">Crear reactivo</button>
+    </div>
+  </form>
+  <p *ngIf="reactivoMsg">{{ reactivoMsg }}</p>
+
+  <!-- Lista y búsqueda de reactivos existentes -->
+  <div>
+    <div>
+      <label for="reactivosQ">Buscar reactivos</label>
+      <input id="reactivosQ" [(ngModel)]="reactivosQ" (input)="filtrarReactivos()" />
+      <button type="button" (click)="mostrarTodosReactivos()">Mostrar todos</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Lote</th>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Estado</th>
+          <th>Cantidad total</th>
+          <th>Adquisición</th>
+          <th>Vencimiento</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of reactivos">
+          <td>{{ r.lote }}</td>
+          <td>{{ r.codigo }}</td>
+          <td>{{ r.nombre }}</td>
+          <td>{{ obtenerNombreTipo(r.tipo_id) }}</td>
+          <td>{{ obtenerNombreEstado(r.estado_id) }}</td>
+          <td>{{ r.cantidad_total }}</td>
+          <td>{{ formatearFecha(r.fecha_adquisicion) }}</td>
+          <td>{{ formatearFecha(r.fecha_vencimiento) }}</td>
+          <td>
+            <button type="button" (click)="eliminarReactivo(r.lote)">Eliminar</button>
+            <button type="button" (click)="mostrarDetallesReactivo(r)" class="btn-detalles">+</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="!reactivos?.length">No hay reactivos cargados.</p>
   </div>
 
-  <div style="margin-top: 1rem; padding: 1rem; background-color: #e3f2fd; border-radius: 4px;">
-    <p><strong>Estado:</strong> Componente creado y listo para desarrollo</p>
-    <p><em>Las funcionalidades específicas se implementarán según los requerimientos.</em></p>
+  <!-- Panel de detalles adicionales -->
+  <div *ngIf="mostrarDetalles" class="detalles-panel">
+    <div class="detalles-header">
+      <h3>Detalles del reactivo</h3>
+      <button type="button" (click)="mostrarDetalles = false">×</button>
+    </div>
+    <div class="detalles-content" *ngIf="reactivoSeleccionado">
+      <p><strong>Lote:</strong> {{ reactivoSeleccionado.lote }}</p>
+      <p><strong>Código:</strong> {{ reactivoSeleccionado.codigo }}</p>
+      <p><strong>Nombre:</strong> {{ reactivoSeleccionado.nombre }}</p>
+      <p><strong>Marca:</strong> {{ reactivoSeleccionado.marca }}</p>
+      <p><strong>Referencia:</strong> {{ reactivoSeleccionado.referencia }}</p>
+      <p><strong>CAS:</strong> {{ reactivoSeleccionado.cas }}</p>
+      <p><strong>Tipo:</strong> {{ obtenerNombreTipo(reactivoSeleccionado.tipo_id) }}</p>
+      <p><strong>Clasificación:</strong> {{ obtenerNombreClasificacion(reactivoSeleccionado.clasificacion_id) }}</p>
+      <p><strong>Unidad:</strong> {{ obtenerNombreUnidad(reactivoSeleccionado.unidad_id) }}</p>
+      <p><strong>Estado:</strong> {{ obtenerNombreEstado(reactivoSeleccionado.estado_id) }}</p>
+      <p><strong>Almacenamiento:</strong> {{ obtenerNombreAlmacenamiento(reactivoSeleccionado.almacenamiento_id) }}</p>
+      <p><strong>Tipo de recipiente:</strong> {{ obtenerNombreTipoRecipiente(reactivoSeleccionado.tipo_recipiente_id) }}</p>
+      <p><strong>Presentación:</strong> {{ reactivoSeleccionado.presentacion }}</p>
+      <p><strong>Cantidad por presentación:</strong> {{ reactivoSeleccionado.presentacion_cant }}</p>
+      <p><strong>Cantidad total:</strong> {{ reactivoSeleccionado.cantidad_total }}</p>
+      <p><strong>Fecha de adquisición:</strong> {{ formatearFecha(reactivoSeleccionado.fecha_adquisicion) }}</p>
+      <p><strong>Fecha de vencimiento:</strong> {{ formatearFecha(reactivoSeleccionado.fecha_vencimiento) }}</p>
+      <p *ngIf="reactivoSeleccionado.observaciones"><strong>Observaciones:</strong> {{ reactivoSeleccionado.observaciones }}</p>
+    </div>
   </div>
 </section>
