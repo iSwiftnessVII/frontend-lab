@@ -1,54 +1,31 @@
-<<<<<<< HEAD
-import { Component, signal, OnDestroy, OnInit } from '@angular/core';
-=======
 import { Component, signal, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
->>>>>>> yorland
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService } from '../services/auth.service';
 
-<<<<<<< HEAD
-
-=======
->>>>>>> yorland
 const API = (window as any).__env?.API_BASE || 'http://localhost:3000/api/solicitudes';
 
 @Component({
   standalone: true,
   selector: 'app-solicitudes',
   imports: [CommonModule, FormsModule, RouterModule],
-<<<<<<< HEAD
-  templateUrl: './solicitudes.component.html'
-=======
   templateUrl: './solicitudes.component.html',
   styleUrls: ['./solicitudes.component.css'],
   encapsulation: ViewEncapsulation.None
->>>>>>> yorland
 })
 export class SolicitudesComponent implements OnInit, OnDestroy {
   usuarios = signal<Array<any>>([]);
   solicitudes = signal<Array<any>>([]);
   usuariosFiltrados = signal<Array<any>>([]);
   solicitudesFiltradas = signal<Array<any>>([]);
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> yorland
-  // Auto-refresh properties
-  private refreshInterval: any;
-  private readonly REFRESH_INTERVAL_MS = 30000; // 30 segundos
-  private isFormActive = false; // Flag para detectar si el usuario está interactuando con formularios
-
-<<<<<<< HEAD
-=======
   clienteErrors: { [key: string]: string } = {};
   solicitudErrors: { [key: string]: string } = {};
   ofertaErrors: { [key: string]: string } = {};
   resultadoErrors: { [key: string]: string } = {};
   encuestaErrors: { [key: string]: string } = {};
->>>>>>> yorland
+
   clienteNombre = '';
   clienteIdNum = '';
   clienteEmail = '';
@@ -75,7 +52,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   solicitudUsuarioId: any = null;
   solicitudNombre = '';
   solicitudMsg = '';
-  // seguimiento checks are handled in the list and toggleCheck()
   solicitudTipo = '';
   solicitudLote = '';
   solicitudFechaVenc = '';
@@ -114,6 +90,11 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   encuestaSolicitoNueva = false;
   encuestaMsg = '';
 
+  // Auto-refresh properties
+  private refreshInterval: any;
+  private readonly REFRESH_INTERVAL_MS = 30000; // 30 segundos
+  private isFormActive = false; // Flag para detectar si el usuario está interactuando con formularios
+
   constructor() {
     // Removed loadUsuarios() and loadSolicitudes() from constructor
     // They will be called in ngOnInit
@@ -123,19 +104,11 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     // Cargar datos inicialmente
     this.loadUsuarios();
     this.loadSolicitudes();
-<<<<<<< HEAD
-    
-    // Initialize filtered data
-    this.filtrarUsuarios();
-    this.filtrarSolicitudes();
-    
-=======
 
     // Initialize filtered data
     this.filtrarUsuarios();
     this.filtrarSolicitudes();
 
->>>>>>> yorland
     // Configurar auto-refresh
     this.startAutoRefresh();
   }
@@ -175,15 +148,11 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   }
 
   async loadUsuarios() {
-<<<<<<< HEAD
     try {
-      // Primero obtenemos la lista básica de usuarios
       const res = await fetch(API + '/usuarios');
       const data = await res.json();
-      // Asegurar que siempre sea un array
       const usuariosBasicos = Array.isArray(data) ? data : [];
       
-      // Ahora obtenemos la información completa de cada usuario
       const usuariosCompletos = [];
       for (const usuario of usuariosBasicos) {
         try {
@@ -192,23 +161,18 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
             const usuarioCompleto = await resCompleto.json();
             usuariosCompletos.push(usuarioCompleto);
           } else {
-            // Si falla la consulta individual, usar los datos básicos
             usuariosCompletos.push(usuario);
           }
         } catch (err) {
           console.warn('Error obteniendo datos completos del usuario', usuario.id_usuario, err);
-          // Si falla la consulta individual, usar los datos básicos
           usuariosCompletos.push(usuario);
         }
       }
       
-
-        
       this.usuarios.set(usuariosCompletos);
-      this.filtrarUsuarios();
+      this.filtrarUsuarios(); // ← IMPORTANTE: Actualizar filtros después de cargar
     } catch (err) {
       console.error('loadUsuarios', err);
-      // En caso de error, establecer array vacío
       this.usuarios.set([]);
       this.usuariosFiltrados.set([]);
     }
@@ -216,17 +180,35 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   filtrarUsuarios() {
     const usuarios = this.usuarios();
+    
+    // Si no hay texto de búsqueda, mostrar todos
     if (!this.clientesQ.trim()) {
       this.usuariosFiltrados.set(usuarios);
       return;
     }
     
     const filtro = this.clientesQ.toLowerCase().trim();
-    const usuariosFiltrados = usuarios.filter(usuario => 
-      (usuario.nombre_solicitante || '').toLowerCase().includes(filtro) ||
-      (usuario.correo_electronico || '').toLowerCase().includes(filtro) ||
-      (usuario.numero_identificacion || '').toLowerCase().includes(filtro)
-    );
+    
+    // Filtrar por múltiples campos
+    const usuariosFiltrados = usuarios.filter(usuario => {
+      const nombre = (usuario.nombre_solicitante || '').toLowerCase();
+      const correo = (usuario.correo_electronico || '').toLowerCase();
+      const identificacion = (usuario.numero_identificacion || '').toLowerCase();
+      const ciudad = (usuario.ciudad || '').toLowerCase();
+      const departamento = (usuario.departamento || '').toLowerCase();
+      const celular = (usuario.celular || '').toLowerCase();
+      const telefono = (usuario.telefono || '').toLowerCase();
+      const tipoUsuario = (usuario.tipo_usuario || '').toLowerCase();
+      
+      return nombre.includes(filtro) ||
+             correo.includes(filtro) ||
+             identificacion.includes(filtro) ||
+             ciudad.includes(filtro) ||
+             departamento.includes(filtro) ||
+             celular.includes(filtro) ||
+             telefono.includes(filtro) ||
+             tipoUsuario.includes(filtro);
+    });
     
     this.usuariosFiltrados.set(usuariosFiltrados);
   }
@@ -235,13 +217,11 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     try {
       const res = await fetch(API);
       const data = await res.json();
-      // Asegurar que siempre sea un array
       const solicitudes = Array.isArray(data) ? data : [];
       this.solicitudes.set(solicitudes);
-      this.filtrarSolicitudes();
+      this.filtrarSolicitudes(); // ← IMPORTANTE: Actualizar filtros después de cargar
     } catch (err) {
       console.error('loadSolicitudes', err);
-      // En caso de error, establecer array vacío
       this.solicitudes.set([]);
       this.solicitudesFiltradas.set([]);
     }
@@ -249,140 +229,36 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   filtrarSolicitudes() {
     const solicitudes = this.solicitudes();
+    
+    // Si no hay texto de búsqueda, mostrar todas
     if (!this.solicitudesQ.trim()) {
       this.solicitudesFiltradas.set(solicitudes);
       return;
     }
     
     const filtro = this.solicitudesQ.toLowerCase().trim();
-    const solicitudesFiltradas = solicitudes.filter(solicitud => 
-      (solicitud.nombre_solicitud || '').toLowerCase().includes(filtro) ||
-      (solicitud.tipo_solicitud || '').toLowerCase().includes(filtro) ||
-      (solicitud.tipo_muestra || '').toLowerCase().includes(filtro) ||
-      (solicitud.tipo_analisis || '').toLowerCase().includes(filtro) ||
-      (solicitud.nombre_solicitante || '').toLowerCase().includes(filtro) ||
-      (solicitud.nombre_muestra_producto || '').toLowerCase().includes(filtro) ||
-      (solicitud.codigo || '').toLowerCase().includes(filtro) ||
-      (solicitud.id_solicitud || '').toString().includes(filtro)
-    );
+    
+    // Filtrar por múltiples campos
+    const solicitudesFiltradas = solicitudes.filter(solicitud => {
+      const id = (solicitud.id_solicitud || '').toString();
+      const codigo = (solicitud.codigo || '').toLowerCase();
+      const nombreSolicitante = (solicitud.nombre_solicitante || '').toLowerCase();
+      const nombreMuestra = (solicitud.nombre_muestra_producto || '').toLowerCase();
+      const tipoMuestra = (solicitud.tipo_muestra || '').toLowerCase();
+      const tipoAnalisis = (solicitud.tipo_analisis_requerido || '').toLowerCase();
+      const lote = (solicitud.lote_producto || '').toLowerCase();
+      
+      return id.includes(filtro) ||
+             codigo.includes(filtro) ||
+             nombreSolicitante.includes(filtro) ||
+             nombreMuestra.includes(filtro) ||
+             tipoMuestra.includes(filtro) ||
+             tipoAnalisis.includes(filtro) ||
+             lote.includes(filtro);
+    });
     
     this.solicitudesFiltradas.set(solicitudesFiltradas);
   }
-
-  async createCliente(e: Event) {
-    e.preventDefault();
-=======
-  try {
-    const res = await fetch(API + '/usuarios');
-    const data = await res.json();
-    const usuariosBasicos = Array.isArray(data) ? data : [];
-    
-    const usuariosCompletos = [];
-    for (const usuario of usuariosBasicos) {
-      try {
-        const resCompleto = await fetch(API + '/usuarios/' + usuario.id_usuario);
-        if (resCompleto.ok) {
-          const usuarioCompleto = await resCompleto.json();
-          usuariosCompletos.push(usuarioCompleto);
-        } else {
-          usuariosCompletos.push(usuario);
-        }
-      } catch (err) {
-        console.warn('Error obteniendo datos completos del usuario', usuario.id_usuario, err);
-        usuariosCompletos.push(usuario);
-      }
-    }
-    
-    this.usuarios.set(usuariosCompletos);
-    this.filtrarUsuarios(); // ← IMPORTANTE: Actualizar filtros después de cargar
-  } catch (err) {
-    console.error('loadUsuarios', err);
-    this.usuarios.set([]);
-    this.usuariosFiltrados.set([]);
-  }
-}
-
-  filtrarUsuarios() {
-  const usuarios = this.usuarios();
-  
-  // Si no hay texto de búsqueda, mostrar todos
-  if (!this.clientesQ.trim()) {
-    this.usuariosFiltrados.set(usuarios);
-    return;
-  }
-  
-  const filtro = this.clientesQ.toLowerCase().trim();
-  
-  // Filtrar por múltiples campos
-  const usuariosFiltrados = usuarios.filter(usuario => {
-    const nombre = (usuario.nombre_solicitante || '').toLowerCase();
-    const correo = (usuario.correo_electronico || '').toLowerCase();
-    const identificacion = (usuario.numero_identificacion || '').toLowerCase();
-    const ciudad = (usuario.ciudad || '').toLowerCase();
-    const departamento = (usuario.departamento || '').toLowerCase();
-    const celular = (usuario.celular || '').toLowerCase();
-    const telefono = (usuario.telefono || '').toLowerCase();
-    const tipoUsuario = (usuario.tipo_usuario || '').toLowerCase();
-    
-    return nombre.includes(filtro) ||
-           correo.includes(filtro) ||
-           identificacion.includes(filtro) ||
-           ciudad.includes(filtro) ||
-           departamento.includes(filtro) ||
-           celular.includes(filtro) ||
-           telefono.includes(filtro) ||
-           tipoUsuario.includes(filtro);
-  });
-  
-  this.usuariosFiltrados.set(usuariosFiltrados);
-}
-
- async loadSolicitudes() {
-  try {
-    const res = await fetch(API);
-    const data = await res.json();
-    const solicitudes = Array.isArray(data) ? data : [];
-    this.solicitudes.set(solicitudes);
-    this.filtrarSolicitudes(); // ← IMPORTANTE: Actualizar filtros después de cargar
-  } catch (err) {
-    console.error('loadSolicitudes', err);
-    this.solicitudes.set([]);
-    this.solicitudesFiltradas.set([]);
-  }
-}
-
-  filtrarSolicitudes() {
-  const solicitudes = this.solicitudes();
-  
-  // Si no hay texto de búsqueda, mostrar todas
-  if (!this.solicitudesQ.trim()) {
-    this.solicitudesFiltradas.set(solicitudes);
-    return;
-  }
-  
-  const filtro = this.solicitudesQ.toLowerCase().trim();
-  
-  // Filtrar por múltiples campos
-  const solicitudesFiltradas = solicitudes.filter(solicitud => {
-    const id = (solicitud.id_solicitud || '').toString();
-    const codigo = (solicitud.codigo || '').toLowerCase();
-    const nombreSolicitante = (solicitud.nombre_solicitante || '').toLowerCase();
-    const nombreMuestra = (solicitud.nombre_muestra_producto || '').toLowerCase();
-    const tipoMuestra = (solicitud.tipo_muestra || '').toLowerCase();
-    const tipoAnalisis = (solicitud.tipo_analisis_requerido || '').toLowerCase();
-    const lote = (solicitud.lote_producto || '').toLowerCase();
-    
-    return id.includes(filtro) ||
-           codigo.includes(filtro) ||
-           nombreSolicitante.includes(filtro) ||
-           nombreMuestra.includes(filtro) ||
-           tipoMuestra.includes(filtro) ||
-           tipoAnalisis.includes(filtro) ||
-           lote.includes(filtro);
-  });
-  
-  this.solicitudesFiltradas.set(solicitudesFiltradas);
-}
 
   validarCliente(): boolean {
     this.clienteErrors = {}; // Limpiar errores previos
@@ -684,7 +560,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.ofertaErrors['fechaEnvio'] = 'La fecha de envío es obligatoria';
       isValid = false;
     }
-    // No hay restricción de fechas pasadas o futuras para ofertas
 
     // Validar Observación (opcional, pero si hay valor, máx 500 caracteres)
     if (this.ofertaObservacion.trim() && this.ofertaObservacion.length > 500) {
@@ -810,7 +685,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     return isValid;
   }
 
-
   async createCliente(e: Event) {
     e.preventDefault();
 
@@ -819,7 +693,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       return;
     }
 
->>>>>>> yorland
     try {
       const payload: any = {
         nombre_solicitante: this.clienteNombre,
@@ -844,15 +717,11 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       };
       const res = await fetch(API + '/usuarios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (!res.ok) throw new Error(await res.text());
-<<<<<<< HEAD
-      this.clienteMsg = 'Cliente creado';
-=======
 
       this.clienteMsg = '✅ Cliente creado exitosamente';
       this.clienteErrors = {}; // Limpiar errores
 
       // Limpiar formulario
->>>>>>> yorland
       this.clienteNombre = this.clienteIdNum = this.clienteEmail = '';
       this.clienteNumero = null;
       this.clienteFechaVinc = '';
@@ -870,11 +739,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.clienteTipoVinc = '';
       this.clienteRegistroPor = '';
       this.clienteObservaciones = '';
-<<<<<<< HEAD
-      await this.loadUsuarios();
-    } catch (err: any) {
-      this.clienteMsg = 'Error: ' + (err.message || err);
-=======
 
       setTimeout(() => {
         this.clienteMsg = '';
@@ -883,51 +747,32 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       await this.loadUsuarios();
     } catch (err: any) {
       this.clienteMsg = '❌ Error: ' + (err.message || err);
->>>>>>> yorland
     }
   }
 
   async createSolicitud(e: Event) {
     e.preventDefault();
-<<<<<<< HEAD
-=======
 
     if (!this.validarSolicitud()) {
       this.solicitudMsg = '⚠️ Por favor corrige los errores en el formulario';
       return;
     }
 
->>>>>>> yorland
     try {
       const body: any = {
         id_usuario: this.solicitudUsuarioId,
         nombre_muestra_producto: this.solicitudNombre,
         codigo: this.solicitudTipo,
-<<<<<<< HEAD
-        lote_producto: this.solicitudLote,
-        fecha_vencimiento_producto: this.solicitudFechaVenc,
-        tipo_muestra: this.solicitudTipoMuestra,
-        condiciones_empaque: this.solicitudCondEmpaque,
-=======
         lote_producto: this.solicitudLote || null,
         fecha_vencimiento_producto: this.solicitudFechaVenc || null,
         tipo_muestra: this.solicitudTipoMuestra,
         condiciones_empaque: this.solicitudCondEmpaque || null,
->>>>>>> yorland
         tipo_analisis_requerido: this.solicitudTipoAnalisis,
         requiere_varios_analisis: this.solicitudRequiereVarios ? 1 : 0,
         cantidad_muestras_analizar: this.solicitudCantidad,
         fecha_estimada_entrega_muestra: this.solicitudFechaEstimada,
         puede_suministrar_informacion_adicional: this.solicitudPuedeSuministrar ? 1 : 0,
         servicio_viable: this.solicitudServicioViable ? 1 : 0,
-<<<<<<< HEAD
-        // seguimiento flags are set later via the list toggles
-      };
-      const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (!res.ok) throw new Error(await res.text());
-      this.solicitudMsg = 'Solicitud creada';
-      
-=======
       };
 
       const res = await fetch(API, {
@@ -941,7 +786,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.solicitudMsg = '✅ Solicitud creada exitosamente';
       this.solicitudErrors = {}; // Limpiar errores
 
->>>>>>> yorland
       // Limpiar todos los campos del formulario después de crear la solicitud
       this.solicitudUsuarioId = null;
       this.solicitudNombre = '';
@@ -956,13 +800,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.solicitudFechaEstimada = '';
       this.solicitudPuedeSuministrar = false;
       this.solicitudServicioViable = false;
-<<<<<<< HEAD
-      
-      // keep seguimiento defaults to server-side
-      await this.loadSolicitudes();
-    } catch (err: any) {
-      this.solicitudMsg = 'Error: ' + (err.message || err);
-=======
 
       setTimeout(() => {
         this.solicitudMsg = '';
@@ -971,60 +808,37 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       await this.loadSolicitudes();
     } catch (err: any) {
       this.solicitudMsg = '❌ Error: ' + (err.message || err);
->>>>>>> yorland
     }
   }
 
   async createOferta(e: Event) {
     e.preventDefault();
-<<<<<<< HEAD
-    if (!this.ofertaSolicitudId) {
-      this.ofertaMsg = 'Debe seleccionar una solicitud';
-      return;
-    }
-    
-=======
 
     if (!this.validarOferta()) {
       this.ofertaMsg = '⚠️ Por favor corrige los errores en el formulario';
       return;
     }
 
->>>>>>> yorland
     try {
       const body = {
         genero_cotizacion: this.ofertaGeneroCotizacion ? 1 : 0,
         valor_cotizacion: this.ofertaValor,
         fecha_envio_oferta: this.ofertaFechaEnvio,
         realizo_seguimiento_oferta: this.ofertaRealizoSeguimiento ? 1 : 0,
-<<<<<<< HEAD
-        observacion_oferta: this.ofertaObservacion
-      };
-      
-=======
         observacion_oferta: this.ofertaObservacion || null
       };
 
->>>>>>> yorland
       const res = await fetch(API + '/' + this.ofertaSolicitudId, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-<<<<<<< HEAD
-      
-      if (!res.ok) throw new Error(await res.text());
-      
-      this.ofertaMsg = 'Oferta actualizada exitosamente';
-      
-=======
 
       if (!res.ok) throw new Error(await res.text());
 
       this.ofertaMsg = '✅ Oferta actualizada exitosamente';
       this.ofertaErrors = {}; // Limpiar errores
 
->>>>>>> yorland
       // Limpiar formulario
       this.ofertaSolicitudId = null;
       this.ofertaGeneroCotizacion = false;
@@ -1032,13 +846,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.ofertaFechaEnvio = '';
       this.ofertaRealizoSeguimiento = false;
       this.ofertaObservacion = '';
-<<<<<<< HEAD
-      
-      // Recargar solicitudes para actualizar el checkbox de oferta
-      await this.loadSolicitudes();
-    } catch (err: any) {
-      this.ofertaMsg = 'Error: ' + (err.message || err);
-=======
 
       // Limpiar mensaje después de 3 segundos
       setTimeout(() => {
@@ -1049,27 +856,11 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       await this.loadSolicitudes();
     } catch (err: any) {
       this.ofertaMsg = '❌ Error: ' + (err.message || err);
->>>>>>> yorland
     }
   }
 
   async createResultado(e: Event) {
     e.preventDefault();
-<<<<<<< HEAD
-    
-    if (!this.resultadoSolicitudId) {
-      this.resultadoMsg = 'Debe seleccionar una solicitud';
-      return;
-    }
-    
-    try {
-      const body = {
-        fecha_limite_entrega_resultados: this.resultadoFechaLimite || null,
-        numero_informe_resultados: this.resultadoNumeroInforme || null,
-        fecha_envio_resultados: this.resultadoFechaEnvio || null
-      };
-      
-=======
 
     if (!this.validarResultado()) {
       this.resultadoMsg = '⚠️ Por favor corrige los errores en el formulario';
@@ -1083,38 +874,22 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
         fecha_envio_resultados: this.resultadoFechaEnvio
       };
 
->>>>>>> yorland
       const res = await fetch(API + '/' + this.resultadoSolicitudId, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-<<<<<<< HEAD
-      
-      if (!res.ok) throw new Error(await res.text());
-      
-      this.resultadoMsg = 'Resultados actualizados exitosamente';
-      
-=======
 
       if (!res.ok) throw new Error(await res.text());
 
       this.resultadoMsg = '✅ Resultados actualizados exitosamente';
       this.resultadoErrors = {}; // Limpiar errores
 
->>>>>>> yorland
       // Limpiar formulario
       this.resultadoSolicitudId = null;
       this.resultadoFechaLimite = '';
       this.resultadoNumeroInforme = '';
       this.resultadoFechaEnvio = '';
-<<<<<<< HEAD
-      
-      // Recargar solicitudes para actualizar la información
-      await this.loadSolicitudes();
-    } catch (err: any) {
-      this.resultadoMsg = 'Error: ' + (err.message || err);
-=======
 
       // Limpiar mensaje después de 3 segundos
       setTimeout(() => {
@@ -1124,24 +899,11 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       await this.loadSolicitudes();
     } catch (err: any) {
       this.resultadoMsg = '❌ Error: ' + (err.message || err);
->>>>>>> yorland
     }
   }
 
   async createEncuesta(e: Event) {
     e.preventDefault();
-<<<<<<< HEAD
-    
-    if (!this.encuestaSolicitudId) {
-      this.encuestaMsg = 'Debe seleccionar una solicitud';
-      return;
-    }
-    
-    try {
-      const body = {
-        id_solicitud: this.encuestaSolicitudId,
-        fecha_encuesta: this.encuestaFecha || null,
-=======
 
     if (!this.validarEncuesta()) {
       this.encuestaMsg = '⚠️ Por favor corrige los errores en el formulario';
@@ -1152,37 +914,24 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       const body = {
         id_solicitud: this.encuestaSolicitudId,
         fecha_encuesta: this.encuestaFecha,
->>>>>>> yorland
         puntuacion_satisfaccion: this.encuestaPuntuacion || null,
         comentarios: this.encuestaComentarios || null,
         recomendaria_servicio: this.encuestaRecomendaria,
         cliente_respondio_encuesta: this.encuestaClienteRespondio,
         solicito_nueva_encuesta: this.encuestaSolicitoNueva
       };
-<<<<<<< HEAD
-      
-=======
 
->>>>>>> yorland
       const res = await fetch(API + '/encuestas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-<<<<<<< HEAD
-      
-      if (!res.ok) throw new Error(await res.text());
-      
-      this.encuestaMsg = 'Encuesta creada exitosamente';
-      
-=======
 
       if (!res.ok) throw new Error(await res.text());
 
       this.encuestaMsg = '✅ Encuesta creada exitosamente';
       this.encuestaErrors = {}; // Limpiar errores
 
->>>>>>> yorland
       // Limpiar formulario
       this.encuestaSolicitudId = null;
       this.encuestaFecha = '';
@@ -1191,13 +940,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.encuestaRecomendaria = false;
       this.encuestaClienteRespondio = false;
       this.encuestaSolicitoNueva = false;
-<<<<<<< HEAD
-      
-      // Recargar solicitudes para actualizar la información
-      await this.loadSolicitudes();
-    } catch (err: any) {
-      this.encuestaMsg = 'Error: ' + (err.message || err);
-=======
 
       // Limpiar mensaje después de 3 segundos
       setTimeout(() => {
@@ -1207,7 +949,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       await this.loadSolicitudes();
     } catch (err: any) {
       this.encuestaMsg = '❌ Error: ' + (err.message || err);
->>>>>>> yorland
     }
   }
 

@@ -1,16 +1,11 @@
-<<<<<<< HEAD
 import { Component, OnInit } from '@angular/core';
-=======
-import { Component } from '@angular/core';
->>>>>>> yorland
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService } from '../services/auth.service';
-<<<<<<< HEAD
 import { reactivosService } from '../services/reactivos.service';
-=======
->>>>>>> yorland
+
+
 
 @Component({
   standalone: true,
@@ -19,7 +14,7 @@ import { reactivosService } from '../services/reactivos.service';
   styleUrls: ['./reactivos.component.css'],
   imports: [CommonModule, FormsModule, RouterModule]
 })
-<<<<<<< HEAD
+
 export class ReactivosComponent implements OnInit {
   // Aux lists
   tipos: Array<any> = [];
@@ -559,24 +554,10 @@ export class ReactivosComponent implements OnInit {
       await this.loadReactivos();
     } catch (err) {
       console.error('Error eliminando reactivo', err);
-=======
-export class ReactivosComponent {
-  
-  constructor() {
-    this.load();
-  }
 
-  async load() {
-    try {
-      // Aquí se cargarán los datos de reactivos cuando se implemente
-      console.log('Componente Reactivos cargado');
-    } catch (err) {
-      console.error('Error cargando reactivos:', err);
->>>>>>> yorland
-    }
-  }
-
+}}
   logout() {
     authService.logout();
   }
+
 }

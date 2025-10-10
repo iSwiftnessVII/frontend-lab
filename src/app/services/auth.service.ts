@@ -1,8 +1,4 @@
 import { signal } from '@angular/core';
-<<<<<<< HEAD
-
-=======
->>>>>>> yorland
 const API_BASE = (window as any).__env?.API_BASE || 'http://localhost:3000/api/auth';
 
 export const authUser = signal<{ id: number; email: string } | null>(null);

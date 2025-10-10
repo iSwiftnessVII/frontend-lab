@@ -226,14 +226,21 @@ button[style*="background-color: #dc3545"]:hover {
 }
 
 /* ---------- TABLAS ---------- */
+.table-container {
+  overflow-x: auto;
+  margin-top: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
 table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin-top: 1rem;
   font-size: 0.95rem;
   overflow: hidden;
   border-radius: 8px;
+  min-width: 800px;
 }
 
 th {
@@ -244,6 +251,7 @@ th {
   padding: 1rem;
   border-bottom: 2px solid var(--primary-turquoise);
   position: relative;
+  white-space: nowrap;
 }
 
 th::after {
@@ -260,6 +268,73 @@ td {
   padding: 1rem;
   border-bottom: 1px solid var(--border-gray);
   transition: all 0.2s ease;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* Dimensiones específicas para columnas */
+/* Tabla de solicitudes */
+th:nth-child(1), td:nth-child(1) { /* Cliente */
+  min-width: 150px;
+  max-width: 200px;
+}
+
+th:nth-child(2), td:nth-child(2) { /* Solicitud */
+  min-width: 120px;
+  max-width: 150px;
+}
+
+/* Columnas de checkboxes más pequeñas */
+th:nth-child(3), td:nth-child(3), /* Viable */
+th:nth-child(4), td:nth-child(4), /* Oferta */
+th:nth-child(5), td:nth-child(5), /* Encuesta */
+th:nth-child(6), td:nth-child(6) { /* Resultados */
+  width: 80px;
+  text-align: center;
+}
+
+/* Columna de acciones */
+th:nth-child(7), td:nth-child(7) { /* Acciones */
+  width: 100px;
+  text-align: center;
+}
+
+/* Tabla de clientes */
+th:nth-child(1), td:nth-child(1) { /* Nombre */
+  min-width: 150px;
+  max-width: 200px;
+}
+
+th:nth-child(2), td:nth-child(2) { /* Identificación */
+  min-width: 120px;
+  max-width: 150px;
+}
+
+th:nth-child(3), td:nth-child(3) { /* Correo */
+  min-width: 180px;
+  max-width: 220px;
+}
+
+th:nth-child(4), td:nth-child(4) { /* Ciudad */
+  min-width: 100px;
+  max-width: 120px;
+}
+
+th:nth-child(5), td:nth-child(5) { /* Celular */
+  min-width: 100px;
+  max-width: 120px;
+}
+
+th:nth-child(6), td:nth-child(6) { /* Acciones */
+  width: 100px;
+  text-align: center;
+}
+
+/* Checkboxes centrados */
+td input[type="checkbox"] {
+  margin: 0 auto;
+  display: block;
 }
 
 tbody tr {
@@ -365,6 +440,13 @@ p[ng-reflect-ng-if]::before {
   align-items: center;
   justify-content: center;
   font-size: 0.9rem;
+}
+
+/* Mensajes de error */
+small[style*="color: #dc3545"] {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
 }
 
 /* ---------- LAYOUT / CONTAINER ---------- */
@@ -707,6 +789,7 @@ select {
 
   table {
     font-size: 0.85rem;
+    min-width: 600px;
   }
 
   th, td {
@@ -719,6 +802,11 @@ select {
 
   h3::before {
     left: 0;
+  }
+
+  .table-container {
+    margin: 0 -1rem;
+    width: calc(100% + 2rem);
   }
 }
 
@@ -741,4 +829,26 @@ html {
 
 .loading {
   animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ---------- CONTADORES DE RESULTADOS ---------- */
+small[style*="color: #666"] {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+/* Mensaje cuando no hay resultados */
+small[style*="color: #dc3545"] {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+/* Mensaje de tabla vacía */
+td[colspan] {
+  text-align: center;
+  padding: 2rem;
+  color: #999;
+  font-style: italic;
 }

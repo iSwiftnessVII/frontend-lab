@@ -28,10 +28,10 @@
     "@angular/forms": "^20.3.0",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
-<<<<<<< HEAD
-=======
+
+
     "bootstrap": "^5.3.8",
->>>>>>> yorland
+
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -48,8 +48,8 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "~5.9.2"
   }
-<<<<<<< HEAD
+
 }
-=======
-}
->>>>>>> yorland
+
+
+
