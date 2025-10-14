@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
+import { CommonModule, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService } from '../services/auth.service';
@@ -12,7 +12,7 @@ import { reactivosService } from '../services/reactivos.service';
   selector: 'app-reactivos',
   templateUrl: './reactivos.component.html',
   styleUrls: ['./reactivos.component.css'],
-  imports: [CommonModule, FormsModule, RouterModule]
+  imports: [CommonModule, NgIf, FormsModule, RouterModule]
 })
 
 export class ReactivosComponent implements OnInit {
@@ -27,8 +27,8 @@ export class ReactivosComponent implements OnInit {
   mostrarDetalles: boolean = false;
   
   ngOnInit() {
-    // La inicialización se realiza en el constructor a través del método init()
-    // que carga los datos auxiliares para los selects
+    // Ejecutar inicialización al montar el componente
+    this.init();
   }
 
   // Catálogo form
@@ -41,21 +41,21 @@ export class ReactivosComponent implements OnInit {
 
   // Catálogo búsqueda y selección
   catalogoQ = '';
-  catalogoResultados: Array<any> = [];
+  // Signals para catálogo
+  catalogoResultadosSig = signal<Array<any>>([]);
   catalogoSeleccionado: any = null;
   catalogoCargando: boolean = false;
-  // Base y listas filtradas para selects
-  catalogoBase: Array<any> = [];
+  // Base y listas filtradas para selects (signal)
+  catalogoBaseSig = signal<Array<any>>([]);
   catalogoCodigoResultados: Array<any> = [];
   catalogoNombreResultados: Array<any> = [];
   codigoFiltro: string = '';
   nombreFiltro: string = '';
-  // Paginación del catálogo
-  catalogoVisibleCount: number = 50;
-  catalogoPageSize: number = 50;
-  get catalogoResultadosPaginados(): Array<any> {
-    return this.catalogoResultados.slice(0, this.catalogoVisibleCount);
-  }
+  // Paginación catálogo
+  catalogoVisibleCount: number = 10; // tamaño página frontend respaldo
+  catalogoTotal: number = 0;
+  catalogoOffset: number = 0; // offset usado en backend
+  // Paginación del catálogo removida: siempre mostrar todo
 
   // Gestión de PDFs
   hojaUrl: string | null = null;
@@ -91,23 +91,20 @@ export class ReactivosComponent implements OnInit {
   // Lista de reactivos
   reactivos: Array<any> = [];
   reactivosQ = '';
-  // Panel de catálogo dentro del formulario
+  // Panel de catálogo dentro del formulario (se mantiene para autocompletar)
   mostrarCatalogoFormPanel: boolean = false;
-  // Mostrar/Ocultar tabla de catálogo
-  mostrarTablaCatalogo: boolean = false;
 
-  constructor() {
-    this.init();
-  }
+  constructor() {}
 
   async init() {
     try {
-      await this.loadAux();
-      await this.loadReactivos();
-      // Cargar catálogo base y mostrar todos desde el inicio
-      await this.cargarCatalogoBase();
-      this.catalogoResultados = this.catalogoBase.slice();
-      this.catalogoVisibleCount = Math.min(this.catalogoPageSize, this.catalogoResultados.length);
+      // Cargar auxiliares y catálogo en paralelo para reducir tiempo de espera perceptual
+      this.catalogoCargando = true;
+      await Promise.all([
+        this.loadAux(),
+        this.loadReactivos(10),
+        this.loadCatalogoInicial()
+      ]);
     } catch (err) {
       console.error('Error inicializando Reactivos:', err);
     }
@@ -123,39 +120,66 @@ export class ReactivosComponent implements OnInit {
     this.almacen = data.almacen || [];
   }
 
-  async loadReactivos() {
-    const rows = await reactivosService.listarReactivos(this.reactivosQ || '');
+  async loadReactivos(limit?: number) {
+    const rows = await reactivosService.listarReactivos(this.reactivosQ || '', limit);
     this.reactivos = rows || [];
   }
 
   async buscarCatalogo() {
     const q = this.normalizarTexto(this.catalogoQ || '');
-    if (!this.catalogoBase.length) {
+    if (!this.catalogoBaseSig().length) {
       await this.cargarCatalogoBase();
     }
     this.catalogoCargando = true;
     try {
       if (!q) {
-        this.catalogoResultados = this.catalogoBase.slice();
+        this.catalogoResultadosSig.set(this.catalogoBaseSig().slice());
       } else {
-        this.catalogoResultados = this.catalogoBase.filter(c =>
+        const filtered = this.catalogoBaseSig().filter(c =>
           this.normalizarTexto(c.codigo || '').includes(q) ||
           this.normalizarTexto(c.nombre || '').includes(q)
         );
+        this.catalogoResultadosSig.set(filtered);
       }
-      this.catalogoVisibleCount = Math.min(this.catalogoPageSize, this.catalogoResultados.length);
     } finally {
       this.catalogoCargando = false;
     }
   }
 
   async cargarCatalogoBase() {
-    const rows = await reactivosService.buscarCatalogo('');
-    this.catalogoBase = rows || [];
-    this.catalogoCodigoResultados = this.catalogoBase.slice();
-    this.catalogoNombreResultados = this.catalogoBase.slice();
-    this.catalogoResultados = this.catalogoBase.slice();
-    this.catalogoVisibleCount = Math.min(this.catalogoPageSize, this.catalogoResultados.length);
+    try {
+      const resp = await reactivosService.buscarCatalogo('', this.catalogoVisibleCount, this.catalogoOffset);
+      if (Array.isArray(resp)) {
+        this.catalogoBaseSig.set(resp);
+        this.catalogoTotal = resp.length;
+        this.catalogoResultadosSig.set(resp.slice(0, this.catalogoVisibleCount));
+      } else {
+        const base = resp.rows || [];
+        this.catalogoBaseSig.set(base);
+        this.catalogoTotal = resp.total || base.length;
+        this.catalogoResultadosSig.set(base.slice());
+      }
+      this.catalogoCodigoResultados = this.catalogoBaseSig().slice();
+      this.catalogoNombreResultados = this.catalogoBaseSig().slice();
+    } catch (e) {
+      console.error('Error cargando catálogo inicial', e);
+      this.catalogoMsg = 'Error cargando catálogo';
+      this.catalogoBaseSig.set([]);
+      this.catalogoResultadosSig.set([]);
+      this.catalogoTotal = 0;
+    }
+  }
+
+  async loadCatalogoInicial() {
+    this.catalogoOffset = 0;
+    this.catalogoVisibleCount = 10;
+    this.codigoFiltro = '';
+    this.nombreFiltro = '';
+    try {
+      await this.cargarCatalogoBase();
+    } finally {
+      this.catalogoCargando = false;
+    }
   }
 
   seleccionarCatalogo(item: any) {
@@ -178,33 +202,43 @@ export class ReactivosComponent implements OnInit {
   filtrarCatalogoCodigo() {
     const q = this.normalizarTexto(this.codigoFiltro || '');
     if (!q) {
-      this.catalogoCodigoResultados = this.catalogoBase.slice();
+      this.catalogoCodigoResultados = this.catalogoBaseSig().slice();
     } else {
-      this.catalogoCodigoResultados = this.catalogoBase.filter(c => this.normalizarTexto(c.codigo || '').startsWith(q));
+      this.catalogoCodigoResultados = this.catalogoBaseSig().filter(c => this.normalizarTexto(c.codigo || '').startsWith(q));
     }
   }
 
   filtrarCatalogoNombre() {
     const q = this.normalizarTexto(this.nombreFiltro || '');
     if (!q) {
-      this.catalogoNombreResultados = this.catalogoBase.slice();
+      this.catalogoNombreResultados = this.catalogoBaseSig().slice();
     } else {
-      this.catalogoNombreResultados = this.catalogoBase.filter(c => this.normalizarTexto(c.nombre || '').includes(q));
+      this.catalogoNombreResultados = this.catalogoBaseSig().filter(c => this.normalizarTexto(c.nombre || '').includes(q));
     }
   }
 
-  filtrarCatalogoPorCampos() {
+  async filtrarCatalogoPorCampos() {
     const codeQ = this.normalizarTexto(this.codigoFiltro || '');
     const nameQ = this.normalizarTexto(this.nombreFiltro || '');
-    let results = this.catalogoBase.slice();
-    if (codeQ) {
-      results = results.filter(c => this.normalizarTexto(c.codigo || '').includes(codeQ));
+    this.catalogoOffset = 0;
+    const query = (codeQ || nameQ) ? (codeQ || nameQ) : '';
+    const resp = await reactivosService.buscarCatalogo(query, this.catalogoVisibleCount, this.catalogoOffset);
+    if (Array.isArray(resp)) {
+      this.catalogoBaseSig.set(resp);
+      this.catalogoTotal = resp.length;
+      let filtered = resp;
+      if (codeQ) filtered = filtered.filter(c => this.normalizarTexto(c.codigo || '').includes(codeQ));
+      if (nameQ) filtered = filtered.filter(c => this.normalizarTexto(c.nombre || '').includes(nameQ));
+      this.catalogoResultadosSig.set(filtered.slice(0, this.catalogoVisibleCount));
+      this.catalogoTotal = filtered.length; // ajustar total a filtrado
+    } else {
+      const base = resp.rows || [];
+      this.catalogoBaseSig.set(base);
+      this.catalogoTotal = resp.total || base.length;
+      this.catalogoResultadosSig.set(base.slice());
     }
-    if (nameQ) {
-      results = results.filter(c => this.normalizarTexto(c.nombre || '').includes(nameQ));
-    }
-    this.catalogoResultados = results;
-    this.catalogoVisibleCount = Math.min(this.catalogoPageSize, this.catalogoResultados.length);
+    this.catalogoCodigoResultados = this.catalogoBaseSig().slice();
+    this.catalogoNombreResultados = this.catalogoBaseSig().slice();
   }
 
   normalizarTexto(s: string): string {
@@ -215,9 +249,29 @@ export class ReactivosComponent implements OnInit {
       .trim();
   }
 
-  cargarMasCatalogo() {
-    const next = this.catalogoVisibleCount + this.catalogoPageSize;
-    this.catalogoVisibleCount = Math.min(next, this.catalogoResultados.length);
+  // Sin cargarMasCatalogo: se muestra todo
+  resetCatalogoPaginado() {
+    this.catalogoVisibleCount = 10;
+    this.catalogoOffset = 0;
+    this.cargarCatalogoBase();
+  }
+
+  async cargarMasCatalogo() {
+    if (this.catalogoResultadosSig().length >= this.catalogoTotal) return;
+    this.catalogoOffset += this.catalogoVisibleCount;
+    const resp = await reactivosService.buscarCatalogo(this.codigoFiltro || this.nombreFiltro || '', this.catalogoVisibleCount, this.catalogoOffset);
+    let nuevos: any[] = [];
+    if (Array.isArray(resp)) {
+      nuevos = resp;
+    } else {
+      nuevos = resp.rows || [];
+      this.catalogoTotal = resp.total || this.catalogoTotal;
+    }
+    this.catalogoResultadosSig.set(this.catalogoResultadosSig().concat(nuevos));
+  }
+
+  trackByCatalogo(index: number, item: any) {
+    return item?.codigo || index;
   }
 
   // --- Acciones PDF en tabla catálogo ---
@@ -335,7 +389,7 @@ export class ReactivosComponent implements OnInit {
   }
 
   onCodigoSeleccionado() {
-    const item = this.catalogoBase.find(c => (c.codigo || '') === (this.codigo || ''));
+    const item = this.catalogoBaseSig().find(c => (c.codigo || '') === (this.codigo || ''));
     if (!item) return;
     this.catalogoSeleccionado = item;
     this.nombre = item.nombre || '';
@@ -347,7 +401,7 @@ export class ReactivosComponent implements OnInit {
   }
 
   onNombreSeleccionado() {
-    const item = this.catalogoBase.find(c => (c.nombre || '') === (this.nombre || ''));
+    const item = this.catalogoBaseSig().find(c => (c.nombre || '') === (this.nombre || ''));
     if (!item) return;
     this.catalogoSeleccionado = item;
     this.codigo = item.codigo || '';
@@ -357,6 +411,10 @@ export class ReactivosComponent implements OnInit {
     this.clasificacion_id = clasif ? clasif.id : '';
     this.loadDocs(item.codigo);
   }
+
+  // Getters para mantener compatibilidad con el template existente
+  get catalogoResultados() { return this.catalogoResultadosSig(); }
+  get catalogoBase() { return this.catalogoBaseSig(); }
 
   async loadDocs(codigo: string) {
     this.hojaUrl = null; this.certUrl = null; this.hojaMsg = ''; this.certMsg = '';
@@ -527,24 +585,14 @@ export class ReactivosComponent implements OnInit {
     this.mostrarCatalogoFormPanel = false;
   }
 
-  async mostrarTodosCatalogo() {
-    // Primero mostramos la tabla para evitar necesidad de segundo clic
-    this.mostrarTablaCatalogo = true;
-    this.catalogoQ = '';
-    await this.buscarCatalogo();
-  }
-
-  ocultarTablaCatalogo() {
-    this.mostrarTablaCatalogo = false;
-  }
-
   async filtrarReactivos() {
-    await this.loadReactivos();
+    // Filtrar vuelve a cargar con límite 10 para mantener paginación simple
+    await this.loadReactivos(10);
   }
 
   async mostrarTodosReactivos() {
     this.reactivosQ = '';
-    await this.loadReactivos();
+    await this.loadReactivos(); // sin límite => todos
   }
 
   async eliminarReactivo(lote: string) {

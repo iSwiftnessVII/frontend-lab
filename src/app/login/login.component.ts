@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, Renderer2, Inject } from '@angular/core';
 import { DOCUMENT, CommonModule } from '@angular/common';
 import { authService } from '../services/auth.service';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 
 @Component({
@@ -16,6 +16,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   password = '';
   error = '';
   loading = false;
+  triedSubmit = false;
   private returnUrl = '/dashboard';
 
   constructor(
@@ -25,7 +26,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     @Inject(DOCUMENT) private document: Document,
   ) {
     const q = this.route.snapshot.queryParamMap.get('returnUrl');
-    this.returnUrl = q ? q : this.returnUrl; // Added null check
+    // Aceptar sólo rutas internas seguras empezando por '/dashboard'
+    if (q && /^\/dashboard(\/|$)/.test(q)) {
+      this.returnUrl = q;
+    } else {
+      this.returnUrl = '/dashboard';
+    }
   }
 
   ngOnInit(): void {
@@ -36,16 +42,23 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.renderer.removeClass(this.document.body, 'auth-page');
   }
 
-  async onSubmit(e: Event) {
-    e.preventDefault();
-    this.loading = true;
+  async onSubmit(e: Event, form?: NgForm) {
+    e?.preventDefault();
+    this.triedSubmit = true;
     this.error = '';
+    if (form && form.invalid) {
+      // Marcar todos los controles como tocados para mostrar errores
+      Object.values(form.controls).forEach((c: any) => c?.control?.markAsTouched?.());
+      return; // No continuar si el formulario es inválido
+    }
+    this.loading = true;
     try {
-      const res = await authService.login(this.email, this.password);
+      await authService.login(this.email, this.password);
+      this.triedSubmit = false;
       await this.router.navigateByUrl(this.returnUrl);
     } catch (err: any) {
-      console.error('Login error:', err); // Log error for debugging
-      this.error = err?.message || 'Login failed. Please try again.';
+      console.error('Error al iniciar sesión:', err);
+      this.error = err?.message || 'Error al iniciar sesión. Intenta nuevamente.';
     } finally {
       this.loading = false;
     }

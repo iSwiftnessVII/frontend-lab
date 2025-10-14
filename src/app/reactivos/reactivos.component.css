@@ -1,0 +1,127 @@
+/* Catalog cards layout */
+.cards-container { margin-top: 0.5rem; }
+
+.catalogo-cards {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0.5rem;
+}
+
+.catalog-card {
+	background: var(--primary-white);
+	border: 1px solid var(--border-gray);
+	border-radius: 10px;
+	padding: 0.75rem 0.85rem;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+	transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+}
+.catalog-card:hover {
+	box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+	transform: translateY(-2px);
+}
+
+.catalog-card .card-top {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.catalog-card .tags {
+	display: grid;
+	grid-template-columns: 160px 1fr 1fr;
+	gap: 0.5rem;
+}
+
+.catalog-card .tag {
+	background: var(--light-gray);
+	color: var(--text-gray);
+	padding: 0.45rem 0.65rem;
+	border-radius: 30px;
+	font-size: 0.75rem;
+	font-weight: 500;
+	letter-spacing: .3px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	border: 1px solid var(--border-gray);
+}
+
+.catalog-card .card-name {
+	margin-top: 0.55rem;
+	background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%);
+	color: var(--primary-white);
+	padding: 0.65rem 0.85rem;
+	border-radius: 6px;
+	font-size: 0.9rem;
+	font-weight: 600;
+	letter-spacing: .25px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.catalogo-stats {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	font-size: 0.85rem;
+	margin: 0.25rem 0 0.25rem;
+}
+.catalogo-stats button {
+	padding: 0.25rem 0.6rem;
+	font-size: 0.75rem;
+	cursor: pointer;
+}
+
+/* Red PDF buttons (squares) */
+.pdf-actions { display: flex; gap: 0.5rem; }
+.pdf-group { display: flex; gap: 0.5rem; }
+.pdf-group + .pdf-group { margin-left: 1rem; position: relative; }
+.pdf-group + .pdf-group::before {
+	content: "";
+	position: absolute;
+	left: -0.6rem;
+	top: 4px;
+	bottom: 4px;
+	width: 1px;
+	background: rgba(255,255,255,0.4);
+}
+.pdf-btn {
+	width: 34px;
+	height: 34px;
+	background: var(--primary-blue);
+	border: 1px solid var(--primary-blue);
+	border-radius: 8px;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--primary-white);
+	padding: 0;
+	position: relative;
+	transition: background-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.pdf-btn:hover { filter: brightness(1.05); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+.pdf-btn:active { transform: translateY(1px); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.pdf-btn:focus-visible { outline: 2px solid var(--primary-turquoise); outline-offset: 2px; }
+
+.pdf-btn .icon { width: 18px; height: 18px; display: block; }
+
+/* Color variants */
+.pdf-btn.upload { background: #179b34; border-color:#179b34; }
+.pdf-btn.upload:hover { filter: brightness(1.05); }
+.pdf-btn.view { background: #1f6fe0; border-color:#1f6fe0; }
+.pdf-btn.view:hover { filter: brightness(1.05); }
+.pdf-btn.delete { background: #d11a1a; border-color:#d11a1a; }
+.pdf-btn.delete:hover { filter: brightness(1.05); }
+
+/* Divider between pdf groups adapt color */
+.pdf-group + .pdf-group::before { background: var(--border-gray); }
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+	.catalog-card .tags {
+		grid-template-columns: 1fr;
+	}
+}

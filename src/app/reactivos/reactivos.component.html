@@ -1,12 +1,11 @@
+<div class="container">
 
 <!-- Catálogo de reactivos -->
+ <h2>Catálogo de reactivos</h2>
+
 <section>
-  <h3>Catálogo de reactivos</h3>
-  <div>
-    <button type="button" (click)="mostrarTodosCatalogo()" *ngIf="!mostrarTablaCatalogo">Mostrar catálogo</button>
-    <button type="button" (click)="ocultarTablaCatalogo()" *ngIf="mostrarTablaCatalogo">Ocultar catálogo</button>
-  </div>
-  <form (submit)="crearCatalogo($event)">
+  <h3>Añadir reactivo al Catalogo</h3>
+  <form class="form-grid" (submit)="crearCatalogo($event)">
     <div>
       <label for="catCodigo">Código</label>
       <input id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" required />
@@ -37,8 +36,8 @@
   </form>
   <p *ngIf="catalogoMsg">{{ catalogoMsg }}</p>
 
-  <div *ngIf="mostrarTablaCatalogo">
-    <div>
+  <div>
+    <div class="filters-grid">
       <div>
         <label for="catalogoCodigoQ">Filtrar por código</label>
         <input id="catalogoCodigoQ" [(ngModel)]="codigoFiltro" (input)="filtrarCatalogoPorCampos()" />
@@ -48,44 +47,71 @@
         <input id="catalogoNombreQ" [(ngModel)]="nombreFiltro" (input)="filtrarCatalogoPorCampos()" />
       </div>
     </div>
-    <div>
+
+
+    <div class="cards-container">
       <p *ngIf="catalogoCargando">Cargando catálogo...</p>
-      <table>
-        <thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Clasificación</th><th>Acciones</th></tr></thead>
-        <tbody>
-          <tr *ngFor="let c of catalogoResultadosPaginados">
-            <td>{{ c.codigo }}</td>
-            <td>{{ c.nombre }}</td>
-            <td>{{ c.tipo_reactivo }}</td>
-            <td>{{ c.clasificacion_sga }}</td>
-            <td>
-              <input type="file" accept="application/pdf" (change)="onSubirHojaCatalogo($event, c.codigo)" hidden #hojaInput>
-              <button type="button" (click)="hojaInput.click()">Subir hoja</button>
-              <button type="button" (click)="onVerHojaCatalogo(c.codigo)">Ver hoja</button>
-              <button type="button" (click)="onEliminarHojaCatalogo(c.codigo)">Borrar hoja</button>
-              <input type="file" accept="application/pdf" (change)="onSubirCertCatalogo($event, c.codigo)" hidden #certInput>
-              <button type="button" (click)="certInput.click()">Subir certificado</button>
-              <button type="button" (click)="onVerCertCatalogo(c.codigo)">Ver certificado</button>
-              <button type="button" (click)="onEliminarCertCatalogo(c.codigo)">Borrar certificado</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div>
-        <small>Mostrando {{ catalogoResultadosPaginados.length }} de {{ catalogoResultados.length }}</small>
-        <button type="button" (click)="cargarMasCatalogo()" [disabled]="catalogoResultadosPaginados.length >= catalogoResultados.length">Cargar más</button>
+      <div class="catalogo-stats" *ngIf="!catalogoCargando && catalogoResultados.length">
+        <span>Mostrando {{ catalogoResultados.length }} de {{ catalogoTotal || catalogoBase.length }}</span>
+        <button type="button" (click)="resetCatalogoPaginado()">Reiniciar</button>
+      </div>
+      <div class="catalogo-cards">
+  <article class="catalog-card" *ngFor="let c of catalogoResultados; trackBy: trackByCatalogo">
+          <div class="card-top">
+            <div class="tags">
+              <span class="tag"><strong>Código:</strong> {{ c.codigo }}</span>
+              <span class="tag"><strong>Tipo:</strong> {{ c.tipo_reactivo }}</span>
+              <span class="tag"><strong>Clasificación:</strong> {{ c.clasificacion_sga }}</span>
+            </div>
+            <div class="pdf-actions" aria-label="Acciones PDF">
+              <div class="pdf-group hoja-group">
+                <input type="file" accept="application/pdf" (change)="onSubirHojaCatalogo($event, c.codigo)" hidden #hojaInput>
+                <button type="button" class="pdf-btn upload" title="Subir hoja de seguridad" aria-label="Subir hoja de seguridad" (click)="hojaInput.click()">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 5l0 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 10l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+                <button type="button" class="pdf-btn view" title="Ver hoja de seguridad" aria-label="Ver hoja de seguridad" (click)="onVerHojaCatalogo(c.codigo)">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                </button>
+                <button type="button" class="pdf-btn delete" title="Eliminar hoja de seguridad" aria-label="Eliminar hoja de seguridad" (click)="onEliminarHojaCatalogo(c.codigo)">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+              <div class="pdf-group cert-group">
+                <input type="file" accept="application/pdf" (change)="onSubirCertCatalogo($event, c.codigo)" hidden #certInput>
+                <button type="button" class="pdf-btn upload" title="Subir certificado de análisis" aria-label="Subir certificado de análisis" (click)="certInput.click()">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 5l0 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 10l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+                <button type="button" class="pdf-btn view" title="Ver certificado de análisis" aria-label="Ver certificado de análisis" (click)="onVerCertCatalogo(c.codigo)">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                </button>
+                <button type="button" class="pdf-btn delete" title="Eliminar certificado de análisis" aria-label="Eliminar certificado de análisis" (click)="onEliminarCertCatalogo(c.codigo)">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-name" [title]="c.nombre">{{ c.nombre }}</div>
+        </article>
       </div>
       <p *ngIf="!catalogoCargando && !catalogoResultados.length">No hay elementos en el catálogo.</p>
+      <div *ngIf="!catalogoCargando && catalogoResultados.length && catalogoResultados.length < catalogoBase.length" class="catalogo-load-more">
+        <button type="button" (click)="cargarMasCatalogo()">Cargar más</button>
+        <small>{{ catalogoResultados.length }} / {{ catalogoBase.length }}</small>
+      </div>
     </div>
   </div>
 </section>
+
+
+
 <!-- Inventario de reactivos -->
+<h2>Inventario de reactivos</h2>
 <section>
-  <h3>Inventario de reactivos</h3>
+ 
   
   <!-- Formulario de creación -->
-  <form (submit)="crearReactivo($event)">
-    <div>
+  <form class="form-grid" (submit)="crearReactivo($event)">
+    <div class="field-sm">
       <label for="lote">Lote</label>
       <input id="lote" [(ngModel)]="lote" name="lote" required />
     </div>
@@ -135,15 +161,15 @@
       <input id="cas" [(ngModel)]="cas" name="cas" />
     </div>
 
-    <div>
+    <div class="field-sm">
       <label for="presentacion">Presentación</label>
       <input id="presentacion" type="number" [(ngModel)]="presentacion" name="presentacion" (input)="calcularCantidadTotal()" />
     </div>
-    <div>
+    <div class="field-sm">
       <label for="presentacion_cant">Cantidad por presentación</label>
       <input id="presentacion_cant" type="number" [(ngModel)]="presentacion_cant" name="presentacion_cant" (input)="calcularCantidadTotal()" />
     </div>
-    <div>
+    <div class="field-sm">
       <label for="cantidad_total">Cantidad total</label>
       <input id="cantidad_total" type="number" [(ngModel)]="cantidad_total" name="cantidad_total" readonly />
     </div>
@@ -214,12 +240,14 @@
 
   <!-- Lista y búsqueda de reactivos existentes -->
   <div>
-    <div>
+    <div class="filters-row">
       <label for="reactivosQ">Buscar reactivos</label>
       <input id="reactivosQ" [(ngModel)]="reactivosQ" (input)="filtrarReactivos()" />
       <button type="button" (click)="mostrarTodosReactivos()">Mostrar todos</button>
     </div>
-    <table>
+    <div class="table-container">
+    <table class="reactivos-table">
+      <caption>Inventario de reactivos: Lote, Código, Nombre, Tipo, Estado, Cantidad y Fechas</caption>
       <thead>
         <tr>
           <th>Lote</th>
@@ -237,7 +265,7 @@
         <tr *ngFor="let r of reactivos">
           <td>{{ r.lote }}</td>
           <td>{{ r.codigo }}</td>
-          <td>{{ r.nombre }}</td>
+          <td class="truncate" title="{{ r.nombre }}">{{ r.nombre }}</td>
           <td>{{ obtenerNombreTipo(r.tipo_id) }}</td>
           <td>{{ obtenerNombreEstado(r.estado_id) }}</td>
           <td>{{ r.cantidad_total }}</td>
@@ -250,6 +278,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
     <p *ngIf="!reactivos?.length">No hay reactivos cargados.</p>
   </div>
 
@@ -279,4 +308,7 @@
       <p><strong>Fecha de vencimiento:</strong> {{ formatearFecha(reactivoSeleccionado.fecha_vencimiento) }}</p>
       <p *ngIf="reactivoSeleccionado.observaciones"><strong>Observaciones:</strong> {{ reactivoSeleccionado.observaciones }}</p>
     </div>
+
+  </div>
+
 

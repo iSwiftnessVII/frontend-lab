@@ -7,12 +7,14 @@ export const reactivosService = {
     return res.json();
   },
   // Catálogo
-  async buscarCatalogo(q: string) {
+  async buscarCatalogo(q: string, limit?: number, offset?: number) {
     const url = new URL(`${API_BASE}/catalogo`);
     if (q) url.searchParams.set('q', q);
+    if (limit && limit > 0) url.searchParams.set('limit', String(limit));
+    if (offset && offset > 0) url.searchParams.set('offset', String(offset));
     const res = await fetch(url);
     if (!res.ok) throw new Error(await res.text());
-    return res.json();
+    return res.json(); // Puede ser array o {rows,total}
   },
   async obtenerCatalogo(codigo: string) {
     const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}`);
@@ -40,9 +42,10 @@ export const reactivosService = {
     return data;
   },
   // Reactivos
-  async listarReactivos(q: string) {
+  async listarReactivos(q: string, limit?: number) {
     const url = new URL(API_BASE);
     if (q) url.searchParams.set('q', q);
+    if (limit && limit > 0) url.searchParams.set('limit', String(limit));
     const res = await fetch(url);
     if (!res.ok) throw new Error(await res.text());
     return res.json();
