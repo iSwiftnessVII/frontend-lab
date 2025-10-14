@@ -1,10 +1,9 @@
-<div class="container">
+<div class="liba-theme container reactivos-page">
 
 <!-- Catálogo de reactivos -->
- <h2>Catálogo de reactivos</h2>
+ <h2>Crear nuevo reactivo en Catalogo</h2>
 
 <section>
-  <h3>Añadir reactivo al Catalogo</h3>
   <form class="form-grid" (submit)="crearCatalogo($event)">
     <div>
       <label for="catCodigo">Código</label>
@@ -35,9 +34,11 @@
     <div><button type="submit">Agregar al catálogo</button></div>
   </form>
   <p *ngIf="catalogoMsg">{{ catalogoMsg }}</p>
-
+</section>
+<h2>Catalogo de Reactivos</h2>
+<section>
   <div>
-    <div class="filters-grid">
+    <div class="filters-grid catalogo-filters">
       <div>
         <label for="catalogoCodigoQ">Filtrar por código</label>
         <input id="catalogoCodigoQ" [(ngModel)]="codigoFiltro" (input)="filtrarCatalogoPorCampos()" />
@@ -46,14 +47,16 @@
         <label for="catalogoNombreQ">Filtrar por nombre</label>
         <input id="catalogoNombreQ" [(ngModel)]="nombreFiltro" (input)="filtrarCatalogoPorCampos()" />
       </div>
+      <div class="reset-cell">
+        <button type="button" class="btn-reset-filtros" (click)="resetCatalogoPaginado()" aria-label="Reiniciar filtros">Reiniciar filtros</button>
+      </div>
     </div>
 
 
     <div class="cards-container">
       <p *ngIf="catalogoCargando">Cargando catálogo...</p>
       <div class="catalogo-stats" *ngIf="!catalogoCargando && catalogoResultados.length">
-        <span>Mostrando {{ catalogoResultados.length }} de {{ catalogoTotal || catalogoBase.length }}</span>
-        <button type="button" (click)="resetCatalogoPaginado()">Reiniciar</button>
+        <span>Mostrando {{ catalogoResultados.length }} de {{ catalogoTotal || catalogoBase.length }} reactivos</span>
       </div>
       <div class="catalogo-cards">
   <article class="catalog-card" *ngFor="let c of catalogoResultados; trackBy: trackByCatalogo">
@@ -111,6 +114,7 @@
     </div>
   </div>
 </section>
+
 
 
 
