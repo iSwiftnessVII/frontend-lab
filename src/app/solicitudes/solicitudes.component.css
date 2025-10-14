@@ -404,26 +404,7 @@ button[style*="background-color: #dc3545"]:hover {
   .list-header, .solicitud-item, .cliente-item { grid-template-columns: 1fr !important; }
 }
 
-/* Field entrance animation: small fade + slide up, staggered for nicer effect */
-.compact-card .field { opacity: 0; transform: translateY(6px); transition: opacity 280ms ease, transform 320ms cubic-bezier(.2,.9,.2,1); }
-.cliente-item.expanded .compact-card .field { opacity: 1; transform: translateY(0); }
-.cliente-item.expanded .compact-card .field:nth-child(1) { transition-delay: 0.02s; }
-.cliente-item.expanded .compact-card .field:nth-child(2) { transition-delay: 0.04s; }
-.cliente-item.expanded .compact-card .field:nth-child(3) { transition-delay: 0.06s; }
-.cliente-item.expanded .compact-card .field:nth-child(4) { transition-delay: 0.08s; }
-.cliente-item.expanded .compact-card .field:nth-child(5) { transition-delay: 0.10s; }
-.cliente-item.expanded .compact-card .field:nth-child(6) { transition-delay: 0.12s; }
-.cliente-item.expanded .compact-card .field:nth-child(7) { transition-delay: 0.14s; }
-.cliente-item.expanded .compact-card .field:nth-child(8) { transition-delay: 0.16s; }
-.cliente-item.expanded .compact-card .field:nth-child(9) { transition-delay: 0.18s; }
-.cliente-item.expanded .compact-card .field:nth-child(10) { transition-delay: 0.20s; }
-.cliente-item.expanded .compact-card .field:nth-child(11) { transition-delay: 0.22s; }
-.cliente-item.expanded .compact-card .field:nth-child(12) { transition-delay: 0.24s; }
-.cliente-item.expanded .compact-card .field:nth-child(13) { transition-delay: 0.26s; }
-.cliente-item.expanded .compact-card .field:nth-child(14) { transition-delay: 0.28s; }
-.cliente-item.expanded .compact-card .field:nth-child(15) { transition-delay: 0.30s; }
-.cliente-item.expanded .compact-card .field:nth-child(16) { transition-delay: 0.32s; }
-.cliente-item.expanded .compact-card .field:nth-child(17) { transition-delay: 0.34s; }
+
 
 
 table {

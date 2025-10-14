@@ -1,1 +1,37 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global styles - import Poppins here so all components inherit the font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* LIBA theme variables (global) */
+:root {
+	--primary-blue: #001f5b;
+	--primary-turquoise: #00b8b5;
+	--primary-white: #ffffff;
+	--alert-yellow: #fff3b0;
+	--alert-orange: #ffd6a5;
+	--alert-red: #ffadad;
+	--text-gray: #4a5568;
+	--light-gray: #f7fafc;
+	--border-gray: #e2e8f0;
+}
+
+html, body {
+	height: 100%;
+	font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	background: var(--light-gray);
+	color: var(--text-gray);
+}
+
+/* Hide global header/nav on auth pages (login/register) */
+body.auth-page .header,
+body.auth-page .nav-menu {
+	display: none !important;
+}
+
+/* When header is removed, allow top-centered auth UIs to use full viewport */
+body.auth-page .container {
+	padding-top: 0;
+}
+
+/* You can add other global styles or imports below */

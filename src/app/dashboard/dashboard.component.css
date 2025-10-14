@@ -1,8 +1,0 @@
-@import '../shared-ui.css';
-
-.dashboard-hero{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.dashboard-welcome{display:flex;flex-direction:column}
-.welcome-name{font-size:20px;font-weight:700}
-.dashboard-actions{display:flex;gap:8px}
-
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}

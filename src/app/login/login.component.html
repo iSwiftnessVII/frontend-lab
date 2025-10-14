@@ -1,20 +1,40 @@
-<div class="page-center">
-  <div class="card auth-card">
-    <h2>Login</h2>
-    <form (submit)="onSubmit($event)">
-      <div class="form-group">
-        <label for="email">Email:</label>
-        <input id="email" type="email" [(ngModel)]="email" name="email" required>
-      </div>
-      <div class="form-group">
-        <label for="password">Password:</label>
-        <input id="password" type="password" [(ngModel)]="password" name="password" required>
-      </div>
-      <div class="auth-actions">
-        <button class="btn btn-primary" type="submit" [disabled]="loading">{{ loading ? 'Logging...' : 'Login' }}</button>
-      </div>
-    </form>
-    <p><a routerLink="/register">Register</a></p>
-    <p *ngIf="error" class="error">{{ error }}</p>
-  </div>
+<div class="login-root">
+  <div class="login-backdrop"></div>
+  <main class="login-center">
+    <section class="login-card">
+      <header class="login-header">
+        <div class="brand-circle">L</div>
+        <h1 class="login-title">Bienvenido de nuevo</h1>
+        <p class="login-sub">Ingresa a tu cuenta para continuar</p>
+      </header>
+
+      <form class="login-form" (submit)="onSubmit($event)">
+        <div class="form-group">
+          <label for="email">Correo electrónico</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="tu@ejemplo.com" [(ngModel)]="email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Contraseña" [(ngModel)]="password" required>
+        </div>
+
+        <div class="form-row">
+          <label class="remember"><input type="checkbox"> Recuérdame</label>
+          <a class="link" routerLink="/forgot">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" type="submit" [disabled]="loading">{{ loading ? 'Ingresando...' : 'Entrar' }}</button>
+        </div>
+      </form>
+
+      
+
+      <footer class="login-foot">
+        <p class="muted">¿No tienes una cuenta? <a routerLink="/register">Regístrate</a></p>
+  <p [hidden]="!error" class="error">{{ error }}</p>
+      </footer>
+    </section>
+  </main>
 </div>

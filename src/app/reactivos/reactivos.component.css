@@ -1,6 +1,0 @@
-@import '../shared-ui.css';
-
-.reactivos-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.reactivos-list{margin-top:6px}
-.reactivo-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);transition:transform .12s ease,box-shadow .12s ease}
-.reactivo-item:hover{transform:translateY(-3px);box-shadow:var(--shadow-sm)}

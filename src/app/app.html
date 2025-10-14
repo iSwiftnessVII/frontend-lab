@@ -1,10 +1,5 @@
-<header style="padding:1rem; border-bottom:1px solid #eaeaea; display:flex; justify-content:space-between; align-items:center;">
-  <div style="font-weight:600">app-lab</div>
+<header>
   <nav>
-  <ng-container *ngIf="!user()">
-      <a routerLink="/login" style="margin-right:1rem">Login</a>
-      <a routerLink="/register">Register</a>
-    </ng-container>
   <ng-container *ngIf="user()">
       <a routerLink="/dashboard" style="margin-right:1rem">Dashboard</a>
       <a routerLink="/solicitudes" style="margin-right:1rem">Solicitudes</a>

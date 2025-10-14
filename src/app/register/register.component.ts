@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { authService } from '../services/auth.service';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
@@ -12,13 +12,22 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./register.component.css'],
   imports: [CommonModule, FormsModule, RouterModule]
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit, OnDestroy {
+  name = '';
   email = '';
   password = '';
   error = '';
   success = '';
 
   constructor(private router: Router) {}
+
+  ngOnInit() {
+    document.body.classList.add('auth-page');
+  }
+
+  ngOnDestroy() {
+    document.body.classList.remove('auth-page');
+  }
 
   async onSubmit(e: Event) {
     e.preventDefault();

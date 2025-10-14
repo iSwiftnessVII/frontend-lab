@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { authService } from '../services/auth.service';
 import { CommonModule } from '@angular/common';
@@ -12,7 +12,7 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./login.component.css'],
   imports: [CommonModule, FormsModule, RouterModule]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit, OnDestroy {
   email = '';
   password = '';
   error = '';
@@ -21,6 +21,14 @@ export class LoginComponent {
   constructor(private router: Router, private route: ActivatedRoute) {
     const q = this.route.snapshot.queryParamMap.get('returnUrl');
     if (q) this.returnUrl = q;
+  }
+
+  ngOnInit() {
+    document.body.classList.add('auth-page');
+  }
+
+  ngOnDestroy() {
+    document.body.classList.remove('auth-page');
   }
 
   async onSubmit(e: Event) {
@@ -34,5 +42,11 @@ export class LoginComponent {
     } catch (err: any) {
       this.error = err.message || 'Login failed';
     }
+  }
+
+  // Placeholder for Google sign-in flow (UI only)
+  onGoogleSignIn() {
+    // implement OAuth redirect or popup here
+    console.log('Google sign-in clicked');
   }
 }
