@@ -7,11 +7,11 @@
   <form class="form-grid" (submit)="crearCatalogo($event)">
     <div>
       <label for="catCodigo">Código</label>
-      <input id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" required />
+      <input id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" required placeholder="Ej: H2SO4-001" />
     </div>
     <div>
       <label for="catNombre">Nombre</label>
-      <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required />
+      <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required placeholder="Ej: Ácido sulfúrico" />
     </div>
     <div>
       <label for="catTipo">Tipo reactivo</label>
@@ -33,7 +33,7 @@
     </div>
     <div><button type="submit">Agregar al catálogo</button></div>
   </form>
-  <p *ngIf="catalogoMsg">{{ catalogoMsg }}</p>
+  <p *ngIf="catalogoMsg" aria-live="polite" role="status">{{ catalogoMsg }}</p>
 </section>
 <h2>Catalogo de Reactivos</h2>
 <section>
@@ -41,11 +41,11 @@
     <div class="filters-grid catalogo-filters">
       <div>
         <label for="catalogoCodigoQ">Filtrar por código</label>
-        <input id="catalogoCodigoQ" [(ngModel)]="codigoFiltro" (input)="filtrarCatalogoPorCampos()" />
+  <input id="catalogoCodigoQ" [(ngModel)]="codigoFiltro" (input)="filtrarCatalogoPorCampos()" placeholder="Ej: H2SO4" />
       </div>
       <div>
         <label for="catalogoNombreQ">Filtrar por nombre</label>
-        <input id="catalogoNombreQ" [(ngModel)]="nombreFiltro" (input)="filtrarCatalogoPorCampos()" />
+  <input id="catalogoNombreQ" [(ngModel)]="nombreFiltro" (input)="filtrarCatalogoPorCampos()" placeholder="Ej: ácido acético" />
       </div>
       <div class="reset-cell">
         <button type="button" class="btn-reset-filtros" (click)="resetCatalogoPaginado()" aria-label="Reiniciar filtros">Reiniciar filtros</button>
@@ -56,7 +56,7 @@
     <div class="cards-container">
       <p *ngIf="catalogoCargando">Cargando catálogo...</p>
       <div class="catalogo-stats" *ngIf="!catalogoCargando && catalogoResultados.length">
-        <span>Mostrando {{ catalogoResultados.length }} de {{ catalogoTotal || catalogoBase.length }} reactivos</span>
+        <span>🧪 Mostrando {{ catalogoResultados.length }} de {{ catalogoTotal || catalogoBase.length }} reactivos</span>
       </div>
       <div class="catalogo-cards">
   <article class="catalog-card" *ngFor="let c of catalogoResultados; trackBy: trackByCatalogo">
@@ -179,8 +179,15 @@
       <label for="presentacion">Presentación</label>
       <input id="presentacion" type="number" [(ngModel)]="presentacion" name="presentacion" (input)="calcularCantidadTotal()" />
     </div>
+    <div>
+      <label for="unidad_id">Unidad</label>
+      <select id="unidad_id" [(ngModel)]="unidad_id" name="unidad_id">
+        <option [ngValue]="''">Seleccione unidad</option>
+        <option *ngFor="let u of unidades" [value]="u.id">{{ u.nombre }}</option>
+      </select>
+    </div>
     <div class="field-sm">
-      <label for="presentacion_cant">Cantidad por presentación</label>
+      <label for="presentacion_cant">Cantidad x presentación</label>
       <input id="presentacion_cant" type="number" [(ngModel)]="presentacion_cant" name="presentacion_cant" (input)="calcularCantidadTotal()" />
     </div>
     <div class="field-sm">
@@ -216,13 +223,6 @@
       </select>
     </div>
     <div>
-      <label for="unidad_id">Unidad</label>
-      <select id="unidad_id" [(ngModel)]="unidad_id" name="unidad_id">
-        <option [ngValue]="''">Seleccione unidad</option>
-        <option *ngFor="let u of unidades" [value]="u.id">{{ u.nombre }}</option>
-      </select>
-    </div>
-    <div>
       <label for="estado_id">Estado</label>
       <select id="estado_id" [(ngModel)]="estado_id" name="estado_id">
         <option [ngValue]="''">Seleccione estado</option>
@@ -243,17 +243,18 @@
         <option *ngFor="let a of almacen" [value]="a.id">{{ a.nombre }}</option>
       </select>
     </div>
-
-    <!-- Adjuntos opcionales al crear reactivo (removidos a solicitud) -->
-
-    <div>
       <button type="submit">Crear reactivo</button>
-    </div>
   </form>
-  <p *ngIf="reactivoMsg">{{ reactivoMsg }}</p>
-
+  <div>
+    <p *ngIf="reactivoMsg">{{ reactivoMsg }}</p>
+  </div>
+    
+</section>
+<section>
   <!-- Lista y búsqueda de reactivos existentes -->
   <div>
+
+
     <div class="filters-row">
       <label for="reactivosQ">Buscar reactivos</label>
       <input id="reactivosQ" [(ngModel)]="reactivosQ" (input)="filtrarReactivos()" />
@@ -324,5 +325,5 @@
     </div>
 
   </div>
-
+</section>
 

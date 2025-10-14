@@ -1,16 +1,35 @@
-<header>
-  <nav>
-  <ng-container *ngIf="user()">
-      <a routerLink="/dashboard" style="margin-right:1rem">Dashboard</a>
-      <a routerLink="/solicitudes" style="margin-right:1rem">Solicitudes</a>
-      <a routerLink="/reactivos" style="margin-right:1rem">Reactivos</a>
-      <span style="margin-right:1rem">Hola, {{ user()?.email }}</span>
-      <button (click)="logout()">Salir de la cuenta</button>
-    </ng-container>
+<header class="navbar">
+  <nav class="nav-inner" *ngIf="user()">
+    <a class="brand" routerLink="/dashboard" aria-label="Inicio">
+      <img src="/img/logo/logo.jpg" alt="Logo" class="brand-logo" />
+    </a>
+
+    <ul class="nav-links">
+      <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/dashboard" class="nav-link">Dashboard</a>
+      </li>
+      <li routerLinkActive="active">
+        <a routerLink="/solicitudes" class="nav-link">Solicitudes</a>
+      </li>
+      <li routerLinkActive="active">
+        <a routerLink="/reactivos" class="nav-link">Reactivos</a>
+      </li>
+    </ul>
+
+    <div class="nav-actions">
+      <span class="user-chip" title="Usuario activo">{{ user()?.email }}</span>
+      <button class="logout-btn" (click)="onLogout()" [disabled]="isLoggingOut()">
+        {{ isLoggingOut() ? 'Cerrando sesión…' : 'Salir' }}
+      </button>
+    </div>
   </nav>
 </header>
 
-<main style="padding:1rem;">
+<main class="main-content">
   <router-outlet></router-outlet>
 </main>
+
+<footer class="app-footer" *ngIf="showFooter()">
+  <p>© {{ currentYear }} LIBA - Laboratorio Integrado de Biociencias Aplicadas. Todos los derechos reservados.</p>
+</footer>
 <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->

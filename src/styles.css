@@ -183,6 +183,9 @@ nav.app-nav a:hover {
   font-size: 0.95rem;
   position: relative;
   padding-left: 8px;
+  white-space: nowrap;           /* fuerza una sola línea */
+  overflow: hidden;              /* evita desbordes horizontales inesperados */
+  text-overflow: ellipsis;       /* muestra elipsis si el layout no pudiera expandirse */
 }
 .liba-theme label::before {
   content: '';
@@ -203,6 +206,16 @@ nav.app-nav a:hover {
   position: relative;
   box-sizing: border-box;
 }
+/* Contenedores de campos: permiten crecer si el label es largo */
+.liba-theme form .form-grid > div,
+.liba-theme form.form-grid > div,
+.liba-theme form div.field,
+.liba-theme .reactivos-page form.form-grid > div {
+  min-width: 0; /* permite que el grid calcule correctamente */
+}
+
+/* Helper: para un label que realmente deba romper línea, añadir clase .label-wrap en el label */
+.liba-theme label.label-wrap { white-space: normal; text-overflow: clip; }
 .liba-theme input:focus,
 .liba-theme select:focus,
 .liba-theme textarea:focus {
@@ -252,3 +265,26 @@ nav.app-nav a:hover {
 
 /* Scoped container (optional) */
 .liba-theme .container { max-width: 1400px; margin:0 auto; padding:2rem; }
+
+/* Global footer */
+/* Footer con estilo de solicitudes, global */
+.app-footer {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, #002d7a 100%);
+  color: var(--primary-white);
+  text-align: center;
+  padding: 2rem;
+  margin-top: 4rem;
+  position: relative;
+  overflow: hidden;
+}
+.app-footer::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--primary-turquoise), transparent);
+}
+.app-footer p {
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

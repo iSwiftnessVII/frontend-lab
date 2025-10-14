@@ -185,6 +185,7 @@ mark { background: var(--alert-yellow); color: #222; padding:0 2px; border-radiu
 	padding: 0.25rem 0.6rem;
 	font-size: 0.75rem;
 	cursor: pointer;
+
 }
 
 /* Red PDF buttons (squares) */
@@ -238,4 +239,11 @@ mark { background: var(--alert-yellow); color: #222; padding:0 2px; border-radiu
 	.catalog-card { padding:1rem 1.05rem; }
 	.catalog-card .card-name { font-size:1rem; }
 	.catalog-card .tags { grid-template-columns: 1fr; }
+}
+
+/* Centrar el texto del botón "Crear reactivo" dentro del formulario */
+.reactivos-page form.form-grid button[type="submit"] {
+	display: inline-flex; /* asegura flex para poder centrar */
+	justify-content: center;
+	text-align: center;
 }

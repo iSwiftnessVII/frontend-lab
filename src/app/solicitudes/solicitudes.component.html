@@ -1,10 +1,10 @@
 <!-- CONTAINER PRINCIPAL -->
-<div class="container">
-  <h2>Solicitudes</h2>
+<div class="liba-theme container">
 
+    <h2>Agregar cliente</h2>
   <!-- SECCIÓN: Agregar cliente -->
   <section>
-    <h3>Agregar cliente</h3>
+
     <form (submit)="createCliente($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
 
@@ -87,7 +87,7 @@
           <label for="clienteTipoId">Tipo identificación:</label>
           <select id="clienteTipoId" [(ngModel)]="clienteTipoId" name="clienteTipoId"
             [style.border-color]="clienteErrors['tipoId'] ? '#dc3545' : ''">
-            <option value="">Seleccionar tipo de identificación</option>
+            <option value="">Seleccionar tipo de id</option>
             <option value="CC">CC - Cédula de Ciudadanía</option>
             <option value="TI">TI - Tarjeta de Identidad</option>
             <option value="CE">CE - Cédula de Extranjería</option>
@@ -244,8 +244,9 @@
   </section>
 
   <!-- SECCIÓN: AGREGAR SOLICITUD-->
+  <h2>Agregar solicitud</h2>
   <section>
-    <h3>Agregar solicitud</h3>
+    
     <form (submit)="createSolicitud($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
 
@@ -284,7 +285,7 @@
 
         <!-- Nombre de muestra/producto -->
         <div>
-          <label for="solicitudNombre">Nombre de la muestra o producto:</label>
+          <label for="solicitudNombre">Nombre de la muestra:</label>
           <input id="solicitudNombre" [(ngModel)]="solicitudNombre" name="solicitudNombre"
             [style.border-color]="solicitudErrors['nombre'] ? '#dc3545' : ''"
             [style.border-width]="solicitudErrors['nombre'] ? '2px' : ''" placeholder="Ej: Suero lácteo" />
@@ -382,7 +383,7 @@
           <label for="solicitudRequiereVarios" style="display:flex; align-items:center; gap:0.5rem;">
             <input id="solicitudRequiereVarios" type="checkbox" [(ngModel)]="solicitudRequiereVarios"
               name="solicitudRequiereVarios" />
-            Requiere varios análisis?
+            ¿Requiere varios análisis?
           </label>
         </div>
 
@@ -391,7 +392,7 @@
           <label for="solicitudPuedeSuministrar" style="display:flex; align-items:center; gap:0.5rem;">
             <input id="solicitudPuedeSuministrar" type="checkbox" [(ngModel)]="solicitudPuedeSuministrar"
               name="solicitudPuedeSuministrar" />
-            Puede suministrar información adicional?
+            ¿Suministra info adicional?
           </label>
         </div>
 
@@ -410,8 +411,9 @@
   </section>
 
   <!-- SECCIÓN: AGREGAR OFERTA -->
+<h2>Agregar oferta</h2>
   <section>
-    <h3>Agregar oferta</h3>
+
     <form (submit)="createOferta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
 
@@ -493,8 +495,9 @@
   </section>
 
   <!-- SECCIÓN: AGREGAR RESULTADOS -->
+<h2>Agregar resultados</h2>
   <section>
-    <h3>Agregar resultados</h3>
+
     <form (submit)="createResultado($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
 
@@ -557,8 +560,9 @@
   </section>
 
   <!-- SECCIÓN: AGREGAR ENCUESTA -->
+<h2>Agregar encuesta de satisfacción</h2>
   <section>
-    <h3>Agregar encuesta</h3>
+
     <form (submit)="createEncuesta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
 
@@ -593,7 +597,7 @@
 
         <!-- Puntuación -->
         <div>
-          <label for="encuestaPuntuacion">Puntuación de satisfacción (1-10):</label>
+          <label for="encuestaPuntuacion">Puntuación de satisfacción:</label>
           <input id="encuestaPuntuacion" type="number" min="1" max="10" [(ngModel)]="encuestaPuntuacion"
             name="encuestaPuntuacion" [style.border-color]="encuestaErrors['puntuacion'] ? '#dc3545' : ''"
             [style.border-width]="encuestaErrors['puntuacion'] ? '2px' : ''" placeholder="Puntuación del 1 al 10" />
@@ -649,8 +653,9 @@
   </section>
 
   <!-- SECCIÓN: Lista rápida de solicitudes -->
+<h2>Catalogo de Solicitudes</h2>
   <section>
-    <h3>Lista rápida de solicitudes</h3>
+
     <div style="margin-bottom:1rem">
       <label for="solicitudesQ">
         Buscar solicitud (ID, código, nombre, tipo, muestra, análisis o cliente):
@@ -698,8 +703,9 @@
   </section>
 
   <!-- SECCIÓN: Lista de clientes -->
+<h2>Catalogo de Clientes</h2>
   <section>
-    <h3>Lista de clientes</h3>
+ 
     <div style="margin-bottom:1rem">
       <label for="clientesQ">
         Buscar cliente (nombre, correo, identificación, ciudad, departamento, celular):
@@ -778,10 +784,7 @@
   </section>
 </div>
 
-<!-- FOOTER -->
-<footer>
-  <p>© 2024 LIBA - Laboratorio Integrado de Biociencias Aplicadas. Todos los derechos reservados.</p>
-</footer>
+<!-- FOOTER moved to app-root global footer -->
 
 <!-- Global toast -->
 <div class="global-toast" *ngIf="lastCopiedMessage">{{ lastCopiedMessage }}</div>
