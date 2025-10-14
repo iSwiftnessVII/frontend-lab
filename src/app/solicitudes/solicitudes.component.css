@@ -233,6 +233,199 @@ button[style*="background-color: #dc3545"]:hover {
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
+/* ---------- LISTAS (reemplazan tablas) ---------- */
+.list-wrapper {
+  margin-top: 1rem;
+  border-radius: 8px;
+  background: var(--primary-white);
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(12,20,30,0.06);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.list-wrapper {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.list-header, .solicitud-item, .cliente-item {
+  display: grid;
+  /* inherit the grid-template-columns from the parent list wrapper so each list can define proportions */
+  grid-template-columns: inherit;
+  align-items: center;
+  gap: 0.5rem; /* balanced spacing */
+  padding: 0.5rem 0.6rem; /* slightly tighter padding for a compact look */
+}
+.solicitudes-list .list-header, .solicitudes-list .solicitud-item {
+  /* use equal proportional columns for solicitudes (7 columns) */
+  grid-template-columns: repeat(7, 1fr);
+}
+.clientes-list .list-header, .clientes-list .cliente-item {
+  /* use equal proportional columns for clientes (6 columns) */
+  grid-template-columns: repeat(6, 1fr);
+}
+
+/* Ensure header columns don't wrap and stay on single line */
+.list-header > .col { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Explicit column placement for clientes list to guarantee order */
+.clientes-list .list-header .cliente-name, .clientes-list .cliente-item .cliente-name { grid-column: 1; }
+.clientes-list .list-header .id-col, .clientes-list .cliente-item .id-col { grid-column: 2; }
+.clientes-list .list-header .email-col, .clientes-list .cliente-item .email-col { grid-column: 3; }
+.clientes-list .list-header .city-col, .clientes-list .cliente-item .city-col { grid-column: 4; }
+.clientes-list .list-header .phone-col, .clientes-list .cliente-item .phone-col { grid-column: 5; }
+.clientes-list .list-header .actions-col, .clientes-list .cliente-item .actions-col { grid-column: 6; }
+
+.list-header {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, #002d7a 100%);
+  color: var(--primary-white);
+  font-weight: 600;
+  /* visual separation from rows */
+  border-bottom: 2px solid rgba(0,0,0,0.06);
+  padding-bottom: 0.55rem;
+}
+
+.solicitud-item {
+  border-bottom: 1px solid var(--border-gray);
+}
+
+.cliente-item {
+  border-bottom: 1px dashed rgba(0,0,0,0.04);
+  /* allow details block to occupy a full row below the main columns */
+  grid-auto-rows: auto;
+}
+
+/* Shared row styling for both lists to ensure consistent look and interactivity */
+.list-row, .solicitud-item, .cliente-item {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.12s ease;
+  transform-origin: center;
+}
+
+/* Hover/active effect similar to section:hover but milder */
+.solicitud-item:hover, .cliente-item:hover, .solicitud-item:focus, .cliente-item:focus, .list-row.expanded {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  background: linear-gradient(90deg, rgba(0,184,181,0.03), transparent);
+  z-index: 1;
+}
+
+/* Make the header visually separated from rows with some breathing room */
+.list-header + .solicitud-item, .list-header + .cliente-item {
+  margin-top: 0.25rem;
+}
+
+/* Interactive row styles */
+.cliente-item {
+  transition: background 0.18s ease, transform 0.12s ease;
+  cursor: pointer;
+}
+.cliente-item:hover, .cliente-item:focus, .cliente-item.expanded {
+  background: linear-gradient(90deg, rgba(0,184,181,0.03), transparent);
+  transform: translateY(-1px);
+}
+
+.cliente-item:focus { outline: 2px solid rgba(0,184,181,0.12); }
+
+.mini { background: transparent; border: none; margin-left: 6px; cursor: pointer; font-size: 0.95rem; }
+.mini:hover { transform: scale(1.05); }
+
+/* Small copy button inside field values */
+.copy-field { background: transparent; border: none; cursor: pointer; font-size: 0.9rem; margin-left: 0.5rem; padding: 2px 6px; border-radius: 6px; }
+.copy-field:hover { background: rgba(0,0,0,0.04); transform: translateY(-1px); }
+
+/* position the copy button inside the value area at the end */
+.field .value { display:flex; align-items:center; justify-content:flex-start; gap:0.5rem; white-space:normal; overflow-wrap:anywhere; }
+.field .value .copy-field { margin-left: auto; }
+
+/* Tooltip that appears when copied */
+.field { position: relative; }
+
+/* Global toast in top-right corner */
+.global-toast { position: fixed; top: 18px; right: 18px; background: rgba(17,24,39,0.95); color: #fff; padding: 8px 12px; border-radius: 8px; font-weight:600; box-shadow: 0 8px 30px rgba(2,6,23,0.3); z-index: 9999; animation: toast-in 220ms ease; }
+.global-toast::after { content: ''; display:block; height:0; clear:both; }
+@keyframes toast-in { from { transform: translateY(-10px) scale(0.98); opacity: 0 } to { transform: translateY(0) scale(1); opacity: 1 } }
+
+/* Animate details reveal */
+.cliente-details { opacity: 0; max-height: 0; overflow: hidden; transition: max-height 340ms cubic-bezier(.2,.9,.2,1), opacity 260ms ease, transform 300ms ease; transform: translateY(-6px); }
+.cliente-item.expanded .cliente-details { opacity: 1; max-height: 1200px; transform: translateY(0); }
+
+.col { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.list-header > .col, .solicitud-item > .col, .cliente-item > .col { min-width: 0; }
+.small-col { text-align: center; }
+.actions-col { display:flex; gap:0.45rem; justify-content:flex-end; }
+.list-header .actions-col, .solicitud-item .actions-col, .cliente-item .actions-col {
+  /* ensure actions are placed in the last column of the grid */
+  grid-column: -1;
+  justify-self: end;
+}
+.btn-danger { background: linear-gradient(135deg, #dc3545 0%, #b92d3a 100%); color:white; border:none; padding:5px 8px; border-radius:6px; cursor:pointer; min-width:48px; }
+
+.empty-row { padding:1.5rem; text-align:center; color:#888; }
+
+/* Cliente details card polished rows */
+.cliente-details { 
+  padding: 1rem 0; 
+  /* make details occupy entire width of the grid row */
+  grid-column: 1 / -1;
+  transition: all 0.18s ease;
+}
+
+/* when details are visible, add a subtle divider and spacing */
+.cliente-item .cliente-details { margin-top: 0.5rem; }
+.cliente-card-polished { background: linear-gradient(180deg, #ffffff, #fbfeff); border-radius: 8px; padding: 1rem; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+.cliente-card-polished .card-header h4 { margin: 0 0 0.25rem 0; color: var(--primary-blue); }
+.cliente-card-polished .muted { color: #6b7280; font-size: 0.85rem; }
+.cliente-card-polished .meta-row { display:flex; gap:0.5rem; margin: 0.5rem 0 1rem 0; flex-wrap:wrap; }
+.cliente-card-polished .pill { background: rgba(0,184,181,0.12); color: var(--primary-blue); padding: 0.35rem 0.6rem; border-radius: 999px; font-weight:600; font-size:0.85rem; }
+
+.cliente-card-polished .cliente-rows { display:flex; flex-direction: column; gap:0.5rem; }
+.cliente-card-polished .cliente-row { display:flex; align-items:center; justify-content:space-between; padding:0.5rem; background: rgba(0,0,0,0.02); border-radius:6px; }
+.cliente-card-polished .cliente-row .label { color: #374151; font-weight:600; font-size:0.9rem; }
+.cliente-card-polished .cliente-row .value { color: #0f172a; font-weight:700; font-size:0.95rem; text-align:right; }
+
+/* Compact card variant for the details */
+.compact-card { padding: 0.8rem; border-radius: 8px; }
+.compact-card .cliente-card-head { display:flex; justify-content:space-between; align-items:center; gap:0.5rem; }
+.compact-card .cliente-title { font-weight:700; color:var(--primary-blue); font-size:1rem; }
+.compact-card .cliente-meta.compact { display:flex; gap:0.45rem; flex-wrap:wrap; margin:0.55rem 0; }
+.compact-card .pill.small { padding: 0.22rem 0.45rem; font-size:0.78rem; font-weight:700; }
+
+/* Grid of fields: responsive and compact */
+.cliente-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:0.45rem; }
+.compact-card .field { background: rgba(0,0,0,0.02); padding:0.45rem; border-radius:6px; display:flex; flex-direction:column; gap:0.15rem; }
+.compact-card .field .label { font-size:0.78rem; color:#5b6470; font-weight:600; }
+.compact-card .field .value { font-size:0.9rem; color:#0b1220; font-weight:700; }
+.compact-card .field.small-muted .label, .compact-card .field.small-muted .value { color:#6b7280; font-weight:600; font-size:0.8rem; }
+.compact-card .field.span-full { grid-column: 1 / -1; }
+
+/* Make sure compact card is responsive on small screens */
+@media (max-width: 720px) {
+  .cliente-grid { grid-template-columns: 1fr; }
+  .list-header, .solicitud-item, .cliente-item { grid-template-columns: 1fr !important; }
+}
+
+/* Field entrance animation: small fade + slide up, staggered for nicer effect */
+.compact-card .field { opacity: 0; transform: translateY(6px); transition: opacity 280ms ease, transform 320ms cubic-bezier(.2,.9,.2,1); }
+.cliente-item.expanded .compact-card .field { opacity: 1; transform: translateY(0); }
+.cliente-item.expanded .compact-card .field:nth-child(1) { transition-delay: 0.02s; }
+.cliente-item.expanded .compact-card .field:nth-child(2) { transition-delay: 0.04s; }
+.cliente-item.expanded .compact-card .field:nth-child(3) { transition-delay: 0.06s; }
+.cliente-item.expanded .compact-card .field:nth-child(4) { transition-delay: 0.08s; }
+.cliente-item.expanded .compact-card .field:nth-child(5) { transition-delay: 0.10s; }
+.cliente-item.expanded .compact-card .field:nth-child(6) { transition-delay: 0.12s; }
+.cliente-item.expanded .compact-card .field:nth-child(7) { transition-delay: 0.14s; }
+.cliente-item.expanded .compact-card .field:nth-child(8) { transition-delay: 0.16s; }
+.cliente-item.expanded .compact-card .field:nth-child(9) { transition-delay: 0.18s; }
+.cliente-item.expanded .compact-card .field:nth-child(10) { transition-delay: 0.20s; }
+.cliente-item.expanded .compact-card .field:nth-child(11) { transition-delay: 0.22s; }
+.cliente-item.expanded .compact-card .field:nth-child(12) { transition-delay: 0.24s; }
+.cliente-item.expanded .compact-card .field:nth-child(13) { transition-delay: 0.26s; }
+.cliente-item.expanded .compact-card .field:nth-child(14) { transition-delay: 0.28s; }
+.cliente-item.expanded .compact-card .field:nth-child(15) { transition-delay: 0.30s; }
+.cliente-item.expanded .compact-card .field:nth-child(16) { transition-delay: 0.32s; }
+.cliente-item.expanded .compact-card .field:nth-child(17) { transition-delay: 0.34s; }
+
+
 table {
   width: 100%;
   border-collapse: separate;
@@ -262,12 +455,12 @@ th::after {
   right: 0;
   height: 2px;
   background: var(--primary-turquoise);
-}
-
-td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-gray);
-  transition: all 0.2s ease;
+  display: grid;
+  /* inherit the grid-template-columns from the parent list wrapper so each list can define proportions */
+  grid-template-columns: inherit;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -282,6 +475,12 @@ th:nth-child(1), td:nth-child(1) { /* Cliente */
 
 th:nth-child(2), td:nth-child(2) { /* Solicitud */
   min-width: 120px;
+.solicitudes-list {
+  grid-template-columns: 2fr 3fr 1fr 1fr 1fr 1fr 1.2fr;
+}
+.clientes-list {
+  grid-template-columns: 2.5fr 1.2fr 2fr 1fr 1fr 1fr;
+}
   max-width: 150px;
 }
 
@@ -851,4 +1050,10 @@ td[colspan] {
   padding: 2rem;
   color: #999;
   font-style: italic;
+}
+
+/* Elevation on hover to make lists feel tactile */
+.list-wrapper:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(12,20,30,0.12);
 }

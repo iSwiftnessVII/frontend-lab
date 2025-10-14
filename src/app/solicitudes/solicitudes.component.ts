@@ -991,4 +991,66 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       console.error('deleteSolicitud', err);
     }
   }
+
+  // Estado para mostrar/ocultar detalles por cliente
+  detallesVisibles: { [key: number]: boolean } = {};
+
+  toggleClienteDetails(id: number) {
+    this.detallesVisibles[id] = !this.detallesVisibles[id];
+  }
+
+  async copyToClipboard(value: string | null): Promise<boolean> {
+    // ignore empty or placeholder values
+    if (!value || value === '-' ) return false;
+    try {
+      await navigator.clipboard.writeText(value.toString());
+      // Optionally, show a small temporary message in the console (UI toast can be added later)
+      console.info('Copiado al portapapeles:', value);
+      return true;
+    } catch (err) {
+      console.error('No se pudo copiar:', err);
+      return false;
+    }
+  }
+
+  // wrapper to copy and show a temporary global toast for a specific field
+  async copyField(key: string, value: string | null) {
+    const ok = await this.copyToClipboard(value);
+    if (!ok) return;
+    this.showToast('Copiado');
+  }
+
+  // Global toast message for copy feedback
+  lastCopiedMessage: string | null = null;
+
+  showToast(message: string, ms = 1400) {
+    this.lastCopiedMessage = message;
+    setTimeout(() => { this.lastCopiedMessage = null; }, ms);
+  }
+
+  // Format ISO / date-like strings into a nicer local representation
+  formatDate(dateStr: string | null): string {
+    if (!dateStr) return '-';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      // e.g. "13 Oct 2025, 14:23" (locale-sensitive)
+      return d.toLocaleString(undefined, {
+        year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  // Generic formatter used in templates
+  formatValue(val: any): string {
+    if (val === null || val === undefined || val === '') return '-';
+    if (typeof val === 'string') {
+      // simple ISO date detection (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS)
+      if (/^\d{4}-\d{2}-\d{2}(T|$)/.test(val)) return this.formatDate(val);
+      return val;
+    }
+    return val.toString();
+  }
 }

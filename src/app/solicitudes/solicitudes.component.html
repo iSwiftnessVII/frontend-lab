@@ -670,44 +670,30 @@
       </small>
     </div>
 
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Solicitud</th>
-            <th>Viable</th>
-            <th>Oferta</th>
-            <th>Encuesta</th>
-            <th>Resultados</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let s of solicitudesFiltradas()">
-            <td>{{ s.nombre_solicitante || '—' }}</td>
-            <td>{{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}</td>
-            <td><input type="checkbox" [checked]="!!s.servicio_viable"
-                (change)="toggleCheck(s, 'servicio_viable', $event.target.checked)" /></td>
-            <td><input type="checkbox" [checked]="!!s.genero_cotizacion"
-                (change)="toggleCheck(s, 'genero_cotizacion', $event.target.checked)" /></td>
-            <td><input type="checkbox" [checked]="!!s.cliente_respondio_encuesta"
-                (change)="toggleCheck(s, 'cliente_respondio_encuesta', $event.target.checked)" /></td>
-            <td><input type="checkbox" [checked]="!!s.numero_informe_resultados"
-                (change)="toggleCheck(s, 'numero_informe_resultados', $event.target.checked)" /></td>
-            <td><button (click)="deleteSolicitud(s.id_solicitud)"
-                style="background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Borrar</button>
-            </td>
-          </tr>
+  <div class="list-wrapper solicitudes-list">
+      <div class="list-header">
+        <div class="col cliente-col">Cliente</div>
+        <div class="col solicitud-col">Solicitud</div>
+        <div class="col small-col">Viable</div>
+        <div class="col small-col">Oferta</div>
+        <div class="col small-col">Encuesta</div>
+        <div class="col small-col">Resultados</div>
+        <div class="col actions-col">Acciones</div>
+      </div>
 
-          <!-- Mensaje cuando la tabla está vacía -->
-          <tr *ngIf="solicitudesFiltradas().length === 0">
-            <td colspan="7" style="text-align: center; padding: 2rem; color: #999;">
-              No hay solicitudes para mostrar
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div *ngFor="let s of solicitudesFiltradas()" class="solicitud-item">
+        <div class="col cliente-col">{{ s.nombre_solicitante || '—' }}</div>
+        <div class="col solicitud-col">{{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}</div>
+        <div class="col small-col"><input type="checkbox" [checked]="!!s.servicio_viable" (change)="toggleCheck(s, 'servicio_viable', $event.target.checked)" /></div>
+        <div class="col small-col"><input type="checkbox" [checked]="!!s.genero_cotizacion" (change)="toggleCheck(s, 'genero_cotizacion', $event.target.checked)" /></div>
+        <div class="col small-col"><input type="checkbox" [checked]="!!s.cliente_respondio_encuesta" (change)="toggleCheck(s, 'cliente_respondio_encuesta', $event.target.checked)" /></div>
+        <div class="col small-col"><input type="checkbox" [checked]="!!s.numero_informe_resultados" (change)="toggleCheck(s, 'numero_informe_resultados', $event.target.checked)" /></div>
+        <div class="col actions-col">
+          <button class="btn-danger" (click)="deleteSolicitud(s.id_solicitud)">Borrar</button>
+        </div>
+      </div>
+
+      <div *ngIf="solicitudesFiltradas().length === 0" class="empty-row">No hay solicitudes para mostrar</div>
     </div>
   </section>
 
@@ -733,36 +719,61 @@
       </small>
     </div>
 
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Identificación</th>
-            <th>Correo</th>
-            <th>Ciudad</th>
-            <th>Celular</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let u of usuariosFiltrados()">
-            <td>{{ u.nombre_solicitante }}</td>
-            <td>{{ u.numero_identificacion }}</td>
-            <td>{{ u.correo_electronico }}</td>
-            <td>{{ u.ciudad }}</td>
-            <td>{{ u.celular || 'Sin celular' }}</td>
-            <td><button (click)="deleteCliente(u.id_usuario)">Borrar</button></td>
-          </tr>
+  <div class="list-wrapper clientes-list">
+      <div class="list-header">
+        <div class="col cliente-name">Nombre</div>
+        <div class="col id-col">Identificación</div>
+        <div class="col email-col">Correo</div>
+        <div class="col city-col">Ciudad</div>
+        <div class="col phone-col">Celular</div>
+        <div class="col actions-col">Acciones</div>
+      </div>
 
-          <!-- Mensaje cuando la tabla está vacía -->
-          <tr *ngIf="usuariosFiltrados().length === 0">
-            <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">
-              No hay clientes para mostrar
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div *ngFor="let u of usuariosFiltrados()" class="cliente-item" tabindex="0" (click)="toggleClienteDetails(u.id_usuario)" (keydown.enter)="toggleClienteDetails(u.id_usuario)" [class.expanded]="detallesVisibles[u.id_usuario]">
+        <div class="col cliente-name">{{ u.nombre_solicitante }}</div>
+        <div class="col id-col">{{ u.numero_identificacion }}</div>
+        <div class="col email-col">{{ u.correo_electronico }}</div>
+        <div class="col city-col">{{ u.ciudad }}</div>
+        <div class="col phone-col">{{ u.celular || 'Sin celular' }}</div>
+        <div class="col actions-col">
+          <button class="btn-danger" (click)="$event.stopPropagation(); deleteCliente(u.id_usuario)">Borrar</button>
+        </div>
+
+        <div *ngIf="detallesVisibles[u.id_usuario]" class="cliente-details">
+          <div class="cliente-card-polished compact-card">
+            <div class="cliente-card-head">
+              <div class="cliente-title">{{ u.nombre_solicitante || u.razon_social || ('Usuario ' + u.id_usuario) }}</div>
+            </div>
+
+            <div class="cliente-meta compact">
+              <span class="pill small">NIT: <strong>{{ u.nit || '—' }}</strong></span>
+              <span class="pill small">ID: <strong>{{ u.numero_identificacion || '—' }}</strong></span>
+              <span class="pill small">Tipo: <strong>{{ u.tipo_usuario || '—' }}</strong></span>
+              <span class="pill small">Activo: <strong>{{ u.activo ? 'Sí' : 'No' }}</strong></span>
+            </div>
+
+            <div class="cliente-grid">
+              <div class="field"><div class="label">Nombre solicitante</div><div class="value">{{ formatValue(u.nombre_solicitante) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('nombre-'+u.id_usuario, u.nombre_solicitante)" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Razón social</div><div class="value">{{ formatValue(u.razon_social) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('razon-'+u.id_usuario, u.razon_social)" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Fecha vinculación</div><div class="value">{{ formatValue(u.fecha_vinculacion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('fecha-'+u.id_usuario, formatValue(u.fecha_vinculacion))" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Tipo identificación</div><div class="value">{{ formatValue(u.tipo_identificacion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('tipoid-'+u.id_usuario, u.tipo_identificacion)" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Sexo</div><div class="value">{{ u.sexo || '-' }}</div></div>
+              <div class="field"><div class="label">Población</div><div class="value">{{ u.tipo_poblacion || '-' }}</div></div>
+              <div class="field"><div class="label">Dirección</div><div class="value">{{ formatValue(u.direccion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('direccion-'+u.id_usuario, u.direccion)" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Ciudad / Departamento</div><div class="value">{{ formatValue(u.ciudad) }} / {{ formatValue(u.departamento) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('ciudad-'+u.id_usuario, (u.ciudad || '') + ' / ' + (u.departamento || ''))" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Teléfono / Celular</div><div class="value">{{ formatValue(u.telefono) }} / {{ formatValue(u.celular) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('tel-'+u.id_usuario, (u.telefono || '') + ' / ' + (u.celular || ''))" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Correo</div><div class="value">{{ formatValue(u.correo_electronico) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('email-'+u.id_usuario, u.correo_electronico)" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Tipo vinculación</div><div class="value">{{ formatValue(u.tipo_vinculacion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('vinc-'+u.id_usuario, u.tipo_vinculacion)" title="Copiar">📋</button></div></div>
+              <div class="field span-full"><div class="label">Observaciones</div><div class="value">{{ formatValue(u.observaciones) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('obs-'+u.id_usuario, u.observaciones)" title="Copiar">📋</button></div></div>
+              <div class="field small-muted"><div class="label">Registro por</div><div class="value">{{ formatValue(u.registro_realizado_por) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('reg-'+u.id_usuario, u.registro_realizado_por)" title="Copiar">📋</button></div></div>
+              <div class="field small-muted"><div class="label">Creado</div><div class="value">{{ formatValue(u.created_at) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('created-'+u.id_usuario, formatValue(u.created_at))" title="Copiar">📋</button></div></div>
+              <div class="field small-muted"><div class="label">Actualizado</div><div class="value">{{ formatValue(u.updated_at) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('updated-'+u.id_usuario, formatValue(u.updated_at))" title="Copiar">📋</button></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="usuariosFiltrados().length === 0" class="empty-row">No hay clientes para mostrar</div>
     </div>
   </section>
 </div>
@@ -771,3 +782,6 @@
 <footer>
   <p>© 2024 LIBA - Laboratorio Integrado de Biociencias Aplicadas. Todos los derechos reservados.</p>
 </footer>
+
+<!-- Global toast -->
+<div class="global-toast" *ngIf="lastCopiedMessage">{{ lastCopiedMessage }}</div>
