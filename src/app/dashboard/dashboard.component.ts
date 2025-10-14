@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
   standalone: true,
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.css'],
   imports: [CommonModule]
 })
 export class DashboardComponent {

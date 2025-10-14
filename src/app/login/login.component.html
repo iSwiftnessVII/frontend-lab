@@ -1,14 +1,20 @@
-<h2>Login</h2>
-<form (submit)="onSubmit($event)">
-  <div>
-    <label for="email">Email:</label>
-    <input id="email" type="email" [(ngModel)]="email" name="email" required>
+<div class="page-center">
+  <div class="card auth-card">
+    <h2>Login</h2>
+    <form (submit)="onSubmit($event)">
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input id="email" type="email" [(ngModel)]="email" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input id="password" type="password" [(ngModel)]="password" name="password" required>
+      </div>
+      <div class="auth-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="loading">{{ loading ? 'Logging...' : 'Login' }}</button>
+      </div>
+    </form>
+    <p><a routerLink="/register">Register</a></p>
+    <p *ngIf="error" class="error">{{ error }}</p>
   </div>
-  <div>
-    <label for="password">Password:</label>
-    <input id="password" type="password" [(ngModel)]="password" name="password" required>
-  </div>
-  <button type="submit" [disabled]="loading">{{ loading ? 'Logging...' : 'Login' }}</button>
-</form>
-<p><a routerLink="/register">Register</a></p>
-<p *ngIf="error">{{ error }}</p>
+</div>
