@@ -1,9 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, OnDestroy, Renderer2, Inject } from '@angular/core';
+import { DOCUMENT, CommonModule } from '@angular/common';
 import { authService } from '../services/auth.service';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -18,29 +17,37 @@ export class LoginComponent implements OnInit, OnDestroy {
   error = '';
   loading = false;
   private returnUrl = '/dashboard';
-  constructor(private router: Router, private route: ActivatedRoute) {
+
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private renderer: Renderer2,
+    @Inject(DOCUMENT) private document: Document,
+  ) {
     const q = this.route.snapshot.queryParamMap.get('returnUrl');
-    if (q) this.returnUrl = q;
+    this.returnUrl = q ? q : this.returnUrl; // Added null check
   }
 
-  ngOnInit() {
-    document.body.classList.add('auth-page');
+  ngOnInit(): void {
+    this.renderer.addClass(this.document.body, 'auth-page');
   }
 
-  ngOnDestroy() {
-    document.body.classList.remove('auth-page');
+  ngOnDestroy(): void {
+    this.renderer.removeClass(this.document.body, 'auth-page');
   }
 
   async onSubmit(e: Event) {
     e.preventDefault();
+    this.loading = true;
+    this.error = '';
     try {
-      this.loading = true;
-      this.error = '';
       const res = await authService.login(this.email, this.password);
       await this.router.navigateByUrl(this.returnUrl);
-      this.loading = false;
     } catch (err: any) {
-      this.error = err.message || 'Login failed';
+      console.error('Login error:', err); // Log error for debugging
+      this.error = err?.message || 'Login failed. Please try again.';
+    } finally {
+      this.loading = false;
     }
   }
 

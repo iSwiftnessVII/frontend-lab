@@ -34,4 +34,88 @@ body.auth-page .container {
 	padding-top: 0;
 }
 
+/* Global app navigation (moved to global scope) */
+nav.app-nav{
+  background: #ffffff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0.5rem 1rem;
+  border-bottom:1px solid #e6e6e6;
+  box-sizing:border-box;
+  position:sticky;
+  top:0;
+  z-index:1000;
+}
+nav.app-nav .brand{
+  font-weight:700;
+  font-size:1rem;
+  color:var(--primary-blue);
+}
+nav.app-nav ul{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  gap:1rem;
+  align-items:center;
+}
+nav.app-nav li{margin:0}
+nav.app-nav a{
+  color:inherit;
+  text-decoration:none;
+  padding:0.35rem 0.6rem;
+  border-radius:6px;
+  transition:background-color .12s ease, transform .12s ease;
+}
+nav.app-nav a:hover{background:rgba(0,0,0,0.04);transform:translateY(-1px)}
+
+/* Hide global nav when the app is in an auth page */
+body.auth-page nav.app-nav{display:none}
+
 /* You can add other global styles or imports below */
+
+/* Moved global navigation/menu styles (from solicitudes.component.css) */
+nav.app-nav {
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  box-sizing: border-box;
+}
+nav.app-nav .brand {
+  font-weight: 600;
+}
+nav.app-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+nav.app-nav li {
+  margin: 0;
+}
+nav.app-nav a {
+  color: inherit;
+  text-decoration: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  transition: background-color .12s ease;
+}
+nav.app-nav a:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+/* Optional responsive helpers (neutral, won't affect component forms/lists) */
+@media (max-width: 600px) {
+  nav.app-nav {
+    padding: 0.4rem;
+  }
+  nav.app-nav ul {
+    gap: 0.5rem;
+  }
+}

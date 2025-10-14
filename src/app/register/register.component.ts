@@ -1,9 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, OnDestroy, Renderer2, Inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { authService } from '../services/auth.service';
 import { CommonModule, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -19,14 +19,18 @@ export class RegisterComponent implements OnInit, OnDestroy {
   error = '';
   success = '';
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private renderer: Renderer2,
+    @Inject(DOCUMENT) private document: Document
+  ) {}
 
-  ngOnInit() {
-    document.body.classList.add('auth-page');
+  ngOnInit(): void {
+    this.renderer.addClass(this.document.body, 'auth-page');
   }
 
-  ngOnDestroy() {
-    document.body.classList.remove('auth-page');
+  ngOnDestroy(): void {
+    this.renderer.removeClass(this.document.body, 'auth-page');
   }
 
   async onSubmit(e: Event) {

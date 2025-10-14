@@ -1,0 +1,36 @@
+<div class="login-root">
+  <div class="login-backdrop"></div>
+  <main class="login-center">
+    <section class="login-card">
+      <header class="login-header">
+        <div class="brand-circle">L</div>
+        <h1 class="login-title">Restablecer contraseña</h1>
+        <p class="login-sub">Ingresa tu correo para recibir el enlace</p>
+      </header>
+
+      <form class="login-form" (submit)="onSubmit($event)" *ngIf="!submitted; else doneTpl">
+        <div class="form-group">
+          <label for="email">Correo electrónico</label>
+          <input id="email" name="email" type="email" [(ngModel)]="email" required placeholder="tu@ejemplo.com" />
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" type="submit" [disabled]="loading">{{ loading ? 'Enviando…' : 'Enviar enlace' }}</button>
+        </div>
+
+        <div class="login-foot">
+          <a class="link" routerLink="/login">Volver al inicio de sesión</a>
+        </div>
+
+        <p class="muted" *ngIf="message">{{ message }}</p>
+      </form>
+
+      <ng-template #doneTpl>
+        <p class="success">Si el correo está registrado, te enviaremos un enlace para restablecer tu contraseña.</p>
+        <div class="login-foot">
+          <a class="link" routerLink="/login">Volver al inicio de sesión</a>
+        </div>
+      </ng-template>
+    </section>
+  </main>
+</div>
