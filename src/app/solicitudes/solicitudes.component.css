@@ -14,6 +14,149 @@
   --border-gray: #e2e8f0;
 }
 
+/* ---------- RESET ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-family: "Poppins", sans-serif;
+  background: var(--light-gray);
+  color: var(--text-gray);
+  line-height: 1.6;
+}
+
+/* ---------- SECCIONES GENERALES ---------- */
+h2, h3 {
+  color: var(--primary-blue);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-turquoise), transparent);
+  border-radius: 2px;
+}
+
+h3::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 20px;
+  background: var(--primary-turquoise);
+  border-radius: 2px;
+}
+
+section {
+  background: var(--primary-white);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: none;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-blue), var(--primary-turquoise));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+section:hover::before {
+  opacity: 1;
+}
+
+section:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+form {
+  width: 100%;
+}
+
+/* ---------- FORMULARIOS ---------- */
+form div[style*="display:grid"] {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+  gap: 1.5rem !important;
+}
+
+label {
+  font-weight: 500;
+  color: var(--primary-blue);
+  margin-bottom: 0.5rem;
+  display: block;
+  font-size: 0.95rem;
+  position: relative;
+  padding-left: 8px;
+}
+
+label::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--primary-turquoise);
+  border-radius: 2px;
+  opacity: 0.6;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px solid var(--border-gray);
+  border-radius: 6px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background-color: var(--primary-white);
+  font-size: 0.95rem;
+  position: relative;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary-turquoise);
+  box-shadow: 0 0 0 3px rgba(0, 184, 181, 0.1);
+  background: linear-gradient(to right, rgba(0, 184, 181, 0.02), transparent);
+}
+
+input:hover:not(:focus),
+select:hover:not(:focus),
+textarea:hover:not(:focus) {
+  border-color: #cbd5e0;
+}
+
 textarea {
   resize: vertical;
   min-height: 100px;
