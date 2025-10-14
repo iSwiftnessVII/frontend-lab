@@ -87,11 +87,15 @@ export const reactivosService = {
     const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/hoja-seguridad`);
     let data: any = null; try { data = await res.json(); } catch {}
     if (!res.ok) throw new Error((data && data.message) || 'No encontrada');
-    // Asegurar que la URL de visualización sea absoluta hacia el backend
+    // Normalizar URL de visualización manteniendo el prefijo /api/reactivos
     try {
-      if (data && data.url) {
-        const full = new URL(data.url, API_BASE).toString();
-        data.url = full;
+      if (data && data.url && typeof data.url === 'string') {
+        // Si ya es absoluta, la dejamos igual
+        if (!/^https?:\/\//i.test(data.url)) {
+          const base = API_BASE.endsWith('/') ? API_BASE : API_BASE + '/';
+          // Evitar perder el segmento 'api/reactivos' como ocurría con new URL(relative, base)
+          data.url = base + data.url.replace(/^\/+/, '');
+        }
       }
     } catch {}
     return data;
@@ -119,11 +123,13 @@ export const reactivosService = {
     const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/cert-analisis`);
     let data: any = null; try { data = await res.json(); } catch {}
     if (!res.ok) throw new Error((data && data.message) || 'No encontrado');
-    // Asegurar que la URL de visualización sea absoluta hacia el backend
+    // Normalizar URL de visualización manteniendo el prefijo /api/reactivos
     try {
-      if (data && data.url) {
-        const full = new URL(data.url, API_BASE).toString();
-        data.url = full;
+      if (data && data.url && typeof data.url === 'string') {
+        if (!/^https?:\/\//i.test(data.url)) {
+          const base = API_BASE.endsWith('/') ? API_BASE : API_BASE + '/';
+          data.url = base + data.url.replace(/^\/+/, '');
+        }
       }
     } catch {}
     return data;

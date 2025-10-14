@@ -1,24 +1,47 @@
 /* Catalog cards layout */
+.container {
+	max-width: 1400px;
+	margin: 0 auto;
+	padding: 2rem;
+}
 .cards-container { margin-top: 0.5rem; }
 
 .catalogo-cards {
-	display: grid;
-	grid-template-columns: 1fr;
-	gap: 0.5rem;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	gap: 1.25rem;
+	justify-content: center;
 }
 
+
+
+
+/* Doblamos el tamaño visual (ancho máximo y espaciamiento) */
 .catalog-card {
 	background: var(--primary-white);
 	border: 1px solid var(--border-gray);
 	border-radius: 10px;
-	padding: 0.75rem 0.85rem;
+	padding: 1.6rem 1.9rem;
 	box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 	transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+	animation: cardFade .4s ease;
+	width: 100%;
+	max-width: 1040px; /* antes 520px */
+	flex: 1 1 100%;
 }
 .catalog-card:hover {
-	box-shadow: 0 4px 12px rgba(0,0,0,0.10);
-	transform: translateY(-2px);
+	box-shadow: 0 6px 18px rgba(0,0,0,0.16);
 }
+
+/* Contenido interno escalado */
+.catalog-card .tags { gap: 0.9rem; }
+.catalog-card .tag { font-size: 0.85rem; padding: 0.65rem 1rem; }
+.catalog-card .card-name { font-size: 1.25rem; padding: 1rem 1.2rem; border-radius: 10px; }
+.catalog-card .card-name .badge { font-size: 0.65rem; padding: 4px 8px; }
+.pdf-btn { width: 42px; height: 42px; }
+.pdf-btn .icon { width: 20px; height: 20px; }
+
 
 .catalog-card .card-top {
 	display: grid;
@@ -29,16 +52,17 @@
 
 .catalog-card .tags {
 	display: grid;
-	grid-template-columns: 160px 1fr 1fr;
-	gap: 0.5rem;
+	grid-template-columns: 170px 1fr 1fr;
+	gap: 0.55rem;
 }
+
 
 .catalog-card .tag {
 	background: var(--light-gray);
 	color: var(--text-gray);
-	padding: 0.45rem 0.65rem;
+	padding: 0.5rem 0.75rem;
 	border-radius: 30px;
-	font-size: 0.75rem;
+	font-size: 0.72rem;
 	font-weight: 500;
 	letter-spacing: .3px;
 	white-space: nowrap;
@@ -47,19 +71,62 @@
 	border: 1px solid var(--border-gray);
 }
 
+
 .catalog-card .card-name {
-	margin-top: 0.55rem;
+	margin-top: 0.75rem;
 	background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%);
 	color: var(--primary-white);
-	padding: 0.65rem 0.85rem;
+	padding: 0.75rem 0.9rem;
 	border-radius: 6px;
-	font-size: 0.9rem;
+	font-size: 0.95rem;
 	font-weight: 600;
 	letter-spacing: .25px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	display:flex;
+	align-items:center;
+	justify-content:space-between;
 }
+
+.catalog-card .card-name .pdf-badges {display:inline-flex; gap:4px; margin-left:8px; align-items:center;}
+
+.catalog-card .card-name .badge {
+	background: rgba(255,255,255,0.25);
+	color: #fff;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	font-size: 0.6rem;
+	font-weight:600;
+	letter-spacing:.5px;
+	border-radius: 8px; /* esquinas curvas */
+	line-height:1;
+	border:1px solid rgba(255,255,255,0.35);
+	position:relative;
+	text-align:center;
+	display:inline-flex;
+	align-items:center;
+	justify-content:center;
+}
+.catalog-card .card-name .badge.loading { background: rgba(255,255,255,0.15); }
+.catalog-card .card-name .badge.loading::after {
+	content:"";
+	width:14px; height:14px;
+	border:2px solid rgba(255,255,255,0.55);
+	border-top-color: rgba(255,255,255,0.05);
+	border-radius:50%;
+	animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg);} }
+@keyframes cardFade { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:translateY(0);} }
+@keyframes flashMark { 0%{background:var(--alert-yellow);} 100%{background:var(--alert-yellow);} }
+
+mark { background: var(--alert-yellow); color: #222; padding:0 2px; border-radius:2px; animation: flashMark 1.2s ease 1; }
+.catalog-card .card-name .badge.ok { background: #1fae64; border-color:#1fae64; }
+.catalog-card .card-name .badge.fail { background: #d63d3d; border-color:#d63d3d; }
+
+mark { background: var(--alert-yellow); color: #222; padding:0 2px; border-radius:2px; }
 
 .catalogo-stats {
 	display: flex;
@@ -120,8 +187,20 @@
 .pdf-group + .pdf-group::before { background: var(--border-gray); }
 
 /* Responsive tweaks */
-@media (max-width: 768px) {
-	.catalog-card .tags {
-		grid-template-columns: 1fr;
-	}
+@media (max-width: 1200px) {
+	.catalog-card { max-width: 880px; }
+}
+@media (max-width: 1000px) {
+	.catalog-card { max-width: 760px; }
+}
+@media (max-width: 900px) {
+	.catalog-card { max-width: 640px; }
+}
+@media (max-width: 640px) {
+	.catalogo-cards { flex-direction: column; }
+	.catalog-card { max-width: 100%; padding:1.1rem 1.25rem; }
+	.catalog-card .card-name { font-size:1rem; margin-top:0.9rem; }
+	.catalog-card .tag { font-size:0.75rem; padding:0.55rem 0.75rem; }
+	.catalog-card .tags { grid-template-columns: 1fr; gap:0.7rem; }
+	.pdf-btn { width: 40px; height: 40px; }
 }

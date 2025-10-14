@@ -59,9 +59,9 @@
   <article class="catalog-card" *ngFor="let c of catalogoResultados; trackBy: trackByCatalogo">
           <div class="card-top">
             <div class="tags">
-              <span class="tag"><strong>Código:</strong> {{ c.codigo }}</span>
-              <span class="tag"><strong>Tipo:</strong> {{ c.tipo_reactivo }}</span>
-              <span class="tag"><strong>Clasificación:</strong> {{ c.clasificacion_sga }}</span>
+              <span class="tag"><strong>Código: </strong> <span [innerHTML]="highlightField(c.codigo, 'codigo')"></span></span>
+              <span class="tag"><strong>Tipo: </strong> <span [innerHTML]="highlightField(c.tipo_reactivo, 'otro')"></span></span>
+              <span class="tag"><strong>Clasificación: </strong> <span [innerHTML]="highlightField(c.clasificacion_sga, 'otro')"></span></span>
             </div>
             <div class="pdf-actions" aria-label="Acciones PDF">
               <div class="pdf-group hoja-group">
@@ -90,7 +90,17 @@
               </div>
             </div>
           </div>
-          <div class="card-name" [title]="c.nombre">{{ c.nombre }}</div>
+          <div class="card-name" [title]="c.nombre">
+            <span [innerHTML]="highlightField(c.nombre, 'nombre')"></span>
+            <span class="pdf-badges" [attr.title]="(pdfStatus[c.codigo] ? (pdfStatus[c.codigo].hoja===true?'HS✓': pdfStatus[c.codigo].hoja===false?'HS✗':'HS…') : 'HS…') + ' • ' + (pdfStatus[c.codigo] ? (pdfStatus[c.codigo].cert===true?'CA✓': pdfStatus[c.codigo].cert===false?'CA✗':'CA…') : 'CA…')" [attr.aria-label]="(pdfStatus[c.codigo] ? (pdfStatus[c.codigo].hoja===true?'Hoja disponible': pdfStatus[c.codigo].hoja===false?'Hoja no disponible':'Hoja verificando') : 'Hoja verificando') + ' y ' + (pdfStatus[c.codigo] ? (pdfStatus[c.codigo].cert===true?'Certificado disponible': pdfStatus[c.codigo].cert===false?'Certificado no disponible':'Certificado verificando') : 'Certificado verificando')">
+              <span class="badge" [class.loading]="pdfStatus[c.codigo] && pdfStatus[c.codigo].hoja===null" [class.ok]="pdfStatus[c.codigo] && pdfStatus[c.codigo].hoja === true" [class.fail]="pdfStatus[c.codigo] && pdfStatus[c.codigo].hoja === false" title="Hoja de seguridad" aria-label="Hoja de seguridad">
+                HS
+              </span>
+              <span class="badge" [class.loading]="pdfStatus[c.codigo] && pdfStatus[c.codigo].cert===null" [class.ok]="pdfStatus[c.codigo] && pdfStatus[c.codigo].cert === true" [class.fail]="pdfStatus[c.codigo] && pdfStatus[c.codigo].cert === false" title="Certificado de análisis" aria-label="Certificado de análisis">
+                CA
+              </span>
+            </span>
+          </div>
         </article>
       </div>
       <p *ngIf="!catalogoCargando && !catalogoResultados.length">No hay elementos en el catálogo.</p>

@@ -1,4 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -94,10 +95,26 @@ export class ReactivosComponent implements OnInit {
   // Panel de catálogo dentro del formulario (se mantiene para autocompletar)
   mostrarCatalogoFormPanel: boolean = false;
 
-  constructor() {}
+  // Estado de disponibilidad de PDFs por código
+  pdfStatus: { [codigo: string]: { hoja: boolean | null; cert: boolean | null } } = {};
+  // Helper para actualizar estado PDF y forzar cambio de referencia
+  private setPdfStatus(codigo: string, changes: Partial<{ hoja: boolean | null; cert: boolean | null }>) {
+    const prev = this.pdfStatus[codigo] || { hoja: null, cert: null };
+    this.pdfStatus = { ...this.pdfStatus, [codigo]: { ...prev, ...changes } };
+    this.persistPdfStatus();
+  }
+
+  constructor(private sanitizer: DomSanitizer) {}
 
   async init() {
     try {
+      // Restaurar cache pdfStatus si existe
+      try {
+        const cache = sessionStorage.getItem('pdfStatusCache');
+        if (cache) {
+          this.pdfStatus = JSON.parse(cache);
+        }
+      } catch {}
       // Cargar auxiliares y catálogo en paralelo para reducir tiempo de espera perceptual
       this.catalogoCargando = true;
       await Promise.all([
@@ -105,6 +122,8 @@ export class ReactivosComponent implements OnInit {
         this.loadReactivos(10),
         this.loadCatalogoInicial()
       ]);
+      // Guardar cache inicial tras carga
+      this.persistPdfStatus();
     } catch (err) {
       console.error('Error inicializando Reactivos:', err);
     }
@@ -161,6 +180,8 @@ export class ReactivosComponent implements OnInit {
       }
       this.catalogoCodigoResultados = this.catalogoBaseSig().slice();
       this.catalogoNombreResultados = this.catalogoBaseSig().slice();
+      // Pre-cargar disponibilidad de PDFs para los visibles iniciales
+      this.preloadDocsForVisible();
     } catch (e) {
       console.error('Error cargando catálogo inicial', e);
       this.catalogoMsg = 'Error cargando catálogo';
@@ -204,7 +225,8 @@ export class ReactivosComponent implements OnInit {
     if (!q) {
       this.catalogoCodigoResultados = this.catalogoBaseSig().slice();
     } else {
-      this.catalogoCodigoResultados = this.catalogoBaseSig().filter(c => this.normalizarTexto(c.codigo || '').startsWith(q));
+      // Coincidencia insensible a mayúsculas y en cualquier parte del código
+      this.catalogoCodigoResultados = this.catalogoBaseSig().filter(c => this.normalizarTexto(c.codigo || '').includes(q));
     }
   }
 
@@ -218,27 +240,47 @@ export class ReactivosComponent implements OnInit {
   }
 
   async filtrarCatalogoPorCampos() {
-    const codeQ = this.normalizarTexto(this.codigoFiltro || '');
-    const nameQ = this.normalizarTexto(this.nombreFiltro || '');
+    const codeQraw = (this.codigoFiltro || '').trim();
+    const nameQraw = (this.nombreFiltro || '').trim();
+    const codeQ = this.normalizarTexto(codeQraw);
+    const nameQ = this.normalizarTexto(nameQraw);
     this.catalogoOffset = 0;
-    const query = (codeQ || nameQ) ? (codeQ || nameQ) : '';
-    const resp = await reactivosService.buscarCatalogo(query, this.catalogoVisibleCount, this.catalogoOffset);
+
+    // Estrategia: no mezclamos. Si sólo hay código -> buscar por código; si sólo nombre -> buscar por nombre; si ambos -> cargar base limitada y filtrar local con AND.
+    let backendQuery = '';
+    if (codeQ && !nameQ) backendQuery = codeQraw; // enviar tal cual para que backend pueda usar LIKE sobre codigo
+    else if (nameQ && !codeQ) backendQuery = nameQraw; // sólo nombre
+    else backendQuery = ''; // ambos o ninguno -> traer primer page y filtrar local
+
+  // Si la búsqueda es de un único carácter (código o nombre), ampliamos límite para no truncar demasiados resultados.
+  const singleCharQuery = (backendQuery && backendQuery.length === 1);
+  const effectiveLimit = singleCharQuery ? 0 : this.catalogoVisibleCount; // 0 => backend sin límite
+  const resp = await reactivosService.buscarCatalogo(backendQuery, effectiveLimit, this.catalogoOffset);
+    let base: any[] = [];
     if (Array.isArray(resp)) {
-      this.catalogoBaseSig.set(resp);
+      base = resp;
       this.catalogoTotal = resp.length;
-      let filtered = resp;
-      if (codeQ) filtered = filtered.filter(c => this.normalizarTexto(c.codigo || '').includes(codeQ));
-      if (nameQ) filtered = filtered.filter(c => this.normalizarTexto(c.nombre || '').includes(nameQ));
-      this.catalogoResultadosSig.set(filtered.slice(0, this.catalogoVisibleCount));
-      this.catalogoTotal = filtered.length; // ajustar total a filtrado
     } else {
-      const base = resp.rows || [];
-      this.catalogoBaseSig.set(base);
+      base = resp.rows || [];
       this.catalogoTotal = resp.total || base.length;
-      this.catalogoResultadosSig.set(base.slice());
     }
+
+    // Filtrado exclusivo
+    let filtered = base;
+    if (codeQ) {
+      filtered = filtered.filter(c => this.normalizarTexto(c.codigo || '').includes(codeQ));
+    }
+    if (nameQ) {
+      // filtrado adicional por nombre, pero sin que el nombre afecte el código (AND si ambos presentes)
+      filtered = filtered.filter(c => this.normalizarTexto(c.nombre || '').includes(nameQ));
+    }
+
+    this.catalogoBaseSig.set(base);
+  this.catalogoResultadosSig.set(singleCharQuery ? filtered : filtered.slice(0, this.catalogoVisibleCount));
+    this.catalogoTotal = filtered.length;
     this.catalogoCodigoResultados = this.catalogoBaseSig().slice();
     this.catalogoNombreResultados = this.catalogoBaseSig().slice();
+    this.preloadDocsForVisible();
   }
 
   normalizarTexto(s: string): string {
@@ -268,6 +310,7 @@ export class ReactivosComponent implements OnInit {
       this.catalogoTotal = resp.total || this.catalogoTotal;
     }
     this.catalogoResultadosSig.set(this.catalogoResultadosSig().concat(nuevos));
+    this.preloadDocsForVisible(nuevos);
   }
 
   trackByCatalogo(index: number, item: any) {
@@ -281,6 +324,7 @@ export class ReactivosComponent implements OnInit {
     try {
       await reactivosService.subirHojaSeguridad(codigo, f);
       this.catalogoMsg = `Hoja de seguridad subida para ${codigo}`;
+  this.setPdfStatus(codigo, { hoja: true });
     } catch (e: any) {
       this.catalogoMsg = e?.message || 'Error subiendo hoja de seguridad';
     } finally {
@@ -292,7 +336,9 @@ export class ReactivosComponent implements OnInit {
     try {
       await reactivosService.eliminarHojaSeguridad(codigo);
       this.catalogoMsg = `Hoja de seguridad eliminada para ${codigo}`;
+      this.setPdfStatus(codigo, { hoja: false });
     } catch (e: any) {
+      this.setPdfStatus(codigo, { hoja: false });
       this.catalogoMsg = e?.message || 'Error eliminando hoja de seguridad';
     }
   }
@@ -302,6 +348,7 @@ export class ReactivosComponent implements OnInit {
     try {
       await reactivosService.subirCertAnalisis(codigo, f);
       this.catalogoMsg = `Certificado de análisis subido para ${codigo}`;
+  this.setPdfStatus(codigo, { cert: true });
     } catch (e: any) {
       this.catalogoMsg = e?.message || 'Error subiendo certificado de análisis';
     } finally {
@@ -313,7 +360,9 @@ export class ReactivosComponent implements OnInit {
     try {
       await reactivosService.eliminarCertAnalisis(codigo);
       this.catalogoMsg = `Certificado de análisis eliminado para ${codigo}`;
+      this.setPdfStatus(codigo, { cert: false });
     } catch (e: any) {
+      this.setPdfStatus(codigo, { cert: false });
       this.catalogoMsg = e?.message || 'Error eliminando certificado de análisis';
     }
   }
@@ -416,6 +465,59 @@ export class ReactivosComponent implements OnInit {
   get catalogoResultados() { return this.catalogoResultadosSig(); }
   get catalogoBase() { return this.catalogoBaseSig(); }
 
+  // Pre-carga de disponibilidad de PDFs (solo estado, no abre ventana)
+  async preloadDocsForVisible(list?: any[]) {
+    const items = list || this.catalogoResultadosSig();
+    // Limitar a 20 para evitar tormenta de peticiones
+    const slice = items.slice(0, 20);
+    for (const item of slice) {
+      const codigo = item.codigo;
+      if (!codigo) continue;
+      if (!this.pdfStatus[codigo]) {
+        this.pdfStatus[codigo] = { hoja: null, cert: null };
+        // Lanzar comprobaciones en paralelo (sin await secuencial bloqueante)
+        this.checkPdfAvailability(codigo);
+      }
+    }
+  }
+
+  private async checkPdfAvailability(codigo: string) {
+    try { await reactivosService.obtenerHojaSeguridad(codigo); this.setPdfStatus(codigo, { hoja: true }); }
+    catch { this.setPdfStatus(codigo, { hoja: false }); }
+    try { await reactivosService.obtenerCertAnalisis(codigo); this.setPdfStatus(codigo, { cert: true }); }
+    catch { this.setPdfStatus(codigo, { cert: false }); }
+  }
+
+  // Resalta coincidencias de búsqueda/filtro dentro de campos
+  highlightField(value: string, field: 'codigo' | 'nombre' | 'otro' = 'otro'): SafeHtml {
+    if (!value) return '';
+    // Determinar si el usuario está filtrando exclusivamente por código o exclusivamente por nombre
+    const hasCode = !!this.codigoFiltro.trim();
+    const hasName = !!this.nombreFiltro.trim();
+    const exclusiveCode = hasCode && !hasName;
+    const exclusiveName = hasName && !hasCode;
+
+    let term: string | null = null;
+    if (exclusiveCode && field === 'codigo') {
+      term = this.normalizarTexto(this.codigoFiltro);
+    } else if (exclusiveName && field === 'nombre') {
+      term = this.normalizarTexto(this.nombreFiltro);
+    } else {
+      // No resaltar en otros casos para evitar "sombreado" no deseado
+      return value;
+    }
+    if (!term) return value;
+  // Escapar caracteres especiales para construir regex seguro
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`(${escaped})`, 'ig');
+    const html = value.replace(re, '<mark>$1</mark>');
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  private persistPdfStatus() {
+    try { sessionStorage.setItem('pdfStatusCache', JSON.stringify(this.pdfStatus)); } catch {}
+  }
+
   async loadDocs(codigo: string) {
     this.hojaUrl = null; this.certUrl = null; this.hojaMsg = ''; this.certMsg = '';
     try {
@@ -451,6 +553,8 @@ export class ReactivosComponent implements OnInit {
       await reactivosService.eliminarHojaSeguridad(this.catalogoSeleccionado.codigo);
       this.hojaUrl = null;
       this.hojaMsg = 'Hoja de seguridad eliminada';
+      const codigo = this.catalogoSeleccionado.codigo;
+      this.setPdfStatus(codigo, { hoja: false });
     } catch (e) {
       this.hojaMsg = 'Error eliminando hoja';
     }
@@ -479,6 +583,8 @@ export class ReactivosComponent implements OnInit {
       await reactivosService.eliminarCertAnalisis(this.catalogoSeleccionado.codigo);
       this.certUrl = null;
       this.certMsg = 'Certificado de análisis eliminado';
+      const codigo = this.catalogoSeleccionado.codigo;
+      this.setPdfStatus(codigo, { cert: false });
     } catch (e) {
       this.certMsg = 'Error eliminando certificado';
     }
