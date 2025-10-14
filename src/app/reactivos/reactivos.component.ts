@@ -91,6 +91,11 @@ export class ReactivosComponent implements OnInit {
 
   // Lista de reactivos
   reactivos: Array<any> = [];
+  // Filtros de inventario (3 campos en una fila)
+  reactivosLoteQ = '';
+  reactivosCodigoQ = '';
+  reactivosNombreQ = '';
+  reactivosFiltrados: Array<any> = [];
   reactivosQ = '';
   // Panel de catálogo dentro del formulario (se mantiene para autocompletar)
   mostrarCatalogoFormPanel: boolean = false;
@@ -142,6 +147,7 @@ export class ReactivosComponent implements OnInit {
   async loadReactivos(limit?: number) {
     const rows = await reactivosService.listarReactivos(this.reactivosQ || '', limit);
     this.reactivos = rows || [];
+    this.aplicarFiltroReactivos();
   }
 
   async buscarCatalogo() {
@@ -692,8 +698,30 @@ export class ReactivosComponent implements OnInit {
   }
 
   async filtrarReactivos() {
-    // Filtrar vuelve a cargar con límite 10 para mantener paginación simple
-    await this.loadReactivos(10);
+    // Filtrado local por lote, código y nombre (insensible a mayúsculas/acentos)
+    this.aplicarFiltroReactivos();
+  }
+
+  private aplicarFiltroReactivos() {
+    const normalizar = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const qLote = normalizar(this.reactivosLoteQ);
+    const qCod = normalizar(this.reactivosCodigoQ);
+    const qNom = normalizar(this.reactivosNombreQ);
+
+    if (!qLote && !qCod && !qNom) {
+      this.reactivosFiltrados = this.reactivos.slice();
+      return;
+    }
+
+    this.reactivosFiltrados = (this.reactivos || []).filter(r => {
+      const lote = normalizar(String(r.lote ?? ''));
+      const codigo = normalizar(String(r.codigo ?? ''));
+      const nombre = normalizar(String(r.nombre ?? ''));
+      if (qLote && !lote.includes(qLote)) return false;
+      if (qCod && !codigo.includes(qCod)) return false;
+      if (qNom && !nombre.includes(qNom)) return false;
+      return true;
+    });
   }
 
   async mostrarTodosReactivos() {

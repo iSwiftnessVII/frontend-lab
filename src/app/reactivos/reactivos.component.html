@@ -58,7 +58,7 @@
       <div class="catalogo-stats" *ngIf="!catalogoCargando && catalogoResultados.length">
         <span>🧪 Mostrando {{ catalogoResultados.length }} de {{ catalogoTotal || catalogoBase.length }} reactivos</span>
       </div>
-      <div class="catalogo-cards">
+  <div class="catalogo-cards">
   <article class="catalog-card" *ngFor="let c of catalogoResultados; trackBy: trackByCatalogo">
           <div class="card-top">
             <div class="tags">
@@ -107,10 +107,6 @@
         </article>
       </div>
       <p *ngIf="!catalogoCargando && !catalogoResultados.length">No hay elementos en el catálogo.</p>
-      <div *ngIf="!catalogoCargando && catalogoResultados.length && catalogoResultados.length < catalogoBase.length" class="catalogo-load-more">
-        <button type="button" (click)="cargarMasCatalogo()">Cargar más</button>
-        <small>{{ catalogoResultados.length }} / {{ catalogoBase.length }}</small>
-      </div>
     </div>
   </div>
 </section>
@@ -255,10 +251,19 @@
   <div>
 
 
-    <div class="filters-row">
-      <label for="reactivosQ">Buscar reactivos</label>
-      <input id="reactivosQ" [(ngModel)]="reactivosQ" (input)="filtrarReactivos()" />
-      <button type="button" (click)="mostrarTodosReactivos()">Mostrar todos</button>
+    <div class="filters-row reactivos-filters">
+      <div>
+        <label for="reactLoteQ">Lote</label>
+        <input id="reactLoteQ" [(ngModel)]="reactivosLoteQ" (input)="filtrarReactivos()" />
+      </div>
+      <div>
+        <label for="reactCodigoQ">Código</label>
+        <input id="reactCodigoQ" [(ngModel)]="reactivosCodigoQ" (input)="filtrarReactivos()" />
+      </div>
+      <div>
+        <label for="reactNombreQ">Nombre</label>
+        <input id="reactNombreQ" [(ngModel)]="reactivosNombreQ" (input)="filtrarReactivos()" />
+      </div>
     </div>
     <div class="table-container">
     <table class="reactivos-table">
@@ -277,7 +282,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let r of reactivos">
+  <tr *ngFor="let r of reactivosFiltrados">
           <td>{{ r.lote }}</td>
           <td>{{ r.codigo }}</td>
           <td class="truncate" title="{{ r.nombre }}">{{ r.nombre }}</td>

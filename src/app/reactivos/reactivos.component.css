@@ -188,6 +188,21 @@ mark { background: var(--alert-yellow); color: #222; padding:0 2px; border-radiu
 
 }
 
+/* Filtros de inventario (3 en una fila) */
+.reactivos-filters {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 1rem;
+	margin: 1rem 0;
+}
+.reactivos-filters > div { display: flex; flex-direction: column; }
+@media (max-width: 900px) {
+	.reactivos-filters { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+	.reactivos-filters { grid-template-columns: 1fr; }
+}
+
 /* Red PDF buttons (squares) */
 .pdf-actions { display: flex; gap: 0.5rem; }
 .pdf-group { display: flex; gap: 0.5rem; }
