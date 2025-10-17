@@ -1,0 +1,277 @@
+<div class="liba-theme container insumos-page">
+
+    <!-- Catálogo de insumos -->
+    <h2>Crear nuevo insumo en catálogo</h2>
+    <section>
+        <form class="form-grid" (submit)="crearCatalogo($event)">
+            <div>
+                <label for="catItem">Item</label>
+                <input id="catItem" [(ngModel)]="catItem" name="catItem" required placeholder="Ej: 001" />
+            </div>
+            <div>
+                <label for="catNombre">Nombre</label>
+                <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required
+                    placeholder="Ej: Guantes de nitrilo" />
+            </div>
+            <div>
+                <label for="catDescripcion">Descripción</label>
+                <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"></textarea>
+            </div>
+            <div><button type="submit">Agregar al catálogo</button></div>
+        </form>
+        <p *ngIf="catalogoMsg" aria-live="polite" role="status">{{ catalogoMsg }}</p>
+    </section>
+
+    <h2>Catálogo de insumos</h2>
+    <section>
+        <div>
+            <div class="filters-grid catalogo-filters">
+                <div>
+                    <label for="catalogoItemQ">Filtrar por item</label>
+                    <input id="catalogoItemQ" [(ngModel)]="itemFiltro" (input)="filtrarCatalogoPorCampos()"
+                        placeholder="Ej: 001" />
+                </div>
+                <div>
+                    <label for="catalogoNombreQ">Filtrar por nombre</label>
+                    <input id="catalogoNombreQ" [(ngModel)]="nombreFiltro" (input)="filtrarCatalogoPorCampos()"
+                        placeholder="Ej: Guantes" />
+                </div>
+                <div class="reset-cell">
+                    <button type="button" class="btn-reset-filtros" (click)="resetCatalogoPaginado()"
+                        aria-label="Reiniciar filtros">Reiniciar filtros</button>
+                </div>
+            </div>
+
+            <div class="cards-container">
+                <p *ngIf="catalogoCargando">Cargando catálogo...</p>
+                <div class="catalogo-stats" *ngIf="!catalogoCargando && catalogoResultados.length">
+                    <span>📦 Mostrando {{ catalogoResultados.length }} de {{ catalogoTotal || catalogoBase.length }}
+                        insumos</span>
+                </div>
+                <div class="catalogo-cards">
+                    <article class="catalog-card" *ngFor="let c of catalogoResultados; trackBy: trackByCatalogo">
+                        <div class="card-top">
+                            <div class="tags">
+                                <span class="tag"><strong>Item: </strong> <span
+                                        [innerHTML]="highlightField(c.item, 'item')"></span></span>
+                            </div>
+                            <div class="pdf-actions" aria-label="Acciones PDF">
+                                <div class="pdf-group hoja-group">
+                                    <input type="file" accept="application/pdf"
+                                        (change)="onSubirHojaCatalogo($event, c.item)" hidden #hojaInput>
+                                    <button type="button" class="pdf-btn upload" title="Subir hoja de seguridad"
+                                        aria-label="Subir hoja de seguridad" (click)="hojaInput.click()">
+                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                                            <path d="M12 5l0 10" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" />
+                                            <path d="M7 10l5-5 5 5" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M4 19h16" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="pdf-btn view" title="Ver hoja de seguridad"
+                                        aria-label="Ver hoja de seguridad" (click)="onVerHojaCatalogo(c.item)">
+                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                                            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor"
+                                                stroke-width="2" fill="none" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"
+                                                fill="none" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="pdf-btn delete" title="Eliminar hoja de seguridad"
+                                        aria-label="Eliminar hoja de seguridad"
+                                        (click)="onEliminarHojaCatalogo(c.item)">
+                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                                            <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="pdf-group cert-group">
+                                    <input type="file" accept="application/pdf"
+                                        (change)="onSubirCertCatalogo($event, c.item)" hidden #certInput>
+                                    <button type="button" class="pdf-btn upload" title="Subir certificado de análisis"
+                                        aria-label="Subir certificado de análisis" (click)="certInput.click()">
+                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                                            <path d="M12 5l0 10" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" />
+                                            <path d="M7 10l5-5 5 5" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M4 19h16" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="pdf-btn view" title="Ver certificado de análisis"
+                                        aria-label="Ver certificado de análisis" (click)="onVerCertCatalogo(c.item)">
+                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                                            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor"
+                                                stroke-width="2" fill="none" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"
+                                                fill="none" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="pdf-btn delete"
+                                        title="Eliminar certificado de análisis"
+                                        aria-label="Eliminar certificado de análisis"
+                                        (click)="onEliminarCertCatalogo(c.item)">
+                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                                            <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-name" [title]="c.nombre">
+                            <span [innerHTML]="highlightField(c.nombre, 'nombre')"></span>
+                            <span class="pdf-badges"
+                                [attr.title]="(pdfStatus[c.item] ? (pdfStatus[c.item].hoja===true?'HS✓': pdfStatus[c.item].hoja===false?'HS✗':'HS…') : 'HS…') + ' • ' + (pdfStatus[c.item] ? (pdfStatus[c.item].cert===true?'CA✓':pdfStatus[c.item].cert===false?'CA✗':'CA…') : 'CA…')"
+                                [attr.aria-label]="(pdfStatus[c.item] ? (pdfStatus[c.item].hoja===true?'Hoja disponible': pdfStatus[c.item].hoja===false?'Hoja no disponible':'Hoja verificando') : 'Hoja verificando') + ' y ' + (pdfStatus[c.item] ? (pdfStatus[c.item].cert===true?'Certificado disponible': pdfStatus[c.item].cert===false?'Certificado no disponible':'Certificado verificando') : 'Certificado verificando')">
+                                <span class="badge" [class.loading]="pdfStatus[c.item] && pdfStatus[c.item].hoja===null"
+                                    [class.ok]="pdfStatus[c.item] && pdfStatus[c.item].hoja === true"
+                                    [class.fail]="pdfStatus[c.item] && pdfStatus[c.item].hoja === false"
+                                    title="Hoja de seguridad" aria-label="Hoja de seguridad">
+                                    HS
+                                </span>
+                                <span class="badge" [class.loading]="pdfStatus[c.item] && pdfStatus[c.item].cert===null"
+                                    [class.ok]="pdfStatus[c.item] && pdfStatus[c.item].cert === true"
+                                    [class.fail]="pdfStatus[c.item] && pdfStatus[c.item].cert === false"
+                                    title="Certificado de análisis" aria-label="Certificado de análisis">
+                                    CA
+                                </span>
+                            </span>
+                        </div>
+                    </article>
+                </div>
+                <p *ngIf="!catalogoCargando && !catalogoResultados.length">No hay elementos en el catálogo.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Inventario de insumos -->
+    <h2>Inventario de insumos</h2>
+    <section>
+        <form class="form-grid" (submit)="crearInsumo($event)">
+            <div>
+                <label for="item">Item</label>
+                <input id="item" [(ngModel)]="item" name="item" required />
+            </div>
+            <div>
+                <label for="nombre">Nombre</label>
+                <input id="nombre" [(ngModel)]="nombre" name="nombre" required />
+            </div>
+            <div>
+                <label for="cantidad_adquirida">Cantidad adquirida</label>
+                <input id="cantidad_adquirida" type="number" [(ngModel)]="cantidad_adquirida" name="cantidad_adquirida"
+                    required />
+            </div>
+            <div>
+                <label for="cantidad_existente">Cantidad existente</label>
+                <input id="cantidad_existente" type="number" [(ngModel)]="cantidad_existente" name="cantidad_existente"
+                    required />
+            </div>
+            <div>
+                <label for="presentacion">Presentación</label>
+                <input id="presentacion" [(ngModel)]="presentacion" name="presentacion" />
+            </div>
+            <div>
+                <label for="marca">Marca</label>
+                <input id="marca" [(ngModel)]="marca" name="marca" />
+            </div>
+            <div>
+                <label for="descripcion">Descripción</label>
+                <textarea id="descripcion" [(ngModel)]="descripcion" name="descripcion" rows="2"></textarea>
+            </div>
+            <div>
+                <label for="fecha_adquisicion">Fecha de adquisición</label>
+                <input id="fecha_adquisicion" type="date" [(ngModel)]="fecha_adquisicion" name="fecha_adquisicion" />
+            </div>
+            <div>
+                <label for="ubicacion">Ubicación</label>
+                <input id="ubicacion" [(ngModel)]="ubicacion" name="ubicacion" />
+            </div>
+            <div>
+                <label for="observaciones">Observaciones</label>
+                <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" rows="2"></textarea>
+            </div>
+            <div>
+                <button type="submit">Crear insumo</button>
+            </div>
+        </form>
+        <p *ngIf="insumoMsg">{{ insumoMsg }}</p>
+    </section>
+
+    <!-- Tabla y detalles de insumos -->
+    <section>
+        <div class="filters-row insumos-filters">
+            <div>
+                <label for="insItemQ">Item</label>
+                <input id="insItemQ" [(ngModel)]="insumosItemQ" (input)="filtrarInsumos()" />
+            </div>
+            <div>
+                <label for="insNombreQ">Nombre</label>
+                <input id="insNombreQ" [(ngModel)]="insumosNombreQ" (input)="filtrarInsumos()" />
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="insumos-table">
+                <caption>Inventario de insumos</caption>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Nombre</th>
+                        <th>Cantidad adquirida</th>
+                        <th>Cantidad existente</th>
+                        <th>Presentación</th>
+                        <th>Marca</th>
+                        <th>Ubicación</th>
+                        <th>Adquisición</th>
+                        <th>Observaciones</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let i of insumosFiltrados">
+                        <td>{{ i.item }}</td>
+                        <td>{{ i.nombre }}</td>
+                        <td>{{ i.cantidad_adquirida }}</td>
+                        <td>{{ i.cantidad_existente }}</td>
+                        <td>{{ i.presentacion }}</td>
+                        <td>{{ i.marca }}</td>
+                        <td>{{ i.ubicacion }}</td>
+                        <td>{{ formatearFecha(i.fecha_adquisicion) }}</td>
+                        <td>{{ i.observaciones }}</td>
+                        <td>
+                            <button type="button" (click)="eliminarInsumo(i.id)">Eliminar</button>
+                            <button type="button" (click)="mostrarDetallesInsumo(i)">Detalles</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <p *ngIf="!insumos?.length">No hay insumos cargados.</p>
+        </div>
+
+        <!-- Panel de detalles adicionales -->
+        <div *ngIf="mostrarDetalles" class="detalles-panel">
+            <div class="detalles-header">
+                <h3>Detalles del insumo</h3>
+                <button type="button" (click)="mostrarDetalles = false">×</button>
+            </div>
+            <div class="detalles-content" *ngIf="insumoSeleccionado">
+                <p><strong>Item:</strong> {{ insumoSeleccionado.item }}</p>
+                <p><strong>Nombre:</strong> {{ insumoSeleccionado.nombre }}</p>
+                <p><strong>Cantidad adquirida:</strong> {{ insumoSeleccionado.cantidad_adquirida }}</p>
+                <p><strong>Cantidad existente:</strong> {{ insumoSeleccionado.cantidad_existente }}</p>
+                <p><strong>Presentación:</strong> {{ insumoSeleccionado.presentacion }}</p>
+                <p><strong>Marca:</strong> {{ insumoSeleccionado.marca }}</p>
+                <p><strong>Descripción:</strong> {{ insumoSeleccionado.descripcion }}</p>
+                <p><strong>Fecha de adquisición:</strong> {{ formatearFecha(insumoSeleccionado.fecha_adquisicion) }}</p>
+                <p><strong>Ubicación:</strong> {{ insumoSeleccionado.ubicacion }}</p>
+                <p *ngIf="insumoSeleccionado.observaciones"><strong>Observaciones:</strong> {{
+                    insumoSeleccionado.observaciones }}</p>
+            </div>
+        </div>

@@ -27,7 +27,7 @@ export const reactivosService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(item)
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error creando catálogo');
     return data;
   },
@@ -37,7 +37,7 @@ export const reactivosService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(item)
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error actualizando catálogo');
     return data;
   },
@@ -61,7 +61,7 @@ export const reactivosService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(item)
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error creando reactivo');
     return data;
   },
@@ -71,13 +71,13 @@ export const reactivosService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(item)
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error actualizando reactivo');
     return data;
   },
   async eliminarReactivo(lote: string) {
     const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}`, { method: 'DELETE' });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error eliminando reactivo');
     return data;
   },
@@ -85,7 +85,7 @@ export const reactivosService = {
   // PDFs: Hoja de Seguridad
   async obtenerHojaSeguridad(codigo: string) {
     const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/hoja-seguridad`);
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'No encontrada');
     // Normalizar URL de visualización manteniendo el prefijo /api/reactivos
     try {
@@ -97,7 +97,7 @@ export const reactivosService = {
           data.url = base + data.url.replace(/^\/+/, '');
         }
       }
-    } catch {}
+    } catch { }
     return data;
   },
   async subirHojaSeguridad(codigo: string, file: File) {
@@ -107,13 +107,13 @@ export const reactivosService = {
       method: 'POST',
       body: fd
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error al subir PDF');
     return data;
   },
   async eliminarHojaSeguridad(codigo: string) {
     const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/hoja-seguridad`, { method: 'DELETE' });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error al eliminar PDF');
     return data;
   },
@@ -121,7 +121,7 @@ export const reactivosService = {
   // PDFs: Certificado de Análisis
   async obtenerCertAnalisis(codigo: string) {
     const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/cert-analisis`);
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'No encontrado');
     // Normalizar URL de visualización manteniendo el prefijo /api/reactivos
     try {
@@ -131,7 +131,7 @@ export const reactivosService = {
           data.url = base + data.url.replace(/^\/+/, '');
         }
       }
-    } catch {}
+    } catch { }
     return data;
   },
   async subirCertAnalisis(codigo: string, file: File) {
@@ -141,13 +141,13 @@ export const reactivosService = {
       method: 'POST',
       body: fd
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error al subir PDF');
     return data;
   },
   async eliminarCertAnalisis(codigo: string) {
     const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/cert-analisis`, { method: 'DELETE' });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error al eliminar PDF');
     return data;
   },
