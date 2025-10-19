@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Renderer2, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, Renderer2, Inject } from '@angular/core';
 import { DOCUMENT, CommonModule } from '@angular/common';
 import { authService } from '../services/auth.service';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -11,7 +11,7 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
   styleUrls: ['./login.component.css'],
   imports: [CommonModule, FormsModule, RouterModule]
 })
-export class LoginComponent implements OnInit, OnDestroy {
+export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   email = '';
   password = '';
   error = '';
@@ -38,8 +38,30 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.renderer.addClass(this.document.body, 'auth-page');
   }
 
+  ngAfterViewInit(): void {
+    // Crear partículas después de que la vista se haya renderizado
+    this.createParticles();
+  }
+
   ngOnDestroy(): void {
     this.renderer.removeClass(this.document.body, 'auth-page');
+  }
+
+  createParticles(): void {
+    const particlesContainer = this.document.getElementById('particles');
+    if (!particlesContainer) return;
+
+    const particleCount = 50;
+    
+    for (let i = 0; i < particleCount; i++) {
+      const particle = this.renderer.createElement('div');
+      this.renderer.addClass(particle, 'particle');
+      this.renderer.setStyle(particle, 'left', Math.random() * 100 + '%');
+      this.renderer.setStyle(particle, 'top', Math.random() * 100 + '%');
+      this.renderer.setStyle(particle, 'animation-delay', Math.random() * 6 + 's');
+      this.renderer.setStyle(particle, 'animation-duration', (Math.random() * 3 + 4) + 's');
+      this.renderer.appendChild(particlesContainer, particle);
+    }
   }
 
   async onSubmit(e: Event, form?: NgForm) {
