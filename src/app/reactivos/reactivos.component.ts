@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule, NgIf } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService } from '../services/auth.service';
 import { reactivosService } from '../services/reactivos.service';
@@ -26,6 +26,7 @@ export class ReactivosComponent implements OnInit {
   almacen: Array<any> = [];
   reactivoSeleccionado: any = null;
   mostrarDetalles: boolean = false;
+  private expandedLotes = new Set<string>();
   
   ngOnInit() {
     // Ejecutar inicialización al montar el componente
@@ -39,11 +40,13 @@ export class ReactivosComponent implements OnInit {
   catClasificacion = '';
   catDescripcion = '';
   catalogoMsg = '';
+  submittedCatalogo = false;
 
   // Catálogo búsqueda y selección
   catalogoQ = '';
   // Signals para catálogo
   catalogoResultadosSig = signal<Array<any>>([]);
+  catalogoSugerenciasSig = signal<Array<any>>([]);
   catalogoSeleccionado: any = null;
   catalogoCargando: boolean = false;
   // Base y listas filtradas para selects (signal)
@@ -88,17 +91,37 @@ export class ReactivosComponent implements OnInit {
   tipo_recipiente_id: any = '';
 
   reactivoMsg = '';
+  submittedReactivo = false;
+  // Edición de reactivo
+  editMode = false;
+  editOriginalLote: string | null = null;
+  // Modal de edición
+  editModalOpen = false;
+  editSubmitted = false;
+  editFormData: any = {
+    loteOriginal: '',
+    lote: '', codigo: '', nombre: '', marca: '', referencia: '', cas: '',
+    presentacion: null as number | null,
+    presentacion_cant: null as number | null,
+    cantidad_total: null as number | null,
+    fecha_adquisicion: '', fecha_vencimiento: '', observaciones: '',
+    tipo_id: '', clasificacion_id: '', unidad_id: '', estado_id: '', almacenamiento_id: '', tipo_recipiente_id: ''
+  };
 
-  // Lista de reactivos
-  reactivos: Array<any> = [];
+  // Lista de reactivos (signals para refresco inmediato)
+  reactivosSig = signal<Array<any>>([]);
   // Filtros de inventario (3 campos en una fila)
   reactivosLoteQ = '';
   reactivosCodigoQ = '';
   reactivosNombreQ = '';
-  reactivosFiltrados: Array<any> = [];
+  reactivosFiltradosSig = signal<Array<any>>([]);
   reactivosQ = '';
   // Panel de catálogo dentro del formulario (se mantiene para autocompletar)
-  mostrarCatalogoFormPanel: boolean = false;
+  mostrarCatalogoFormPanel: boolean = false; // deprecado visualmente
+  private catalogoDebounce: any = null;
+  catalogoFiltroCampo: 'codigo' | 'nombre' | 'mixto' = 'mixto';
+  isCodigoFocused: boolean = false;
+  isNombreFocused: boolean = false;
 
   // Estado de disponibilidad de PDFs por código
   pdfStatus: { [codigo: string]: { hoja: boolean | null; cert: boolean | null } } = {};
@@ -127,11 +150,91 @@ export class ReactivosComponent implements OnInit {
         this.loadReactivos(10),
         this.loadCatalogoInicial()
       ]);
+      // Asegurar re-render de tarjetas una vez que auxiliares y reactivos estén listos
+      // Esto fuerza a recalcular nombres (tipo/unidad/estado/SGA) y evita depender de un clic
+      this.aplicarFiltroReactivos();
       // Guardar cache inicial tras carga
       this.persistPdfStatus();
     } catch (err) {
       console.error('Error inicializando Reactivos:', err);
     }
+  }
+
+  // Convierte distintos formatos de fecha a 'yyyy-MM-dd' para inputs type="date"
+  private toDateInputValue(v: any): string {
+    if (!v) return '';
+    if (typeof v === 'string') {
+      const s = v.trim();
+      // ISO o 'yyyy-MM-dd...' -> tomar primeros 10
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+      // 'dd-mm-yyyy' -> reordenar a 'yyyy-MM-dd'
+      const m = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+      if (m) {
+        const dd = m[1].padStart(2, '0');
+        const mm = m[2].padStart(2, '0');
+        const yyyy = m[3];
+        return `${yyyy}-${mm}-${dd}`;
+      }
+      // Intentar parseo general
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+      return '';
+    }
+    try {
+      const d = v instanceof Date ? v : new Date(v);
+      if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+    } catch {}
+    return '';
+  }
+
+  // Normalización reutilizable de CAS: recorta, mapea guiones unicode a '-', elimina espacios, deja solo dígitos y '-', colapsa guiones múltiples y auto-formatea a A-B-C (2-7 | 2 | 1)
+  private normalizeCas(v: any): string | null {
+    if (v === null || v === undefined) return null;
+    const s = String(v);
+    // Reemplazar espacios no separables por espacios normales y recortar
+    const trimmed = s.replace(/\u00A0/g, ' ').trim();
+    if (!trimmed) return null;
+    // Mapear diferentes tipos de guiones a '-'
+    const dashNormalized = trimmed.replace(/[\u2010-\u2015\u2212]/g, '-');
+    // Eliminar espacios alrededor de guiones y dentro del string
+    const noSpaces = dashNormalized.replace(/\s+/g, '');
+    // Dejar solo dígitos o '-'
+    const digitsAndDash = noSpaces.replace(/[^0-9-]/g, '');
+    // Colapsar múltiples guiones
+    const compact = digitsAndDash.replace(/-+/g, '-');
+    // Construir versión con solo dígitos
+    const digitsOnly = compact.replace(/-/g, '');
+    // Si parece un CAS válido (5 a 10 dígitos), auto-formatear: A-B-C, donde C=1 dígito, B=2 dígitos, A=resto
+    if (digitsOnly.length >= 5 && digitsOnly.length <= 10) {
+      const len = digitsOnly.length;
+      const a = digitsOnly.slice(0, len - 3);
+      const b = digitsOnly.slice(len - 3, len - 1);
+      const c = digitsOnly.slice(len - 1);
+      return `${a}-${b}-${c}`;
+    }
+    return compact;
+  }
+
+  // Limpia el CAS del modal al perder foco para evitar falsos inválidos visuales
+  onEditCasBlur() {
+    const n = this.normalizeCas(this.editFormData.cas);
+    this.editFormData.cas = n === null ? '' : n;
+  }
+
+  // Limpia el CAS del formulario principal al perder foco
+  onCasBlur() {
+    const n = this.normalizeCas(this.cas);
+    this.cas = n === null ? '' : n;
   }
 
   async loadAux() {
@@ -146,7 +249,7 @@ export class ReactivosComponent implements OnInit {
 
   async loadReactivos(limit?: number) {
     const rows = await reactivosService.listarReactivos(this.reactivosQ || '', limit);
-    this.reactivos = rows || [];
+    this.reactivosSig.set(rows || []);
     this.aplicarFiltroReactivos();
   }
 
@@ -155,35 +258,32 @@ export class ReactivosComponent implements OnInit {
     if (!this.catalogoBaseSig().length) {
       await this.cargarCatalogoBase();
     }
-    this.catalogoCargando = true;
-    try {
-      if (!q) {
-        this.catalogoResultadosSig.set(this.catalogoBaseSig().slice());
-      } else {
-        const filtered = this.catalogoBaseSig().filter(c =>
-          this.normalizarTexto(c.codigo || '').includes(q) ||
-          this.normalizarTexto(c.nombre || '').includes(q)
-        );
-        this.catalogoResultadosSig.set(filtered);
-      }
-    } finally {
-      this.catalogoCargando = false;
+    // Importante: no tocar catalogoCargando aquí para no afectar la lista de catálogo
+    if (!q) {
+      this.catalogoSugerenciasSig.set([]); // sólo dropdown
+    } else {
+      const base = this.catalogoBaseSig();
+      const filtered = base.filter(c => {
+        const cod = this.normalizarTexto(c.codigo || '');
+        const nom = this.normalizarTexto(c.nombre || '');
+        if (this.catalogoFiltroCampo === 'codigo') return cod.includes(q);
+        if (this.catalogoFiltroCampo === 'nombre') return nom.includes(q);
+        // mixto
+        return cod.includes(q) || nom.includes(q);
+      });
+      this.catalogoSugerenciasSig.set(filtered);
     }
   }
 
   async cargarCatalogoBase() {
     try {
-      const resp = await reactivosService.buscarCatalogo('', this.catalogoVisibleCount, this.catalogoOffset);
-      if (Array.isArray(resp)) {
-        this.catalogoBaseSig.set(resp);
-        this.catalogoTotal = resp.length;
-        this.catalogoResultadosSig.set(resp.slice(0, this.catalogoVisibleCount));
-      } else {
-        const base = resp.rows || [];
-        this.catalogoBaseSig.set(base);
-        this.catalogoTotal = resp.total || base.length;
-        this.catalogoResultadosSig.set(base.slice());
-      }
+      // Traer todo (sin límite) para que los filtros y sugerencias funcionen sobre el universo completo
+      const resp = await reactivosService.buscarCatalogo('', 0, 0);
+      const base = Array.isArray(resp) ? resp : (resp.rows || []);
+      this.catalogoBaseSig.set(base);
+      this.catalogoTotal = Array.isArray(resp) ? resp.length : (resp.total || base.length);
+      // Mostrar solo los primeros N en el catálogo (independiente del dropdown)
+      this.catalogoResultadosSig.set(base.slice(0, this.catalogoVisibleCount));
       this.catalogoCodigoResultados = this.catalogoBaseSig().slice();
       this.catalogoNombreResultados = this.catalogoBaseSig().slice();
       // Pre-cargar disponibilidad de PDFs para los visibles iniciales
@@ -224,6 +324,9 @@ export class ReactivosComponent implements OnInit {
     this.loadDocs(item.codigo);
     // Ocultar panel de catálogo embebido
     this.mostrarCatalogoFormPanel = false;
+    // Limpiar sugerencias para cerrar dropdowns
+    this.catalogoSugerenciasSig.set([]);
+    this.catalogoQ = '';
   }
 
   filtrarCatalogoCodigo() {
@@ -282,7 +385,8 @@ export class ReactivosComponent implements OnInit {
     }
 
     this.catalogoBaseSig.set(base);
-  this.catalogoResultadosSig.set(singleCharQuery ? filtered : filtered.slice(0, this.catalogoVisibleCount));
+    // La lista principal siempre limitada a catalogoVisibleCount
+    this.catalogoResultadosSig.set((singleCharQuery ? filtered : filtered).slice(0, this.catalogoVisibleCount));
     this.catalogoTotal = filtered.length;
     this.catalogoCodigoResultados = this.catalogoBaseSig().slice();
     this.catalogoNombreResultados = this.catalogoBaseSig().slice();
@@ -321,6 +425,11 @@ export class ReactivosComponent implements OnInit {
 
   trackByCatalogo(index: number, item: any) {
     return item?.codigo || index;
+  }
+
+  trackByReactivo(index: number, item: any) {
+    // Prefer lote as unique key; fallback to codigo + index
+    return item?.lote || `${item?.codigo || 'item'}-${index}`;
   }
 
   // --- Acciones PDF en tabla catálogo ---
@@ -384,6 +493,18 @@ export class ReactivosComponent implements OnInit {
     this.mostrarDetalles = true;
   }
 
+  // Inline expand/collapse per card
+  toggleExpand(r: any) {
+    const key = String(r?.lote ?? '');
+    if (!key) return;
+    if (this.expandedLotes.has(key)) this.expandedLotes.delete(key);
+    else this.expandedLotes.add(key);
+  }
+  isExpanded(r: any): boolean {
+    const key = String(r?.lote ?? '');
+    return key ? this.expandedLotes.has(key) : false;
+  }
+
   // Funciones auxiliares para obtener nombres descriptivos
   obtenerNombreTipo(id: any): string {
     const tipo = this.tipos.find(t => t.id == id);
@@ -393,6 +514,56 @@ export class ReactivosComponent implements OnInit {
   obtenerNombreClasificacion(id: any): string {
     const clasif = this.clasif.find(c => c.id == id);
     return clasif ? clasif.nombre : 'N/A';
+  }
+
+  // Devuelve el color HEX para la clasificación SGA (según guía aportada)
+  getClasifColor(id: any): string {
+    const nombre = this.obtenerNombreClasificacion(id);
+    const n = this.normalizarTexto(nombre);
+    return this.mapClasifHex(n);
+  }
+
+  // Versión por nombre directo (para options que usan c.nombre)
+  getClasifColorByName(nombre: string): string {
+    const n = this.normalizarTexto(nombre || '');
+    return this.mapClasifHex(n);
+  }
+
+  // Color de texto sugerido para buen contraste sobre el fondo dado
+  getClasifTextColor(hex: string): string {
+    const h = (hex || '').toUpperCase();
+    // Forzar texto negro en fondos claros (amarillos/grises)
+    if (h === '#D9D9D9' || h === '#FEC720' || h === '#FFFF00') return '#000';
+    return '#FFF';
+  }
+
+  private mapClasifHex(n: string): string {
+    if (!n || n === 'n/a') return '#2d7dd2';
+    if (n.includes('irritacion') || n.includes('irritación')) return '#4A90D9';
+    if (n.includes('inflamable')) return '#FF0000';
+    if (n.includes('corrosivo')) return '#FEC720';
+    if (n.includes('respiracion') || n.includes('respiración')) return '#792C9B';
+    if (n.includes('no peligro')) return '#D9D9D9';
+    if (n.includes('toxico') || n.includes('tóxico')) return '#00B050';
+    if (n.includes('medio ambiente') || n.includes('ambiente')) return '#792C9B';
+    if (n.includes('comburente') || n.includes('oxidante')) return '#FFFF00';
+    return '#2d7dd2';
+  }
+
+  // Estilos para que el <select> se vea coloreado con la opción elegida (por nombre)
+  getSelectStyleForName(nombre: string | null | undefined): {[k: string]: string} {
+    if (!nombre) return {};
+    const bg = this.getClasifColorByName(nombre);
+    const fg = this.getClasifTextColor(bg);
+    return { 'background-color': bg, 'color': fg };
+  }
+
+  // Estilos para que el <select> se vea coloreado con la opción elegida (por id)
+  getSelectStyleForId(id: any): {[k: string]: string} {
+    if (!id && id !== 0) return {};
+    const bg = this.getClasifColor(id);
+    const fg = this.getClasifTextColor(bg);
+    return { 'background-color': bg, 'color': fg };
   }
 
   obtenerNombreUnidad(id: any): string {
@@ -468,8 +639,11 @@ export class ReactivosComponent implements OnInit {
   }
 
   // Getters para mantener compatibilidad con el template existente
+  get reactivos() { return this.reactivosSig(); }
+  get reactivosFiltrados() { return this.reactivosFiltradosSig(); }
   get catalogoResultados() { return this.catalogoResultadosSig(); }
   get catalogoBase() { return this.catalogoBaseSig(); }
+  get catalogoSugerencias() { return this.catalogoSugerenciasSig(); }
 
   // Pre-carga de disponibilidad de PDFs (solo estado, no abre ventana)
   async preloadDocsForVisible(list?: any[]) {
@@ -602,9 +776,15 @@ export class ReactivosComponent implements OnInit {
     }
   }
 
-  async crearCatalogo(e: Event) {
+  async crearCatalogo(e: Event, form?: NgForm) {
     e.preventDefault();
     this.catalogoMsg = '';
+    this.submittedCatalogo = true;
+    if (form && form.invalid) {
+      try { form.control.markAllAsTouched(); } catch {}
+      this.catalogoMsg = 'Por favor corrige los campos resaltados.';
+      return;
+    }
     try {
       await reactivosService.crearCatalogo({
         codigo: this.catCodigo.trim(),
@@ -613,9 +793,10 @@ export class ReactivosComponent implements OnInit {
         clasificacion_sga: this.catClasificacion.trim(),
         descripcion: this.catDescripcion.trim() || null
       });
-      this.catalogoMsg = 'Catálogo creado correctamente';
+  this.catalogoMsg = 'Catálogo creado correctamente';
       // limpiar
       this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = this.catDescripcion = '';
+  this.submittedCatalogo = false;
       // Recargar base y re-aplicar filtros/búsqueda para que el nuevo elemento aparezca
       await this.cargarCatalogoBase();
       if ((this.codigoFiltro || '').trim() || (this.nombreFiltro || '').trim()) {
@@ -629,35 +810,70 @@ export class ReactivosComponent implements OnInit {
     }
   }
 
-  async crearReactivo(e: Event) {
+  async crearReactivo(e: Event, form?: NgForm) {
     e.preventDefault();
     this.reactivoMsg = '';
+    this.submittedReactivo = true;
+    // Normalizar CAS antes de validar por si el usuario no salió del campo
+    {
+      const n = this.normalizeCas(this.cas);
+      this.cas = n === null ? '' : n;
+    }
+    if (form && form.invalid) {
+      try { form.control.markAllAsTouched(); } catch {}
+      this.reactivoMsg = 'Por favor corrige los campos resaltados.';
+      return;
+    }
     try {
+      // Validación mínima de campos obligatorios
+      if (!this.lote.trim() || !this.codigo.trim() || !this.nombre.trim()) {
+        this.reactivoMsg = 'Por favor completa Lote, Código y Nombre.';
+        return;
+      }
+
+      const toNull = (v: any) => {
+        if (v === null || v === undefined) return null;
+        if (typeof v === 'string') {
+          const t = v.trim();
+          return t === '' ? null : t;
+        }
+        return v;
+      };
+
       this.calcularCantidadTotal();
       const payload = {
         lote: this.lote.trim(),
         codigo: this.codigo.trim(),
         nombre: this.nombre.trim(),
-        marca: this.marca.trim(),
-        referencia: this.referencia.trim() || null,
-        cas: this.cas.trim() || null,
+        marca: toNull(this.marca),
+        referencia: toNull(this.referencia),
+        cas: this.normalizeCas(this.cas),
         presentacion: this.presentacion,
         presentacion_cant: this.presentacion_cant,
         cantidad_total: this.cantidad_total,
-        fecha_adquisicion: this.fecha_adquisicion,
-        fecha_vencimiento: this.fecha_vencimiento,
-        observaciones: this.observaciones.trim() || null,
-        tipo_id: this.tipo_id,
-        clasificacion_id: this.clasificacion_id,
-        unidad_id: this.unidad_id,
-        estado_id: this.estado_id,
-        almacenamiento_id: this.almacenamiento_id,
-        tipo_recipiente_id: this.tipo_recipiente_id
+        fecha_adquisicion: toNull(this.fecha_adquisicion),
+        fecha_vencimiento: toNull(this.fecha_vencimiento),
+        observaciones: toNull(this.observaciones),
+        tipo_id: toNull(this.tipo_id),
+        clasificacion_id: toNull(this.clasificacion_id),
+        unidad_id: toNull(this.unidad_id),
+        estado_id: toNull(this.estado_id),
+        almacenamiento_id: toNull(this.almacenamiento_id),
+        tipo_recipiente_id: toNull(this.tipo_recipiente_id)
       };
-      await reactivosService.crearReactivo(payload);
-      this.reactivoMsg = 'Reactivo creado correctamente';
+      if (this.editMode && this.editOriginalLote) {
+        // Actualizar: usar lote original como clave en la URL
+        await reactivosService.actualizarReactivo(this.editOriginalLote, payload);
+        this.reactivoMsg = 'Reactivo actualizado correctamente';
+      } else {
+        await reactivosService.crearReactivo(payload);
+        this.reactivoMsg = 'Reactivo creado correctamente';
+      }
       await this.loadReactivos();
+      // Limpiar modelo y restablecer estado visual del formulario (pristine/untouched)
       this.resetReactivoForm();
+      this.submittedReactivo = false;
+      try { if (form) form.resetForm(); } catch {}
     } catch (err: any) {
       this.reactivoMsg = err?.message || 'Error creando reactivo';
     }
@@ -668,34 +884,184 @@ export class ReactivosComponent implements OnInit {
     this.presentacion = this.presentacion_cant = this.cantidad_total = null;
     this.fecha_adquisicion = this.fecha_vencimiento = this.observaciones = '';
     this.tipo_id = this.clasificacion_id = this.unidad_id = this.estado_id = this.almacenamiento_id = this.tipo_recipiente_id = '';
+    this.editMode = false;
+    this.editOriginalLote = null;
+  }
+
+  // Iniciar edición tomando datos del reactivo y subiendo el formulario
+  startEditReactivo(r: any) {
+    // Cargar valores en el formulario
+    this.lote = r.lote || '';
+    this.codigo = r.codigo || '';
+    this.nombre = r.nombre || '';
+    this.marca = r.marca || '';
+    this.referencia = r.referencia || '';
+    this.cas = r.cas || '';
+    this.presentacion = r.presentacion ?? null;
+    this.presentacion_cant = r.presentacion_cant ?? null;
+    this.cantidad_total = r.cantidad_total ?? null;
+    this.fecha_adquisicion = r.fecha_adquisicion || '';
+    this.fecha_vencimiento = r.fecha_vencimiento || '';
+    this.observaciones = r.observaciones || '';
+    this.tipo_id = r.tipo_id ?? '';
+    this.clasificacion_id = r.clasificacion_id ?? '';
+    this.unidad_id = r.unidad_id ?? '';
+    this.estado_id = r.estado_id ?? '';
+    this.almacenamiento_id = r.almacenamiento_id ?? '';
+    this.tipo_recipiente_id = r.tipo_recipiente_id ?? '';
+    this.editMode = true;
+    this.editOriginalLote = String(r.lote ?? '');
+    // Asegurar cantidad total consistente
+    this.calcularCantidadTotal();
+    // Abrir el panel de edición (el formulario está arriba en la vista)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Abrir modal de edición sin tocar el formulario principal
+  openEditModal(r: any) {
+    this.editFormData = {
+      loteOriginal: String(r.lote ?? ''),
+      lote: r.lote || '',
+      codigo: r.codigo || '',
+      nombre: r.nombre || '',
+      marca: r.marca || '',
+      referencia: r.referencia || '',
+      cas: r.cas || '',
+      presentacion: r.presentacion ?? null,
+      presentacion_cant: r.presentacion_cant ?? null,
+      cantidad_total: r.cantidad_total ?? null,
+      fecha_adquisicion: this.toDateInputValue(r.fecha_adquisicion),
+      fecha_vencimiento: this.toDateInputValue(r.fecha_vencimiento),
+      observaciones: r.observaciones || '',
+      tipo_id: r.tipo_id ?? '',
+      clasificacion_id: r.clasificacion_id ?? '',
+      unidad_id: r.unidad_id ?? '',
+      estado_id: r.estado_id ?? '',
+      almacenamiento_id: r.almacenamiento_id ?? '',
+      tipo_recipiente_id: r.tipo_recipiente_id ?? ''
+    };
+    this.editSubmitted = false;
+    this.editModalOpen = true;
+  }
+
+  // Cerrar modal y limpiar flags
+  closeEditModal() {
+    this.editModalOpen = false;
+    this.editSubmitted = false;
+  }
+
+  // Guardar cambios desde el modal
+  async guardarEdicion(form?: NgForm) {
+    this.editSubmitted = true;
+    // Normalizar CAS antes de que Angular valide el formulario, por si el usuario no salió del campo
+    {
+      const n = this.normalizeCas(this.editFormData.cas);
+      this.editFormData.cas = n === null ? '' : n;
+    }
+    if (form && form.invalid) {
+      try { form.control.markAllAsTouched(); } catch {}
+      return;
+    }
+    // Normalizar campos antes de construir el payload
+    const toNull = (v: any) => {
+      if (v === null || v === undefined) return null;
+      if (typeof v === 'string') {
+        const t = v.trim();
+        return t === '' ? null : t;
+      }
+      return v;
+    };
+    // Recalcular cantidad total si aplica
+    const cantidad_total = (this.editFormData.presentacion != null && this.editFormData.presentacion_cant != null)
+      ? Number(this.editFormData.presentacion) * Number(this.editFormData.presentacion_cant)
+      : this.editFormData.cantidad_total;
+    const payload = {
+      lote: String(this.editFormData.lote || '').trim(),
+      codigo: String(this.editFormData.codigo || '').trim(),
+      nombre: String(this.editFormData.nombre || '').trim(),
+      marca: toNull(this.editFormData.marca),
+      referencia: toNull(this.editFormData.referencia),
+  cas: this.normalizeCas(this.editFormData.cas),
+      presentacion: this.editFormData.presentacion,
+      presentacion_cant: this.editFormData.presentacion_cant,
+      cantidad_total,
+      fecha_adquisicion: toNull(this.editFormData.fecha_adquisicion),
+      fecha_vencimiento: toNull(this.editFormData.fecha_vencimiento),
+      observaciones: toNull(this.editFormData.observaciones),
+      tipo_id: toNull(this.editFormData.tipo_id),
+      clasificacion_id: toNull(this.editFormData.clasificacion_id),
+      unidad_id: toNull(this.editFormData.unidad_id),
+      estado_id: toNull(this.editFormData.estado_id),
+      almacenamiento_id: toNull(this.editFormData.almacenamiento_id),
+      tipo_recipiente_id: toNull(this.editFormData.tipo_recipiente_id)
+    };
+    try {
+      if (!payload.lote || !payload.codigo || !payload.nombre) {
+        this.reactivoMsg = 'Por favor completa Lote, Código y Nombre.';
+        return;
+      }
+      await reactivosService.actualizarReactivo(this.editFormData.loteOriginal, payload);
+      this.reactivoMsg = 'Reactivo actualizado correctamente';
+      this.closeEditModal();
+      await this.loadReactivos();
+    } catch (e: any) {
+      this.reactivoMsg = e?.message || 'Error actualizando reactivo';
+    }
   }
 
 
   async onCodigoInput() {
     const q = (this.codigo || '').trim();
-    if (q.length >= 1) {
-      this.catalogoQ = q;
-      await this.buscarCatalogo();
-      this.mostrarCatalogoFormPanel = true;
-    } else {
-      this.mostrarCatalogoFormPanel = false;
-    }
+    this.catalogoQ = q;
+    this.catalogoFiltroCampo = 'codigo';
+    if (this.catalogoDebounce) clearTimeout(this.catalogoDebounce);
+    this.catalogoDebounce = setTimeout(async () => {
+      if (q.length >= 1) {
+        await this.buscarCatalogo();
+      } else {
+        // Cuando vacío, limpiar solo el dropdown (no tocar la lista principal)
+        this.catalogoSugerenciasSig.set([]);
+      }
+    }, 150);
+    this.mostrarCatalogoFormPanel = false;
+  }
+
+  onCodigoFocus() {
+    this.isCodigoFocused = true;
+    this.catalogoFiltroCampo = 'codigo';
+  }
+  onCodigoBlur() {
+    // Timeout corto para permitir click en opción (mousedown previene blur en el botón)
+    setTimeout(() => { this.isCodigoFocused = false; }, 80);
   }
 
   async onNombreInput() {
     const q = (this.nombre || '').trim();
-    if (q.length >= 1) {
-      this.catalogoQ = q;
-      await this.buscarCatalogo();
-      this.mostrarCatalogoFormPanel = true;
-    } else {
-      this.mostrarCatalogoFormPanel = false;
-    }
+    this.catalogoQ = q;
+    this.catalogoFiltroCampo = 'nombre';
+    if (this.catalogoDebounce) clearTimeout(this.catalogoDebounce);
+    this.catalogoDebounce = setTimeout(async () => {
+      if (q.length >= 1) {
+        await this.buscarCatalogo();
+      } else {
+        this.catalogoSugerenciasSig.set([]);
+      }
+    }, 150);
+    this.mostrarCatalogoFormPanel = false;
+  }
+
+  onNombreFocus() {
+    this.isNombreFocused = true;
+    this.catalogoFiltroCampo = 'nombre';
+  }
+  onNombreBlur() {
+    setTimeout(() => { this.isNombreFocused = false; }, 80);
   }
 
   cerrarCatalogoFormPanel() {
     this.mostrarCatalogoFormPanel = false;
   }
+
 
   async filtrarReactivos() {
     // Filtrado local por lote, código y nombre (insensible a mayúsculas/acentos)
@@ -709,11 +1075,11 @@ export class ReactivosComponent implements OnInit {
     const qNom = normalizar(this.reactivosNombreQ);
 
     if (!qLote && !qCod && !qNom) {
-      this.reactivosFiltrados = this.reactivos.slice();
+      this.reactivosFiltradosSig.set(this.reactivosSig().slice());
       return;
     }
 
-    this.reactivosFiltrados = (this.reactivos || []).filter(r => {
+    const filtrados = (this.reactivosSig() || []).filter((r: any) => {
       const lote = normalizar(String(r.lote ?? ''));
       const codigo = normalizar(String(r.codigo ?? ''));
       const nombre = normalizar(String(r.nombre ?? ''));
@@ -722,6 +1088,7 @@ export class ReactivosComponent implements OnInit {
       if (qNom && !nombre.includes(qNom)) return false;
       return true;
     });
+    this.reactivosFiltradosSig.set(filtrados);
   }
 
   async mostrarTodosReactivos() {
@@ -732,12 +1099,55 @@ export class ReactivosComponent implements OnInit {
   async eliminarReactivo(lote: string) {
     if (!confirm('¿Eliminar reactivo ' + lote + '?')) return;
     try {
+      // Optimista: quitar de la lista inmediatamente
+      const prev = this.reactivosSig();
+      const next = prev.filter(r => String(r.lote) !== String(lote));
+      this.reactivosSig.set(next);
+      this.aplicarFiltroReactivos();
+
       await reactivosService.eliminarReactivo(lote);
-      await this.loadReactivos();
+      // Para consistencia estricta, podría recargarse del servidor:
+      // await this.loadReactivos();
     } catch (err) {
       console.error('Error eliminando reactivo', err);
+      await this.loadReactivos();
+    }
+  }
 
-}}
+  // Validación cruzada simple: vencimiento >= adquisición
+  fechasInconsistentes(): boolean {
+    if (!this.fecha_adquisicion || !this.fecha_vencimiento) return false;
+    const adq = new Date(this.fecha_adquisicion);
+    const ven = new Date(this.fecha_vencimiento);
+    if (isNaN(adq.getTime()) || isNaN(ven.getTime())) return false;
+    return ven < adq;
+  }
+
+  // Estado visual de vencimiento: negro (vencido), rojo (<=2 meses), amarillo (<=6 meses)
+  getVencimientoInfo(fecha: string | null | undefined): { text: string; bg: string; fg: string; title: string } | null {
+    if (!fecha) return null;
+    const d = new Date(fecha);
+    if (isNaN(d.getTime())) return null;
+    const today = new Date();
+    const toMid = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const days = Math.floor((toMid(d) - toMid(today)) / 86400000);
+
+    if (days < 0) {
+      return { text: 'Vencido', bg: '#000000', fg: '#FFFFFF', title: 'El reactivo está vencido' };
+    }
+    // Mostrar cuenta regresiva en días cuando falta 1 mes o menos
+    if (days <= 30) {
+      const plural = days === 1 ? '' : 's';
+      return { text: `Vence en ${days} día${plural}`, bg: '#FF0000', fg: '#FFFFFF', title: `El reactivo vence en ${days} día${plural}` };
+    }
+    if (days <= 60) {
+      return { text: 'Vence ≤ 2 meses', bg: '#FF0000', fg: '#FFFFFF', title: 'El reactivo vence en 2 meses o menos' };
+    }
+    if (days <= 180) {
+      return { text: 'Vence ≤ 6 meses', bg: '#FFC107', fg: '#000000', title: 'El reactivo vence en 6 meses o menos' };
+    }
+    return null;
+  }
   logout() {
     authService.logout();
   }
