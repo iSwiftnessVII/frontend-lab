@@ -1,4 +1,49 @@
-<div class="liba-theme container insumos-page">
+<!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">LIBA</div>
+                <div>
+                    <div class="header-title">Laboratorio Integrado de Biociencias Aplicadas</div>
+                    <div class="header-subtitle">Sistema de Gestión de Inventarios ISO 17025</div>
+                </div>
+            </div>
+            <div class="user-menu">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                <span>Usuario Admin</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-menu">
+        <div class="nav-content">
+            <a href="#" class="nav-item active" data-section="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                Dashboard
+            </a>
+            <a href="#" class="nav-item" data-section="inventory">
+                <i class="fas fa-boxes"></i>
+                Inventario
+            </a>
+            <a href="#" class="nav-item" data-section="reports">
+                <i class="fas fa-chart-bar"></i>
+                Reportes
+            </a>
+            <a href="#" class="nav-item" data-section="requests">
+                <i class="fas fa-clipboard-list"></i>
+                Solicitudes
+            </a>
+            <a href="#" class="nav-item" data-section="config">
+                <i class="fas fa-cog"></i>
+                Configuración
+            </a>
+            <a href="#" class="nav-item" data-section="users">
+                <i class="fas fa-users"></i>
+                Usuarios
+            </a>
+        </div>
+    </nav><div class="liba-theme container insumos-page">
 
     <!-- Catálogo de insumos -->
     <h2>Crear nuevo insumo en catálogo</h2>
@@ -45,7 +90,7 @@
             <div class="cards-container">
                 <p *ngIf="catalogoCargando">Cargando catálogo...</p>
                 <div class="catalogo-stats" *ngIf="!catalogoCargando && catalogoResultados.length">
-                    <span>📦 Mostrando {{ catalogoResultados.length }} de {{ catalogoTotal || catalogoBase.length }}
+                    <span>Mostrando {{ catalogoResultados.length }} de {{ catalogoTotal || catalogoBase.length }}
                         insumos</span>
                 </div>
                 <div class="catalogo-cards">
@@ -274,4 +319,4 @@
                 <p *ngIf="insumoSeleccionado.observaciones"><strong>Observaciones:</strong> {{
                     insumoSeleccionado.observaciones }}</p>
             </div>
-        </div>
+        </div> 
