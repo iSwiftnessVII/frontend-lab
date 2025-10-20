@@ -123,7 +123,7 @@
 
 
 <!-- Inventario de reactivos -->
-<h2>Crear reactivo activo</h2>
+<h2>Crear reactivo</h2>
 <section>
  
   
@@ -181,7 +181,7 @@
     </div>
     <div>
       <label for="cas">CAS</label>
-      <input id="cas" [(ngModel)]="cas" name="cas" #casCtrl="ngModel" required pattern="^\\d{2,7}-\\d{2}-\\d$" title="Formato: 64-17-5" [class.invalid]="casCtrl.invalid && (casCtrl.touched || submittedReactivo)" />
+  <input id="cas" [(ngModel)]="cas" name="cas" #casCtrl="ngModel" required title="Formato: 64-17-5" (blur)="onCasBlur()" [class.invalid]="casCtrl.invalid && (casCtrl.touched || submittedReactivo)" />
       <span class="field-error" *ngIf="casCtrl.errors?.['required'] && (casCtrl.touched || submittedReactivo)">Requerido</span>
       <span class="field-error" *ngIf="casCtrl.errors?.['pattern'] && (casCtrl.touched || submittedReactivo)">Formato CAS inválido (ej: 64-17-5)</span>
     </div>
@@ -271,7 +271,10 @@
       </select>
       <span class="field-error" *ngIf="almacenIdCtrl.invalid && (almacenIdCtrl.touched || submittedReactivo)">Seleccione una opción</span>
     </div>
-      <button type="submit">Crear reactivo</button>
+      <div class="form-actions">
+        <button type="submit" class="btn-create">{{ editMode ? 'Guardar cambios' : 'Crear reactivo' }}</button>
+        <button type="button" *ngIf="editMode" (click)="resetReactivoForm()" style="margin-left:8px; background:#777; color:#fff; border:1px solid #666;">Cancelar</button>
+      </div>
   </form>
   <div>
     <p *ngIf="reactivoMsg">{{ reactivoMsg }}</p>
@@ -279,7 +282,7 @@
     
 </section>
 
-<h2>Reactivos existentes</h2>
+<h2>Inventario de Reactivos</h2>
 <section>
   <!-- Lista y búsqueda de reactivos existentes -->
   <div>
@@ -321,6 +324,9 @@
             </div>
             <div class="pdf-actions" aria-label="Acciones del reactivo" (click)="$event.stopPropagation()">
               <div class="pdf-group">
+                <button type="button" class="pdf-btn view" title="Editar reactivo" aria-label="Editar reactivo" (click)="openEditModal(r)">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z" fill="currentColor"/><path d="M20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.29a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" fill="currentColor"/></svg>
+                </button>
                 <button type="button" class="pdf-btn delete" title="Eliminar reactivo" aria-label="Eliminar reactivo" (click)="eliminarReactivo(r.lote)">
                   <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 </button>
@@ -368,4 +374,111 @@
   
 
 </section>
+<!-- Modal de edición de reactivo -->
+<div class="modal-backdrop" *ngIf="editModalOpen" (click)="closeEditModal()"></div>
+<div class="modal" *ngIf="editModalOpen" role="dialog" aria-modal="true" aria-label="Editar reactivo" (click)="$event.stopPropagation()">
+  <div class="modal-header">
+    <button type="button" class="close-btn" (click)="closeEditModal()" aria-label="Cerrar">×</button>
+  </div>
+  <form class="form-grid" #editForm="ngForm" (ngSubmit)="guardarEdicion(editForm)">
+    <div class="field-sm">
+      <label for="edit_lote">Lote</label>
+      <input id="edit_lote" [(ngModel)]="editFormData.lote" name="edit_lote" #editLoteCtrl="ngModel" required [class.invalid]="editLoteCtrl.invalid && (editLoteCtrl.touched || editSubmitted)" />
+      <span class="field-error" *ngIf="editLoteCtrl.invalid && (editLoteCtrl.touched || editSubmitted)">Requerido</span>
+    </div>
+    <div>
+      <label for="edit_codigo">Código (catálogo)</label>
+      <input id="edit_codigo" [(ngModel)]="editFormData.codigo" name="edit_codigo" #editCodigoCtrl="ngModel" required [class.invalid]="editCodigoCtrl.invalid && (editCodigoCtrl.touched || editSubmitted)" />
+      <span class="field-error" *ngIf="editCodigoCtrl.invalid && (editCodigoCtrl.touched || editSubmitted)">Requerido</span>
+    </div>
+    <div>
+      <label for="edit_nombre">Nombre (catálogo)</label>
+      <input id="edit_nombre" [(ngModel)]="editFormData.nombre" name="edit_nombre" #editNombreCtrl="ngModel" required [class.invalid]="editNombreCtrl.invalid && (editNombreCtrl.touched || editSubmitted)" />
+      <span class="field-error" *ngIf="editNombreCtrl.invalid && (editNombreCtrl.touched || editSubmitted)">Requerido</span>
+    </div>
+    <div>
+      <label for="edit_marca">Marca</label>
+      <input id="edit_marca" [(ngModel)]="editFormData.marca" name="edit_marca" />
+    </div>
+    <div>
+      <label for="edit_referencia">Referencia</label>
+      <input id="edit_referencia" [(ngModel)]="editFormData.referencia" name="edit_referencia" />
+    </div>
+    <div>
+      <label for="edit_cas">CAS</label>
+  <input id="edit_cas" [(ngModel)]="editFormData.cas" name="edit_cas" title="Formato: 64-17-5" #editCasCtrl="ngModel" (blur)="onEditCasBlur()" [class.invalid]="editCasCtrl.invalid && (editCasCtrl.touched || editSubmitted)" />
+      <span class="field-error" *ngIf="editCasCtrl.errors?.['pattern'] && (editCasCtrl.touched || editSubmitted)">Formato CAS inválido</span>
+    </div>
+    <div class="field-sm">
+      <label for="edit_presentacion">Presentación</label>
+      <input id="edit_presentacion" type="number" [(ngModel)]="editFormData.presentacion" name="edit_presentacion" min="0" step="any" />
+    </div>
+    <div class="field-sm">
+      <label for="edit_presentacion_cant">Cantidad x presentación</label>
+      <input id="edit_presentacion_cant" type="number" [(ngModel)]="editFormData.presentacion_cant" name="edit_presentacion_cant" min="0" step="any" />
+    </div>
+    <div class="field-sm">
+      <label for="edit_cantidad_total">Cantidad total</label>
+      <input id="edit_cantidad_total" type="number" [(ngModel)]="editFormData.cantidad_total" name="edit_cantidad_total" readonly />
+    </div>
+    <div>
+      <label for="edit_fecha_adq">Fecha de adquisición</label>
+      <input id="edit_fecha_adq" type="date" [(ngModel)]="editFormData.fecha_adquisicion" name="edit_fecha_adq" />
+    </div>
+    <div>
+      <label for="edit_fecha_venc">Fecha de vencimiento</label>
+      <input id="edit_fecha_venc" type="date" [(ngModel)]="editFormData.fecha_vencimiento" name="edit_fecha_venc" />
+    </div>
+    <div>
+      <label for="edit_tipo">Tipo reactivo</label>
+      <select id="edit_tipo" [(ngModel)]="editFormData.tipo_id" name="edit_tipo">
+        <option [ngValue]="''">Seleccione tipo</option>
+        <option *ngFor="let t of tipos" [value]="t.id">{{ t.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="edit_clasif">Clasificación SGA</label>
+      <select id="edit_clasif" [(ngModel)]="editFormData.clasificacion_id" name="edit_clasif" [ngStyle]="getSelectStyleForId(editFormData.clasificacion_id)">
+        <option [ngValue]="''">Seleccione clasificación</option>
+        <option *ngFor="let c of clasif" [value]="c.id" [style.backgroundColor]="getClasifColorByName(c.nombre)" [style.color]="getClasifTextColor(getClasifColorByName(c.nombre))">{{ c.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="edit_unidad">Unidad</label>
+      <select id="edit_unidad" [(ngModel)]="editFormData.unidad_id" name="edit_unidad">
+        <option [ngValue]="''">Seleccione unidad</option>
+        <option *ngFor="let u of unidades" [value]="u.id">{{ u.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="edit_estado">Estado</label>
+      <select id="edit_estado" [(ngModel)]="editFormData.estado_id" name="edit_estado">
+        <option [ngValue]="''">Seleccione estado</option>
+        <option *ngFor="let e of estado" [value]="e.id">{{ e.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="edit_recipiente">Recipiente</label>
+      <select id="edit_recipiente" [(ngModel)]="editFormData.tipo_recipiente_id" name="edit_recipiente">
+        <option [ngValue]="''">Seleccione recipiente</option>
+        <option *ngFor="let rtp of recipiente" [value]="rtp.id">{{ rtp.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="edit_almacen">Almacenamiento</label>
+      <select id="edit_almacen" [(ngModel)]="editFormData.almacenamiento_id" name="edit_almacen">
+        <option [ngValue]="''">Seleccione almacenamiento</option>
+        <option *ngFor="let a of almacen" [value]="a.id">{{ a.nombre }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="edit_obs">Observaciones</label>
+      <textarea id="edit_obs" [(ngModel)]="editFormData.observaciones" name="edit_obs" rows="2"></textarea>
+    </div>
+    <div class="actions">
+      <button type="submit">Guardar cambios</button>
+    </div>
+  </form>
+  
+</div>
 

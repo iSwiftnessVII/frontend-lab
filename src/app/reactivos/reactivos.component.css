@@ -293,6 +293,14 @@ mark { background: var(--alert-yellow); color: #222; padding:0 2px; border-radiu
 	text-align: center;
 }
 
+/* Botones del modal con tamaño compacto */
+.modal .actions button {
+	padding: 0.5rem 0.8rem;
+	font-size: 0.95rem;
+	line-height: 1.1;
+	min-height: 36px;
+}
+
 /* Autocomplete per-field (like select) */
 .field-autocomplete { position: relative; }
 .autocomplete-panel {
@@ -352,4 +360,24 @@ mark { background: var(--alert-yellow); color: #222; padding:0 2px; border-radiu
 	font-size: 0.75rem;
 	margin-top: 4px;
 }
+
+/* ===== Modal de edición ===== */
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index: 1000; }
+.modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; border-radius:10px; border:1px solid var(--border-gray); width:min(900px, 96vw); max-height: 90vh; overflow:auto; z-index: 1001; box-shadow:0 10px 30px rgba(0,0,0,0.25); padding: 0.5rem 1.2rem 1rem; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom: 0; }
+.modal .close-btn { background:transparent; border:none; font-size:1.4rem; line-height:1; cursor:pointer; }
+.modal form.form-grid { margin-top: 0; }
+.modal .actions { grid-column: 1 / -1; display:flex; gap:8px; align-items: stretch; justify-content: stretch; flex-wrap: nowrap; }
+.modal .actions button { flex: 1 1 100%; width: auto; padding: 0.9rem 1.1rem; min-height: 50px; font-size: 1rem; }
+
+/* Botón principal más alto para ocupar mejor la fila */
+.reactivos-page form.form-grid .btn-create {
+	padding: 0.9rem 1.1rem;
+	min-height: 50px;
+	font-size: 1rem;
+}
+
+/* Hacer que el contenedor de acciones ocupe toda la fila y estire el botón al alto del área */
+.reactivos-page form.form-grid .form-actions { display:flex; align-items: stretch; gap: 8px; align-self: stretch; }
+.reactivos-page form.form-grid .form-actions .btn-create { flex: 0 0 auto; height: 100%; }
 

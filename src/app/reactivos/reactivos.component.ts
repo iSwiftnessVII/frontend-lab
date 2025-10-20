@@ -92,6 +92,21 @@ export class ReactivosComponent implements OnInit {
 
   reactivoMsg = '';
   submittedReactivo = false;
+  // Edición de reactivo
+  editMode = false;
+  editOriginalLote: string | null = null;
+  // Modal de edición
+  editModalOpen = false;
+  editSubmitted = false;
+  editFormData: any = {
+    loteOriginal: '',
+    lote: '', codigo: '', nombre: '', marca: '', referencia: '', cas: '',
+    presentacion: null as number | null,
+    presentacion_cant: null as number | null,
+    cantidad_total: null as number | null,
+    fecha_adquisicion: '', fecha_vencimiento: '', observaciones: '',
+    tipo_id: '', clasificacion_id: '', unidad_id: '', estado_id: '', almacenamiento_id: '', tipo_recipiente_id: ''
+  };
 
   // Lista de reactivos (signals para refresco inmediato)
   reactivosSig = signal<Array<any>>([]);
@@ -143,6 +158,83 @@ export class ReactivosComponent implements OnInit {
     } catch (err) {
       console.error('Error inicializando Reactivos:', err);
     }
+  }
+
+  // Convierte distintos formatos de fecha a 'yyyy-MM-dd' para inputs type="date"
+  private toDateInputValue(v: any): string {
+    if (!v) return '';
+    if (typeof v === 'string') {
+      const s = v.trim();
+      // ISO o 'yyyy-MM-dd...' -> tomar primeros 10
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+      // 'dd-mm-yyyy' -> reordenar a 'yyyy-MM-dd'
+      const m = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+      if (m) {
+        const dd = m[1].padStart(2, '0');
+        const mm = m[2].padStart(2, '0');
+        const yyyy = m[3];
+        return `${yyyy}-${mm}-${dd}`;
+      }
+      // Intentar parseo general
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+      return '';
+    }
+    try {
+      const d = v instanceof Date ? v : new Date(v);
+      if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+    } catch {}
+    return '';
+  }
+
+  // Normalización reutilizable de CAS: recorta, mapea guiones unicode a '-', elimina espacios, deja solo dígitos y '-', colapsa guiones múltiples y auto-formatea a A-B-C (2-7 | 2 | 1)
+  private normalizeCas(v: any): string | null {
+    if (v === null || v === undefined) return null;
+    const s = String(v);
+    // Reemplazar espacios no separables por espacios normales y recortar
+    const trimmed = s.replace(/\u00A0/g, ' ').trim();
+    if (!trimmed) return null;
+    // Mapear diferentes tipos de guiones a '-'
+    const dashNormalized = trimmed.replace(/[\u2010-\u2015\u2212]/g, '-');
+    // Eliminar espacios alrededor de guiones y dentro del string
+    const noSpaces = dashNormalized.replace(/\s+/g, '');
+    // Dejar solo dígitos o '-'
+    const digitsAndDash = noSpaces.replace(/[^0-9-]/g, '');
+    // Colapsar múltiples guiones
+    const compact = digitsAndDash.replace(/-+/g, '-');
+    // Construir versión con solo dígitos
+    const digitsOnly = compact.replace(/-/g, '');
+    // Si parece un CAS válido (5 a 10 dígitos), auto-formatear: A-B-C, donde C=1 dígito, B=2 dígitos, A=resto
+    if (digitsOnly.length >= 5 && digitsOnly.length <= 10) {
+      const len = digitsOnly.length;
+      const a = digitsOnly.slice(0, len - 3);
+      const b = digitsOnly.slice(len - 3, len - 1);
+      const c = digitsOnly.slice(len - 1);
+      return `${a}-${b}-${c}`;
+    }
+    return compact;
+  }
+
+  // Limpia el CAS del modal al perder foco para evitar falsos inválidos visuales
+  onEditCasBlur() {
+    const n = this.normalizeCas(this.editFormData.cas);
+    this.editFormData.cas = n === null ? '' : n;
+  }
+
+  // Limpia el CAS del formulario principal al perder foco
+  onCasBlur() {
+    const n = this.normalizeCas(this.cas);
+    this.cas = n === null ? '' : n;
   }
 
   async loadAux() {
@@ -722,6 +814,11 @@ export class ReactivosComponent implements OnInit {
     e.preventDefault();
     this.reactivoMsg = '';
     this.submittedReactivo = true;
+    // Normalizar CAS antes de validar por si el usuario no salió del campo
+    {
+      const n = this.normalizeCas(this.cas);
+      this.cas = n === null ? '' : n;
+    }
     if (form && form.invalid) {
       try { form.control.markAllAsTouched(); } catch {}
       this.reactivoMsg = 'Por favor corrige los campos resaltados.';
@@ -750,7 +847,7 @@ export class ReactivosComponent implements OnInit {
         nombre: this.nombre.trim(),
         marca: toNull(this.marca),
         referencia: toNull(this.referencia),
-        cas: toNull(this.cas),
+        cas: this.normalizeCas(this.cas),
         presentacion: this.presentacion,
         presentacion_cant: this.presentacion_cant,
         cantidad_total: this.cantidad_total,
@@ -764,11 +861,19 @@ export class ReactivosComponent implements OnInit {
         almacenamiento_id: toNull(this.almacenamiento_id),
         tipo_recipiente_id: toNull(this.tipo_recipiente_id)
       };
-      await reactivosService.crearReactivo(payload);
-      this.reactivoMsg = 'Reactivo creado correctamente';
+      if (this.editMode && this.editOriginalLote) {
+        // Actualizar: usar lote original como clave en la URL
+        await reactivosService.actualizarReactivo(this.editOriginalLote, payload);
+        this.reactivoMsg = 'Reactivo actualizado correctamente';
+      } else {
+        await reactivosService.crearReactivo(payload);
+        this.reactivoMsg = 'Reactivo creado correctamente';
+      }
       await this.loadReactivos();
+      // Limpiar modelo y restablecer estado visual del formulario (pristine/untouched)
       this.resetReactivoForm();
       this.submittedReactivo = false;
+      try { if (form) form.resetForm(); } catch {}
     } catch (err: any) {
       this.reactivoMsg = err?.message || 'Error creando reactivo';
     }
@@ -779,6 +884,129 @@ export class ReactivosComponent implements OnInit {
     this.presentacion = this.presentacion_cant = this.cantidad_total = null;
     this.fecha_adquisicion = this.fecha_vencimiento = this.observaciones = '';
     this.tipo_id = this.clasificacion_id = this.unidad_id = this.estado_id = this.almacenamiento_id = this.tipo_recipiente_id = '';
+    this.editMode = false;
+    this.editOriginalLote = null;
+  }
+
+  // Iniciar edición tomando datos del reactivo y subiendo el formulario
+  startEditReactivo(r: any) {
+    // Cargar valores en el formulario
+    this.lote = r.lote || '';
+    this.codigo = r.codigo || '';
+    this.nombre = r.nombre || '';
+    this.marca = r.marca || '';
+    this.referencia = r.referencia || '';
+    this.cas = r.cas || '';
+    this.presentacion = r.presentacion ?? null;
+    this.presentacion_cant = r.presentacion_cant ?? null;
+    this.cantidad_total = r.cantidad_total ?? null;
+    this.fecha_adquisicion = r.fecha_adquisicion || '';
+    this.fecha_vencimiento = r.fecha_vencimiento || '';
+    this.observaciones = r.observaciones || '';
+    this.tipo_id = r.tipo_id ?? '';
+    this.clasificacion_id = r.clasificacion_id ?? '';
+    this.unidad_id = r.unidad_id ?? '';
+    this.estado_id = r.estado_id ?? '';
+    this.almacenamiento_id = r.almacenamiento_id ?? '';
+    this.tipo_recipiente_id = r.tipo_recipiente_id ?? '';
+    this.editMode = true;
+    this.editOriginalLote = String(r.lote ?? '');
+    // Asegurar cantidad total consistente
+    this.calcularCantidadTotal();
+    // Abrir el panel de edición (el formulario está arriba en la vista)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Abrir modal de edición sin tocar el formulario principal
+  openEditModal(r: any) {
+    this.editFormData = {
+      loteOriginal: String(r.lote ?? ''),
+      lote: r.lote || '',
+      codigo: r.codigo || '',
+      nombre: r.nombre || '',
+      marca: r.marca || '',
+      referencia: r.referencia || '',
+      cas: r.cas || '',
+      presentacion: r.presentacion ?? null,
+      presentacion_cant: r.presentacion_cant ?? null,
+      cantidad_total: r.cantidad_total ?? null,
+      fecha_adquisicion: this.toDateInputValue(r.fecha_adquisicion),
+      fecha_vencimiento: this.toDateInputValue(r.fecha_vencimiento),
+      observaciones: r.observaciones || '',
+      tipo_id: r.tipo_id ?? '',
+      clasificacion_id: r.clasificacion_id ?? '',
+      unidad_id: r.unidad_id ?? '',
+      estado_id: r.estado_id ?? '',
+      almacenamiento_id: r.almacenamiento_id ?? '',
+      tipo_recipiente_id: r.tipo_recipiente_id ?? ''
+    };
+    this.editSubmitted = false;
+    this.editModalOpen = true;
+  }
+
+  // Cerrar modal y limpiar flags
+  closeEditModal() {
+    this.editModalOpen = false;
+    this.editSubmitted = false;
+  }
+
+  // Guardar cambios desde el modal
+  async guardarEdicion(form?: NgForm) {
+    this.editSubmitted = true;
+    // Normalizar CAS antes de que Angular valide el formulario, por si el usuario no salió del campo
+    {
+      const n = this.normalizeCas(this.editFormData.cas);
+      this.editFormData.cas = n === null ? '' : n;
+    }
+    if (form && form.invalid) {
+      try { form.control.markAllAsTouched(); } catch {}
+      return;
+    }
+    // Normalizar campos antes de construir el payload
+    const toNull = (v: any) => {
+      if (v === null || v === undefined) return null;
+      if (typeof v === 'string') {
+        const t = v.trim();
+        return t === '' ? null : t;
+      }
+      return v;
+    };
+    // Recalcular cantidad total si aplica
+    const cantidad_total = (this.editFormData.presentacion != null && this.editFormData.presentacion_cant != null)
+      ? Number(this.editFormData.presentacion) * Number(this.editFormData.presentacion_cant)
+      : this.editFormData.cantidad_total;
+    const payload = {
+      lote: String(this.editFormData.lote || '').trim(),
+      codigo: String(this.editFormData.codigo || '').trim(),
+      nombre: String(this.editFormData.nombre || '').trim(),
+      marca: toNull(this.editFormData.marca),
+      referencia: toNull(this.editFormData.referencia),
+  cas: this.normalizeCas(this.editFormData.cas),
+      presentacion: this.editFormData.presentacion,
+      presentacion_cant: this.editFormData.presentacion_cant,
+      cantidad_total,
+      fecha_adquisicion: toNull(this.editFormData.fecha_adquisicion),
+      fecha_vencimiento: toNull(this.editFormData.fecha_vencimiento),
+      observaciones: toNull(this.editFormData.observaciones),
+      tipo_id: toNull(this.editFormData.tipo_id),
+      clasificacion_id: toNull(this.editFormData.clasificacion_id),
+      unidad_id: toNull(this.editFormData.unidad_id),
+      estado_id: toNull(this.editFormData.estado_id),
+      almacenamiento_id: toNull(this.editFormData.almacenamiento_id),
+      tipo_recipiente_id: toNull(this.editFormData.tipo_recipiente_id)
+    };
+    try {
+      if (!payload.lote || !payload.codigo || !payload.nombre) {
+        this.reactivoMsg = 'Por favor completa Lote, Código y Nombre.';
+        return;
+      }
+      await reactivosService.actualizarReactivo(this.editFormData.loteOriginal, payload);
+      this.reactivoMsg = 'Reactivo actualizado correctamente';
+      this.closeEditModal();
+      await this.loadReactivos();
+    } catch (e: any) {
+      this.reactivoMsg = e?.message || 'Error actualizando reactivo';
+    }
   }
 
 
