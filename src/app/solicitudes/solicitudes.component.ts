@@ -1,5 +1,5 @@
 import { Component, signal, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService } from '../services/auth.service';
@@ -9,7 +9,7 @@ const API = (window as any).__env?.API_BASE || 'http://localhost:3000/api/solici
 @Component({
   standalone: true,
   selector: 'app-solicitudes',
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, NgIf, NgFor, FormsModule, RouterModule],
   templateUrl: './solicitudes.component.html',
   styleUrls: ['./solicitudes.component.css'],
   encapsulation: ViewEncapsulation.None
@@ -994,9 +994,22 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   // Estado para mostrar/ocultar detalles por cliente
   detallesVisibles: { [key: number]: boolean } = {};
+  private expandedSolicitudes = new Set<number>();
 
   toggleClienteDetails(id: number) {
     this.detallesVisibles[id] = !this.detallesVisibles[id];
+  }
+
+  // Expand/collapse para tarjetas de solicitudes
+  toggleExpandSolicitud(s: any) {
+    const key = Number(s?.id_solicitud ?? 0);
+    if (!key) return;
+    if (this.expandedSolicitudes.has(key)) this.expandedSolicitudes.delete(key);
+    else this.expandedSolicitudes.add(key);
+  }
+  isSolicitudExpanded(s: any): boolean {
+    const key = Number(s?.id_solicitud ?? 0);
+    return key ? this.expandedSolicitudes.has(key) : false;
   }
 
   async copyToClipboard(value: string | null): Promise<boolean> {

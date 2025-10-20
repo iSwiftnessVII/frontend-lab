@@ -675,30 +675,54 @@
       </small>
     </div>
 
-  <div class="list-wrapper solicitudes-list">
-      <div class="list-header">
-        <div class="col cliente-col">Cliente</div>
-        <div class="col solicitud-col">Solicitud</div>
-        <div class="col small-col">Viable</div>
-        <div class="col small-col">Oferta</div>
-        <div class="col small-col">Encuesta</div>
-        <div class="col small-col">Resultados</div>
-        <div class="col actions-col">Acciones</div>
+    <div class="cards-container">
+      <div class="catalogo-stats" *ngIf="solicitudes() && solicitudes().length">
+        <span>📄 Mostrando {{ solicitudesFiltradas().length }} de {{ solicitudes().length }} solicitudes</span>
       </div>
+      <div class="catalogo-cards">
+        <article class="catalog-card solicitud-card" *ngFor="let s of solicitudesFiltradas()"
+                 (click)="toggleExpandSolicitud(s)" [attr.aria-expanded]="isSolicitudExpanded(s)" tabindex="0">
+          <div class="card-top">
+            <div class="cliente-wrap">
+              <span class="cliente-pill">{{ s.nombre_solicitante || '—' }}</span>
+            </div>
+            <div class="sol-actions" (click)="$event.stopPropagation()" aria-label="Acciones de la solicitud">
+              <span><input type="checkbox" [checked]="!!s.servicio_viable" (change)="toggleCheck(s, 'servicio_viable', $event.target.checked)" /> Viable</span>
+              <span><input type="checkbox" [checked]="!!s.genero_cotizacion" (change)="toggleCheck(s, 'genero_cotizacion', $event.target.checked)" /> Oferta</span>
+              <span><input type="checkbox" [checked]="!!s.cliente_respondio_encuesta" (change)="toggleCheck(s, 'cliente_respondio_encuesta', $event.target.checked)" /> Encuesta</span>
+              <span><input type="checkbox" [checked]="!!s.numero_informe_resultados" (change)="toggleCheck(s, 'numero_informe_resultados', $event.target.checked)" /> Resultados</span>
+              <button type="button" class="icon-btn delete" (click)="deleteSolicitud(s.id_solicitud)" aria-label="Eliminar solicitud" title="Eliminar solicitud">
+                <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="card-name" [title]="s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud)">
+            <div class="name-line">{{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}</div>
+            <span class="toggle-icon" [class.open]="isSolicitudExpanded(s)" aria-hidden="true">▾</span>
+          </div>
+          <div class="card-expand" *ngIf="isSolicitudExpanded(s)" (click)="$event.stopPropagation()">
+            <div class="expand-grid">
+              <div class="section-label">Detalle</div>
+              <div><strong>Cliente:</strong> {{ s.nombre_solicitante || '—' }}</div>
+              <div><strong>Código:</strong> {{ s.codigo || '—' }}</div>
+              <div><strong>Lote producto:</strong> {{ s.lote_producto || '—' }}</div>
 
-      <div *ngFor="let s of solicitudesFiltradas()" class="solicitud-item">
-        <div class="col cliente-col">{{ s.nombre_solicitante || '—' }}</div>
-        <div class="col solicitud-col">{{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}</div>
-        <div class="col small-col"><input type="checkbox" [checked]="!!s.servicio_viable" (change)="toggleCheck(s, 'servicio_viable', $event.target.checked)" /></div>
-        <div class="col small-col"><input type="checkbox" [checked]="!!s.genero_cotizacion" (change)="toggleCheck(s, 'genero_cotizacion', $event.target.checked)" /></div>
-        <div class="col small-col"><input type="checkbox" [checked]="!!s.cliente_respondio_encuesta" (change)="toggleCheck(s, 'cliente_respondio_encuesta', $event.target.checked)" /></div>
-        <div class="col small-col"><input type="checkbox" [checked]="!!s.numero_informe_resultados" (change)="toggleCheck(s, 'numero_informe_resultados', $event.target.checked)" /></div>
-        <div class="col actions-col">
-          <button class="btn-danger" (click)="deleteSolicitud(s.id_solicitud)">Borrar</button>
-        </div>
+              <div class="section-label">Muestra y análisis</div>
+              <div><strong>Nombre muestra:</strong> {{ s.nombre_muestra_producto || '—' }}</div>
+              <div><strong>Tipo muestra:</strong> {{ s.tipo_muestra || '—' }}</div>
+              <div><strong>Tipo análisis:</strong> {{ s.tipo_analisis_requerido || '—' }}</div>
+              <div><strong>Cond. empaque:</strong> {{ s.condiciones_empaque || '—' }}</div>
+
+              <div class="section-label">Fechas</div>
+              <div><strong>Vencimiento:</strong> {{ formatValue(s.fecha_vencimiento) }}</div>
+              <div><strong>Entrega estimada:</strong> {{ formatValue(s.fecha_estimada_entrega) }}</div>
+
+              <div class="full"><strong>Observaciones:</strong> {{ s.observaciones || '—' }}</div>
+            </div>
+          </div>
+        </article>
       </div>
-
-      <div *ngIf="solicitudesFiltradas().length === 0" class="empty-row">No hay solicitudes para mostrar</div>
+      <p *ngIf="solicitudesFiltradas().length === 0">No hay solicitudes para mostrar</p>
     </div>
   </section>
 

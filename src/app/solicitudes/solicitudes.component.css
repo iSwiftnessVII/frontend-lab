@@ -399,6 +399,45 @@ small[style*="color: #dc3545"] {
   padding: 2rem;
 }
 
+/* ====== Tarjetas estilo catálogo (reuso de clases de reactivos) ====== */
+.catalogo-cards { display:flex; flex-wrap:wrap; align-items:stretch; gap:1.25rem; justify-content:center; }
+.catalog-card { background: var(--primary-white); border:1px solid var(--border-gray); border-radius:10px; padding:1.2rem 1.4rem; box-shadow:0 2px 4px rgba(0,0,0,0.04); transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease; animation: cardFade .4s ease; width:100%; max-width:none; flex:1 1 100%; }
+.catalog-card:hover { box-shadow:0 6px 18px rgba(0,0,0,0.16); }
+.catalog-card .card-top { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:0.5rem; align-items:center; }
+/* Refuerzo: cada hijo de card-top se centra verticalmente */
+.catalog-card .card-top > * { align-self: center; }
+.catalog-card .tags { display:flex; flex-wrap:wrap; gap:6px 8px; }
+.catalog-card .tag { background: var(--light-gray); color: var(--text-gray); padding:0.35rem 0.55rem; border-radius:30px; font-size:0.72rem; font-weight:500; letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border:1px solid var(--border-gray); }
+.catalog-card .card-name { margin-top:0.75rem; background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%); color:#fff; padding:0.75rem 0.9rem; border-radius:6px; font-size:0.95rem; font-weight:600; letter-spacing:.25px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; justify-content:space-between; position:relative; }
+.catalog-card .card-name .name-line { font-size: 1.05rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; }
+.catalog-card .card-name .meta-line { display:flex; flex-wrap:wrap; gap:6px; opacity:.95; }
+.catalog-card .card-name .meta-line .chip { background: rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); padding:2px 8px; border-radius:999px; font-weight:600; font-size:0.8rem; }
+.catalog-card .card-name .toggle-icon { position:absolute; right:12px; top:8px; transition: transform .18s ease; }
+.catalog-card .card-name .toggle-icon.open { transform: rotate(180deg); }
+.catalog-card .card-expand { background:#fff; border:1px solid var(--border-gray); border-radius:8px; margin-top:10px; padding:10px; }
+.catalog-card .expand-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px; }
+.catalog-card .expand-grid .full { grid-column: 1 / -1; }
+.catalog-card .expand-grid .section-label { grid-column:1 / -1; font-weight:700; font-size:0.85rem; color:#333; margin-top:6px; padding-top:6px; border-top:1px dashed var(--border-gray); }
+
+.solicitud-card { --row-h: 36px; }
+/* Fila superior: cliente a la izquierda, acciones (checkboxes) y eliminar a la derecha */
+.solicitud-card .sol-actions { display:flex; gap:0.5rem; align-items:center; flex-wrap: nowrap; align-self: center; min-height: var(--row-h); }
+.solicitud-card .sol-actions span { display:inline-flex; align-items:center; gap:0.35rem; }
+.solicitud-card .sol-actions input[type="checkbox"] { width: 1.2rem; height: 1.2rem; transform: translateY(1px); }
+.solicitud-card .cliente-wrap { display:flex; align-items:center; align-self: center; }
+.solicitud-card .cliente-pill { background: rgba(0,0,0,0.03); border:1px solid var(--border-gray); height: var(--row-h); display:inline-flex; align-items:center; padding: 0 12px; border-radius:8px; font-weight:600; color:#0b1220; font-size:0.95rem; }
+.solicitud-card .icon-btn { width: var(--row-h); height: var(--row-h); background: #d11a1a; border: 1px solid #d11a1a; border-radius: 8px; cursor: pointer; display:inline-flex; align-items:center; justify-content:center; color:#fff; padding:0; position:relative; transition: background-color .18s ease, transform .18s ease, box-shadow .18s ease; align-self: center; }
+.solicitud-card .icon-btn:hover { filter: brightness(1.05); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+.solicitud-card .icon-btn:active { transform: translateY(1px); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.solicitud-card .icon-btn .icon { width: 18px; height: 18px; display:block; }
+
+/* En pantallas pequeñas, permite que las acciones hagan wrap para no desbordar */
+@media (max-width: 720px) {
+  .solicitud-card .sol-actions { flex-wrap: wrap; }
+}
+
+@keyframes cardFade { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:translateY(0);} }
+
 /* ---------- HEADER ---------- */
 .header {
   background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%);
