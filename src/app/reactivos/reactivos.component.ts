@@ -44,6 +44,7 @@ export class ReactivosComponent implements OnInit {
   catalogoQ = '';
   // Signals para catálogo
   catalogoResultadosSig = signal<Array<any>>([]);
+  catalogoSugerenciasSig = signal<Array<any>>([]);
   catalogoSeleccionado: any = null;
   catalogoCargando: boolean = false;
   // Base y listas filtradas para selects (signal)
@@ -98,7 +99,11 @@ export class ReactivosComponent implements OnInit {
   reactivosFiltrados: Array<any> = [];
   reactivosQ = '';
   // Panel de catálogo dentro del formulario (se mantiene para autocompletar)
-  mostrarCatalogoFormPanel: boolean = false;
+  mostrarCatalogoFormPanel: boolean = false; // deprecado visualmente
+  private catalogoDebounce: any = null;
+  catalogoFiltroCampo: 'codigo' | 'nombre' | 'mixto' = 'mixto';
+  isCodigoFocused: boolean = false;
+  isNombreFocused: boolean = false;
 
   // Estado de disponibilidad de PDFs por código
   pdfStatus: { [codigo: string]: { hoja: boolean | null; cert: boolean | null } } = {};
@@ -155,35 +160,32 @@ export class ReactivosComponent implements OnInit {
     if (!this.catalogoBaseSig().length) {
       await this.cargarCatalogoBase();
     }
-    this.catalogoCargando = true;
-    try {
-      if (!q) {
-        this.catalogoResultadosSig.set(this.catalogoBaseSig().slice());
-      } else {
-        const filtered = this.catalogoBaseSig().filter(c =>
-          this.normalizarTexto(c.codigo || '').includes(q) ||
-          this.normalizarTexto(c.nombre || '').includes(q)
-        );
-        this.catalogoResultadosSig.set(filtered);
-      }
-    } finally {
-      this.catalogoCargando = false;
+    // Importante: no tocar catalogoCargando aquí para no afectar la lista de catálogo
+    if (!q) {
+      this.catalogoSugerenciasSig.set([]); // sólo dropdown
+    } else {
+      const base = this.catalogoBaseSig();
+      const filtered = base.filter(c => {
+        const cod = this.normalizarTexto(c.codigo || '');
+        const nom = this.normalizarTexto(c.nombre || '');
+        if (this.catalogoFiltroCampo === 'codigo') return cod.includes(q);
+        if (this.catalogoFiltroCampo === 'nombre') return nom.includes(q);
+        // mixto
+        return cod.includes(q) || nom.includes(q);
+      });
+      this.catalogoSugerenciasSig.set(filtered);
     }
   }
 
   async cargarCatalogoBase() {
     try {
-      const resp = await reactivosService.buscarCatalogo('', this.catalogoVisibleCount, this.catalogoOffset);
-      if (Array.isArray(resp)) {
-        this.catalogoBaseSig.set(resp);
-        this.catalogoTotal = resp.length;
-        this.catalogoResultadosSig.set(resp.slice(0, this.catalogoVisibleCount));
-      } else {
-        const base = resp.rows || [];
-        this.catalogoBaseSig.set(base);
-        this.catalogoTotal = resp.total || base.length;
-        this.catalogoResultadosSig.set(base.slice());
-      }
+      // Traer todo (sin límite) para que los filtros y sugerencias funcionen sobre el universo completo
+      const resp = await reactivosService.buscarCatalogo('', 0, 0);
+      const base = Array.isArray(resp) ? resp : (resp.rows || []);
+      this.catalogoBaseSig.set(base);
+      this.catalogoTotal = Array.isArray(resp) ? resp.length : (resp.total || base.length);
+      // Mostrar solo los primeros N en el catálogo (independiente del dropdown)
+      this.catalogoResultadosSig.set(base.slice(0, this.catalogoVisibleCount));
       this.catalogoCodigoResultados = this.catalogoBaseSig().slice();
       this.catalogoNombreResultados = this.catalogoBaseSig().slice();
       // Pre-cargar disponibilidad de PDFs para los visibles iniciales
@@ -224,6 +226,9 @@ export class ReactivosComponent implements OnInit {
     this.loadDocs(item.codigo);
     // Ocultar panel de catálogo embebido
     this.mostrarCatalogoFormPanel = false;
+    // Limpiar sugerencias para cerrar dropdowns
+    this.catalogoSugerenciasSig.set([]);
+    this.catalogoQ = '';
   }
 
   filtrarCatalogoCodigo() {
@@ -282,7 +287,8 @@ export class ReactivosComponent implements OnInit {
     }
 
     this.catalogoBaseSig.set(base);
-  this.catalogoResultadosSig.set(singleCharQuery ? filtered : filtered.slice(0, this.catalogoVisibleCount));
+    // La lista principal siempre limitada a catalogoVisibleCount
+    this.catalogoResultadosSig.set((singleCharQuery ? filtered : filtered).slice(0, this.catalogoVisibleCount));
     this.catalogoTotal = filtered.length;
     this.catalogoCodigoResultados = this.catalogoBaseSig().slice();
     this.catalogoNombreResultados = this.catalogoBaseSig().slice();
@@ -321,6 +327,11 @@ export class ReactivosComponent implements OnInit {
 
   trackByCatalogo(index: number, item: any) {
     return item?.codigo || index;
+  }
+
+  trackByReactivo(index: number, item: any) {
+    // Prefer lote as unique key; fallback to codigo + index
+    return item?.lote || `${item?.codigo || 'item'}-${index}`;
   }
 
   // --- Acciones PDF en tabla catálogo ---
@@ -470,6 +481,7 @@ export class ReactivosComponent implements OnInit {
   // Getters para mantener compatibilidad con el template existente
   get catalogoResultados() { return this.catalogoResultadosSig(); }
   get catalogoBase() { return this.catalogoBaseSig(); }
+  get catalogoSugerencias() { return this.catalogoSugerenciasSig(); }
 
   // Pre-carga de disponibilidad de PDFs (solo estado, no abre ventana)
   async preloadDocsForVisible(list?: any[]) {
@@ -633,26 +645,41 @@ export class ReactivosComponent implements OnInit {
     e.preventDefault();
     this.reactivoMsg = '';
     try {
+      // Validación mínima de campos obligatorios
+      if (!this.lote.trim() || !this.codigo.trim() || !this.nombre.trim()) {
+        this.reactivoMsg = 'Por favor completa Lote, Código y Nombre.';
+        return;
+      }
+
+      const toNull = (v: any) => {
+        if (v === null || v === undefined) return null;
+        if (typeof v === 'string') {
+          const t = v.trim();
+          return t === '' ? null : t;
+        }
+        return v;
+      };
+
       this.calcularCantidadTotal();
       const payload = {
         lote: this.lote.trim(),
         codigo: this.codigo.trim(),
         nombre: this.nombre.trim(),
-        marca: this.marca.trim(),
-        referencia: this.referencia.trim() || null,
-        cas: this.cas.trim() || null,
+        marca: toNull(this.marca),
+        referencia: toNull(this.referencia),
+        cas: toNull(this.cas),
         presentacion: this.presentacion,
         presentacion_cant: this.presentacion_cant,
         cantidad_total: this.cantidad_total,
-        fecha_adquisicion: this.fecha_adquisicion,
-        fecha_vencimiento: this.fecha_vencimiento,
-        observaciones: this.observaciones.trim() || null,
-        tipo_id: this.tipo_id,
-        clasificacion_id: this.clasificacion_id,
-        unidad_id: this.unidad_id,
-        estado_id: this.estado_id,
-        almacenamiento_id: this.almacenamiento_id,
-        tipo_recipiente_id: this.tipo_recipiente_id
+        fecha_adquisicion: toNull(this.fecha_adquisicion),
+        fecha_vencimiento: toNull(this.fecha_vencimiento),
+        observaciones: toNull(this.observaciones),
+        tipo_id: toNull(this.tipo_id),
+        clasificacion_id: toNull(this.clasificacion_id),
+        unidad_id: toNull(this.unidad_id),
+        estado_id: toNull(this.estado_id),
+        almacenamiento_id: toNull(this.almacenamiento_id),
+        tipo_recipiente_id: toNull(this.tipo_recipiente_id)
       };
       await reactivosService.crearReactivo(payload);
       this.reactivoMsg = 'Reactivo creado correctamente';
@@ -673,29 +700,56 @@ export class ReactivosComponent implements OnInit {
 
   async onCodigoInput() {
     const q = (this.codigo || '').trim();
-    if (q.length >= 1) {
-      this.catalogoQ = q;
-      await this.buscarCatalogo();
-      this.mostrarCatalogoFormPanel = true;
-    } else {
-      this.mostrarCatalogoFormPanel = false;
-    }
+    this.catalogoQ = q;
+    this.catalogoFiltroCampo = 'codigo';
+    if (this.catalogoDebounce) clearTimeout(this.catalogoDebounce);
+    this.catalogoDebounce = setTimeout(async () => {
+      if (q.length >= 1) {
+        await this.buscarCatalogo();
+      } else {
+        // Cuando vacío, limpiar solo el dropdown (no tocar la lista principal)
+        this.catalogoSugerenciasSig.set([]);
+      }
+    }, 150);
+    this.mostrarCatalogoFormPanel = false;
+  }
+
+  onCodigoFocus() {
+    this.isCodigoFocused = true;
+    this.catalogoFiltroCampo = 'codigo';
+  }
+  onCodigoBlur() {
+    // Timeout corto para permitir click en opción (mousedown previene blur en el botón)
+    setTimeout(() => { this.isCodigoFocused = false; }, 80);
   }
 
   async onNombreInput() {
     const q = (this.nombre || '').trim();
-    if (q.length >= 1) {
-      this.catalogoQ = q;
-      await this.buscarCatalogo();
-      this.mostrarCatalogoFormPanel = true;
-    } else {
-      this.mostrarCatalogoFormPanel = false;
-    }
+    this.catalogoQ = q;
+    this.catalogoFiltroCampo = 'nombre';
+    if (this.catalogoDebounce) clearTimeout(this.catalogoDebounce);
+    this.catalogoDebounce = setTimeout(async () => {
+      if (q.length >= 1) {
+        await this.buscarCatalogo();
+      } else {
+        this.catalogoSugerenciasSig.set([]);
+      }
+    }, 150);
+    this.mostrarCatalogoFormPanel = false;
+  }
+
+  onNombreFocus() {
+    this.isNombreFocused = true;
+    this.catalogoFiltroCampo = 'nombre';
+  }
+  onNombreBlur() {
+    setTimeout(() => { this.isNombreFocused = false; }, 80);
   }
 
   cerrarCatalogoFormPanel() {
     this.mostrarCatalogoFormPanel = false;
   }
+
 
   async filtrarReactivos() {
     // Filtrado local por lote, código y nombre (insensible a mayúsculas/acentos)

@@ -107,6 +107,12 @@
 	text-align:center;
 	display:inline-flex;
 	align-items:center;
+.catalog-card .card-name .inv-meta {
+	font-weight:500;
+	opacity:0.95;
+	font-size:0.85em;
+	margin-left: 12px;
+}
 	justify-content:center;
 }
 .catalog-card .card-name .badge.loading { background: rgba(255,255,255,0.15); }
@@ -262,3 +268,46 @@ mark { background: var(--alert-yellow); color: #222; padding:0 2px; border-radiu
 	justify-content: center;
 	text-align: center;
 }
+
+/* Autocomplete per-field (like select) */
+.field-autocomplete { position: relative; }
+.autocomplete-panel {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: calc(100% + 4px);
+	z-index: 50;
+	background: #fff;
+	border: 1px solid var(--border-gray);
+	border-radius: 8px;
+	box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+	padding: 6px;
+	max-height: 220px;
+	overflow: auto;
+}
+.autocomplete-item {
+	display: flex;
+	gap: 8px;
+	width: 100%;
+	background: transparent;
+	border: none;
+	text-align: left;
+	padding: 8px 10px;
+	border-radius: 6px;
+	cursor: pointer;
+}
+.autocomplete-item:hover { background: var(--light-gray); }
+.autocomplete-item .code { font-weight: 700; color: #0b5bd3; }
+.autocomplete-item .name { color: #333; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Sugerencias compacto debajo de filtros */
+.catalogo-suggestions-wrap { max-height: 0; overflow: clip; transition: max-height .25s ease, opacity .25s ease; opacity: 0; }
+.catalogo-suggestions-wrap.open { max-height: 200px; opacity: 1; }
+.catalogo-suggestions { margin-top: -0.5rem; padding-top: 0.25rem; }
+.catalogo-suggestions .suggestions-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.35rem; }
+.catalogo-suggestions .link-btn { background:none; border:none; color: var(--primary-blue); cursor:pointer; padding:0; font-weight:600; }
+.catalogo-suggestions .chips { display:flex; flex-wrap:wrap; gap:0.5rem; }
+.suggestion-chip { display:inline-flex; align-items:center; gap:0.5rem; border:1px solid var(--border-gray); background:var(--primary-white); padding:0.35rem 0.6rem; border-radius:999px; cursor:pointer; }
+.suggestion-chip .code { font-weight:700; color:#0b5bd3; }
+.suggestion-chip .name { color:#333; max-width: 40ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+

@@ -121,42 +121,42 @@
   
   <!-- Formulario de creación -->
   <form class="form-grid" (submit)="crearReactivo($event)">
-    <div class="field-sm">
+    <div class="field-sm field-autocomplete">
       <label for="lote">Lote</label>
       <input id="lote" [(ngModel)]="lote" name="lote" required />
     </div>
-    <div>
+    <div class="field-autocomplete">
       <label for="codigo">Código (catálogo)</label>
-      <input id="codigo" [(ngModel)]="codigo" name="codigo" (input)="onCodigoInput()" required />
+      <input id="codigo" [(ngModel)]="codigo" name="codigo" (input)="onCodigoInput()" (focus)="onCodigoFocus()" (blur)="onCodigoBlur()" required />
+   <div class="autocomplete-panel" role="listbox"
+     *ngIf="isCodigoFocused && (codigo.trim().length>=1) && catalogoSugerencias.length && catalogoFiltroCampo==='codigo'">
+        <button type="button" class="autocomplete-item" role="option"
+       *ngFor="let s of catalogoSugerencias | slice:0:8"
+                (mousedown)="$event.preventDefault()"
+                (click)="seleccionarCatalogo(s)"
+                [title]="s.nombre">
+          <span class="code">{{ s.codigo }}</span>
+          <span class="name">{{ s.nombre }}</span>
+        </button>
+      </div>
     </div>
-    <div>
+    <div class="field-autocomplete">
       <label for="nombre">Nombre (catálogo)</label>
-      <input id="nombre" [(ngModel)]="nombre" name="nombre" (input)="onNombreInput()" required />
+      <input id="nombre" [(ngModel)]="nombre" name="nombre" (input)="onNombreInput()" (focus)="onNombreFocus()" (blur)="onNombreBlur()" required />
+   <div class="autocomplete-panel" role="listbox"
+     *ngIf="isNombreFocused && (nombre.trim().length>=1) && catalogoSugerencias.length && catalogoFiltroCampo==='nombre'">
+        <button type="button" class="autocomplete-item" role="option"
+       *ngFor="let s of catalogoSugerencias | slice:0:8"
+                (mousedown)="$event.preventDefault()"
+                (click)="seleccionarCatalogo(s)"
+                [title]="s.nombre">
+          <span class="code">{{ s.codigo }}</span>
+          <span class="name">{{ s.nombre }}</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Panel de catálogo embebido para autocompletar -->
-    <div *ngIf="mostrarCatalogoFormPanel" style="border:1px solid #ddd; padding:0.5rem; margin:0.5rem 0;">
-      <div style="display:flex; gap:0.5rem; align-items:center;">
-        <strong>Catálogo</strong>
-        <button type="button" (click)="cerrarCatalogoFormPanel()">Cerrar</button>
-      </div>
-      <div style="max-height:200px; overflow:auto; margin-top:0.5rem;">
-        <table>
-          <thead>
-            <tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Clasificación</th><th></th></tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let c of catalogoResultados">
-              <td>{{ c.codigo }}</td>
-              <td>{{ c.nombre }}</td>
-              <td>{{ c.tipo_reactivo }}</td>
-              <td>{{ c.clasificacion_sga }}</td>
-              <td><button type="button" (click)="seleccionarCatalogo(c)">Usar</button></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    
 
     <div>
       <label for="marca">Marca</label>
@@ -265,41 +265,37 @@
         <input id="reactNombreQ" [(ngModel)]="reactivosNombreQ" (input)="filtrarReactivos()" />
       </div>
     </div>
-    <div class="table-container">
-    <table class="reactivos-table">
-      <caption>Inventario de reactivos: Lote, Código, Nombre, Tipo, Estado, Cantidad y Fechas</caption>
-      <thead>
-        <tr>
-          <th>Lote</th>
-          <th>Código</th>
-          <th>Nombre</th>
-          <th>Tipo</th>
-          <th>Estado</th>
-          <th>Cantidad total</th>
-          <th>Adquisición</th>
-          <th>Vencimiento</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-  <tr *ngFor="let r of reactivosFiltrados">
-          <td>{{ r.lote }}</td>
-          <td>{{ r.codigo }}</td>
-          <td class="truncate" title="{{ r.nombre }}">{{ r.nombre }}</td>
-          <td>{{ obtenerNombreTipo(r.tipo_id) }}</td>
-          <td>{{ obtenerNombreEstado(r.estado_id) }}</td>
-          <td>{{ r.cantidad_total }}</td>
-          <td>{{ formatearFecha(r.fecha_adquisicion) }}</td>
-          <td>{{ formatearFecha(r.fecha_vencimiento) }}</td>
-          <td>
-            <button type="button" (click)="eliminarReactivo(r.lote)">Eliminar</button>
-            <button type="button" (click)="mostrarDetallesReactivo(r)" class="btn-detalles">+</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="cards-container">
+      <div class="catalogo-cards">
+        <article class="catalog-card" *ngFor="let r of reactivosFiltrados; trackBy: trackByReactivo">
+          <div class="card-top">
+            <div class="tags">
+              <span class="tag"><strong>Lote: </strong> {{ r.lote }}</span>
+              <span class="tag"><strong>Código: </strong> {{ r.codigo }}</span>
+              <span class="tag"><strong>Estado: </strong> {{ obtenerNombreEstado(r.estado_id) }}</span>
+            </div>
+            <div class="pdf-actions" aria-label="Acciones del reactivo">
+              <div class="pdf-group">
+                <button type="button" class="pdf-btn view" title="Ver detalles" aria-label="Ver detalles" (click)="mostrarDetallesReactivo(r)">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                </button>
+                <button type="button" class="pdf-btn delete" title="Eliminar reactivo" aria-label="Eliminar reactivo" (click)="eliminarReactivo(r.lote)">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-name" [title]="r.nombre">
+            <span>{{ r.nombre }}</span>
+            <span class="inv-meta">
+              {{ obtenerNombreTipo(r.tipo_id) }} • {{ r.cantidad_total }} {{ obtenerNombreUnidad(r.unidad_id) }} • Vence: {{ formatearFecha(r.fecha_vencimiento) }}
+            </span>
+          </div>
+        </article>
+      </div>
+      <p *ngIf="reactivosFiltrados && reactivosFiltrados.length === 0">No hay reactivos que coincidan con los filtros.</p>
+      <p *ngIf="reactivos && reactivos.length === 0">No hay reactivos cargados.</p>
     </div>
-    <p *ngIf="!reactivos?.length">No hay reactivos cargados.</p>
   </div>
 
   <!-- Panel de detalles adicionales -->
@@ -330,5 +326,6 @@
     </div>
 
   </div>
+
 </section>
 
