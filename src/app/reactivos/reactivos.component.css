@@ -107,13 +107,37 @@
 	text-align:center;
 	display:inline-flex;
 	align-items:center;
+	justify-content:center;
+}
 .catalog-card .card-name .inv-meta {
 	font-weight:500;
 	opacity:0.95;
 	font-size:0.85em;
 	margin-left: 12px;
 }
-	justify-content:center;
+.reactivo-card .card-name { flex-direction: column; align-items: flex-start; gap: 4px; }
+.reactivo-card .card-name .name-line { font-size: 1.05rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.reactivo-card .card-name .meta-line { display:flex; flex-wrap: wrap; gap: 6px; opacity: 0.95; }
+.reactivo-card .card-name .meta-line .chip { background: rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); padding: 2px 8px; border-radius: 999px; font-weight: 600; font-size: 0.8rem; }
+.reactivo-card .card-name .toggle-icon { position: absolute; right: 12px; top: 8px; transition: transform .18s ease; }
+.reactivo-card .card-name .toggle-icon.open { transform: rotate(180deg); }
+.reactivo-card .card-expand { background: #fff; border: 1px solid var(--border-gray); border-radius: 8px; margin-top: 10px; padding: 10px; }
+.reactivo-card .expand-grid { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.reactivo-card .expand-grid .full { grid-column: 1 / -1; }
+.reactivo-card .expand-grid .section-label { grid-column: 1 / -1; font-weight:700; font-size:0.85rem; color:#333; margin-top:6px; padding-top:6px; border-top:1px dashed var(--border-gray); }
+
+.reactivo-card .tags { 
+	display: flex; 
+	flex-wrap: wrap; 
+	gap: 6px 8px; 
+}
+.reactivo-card .tags .tag { 
+	white-space: nowrap; 
+	overflow: hidden; 
+	text-overflow: ellipsis; 
+	width: fit-content; 
+	max-width: 100%; 
+	padding: 0.35rem 0.55rem; 
 }
 .catalog-card .card-name .badge.loading { background: rgba(255,255,255,0.15); }
 .catalog-card .card-name .badge.loading::after {
@@ -310,4 +334,22 @@ mark { background: var(--alert-yellow); color: #222; padding:0 2px; border-radiu
 .suggestion-chip { display:inline-flex; align-items:center; gap:0.5rem; border:1px solid var(--border-gray); background:var(--primary-white); padding:0.35rem 0.6rem; border-radius:999px; cursor:pointer; }
 .suggestion-chip .code { font-weight:700; color:#0b5bd3; }
 .suggestion-chip .name { color:#333; max-width: 40ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* ===== Form validation visuals ===== */
+.reactivos-page input.invalid,
+.reactivos-page select.invalid,
+.reactivos-page textarea.invalid {
+	border-color: #d11a1a !important;
+	box-shadow: 0 0 0 2px rgba(209,26,26,0.12);
+}
+.reactivos-page .field-error {
+	color: #d11a1a;
+	font-size: 0.8rem;
+	margin-top: 4px;
+}
+.reactivos-page .field-hint {
+	color: #666;
+	font-size: 0.75rem;
+	margin-top: 4px;
+}
 

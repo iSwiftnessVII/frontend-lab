@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule, NgIf } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService } from '../services/auth.service';
 import { reactivosService } from '../services/reactivos.service';
@@ -26,6 +26,7 @@ export class ReactivosComponent implements OnInit {
   almacen: Array<any> = [];
   reactivoSeleccionado: any = null;
   mostrarDetalles: boolean = false;
+  private expandedLotes = new Set<string>();
   
   ngOnInit() {
     // Ejecutar inicialización al montar el componente
@@ -39,6 +40,7 @@ export class ReactivosComponent implements OnInit {
   catClasificacion = '';
   catDescripcion = '';
   catalogoMsg = '';
+  submittedCatalogo = false;
 
   // Catálogo búsqueda y selección
   catalogoQ = '';
@@ -89,14 +91,15 @@ export class ReactivosComponent implements OnInit {
   tipo_recipiente_id: any = '';
 
   reactivoMsg = '';
+  submittedReactivo = false;
 
-  // Lista de reactivos
-  reactivos: Array<any> = [];
+  // Lista de reactivos (signals para refresco inmediato)
+  reactivosSig = signal<Array<any>>([]);
   // Filtros de inventario (3 campos en una fila)
   reactivosLoteQ = '';
   reactivosCodigoQ = '';
   reactivosNombreQ = '';
-  reactivosFiltrados: Array<any> = [];
+  reactivosFiltradosSig = signal<Array<any>>([]);
   reactivosQ = '';
   // Panel de catálogo dentro del formulario (se mantiene para autocompletar)
   mostrarCatalogoFormPanel: boolean = false; // deprecado visualmente
@@ -132,6 +135,9 @@ export class ReactivosComponent implements OnInit {
         this.loadReactivos(10),
         this.loadCatalogoInicial()
       ]);
+      // Asegurar re-render de tarjetas una vez que auxiliares y reactivos estén listos
+      // Esto fuerza a recalcular nombres (tipo/unidad/estado/SGA) y evita depender de un clic
+      this.aplicarFiltroReactivos();
       // Guardar cache inicial tras carga
       this.persistPdfStatus();
     } catch (err) {
@@ -151,7 +157,7 @@ export class ReactivosComponent implements OnInit {
 
   async loadReactivos(limit?: number) {
     const rows = await reactivosService.listarReactivos(this.reactivosQ || '', limit);
-    this.reactivos = rows || [];
+    this.reactivosSig.set(rows || []);
     this.aplicarFiltroReactivos();
   }
 
@@ -395,6 +401,18 @@ export class ReactivosComponent implements OnInit {
     this.mostrarDetalles = true;
   }
 
+  // Inline expand/collapse per card
+  toggleExpand(r: any) {
+    const key = String(r?.lote ?? '');
+    if (!key) return;
+    if (this.expandedLotes.has(key)) this.expandedLotes.delete(key);
+    else this.expandedLotes.add(key);
+  }
+  isExpanded(r: any): boolean {
+    const key = String(r?.lote ?? '');
+    return key ? this.expandedLotes.has(key) : false;
+  }
+
   // Funciones auxiliares para obtener nombres descriptivos
   obtenerNombreTipo(id: any): string {
     const tipo = this.tipos.find(t => t.id == id);
@@ -404,6 +422,56 @@ export class ReactivosComponent implements OnInit {
   obtenerNombreClasificacion(id: any): string {
     const clasif = this.clasif.find(c => c.id == id);
     return clasif ? clasif.nombre : 'N/A';
+  }
+
+  // Devuelve el color HEX para la clasificación SGA (según guía aportada)
+  getClasifColor(id: any): string {
+    const nombre = this.obtenerNombreClasificacion(id);
+    const n = this.normalizarTexto(nombre);
+    return this.mapClasifHex(n);
+  }
+
+  // Versión por nombre directo (para options que usan c.nombre)
+  getClasifColorByName(nombre: string): string {
+    const n = this.normalizarTexto(nombre || '');
+    return this.mapClasifHex(n);
+  }
+
+  // Color de texto sugerido para buen contraste sobre el fondo dado
+  getClasifTextColor(hex: string): string {
+    const h = (hex || '').toUpperCase();
+    // Forzar texto negro en fondos claros (amarillos/grises)
+    if (h === '#D9D9D9' || h === '#FEC720' || h === '#FFFF00') return '#000';
+    return '#FFF';
+  }
+
+  private mapClasifHex(n: string): string {
+    if (!n || n === 'n/a') return '#2d7dd2';
+    if (n.includes('irritacion') || n.includes('irritación')) return '#4A90D9';
+    if (n.includes('inflamable')) return '#FF0000';
+    if (n.includes('corrosivo')) return '#FEC720';
+    if (n.includes('respiracion') || n.includes('respiración')) return '#792C9B';
+    if (n.includes('no peligro')) return '#D9D9D9';
+    if (n.includes('toxico') || n.includes('tóxico')) return '#00B050';
+    if (n.includes('medio ambiente') || n.includes('ambiente')) return '#792C9B';
+    if (n.includes('comburente') || n.includes('oxidante')) return '#FFFF00';
+    return '#2d7dd2';
+  }
+
+  // Estilos para que el <select> se vea coloreado con la opción elegida (por nombre)
+  getSelectStyleForName(nombre: string | null | undefined): {[k: string]: string} {
+    if (!nombre) return {};
+    const bg = this.getClasifColorByName(nombre);
+    const fg = this.getClasifTextColor(bg);
+    return { 'background-color': bg, 'color': fg };
+  }
+
+  // Estilos para que el <select> se vea coloreado con la opción elegida (por id)
+  getSelectStyleForId(id: any): {[k: string]: string} {
+    if (!id && id !== 0) return {};
+    const bg = this.getClasifColor(id);
+    const fg = this.getClasifTextColor(bg);
+    return { 'background-color': bg, 'color': fg };
   }
 
   obtenerNombreUnidad(id: any): string {
@@ -479,6 +547,8 @@ export class ReactivosComponent implements OnInit {
   }
 
   // Getters para mantener compatibilidad con el template existente
+  get reactivos() { return this.reactivosSig(); }
+  get reactivosFiltrados() { return this.reactivosFiltradosSig(); }
   get catalogoResultados() { return this.catalogoResultadosSig(); }
   get catalogoBase() { return this.catalogoBaseSig(); }
   get catalogoSugerencias() { return this.catalogoSugerenciasSig(); }
@@ -614,9 +684,15 @@ export class ReactivosComponent implements OnInit {
     }
   }
 
-  async crearCatalogo(e: Event) {
+  async crearCatalogo(e: Event, form?: NgForm) {
     e.preventDefault();
     this.catalogoMsg = '';
+    this.submittedCatalogo = true;
+    if (form && form.invalid) {
+      try { form.control.markAllAsTouched(); } catch {}
+      this.catalogoMsg = 'Por favor corrige los campos resaltados.';
+      return;
+    }
     try {
       await reactivosService.crearCatalogo({
         codigo: this.catCodigo.trim(),
@@ -625,9 +701,10 @@ export class ReactivosComponent implements OnInit {
         clasificacion_sga: this.catClasificacion.trim(),
         descripcion: this.catDescripcion.trim() || null
       });
-      this.catalogoMsg = 'Catálogo creado correctamente';
+  this.catalogoMsg = 'Catálogo creado correctamente';
       // limpiar
       this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = this.catDescripcion = '';
+  this.submittedCatalogo = false;
       // Recargar base y re-aplicar filtros/búsqueda para que el nuevo elemento aparezca
       await this.cargarCatalogoBase();
       if ((this.codigoFiltro || '').trim() || (this.nombreFiltro || '').trim()) {
@@ -641,9 +718,15 @@ export class ReactivosComponent implements OnInit {
     }
   }
 
-  async crearReactivo(e: Event) {
+  async crearReactivo(e: Event, form?: NgForm) {
     e.preventDefault();
     this.reactivoMsg = '';
+    this.submittedReactivo = true;
+    if (form && form.invalid) {
+      try { form.control.markAllAsTouched(); } catch {}
+      this.reactivoMsg = 'Por favor corrige los campos resaltados.';
+      return;
+    }
     try {
       // Validación mínima de campos obligatorios
       if (!this.lote.trim() || !this.codigo.trim() || !this.nombre.trim()) {
@@ -685,6 +768,7 @@ export class ReactivosComponent implements OnInit {
       this.reactivoMsg = 'Reactivo creado correctamente';
       await this.loadReactivos();
       this.resetReactivoForm();
+      this.submittedReactivo = false;
     } catch (err: any) {
       this.reactivoMsg = err?.message || 'Error creando reactivo';
     }
@@ -763,11 +847,11 @@ export class ReactivosComponent implements OnInit {
     const qNom = normalizar(this.reactivosNombreQ);
 
     if (!qLote && !qCod && !qNom) {
-      this.reactivosFiltrados = this.reactivos.slice();
+      this.reactivosFiltradosSig.set(this.reactivosSig().slice());
       return;
     }
 
-    this.reactivosFiltrados = (this.reactivos || []).filter(r => {
+    const filtrados = (this.reactivosSig() || []).filter((r: any) => {
       const lote = normalizar(String(r.lote ?? ''));
       const codigo = normalizar(String(r.codigo ?? ''));
       const nombre = normalizar(String(r.nombre ?? ''));
@@ -776,6 +860,7 @@ export class ReactivosComponent implements OnInit {
       if (qNom && !nombre.includes(qNom)) return false;
       return true;
     });
+    this.reactivosFiltradosSig.set(filtrados);
   }
 
   async mostrarTodosReactivos() {
@@ -786,12 +871,55 @@ export class ReactivosComponent implements OnInit {
   async eliminarReactivo(lote: string) {
     if (!confirm('¿Eliminar reactivo ' + lote + '?')) return;
     try {
+      // Optimista: quitar de la lista inmediatamente
+      const prev = this.reactivosSig();
+      const next = prev.filter(r => String(r.lote) !== String(lote));
+      this.reactivosSig.set(next);
+      this.aplicarFiltroReactivos();
+
       await reactivosService.eliminarReactivo(lote);
-      await this.loadReactivos();
+      // Para consistencia estricta, podría recargarse del servidor:
+      // await this.loadReactivos();
     } catch (err) {
       console.error('Error eliminando reactivo', err);
+      await this.loadReactivos();
+    }
+  }
 
-}}
+  // Validación cruzada simple: vencimiento >= adquisición
+  fechasInconsistentes(): boolean {
+    if (!this.fecha_adquisicion || !this.fecha_vencimiento) return false;
+    const adq = new Date(this.fecha_adquisicion);
+    const ven = new Date(this.fecha_vencimiento);
+    if (isNaN(adq.getTime()) || isNaN(ven.getTime())) return false;
+    return ven < adq;
+  }
+
+  // Estado visual de vencimiento: negro (vencido), rojo (<=2 meses), amarillo (<=6 meses)
+  getVencimientoInfo(fecha: string | null | undefined): { text: string; bg: string; fg: string; title: string } | null {
+    if (!fecha) return null;
+    const d = new Date(fecha);
+    if (isNaN(d.getTime())) return null;
+    const today = new Date();
+    const toMid = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const days = Math.floor((toMid(d) - toMid(today)) / 86400000);
+
+    if (days < 0) {
+      return { text: 'Vencido', bg: '#000000', fg: '#FFFFFF', title: 'El reactivo está vencido' };
+    }
+    // Mostrar cuenta regresiva en días cuando falta 1 mes o menos
+    if (days <= 30) {
+      const plural = days === 1 ? '' : 's';
+      return { text: `Vence en ${days} día${plural}`, bg: '#FF0000', fg: '#FFFFFF', title: `El reactivo vence en ${days} día${plural}` };
+    }
+    if (days <= 60) {
+      return { text: 'Vence ≤ 2 meses', bg: '#FF0000', fg: '#FFFFFF', title: 'El reactivo vence en 2 meses o menos' };
+    }
+    if (days <= 180) {
+      return { text: 'Vence ≤ 6 meses', bg: '#FFC107', fg: '#000000', title: 'El reactivo vence en 6 meses o menos' };
+    }
+    return null;
+  }
   logout() {
     authService.logout();
   }
