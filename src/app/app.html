@@ -1,38 +1,69 @@
-<header class="navbar">
-  <nav class="nav-inner" *ngIf="user()">
-    <a class="brand" routerLink="/dashboard" aria-label="Inicio">
-      <img src="/img/logo/logo.jpg" alt="Logo" class="brand-logo" />
-    </a>
+<!-- ====== HEADER GLOBAL LIBA ====== -->
+<header class="header" *ngIf="user()">
+  <div class="header-content">
+    <div class="logo-section">
+      <div class="logo">LIBA</div>
+      <div>
+        <div class="header-title">
+          Laboratorio Integrado de Biociencias Aplicadas
+        </div>
+        <div class="header-subtitle">
+          Sistema de Gestión de Inventarios ISO 17025
+        </div>
+      </div>
+    </div>
 
-    <ul class="nav-links">
-      <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        <a routerLink="/dashboard" class="nav-link">Dashboard</a>
-      </li>
-      <li routerLinkActive="active">
-        <a routerLink="/solicitudes" class="nav-link">Solicitudes</a>
-      </li>
-      <li routerLinkActive="active">
-        <a routerLink="/reactivos" class="nav-link">Reactivos</a>
-      </li>
-      <li routerLinkActive="active">
-        <a routerLink="/insumos" class="nav-link">Insumos</a>
-      </li>
-    </ul>
-
-    <div class="nav-actions">
-      <span class="user-chip" title="Usuario activo">{{ user()?.email }}</span>
-      <button class="logout-btn" (click)="onLogout()" [disabled]="isLoggingOut()">
+    <div class="user-menu">
+      <i class="fas fa-user-circle"></i>
+      <span>{{ user()?.email }}</span>
+      <button
+        class="logout-btn"
+        (click)="onLogout()"
+        [disabled]="isLoggingOut()"
+        title="Cerrar sesión"
+      >
+        <i class="fas fa-sign-out-alt" *ngIf="!isLoggingOut()"></i>
         {{ isLoggingOut() ? 'Cerrando sesión…' : 'Salir' }}
       </button>
     </div>
-  </nav>
+  </div>
 </header>
 
-<main class="main-content">
+<!-- ====== NAVIGATION MENU ====== -->
+<nav class="nav-menu" *ngIf="user()">
+  <div class="nav-content">
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="nav-item"
+    >
+      <i class="fas fa-tachometer-alt"></i> Dashboard
+    </a>
+
+    <a routerLink="/solicitudes" routerLinkActive="active" class="nav-item">
+      <i class="fas fa-clipboard-list"></i> Solicitudes
+    </a>
+
+    <a routerLink="/reactivos" routerLinkActive="active" class="nav-item">
+      <i class="fas fa-flask"></i> Reactivos
+    </a>
+
+    <a routerLink="/insumos" routerLinkActive="active" class="nav-item">
+      <i class="fas fa-boxes"></i> Insumos
+    </a>
+  </div>
+</nav>
+
+<!-- ====== CONTENIDO PRINCIPAL ====== -->
+<main class="main-content liba-theme">
   <router-outlet></router-outlet>
 </main>
 
+<!-- ====== FOOTER GLOBAL LIBA ====== -->
 <footer class="app-footer" *ngIf="showFooter()">
-  <p>© {{ currentYear }} LIBA - Laboratorio Integrado de Biociencias Aplicadas. Todos los derechos reservados.</p>
+  <p>
+    © {{ currentYear }} LIBA - Laboratorio Integrado de Biociencias Aplicadas.
+    Todos los derechos reservados.
+  </p>
 </footer>
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->

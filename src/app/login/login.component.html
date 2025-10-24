@@ -48,7 +48,10 @@
     <main class="login-center">
       <section class="login-card">
         <header class="login-header">
-          <div class="brand-circle">L</div>
+          <div class="logo-container">
+            <img src="img\logo-loggin.png" alt="Logo LIBA" class="brand-circle">
+          </div>
+        
           <h1 class="login-title">Bienvenido de nuevo</h1>
           <p class="login-sub">Ingresa a tu cuenta para continuar</p>
         </header>
@@ -87,13 +90,8 @@
           </div>
         </form>
 
-
-
-        <footer class="login-foot">
-          <p class="muted">¿No tienes una cuenta? <a routerLink="/register">Regístrate</a></p>
-          <p [hidden]="!error" class="error">{{ error }}</p>
-        </footer>
       </section>
     </main>
   </div>
 
+</div>
