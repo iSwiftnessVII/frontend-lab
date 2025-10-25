@@ -15,9 +15,9 @@ const API = (window as any).__env?.API_BASE || 'http://localhost:3000/api/solici
   encapsulation: ViewEncapsulation.None
 })
 export class SolicitudesComponent implements OnInit, OnDestroy {
-  usuarios = signal<Array<any>>([]);
+  clientes = signal<Array<any>>([]);
   solicitudes = signal<Array<any>>([]);
-  usuariosFiltrados = signal<Array<any>>([]);
+  clientesFiltrados = signal<Array<any>>([]);
   solicitudesFiltradas = signal<Array<any>>([]);
 
   clienteErrors: { [key: string]: string } = {};
@@ -49,7 +49,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   clientesQ = '';
   solicitudesQ = '';
 
-  solicitudUsuarioId: any = null;
+  solicitudClienteId: any = null;
   solicitudNombre = '';
   solicitudMsg = '';
   solicitudTipo = '';
@@ -93,20 +93,20 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   // Auto-refresh properties
   private refreshInterval: any;
   private readonly REFRESH_INTERVAL_MS = 30000; // 30 segundos
-  private isFormActive = false; // Flag para detectar si el usuario está interactuando con formularios
+  private isFormActive = false; // Flag para detectar si el cliente está interactuando con formularios
 
   constructor() {
-    // Removed loadUsuarios() and loadSolicitudes() from constructor
+    // Removed loadClientes() and loadSolicitudes() from constructor
     // They will be called in ngOnInit
   }
 
   ngOnInit() {
     // Cargar datos inicialmente
-    this.loadUsuarios();
+    this.loadClientes();
     this.loadSolicitudes();
 
     // Initialize filtered data
-    this.filtrarUsuarios();
+    this.filtrarClientes();
     this.filtrarSolicitudes();
 
     // Configurar auto-refresh
@@ -120,9 +120,9 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   private startAutoRefresh() {
     this.refreshInterval = setInterval(async () => {
-      // Solo actualizar si el usuario no está interactuando con formularios
+      // Solo actualizar si el cliente no está interactuando con formularios
       if (!this.isFormActive) {
-        await this.loadUsuarios();
+        await this.loadClientes();
         await this.loadSolicitudes();
       }
     }, this.REFRESH_INTERVAL_MS);
@@ -147,58 +147,58 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  async loadUsuarios() {
+  async loadClientes() {
     try {
-      const res = await fetch(API + '/usuarios');
+      const res = await fetch(API + '/clientes');
       const data = await res.json();
-      const usuariosBasicos = Array.isArray(data) ? data : [];
+      const clientesBasicos = Array.isArray(data) ? data : [];
       
-      const usuariosCompletos = [];
-      for (const usuario of usuariosBasicos) {
+      const clientesCompletos = [];
+      for (const cliente of clientesBasicos) {
         try {
-          const resCompleto = await fetch(API + '/usuarios/' + usuario.id_usuario);
+          const resCompleto = await fetch(API + '/clientes/' + cliente.id_cliente);
           if (resCompleto.ok) {
-            const usuarioCompleto = await resCompleto.json();
-            usuariosCompletos.push(usuarioCompleto);
+            const clienteCompleto = await resCompleto.json();
+            clientesCompletos.push(clienteCompleto);
           } else {
-            usuariosCompletos.push(usuario);
+            clientesCompletos.push(cliente);
           }
         } catch (err) {
-          console.warn('Error obteniendo datos completos del usuario', usuario.id_usuario, err);
-          usuariosCompletos.push(usuario);
+          console.warn('Error obteniendo datos completos del cliente', cliente.id_cliente, err);
+          clientesCompletos.push(cliente);
         }
       }
       
-      this.usuarios.set(usuariosCompletos);
-      this.filtrarUsuarios(); // ← IMPORTANTE: Actualizar filtros después de cargar
+      this.clientes.set(clientesCompletos);
+      this.filtrarClientes(); // ← IMPORTANTE: Actualizar filtros después de cargar
     } catch (err) {
-      console.error('loadUsuarios', err);
-      this.usuarios.set([]);
-      this.usuariosFiltrados.set([]);
+      console.error('loadClientes', err);
+      this.clientes.set([]);
+      this.clientesFiltrados.set([]);
     }
   }
 
-  filtrarUsuarios() {
-    const usuarios = this.usuarios();
+  filtrarClientes() {
+    const clientes = this.clientes();
     
     // Si no hay texto de búsqueda, mostrar todos
     if (!this.clientesQ.trim()) {
-      this.usuariosFiltrados.set(usuarios);
+      this.clientesFiltrados.set(clientes);
       return;
     }
     
     const filtro = this.clientesQ.toLowerCase().trim();
     
     // Filtrar por múltiples campos
-    const usuariosFiltrados = usuarios.filter(usuario => {
-      const nombre = (usuario.nombre_solicitante || '').toLowerCase();
-      const correo = (usuario.correo_electronico || '').toLowerCase();
-      const identificacion = (usuario.numero_identificacion || '').toLowerCase();
-      const ciudad = (usuario.ciudad || '').toLowerCase();
-      const departamento = (usuario.departamento || '').toLowerCase();
-      const celular = (usuario.celular || '').toLowerCase();
-      const telefono = (usuario.telefono || '').toLowerCase();
-      const tipoUsuario = (usuario.tipo_usuario || '').toLowerCase();
+    const clientesFiltrados = clientes.filter(cliente => {
+      const nombre = (cliente.nombre_solicitante || '').toLowerCase();
+      const correo = (cliente.correo_electronico || '').toLowerCase();
+      const identificacion = (cliente.numero_identificacion || '').toLowerCase();
+      const ciudad = (cliente.ciudad || '').toLowerCase();
+      const departamento = (cliente.departamento || '').toLowerCase();
+      const celular = (cliente.celular || '').toLowerCase();
+      const telefono = (cliente.telefono || '').toLowerCase();
+      const tipoUsuario = (cliente.tipo_usuario || '').toLowerCase();
       
       return nombre.includes(filtro) ||
              correo.includes(filtro) ||
@@ -210,7 +210,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
              tipoUsuario.includes(filtro);
     });
     
-    this.usuariosFiltrados.set(usuariosFiltrados);
+    this.clientesFiltrados.set(clientesFiltrados);
   }
 
   async loadSolicitudes() {
@@ -294,7 +294,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Validar Tipo usuario
+    // Validar Tipo cliente
     if (!this.clienteTipoUsuario.trim()) {
       this.clienteErrors['tipoUsuario'] = 'Debe seleccionar un tipo de usuario';
       isValid = false;
@@ -395,7 +395,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.clienteErrors['email'] = 'El correo es obligatorio';
       isValid = false;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.clienteEmail)) {
-      this.clienteErrors['email'] = 'Formato inválido. Ej: usuario@ejemplo.com';
+      this.clienteErrors['email'] = 'Formato inválido. Ej: cliente@ejemplo.com';
       isValid = false;
     }
 
@@ -431,8 +431,8 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     let isValid = true;
 
     // Validar Cliente (obligatorio)
-    if (!this.solicitudUsuarioId) {
-      this.solicitudErrors['usuarioId'] = 'Debe seleccionar un cliente';
+    if (!this.solicitudClienteId) {
+      this.solicitudErrors['clienteId'] = 'Debe seleccionar un cliente';
       isValid = false;
     }
 
@@ -715,7 +715,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
         registro_realizado_por: this.clienteRegistroPor,
         observaciones: this.clienteObservaciones
       };
-      const res = await fetch(API + '/usuarios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const res = await fetch(API + '/clientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (!res.ok) throw new Error(await res.text());
 
       this.clienteMsg = '✅ Cliente creado exitosamente';
@@ -744,7 +744,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
         this.clienteMsg = '';
       }, 3000);
 
-      await this.loadUsuarios();
+      await this.loadClientes();
     } catch (err: any) {
       this.clienteMsg = '❌ Error: ' + (err.message || err);
     }
@@ -760,7 +760,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
     try {
       const body: any = {
-        id_usuario: this.solicitudUsuarioId,
+        id_cliente: this.solicitudClienteId,
         nombre_muestra_producto: this.solicitudNombre,
         codigo: this.solicitudTipo,
         lote_producto: this.solicitudLote || null,
@@ -787,7 +787,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.solicitudErrors = {}; // Limpiar errores
 
       // Limpiar todos los campos del formulario después de crear la solicitud
-      this.solicitudUsuarioId = null;
+      this.solicitudClienteId = null;
       this.solicitudNombre = '';
       this.solicitudTipo = '';
       this.solicitudLote = '';
@@ -955,9 +955,9 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   async deleteCliente(id: number) {
     if (!confirm('¿Borrar este cliente?')) return;
     try {
-      const res = await fetch(API + '/usuarios/' + id, { method: 'DELETE' });
+      const res = await fetch(API + '/clientes/' + id, { method: 'DELETE' });
       if (!res.ok) throw new Error(await res.text());
-      await this.loadUsuarios();
+      await this.loadClientes();
     } catch (err) {
       console.error('deleteCliente', err);
     }
