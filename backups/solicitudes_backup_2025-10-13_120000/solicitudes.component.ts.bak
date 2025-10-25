@@ -18,9 +18,9 @@ const API = (window as any).__env?.API_BASE || 'http://localhost:3000/api/solici
   encapsulation: ViewEncapsulation.None
 })
 export class SolicitudesComponent implements OnInit, OnDestroy {
-  usuarios = signal<Array<any>>([]);
+  clientes = signal<Array<any>>([]);
   solicitudes = signal<Array<any>>([]);
-  usuariosFiltrados = signal<Array<any>>([]);
+  clientesFiltrados = signal<Array<any>>([]);
   solicitudesFiltradas = signal<Array<any>>([]);
 
   // truncated for brevity in backup

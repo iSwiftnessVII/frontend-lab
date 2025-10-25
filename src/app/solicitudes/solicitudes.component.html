@@ -43,10 +43,10 @@
 
         <!-- Tipo usuario -->
         <div>
-          <label for="clienteTipoUsuario">Tipo usuario:</label>
+          <label for="clienteTipoUsuario">Tipo cliente:</label>
           <select id="clienteTipoUsuario" [(ngModel)]="clienteTipoUsuario" name="clienteTipoUsuario"
             [style.border-color]="clienteErrors['tipoUsuario'] ? '#dc3545' : ''">
-            <option value="">Seleccionar tipo de usuario</option>
+            <option value="">Seleccionar tipo de cliente</option>
             <option value="Emprendedor">Emprendedor</option>
             <option value="Persona Natural">Persona Natural</option>
             <option value="Persona Jurídica">Persona Jurídica</option>
@@ -252,17 +252,17 @@
 
         <!-- Cliente -->
         <div>
-          <label for="solicitudUsuarioId">Cliente:</label>
-          <select id="solicitudUsuarioId" [(ngModel)]="solicitudUsuarioId" name="solicitudUsuarioId" required
-            [style.border-color]="solicitudErrors['usuarioId'] ? '#dc3545' : ''">
+          <label for="solicitudClienteId">Cliente:</label>
+          <select id="solicitudClienteId" [(ngModel)]="solicitudClienteId" name="solicitudClienteId" required
+            [style.border-color]="solicitudErrors['clienteId'] ? '#dc3545' : ''">
             <option value="">Seleccionar cliente</option>
-            <option *ngFor="let u of usuarios()" [value]="u.id_usuario">
+            <option *ngFor="let u of clientes()" [value]="u.id_cliente">
               {{ u.nombre_solicitante }} ({{ u.numero_identificacion }})
             </option>
           </select>
-          <small *ngIf="solicitudErrors['usuarioId']"
+          <small *ngIf="solicitudErrors['clienteId']"
             style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
-            ⚠️ {{ solicitudErrors['usuarioId'] }}
+            ⚠️ {{ solicitudErrors['clienteId'] }}
           </small>
         </div>
 
@@ -665,7 +665,7 @@
 
       <!-- Mostrar contador de resultados -->
       <small style="color: #666; display: block; margin-top: 0.5rem;">
-        📊 Mostrando {{ solicitudesFiltradas().length }} de {{ solicitudes().length }} solicitudes
+      Mostrando {{ solicitudesFiltradas().length }} de {{ solicitudes().length }} solicitudes
       </small>
 
       <!-- Mensaje cuando no hay resultados -->
@@ -731,16 +731,16 @@
       <label for="clientesQ">
         Buscar cliente (nombre, correo, identificación, ciudad, departamento, celular):
       </label>
-      <input id="clientesQ" [(ngModel)]="clientesQ" (input)="filtrarUsuarios()" placeholder="Escribe para buscar..."
+      <input id="clientesQ" [(ngModel)]="clientesQ" (input)="filtrarClientes()" placeholder="Escribe para buscar..."
         style="width:100%; margin-top:0.25rem;" />
 
       <!-- Mostrar contador de resultados -->
       <small style="color: #666; display: block; margin-top: 0.5rem;">
-        👥 Mostrando {{ usuariosFiltrados().length }} de {{ usuarios().length }} clientes
+        👥 Mostrando {{ clientesFiltrados().length }} de {{ clientes().length }} clientes
       </small>
 
       <!-- Mensaje cuando no hay resultados -->
-      <small *ngIf="clientesQ.trim() && usuariosFiltrados().length === 0"
+      <small *ngIf="clientesQ.trim() && clientesFiltrados().length === 0"
         style="color: #dc3545; display: block; margin-top: 0.5rem;">
         ⚠️ No se encontraron clientes con el término "{{ clientesQ }}"
       </small>
@@ -756,20 +756,20 @@
         <div class="col actions-col">Acciones</div>
       </div>
 
-      <div *ngFor="let u of usuariosFiltrados()" class="cliente-item" tabindex="0" (click)="toggleClienteDetails(u.id_usuario)" (keydown.enter)="toggleClienteDetails(u.id_usuario)" [class.expanded]="detallesVisibles[u.id_usuario]">
+      <div *ngFor="let u of clientesFiltrados()" class="cliente-item" tabindex="0" (click)="toggleClienteDetails(u.id_cliente)" (keydown.enter)="toggleClienteDetails(u.id_cliente)" [class.expanded]="detallesVisibles[u.id_cliente]">
         <div class="col cliente-name">{{ u.nombre_solicitante }}</div>
         <div class="col id-col">{{ u.numero_identificacion }}</div>
         <div class="col email-col">{{ u.correo_electronico }}</div>
         <div class="col city-col">{{ u.ciudad }}</div>
         <div class="col phone-col">{{ u.celular || 'Sin celular' }}</div>
         <div class="col actions-col">
-          <button class="btn-danger" (click)="$event.stopPropagation(); deleteCliente(u.id_usuario)">Borrar</button>
+          <button class="btn-danger" (click)="$event.stopPropagation(); deleteCliente(u.id_cliente)">Borrar</button>
         </div>
 
-        <div *ngIf="detallesVisibles[u.id_usuario]" class="cliente-details">
+        <div *ngIf="detallesVisibles[u.id_cliente]" class="cliente-details">
           <div class="cliente-card-polished compact-card">
             <div class="cliente-card-head">
-              <div class="cliente-title">{{ u.nombre_solicitante || u.razon_social || ('Usuario ' + u.id_usuario) }}</div>
+              <div class="cliente-title">{{ u.nombre_solicitante || u.razon_social || ('Cliente ' + u.id_cliente) }}</div>
             </div>
 
             <div class="cliente-meta compact">
@@ -780,27 +780,27 @@
             </div>
 
             <div class="cliente-grid">
-              <div class="field"><div class="label">Nombre solicitante</div><div class="value">{{ formatValue(u.nombre_solicitante) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('nombre-'+u.id_usuario, u.nombre_solicitante)" title="Copiar">📋</button></div></div>
-              <div class="field"><div class="label">Razón social</div><div class="value">{{ formatValue(u.razon_social) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('razon-'+u.id_usuario, u.razon_social)" title="Copiar">📋</button></div></div>
-              <div class="field"><div class="label">Fecha vinculación</div><div class="value">{{ formatValue(u.fecha_vinculacion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('fecha-'+u.id_usuario, formatValue(u.fecha_vinculacion))" title="Copiar">📋</button></div></div>
-              <div class="field"><div class="label">Tipo identificación</div><div class="value">{{ formatValue(u.tipo_identificacion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('tipoid-'+u.id_usuario, u.tipo_identificacion)" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Nombre solicitante</div><div class="value">{{ formatValue(u.nombre_solicitante) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('nombre-'+u.id_cliente, u.nombre_solicitante)" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Razón social</div><div class="value">{{ formatValue(u.razon_social) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('razon-'+u.id_cliente, u.razon_social)" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Fecha vinculación</div><div class="value">{{ formatValue(u.fecha_vinculacion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('fecha-'+u.id_cliente, formatValue(u.fecha_vinculacion))" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Tipo identificación</div><div class="value">{{ formatValue(u.tipo_identificacion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('tipoid-'+u.id_cliente, u.tipo_identificacion)" title="Copiar">📋</button></div></div>
               <div class="field"><div class="label">Sexo</div><div class="value">{{ u.sexo || '-' }}</div></div>
               <div class="field"><div class="label">Población</div><div class="value">{{ u.tipo_poblacion || '-' }}</div></div>
-              <div class="field"><div class="label">Dirección</div><div class="value">{{ formatValue(u.direccion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('direccion-'+u.id_usuario, u.direccion)" title="Copiar">📋</button></div></div>
-              <div class="field"><div class="label">Ciudad / Departamento</div><div class="value">{{ formatValue(u.ciudad) }} / {{ formatValue(u.departamento) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('ciudad-'+u.id_usuario, (u.ciudad || '') + ' / ' + (u.departamento || ''))" title="Copiar">📋</button></div></div>
-              <div class="field"><div class="label">Teléfono / Celular</div><div class="value">{{ formatValue(u.telefono) }} / {{ formatValue(u.celular) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('tel-'+u.id_usuario, (u.telefono || '') + ' / ' + (u.celular || ''))" title="Copiar">📋</button></div></div>
-              <div class="field"><div class="label">Correo</div><div class="value">{{ formatValue(u.correo_electronico) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('email-'+u.id_usuario, u.correo_electronico)" title="Copiar">📋</button></div></div>
-              <div class="field"><div class="label">Tipo vinculación</div><div class="value">{{ formatValue(u.tipo_vinculacion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('vinc-'+u.id_usuario, u.tipo_vinculacion)" title="Copiar">📋</button></div></div>
-              <div class="field span-full"><div class="label">Observaciones</div><div class="value">{{ formatValue(u.observaciones) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('obs-'+u.id_usuario, u.observaciones)" title="Copiar">📋</button></div></div>
-              <div class="field small-muted"><div class="label">Registro por</div><div class="value">{{ formatValue(u.registro_realizado_por) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('reg-'+u.id_usuario, u.registro_realizado_por)" title="Copiar">📋</button></div></div>
-              <div class="field small-muted"><div class="label">Creado</div><div class="value">{{ formatValue(u.created_at) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('created-'+u.id_usuario, formatValue(u.created_at))" title="Copiar">📋</button></div></div>
-              <div class="field small-muted"><div class="label">Actualizado</div><div class="value">{{ formatValue(u.updated_at) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('updated-'+u.id_usuario, formatValue(u.updated_at))" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Dirección</div><div class="value">{{ formatValue(u.direccion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('direccion-'+u.id_cliente, u.direccion)" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Ciudad / Departamento</div><div class="value">{{ formatValue(u.ciudad) }} / {{ formatValue(u.departamento) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('ciudad-'+u.id_cliente, (u.ciudad || '') + ' / ' + (u.departamento || ''))" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Teléfono / Celular</div><div class="value">{{ formatValue(u.telefono) }} / {{ formatValue(u.celular) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('tel-'+u.id_cliente, (u.telefono || '') + ' / ' + (u.celular || ''))" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Correo</div><div class="value">{{ formatValue(u.correo_electronico) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('email-'+u.id_cliente, u.correo_electronico)" title="Copiar">📋</button></div></div>
+              <div class="field"><div class="label">Tipo vinculación</div><div class="value">{{ formatValue(u.tipo_vinculacion) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('vinc-'+u.id_cliente, u.tipo_vinculacion)" title="Copiar">📋</button></div></div>
+              <div class="field span-full"><div class="label">Observaciones</div><div class="value">{{ formatValue(u.observaciones) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('obs-'+u.id_cliente, u.observaciones)" title="Copiar">📋</button></div></div>
+              <div class="field small-muted"><div class="label">Registro por</div><div class="value">{{ formatValue(u.registro_realizado_por) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('reg-'+u.id_cliente, u.registro_realizado_por)" title="Copiar">📋</button></div></div>
+              <div class="field small-muted"><div class="label">Creado</div><div class="value">{{ formatValue(u.created_at) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('created-'+u.id_cliente, formatValue(u.created_at))" title="Copiar">📋</button></div></div>
+              <div class="field small-muted"><div class="label">Actualizado</div><div class="value">{{ formatValue(u.updated_at) }}<button class="copy-field" (click)="$event.stopPropagation(); copyField('updated-'+u.id_cliente, formatValue(u.updated_at))" title="Copiar">📋</button></div></div>
             </div>
           </div>
         </div>
       </div>
 
-      <div *ngIf="usuariosFiltrados().length === 0" class="empty-row">No hay clientes para mostrar</div>
+      <div *ngIf="clientesFiltrados().length === 0" class="empty-row">No hay clientes para mostrar</div>
     </div>
   </section>
 </div>

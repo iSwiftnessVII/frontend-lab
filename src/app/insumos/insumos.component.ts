@@ -90,27 +90,11 @@ insumosQ = '';
 // Panel de catálogo dentro del formulario (autocompletar)
 mostrarCatalogoFormPanel: boolean = false;
 
-// Estado de disponibilidad de PDFs por código
-pdfStatus: { [item: string]: { hoja: boolean | null; cert: boolean | null } } = {};
-
-// Helper para actualizar estado PDF y forzar cambio de referencia
-private setPdfStatus(item: string, changes: Partial<{ hoja: boolean | null; cert: boolean | null }>) {
-  const prev = this.pdfStatus[item] || { hoja: null, cert: null };
-  this.pdfStatus = { ...this.pdfStatus, [item]: { ...prev, ...changes } };
-  this.persistPdfStatus();
-}
 
 constructor(private sanitizer: DomSanitizer) {}
 
 async init() {
   try {
-    // Restaurar cache pdfStatus si existe
-    try {
-      const cache = sessionStorage.getItem('pdfStatusCache');
-      if (cache) {
-        this.pdfStatus = JSON.parse(cache);
-      }
-    } catch {}
 
     // Cargar auxiliares y catálogo en paralelo para reducir tiempo de espera perceptual
     this.catalogoCargando = true;
@@ -120,8 +104,6 @@ async init() {
       this.loadCatalogoInicial()
     ]);
 
-    // Guardar cache inicial tras carga
-    this.persistPdfStatus();
   } catch (err) {
     console.error('Error inicializando Insumos:', err);
   }
@@ -180,8 +162,6 @@ async cargarCatalogoBase() {
     this.catalogoItemResultados = this.catalogoBaseSig().slice();
     this.catalogoNombreResultados = this.catalogoBaseSig().slice();
 
-    // Pre-cargar disponibilidad de PDFs para los visibles iniciales
-    this.preloadDocsForVisible();
   } catch (e) {
     console.error('Error cargando catálogo inicial de insumos', e);
     this.catalogoMsg = 'Error cargando catálogo';
@@ -209,9 +189,6 @@ async loadCatalogoInicial() {
     // ✅ Asignar correctamente: convertir el 'item' del catálogo (string) a number
     this.item = parseInt(catalogoItem.item) || 0;
     this.nombre = catalogoItem.nombre || '';
-    
-    // Cargar PDFs existentes usando el 'item' del catálogo
-    this.loadDocs(catalogoItem.item);
     
     // Ocultar panel de catálogo
     this.mostrarCatalogoFormPanel = false;
@@ -277,7 +254,6 @@ async filtrarCatalogoPorCampos() {
   this.catalogoTotal = filtered.length;
   this.catalogoItemResultados = this.catalogoBaseSig().slice();
   this.catalogoNombreResultados = this.catalogoBaseSig().slice();
-  this.preloadDocsForVisible();
 }
 
 normalizarTexto(s: string): string {
@@ -307,66 +283,16 @@ async cargarMasCatalogo() {
     this.catalogoTotal = resp.total || this.catalogoTotal;
   }
   this.catalogoResultadosSig.set(this.catalogoResultadosSig().concat(nuevos));
-  this.preloadDocsForVisible(nuevos);
 }
 
  trackByCatalogo(index: number, catalogoItem: any) {
     return catalogoItem?.item || index;
   }
 
-// --- Acciones PDF en tabla catálogo ---
-async onSubirHojaCatalogo(ev: any, item: string) {
-  const f = ev?.target?.files?.[0];
-  if (!f) return;
-  try {
-    await insumosService.subirHojaSeguridad(item, f);
-    this.catalogoMsg = `Hoja de seguridad subida para ${item}`;
-    this.setPdfStatus(item, { hoja: true });
-  } catch (e: any) {
-    this.catalogoMsg = e?.message || 'Error subiendo hoja de seguridad';
-  } finally {
-    if (ev?.target) ev.target.value = '';
-  }
-}
 
-  async onEliminarHojaCatalogo(item: string) {
-    if (!confirm('¿Eliminar hoja de seguridad?')) return;
-    try {
-      await insumosService.eliminarHojaSeguridad(Number(item));
 
-      this.catalogoMsg = `Hoja de seguridad eliminada para ${item}`;
-      this.setPdfStatus(item, { hoja: false });
-    } catch (e: any) {
-      this.setPdfStatus(item, { hoja: false });
-      this.catalogoMsg = e?.message || 'Error eliminando hoja de seguridad';
-    }
-  }
 
-async onSubirCertCatalogo(ev: any, item: string) {
-  const f = ev?.target?.files?.[0];
-  if (!f) return;
-  try {
-    await insumosService.subirCertAnalisis(item, f);
-    this.catalogoMsg = `Certificado de análisis subido para ${item}`;
-    this.setPdfStatus(item, { cert: true });
-  } catch (e: any) {
-    this.catalogoMsg = e?.message || 'Error subiendo certificado de análisis';
-  } finally {
-    if (ev?.target) ev.target.value = '';
-  }
-}
 
-async onEliminarCertCatalogo(item: string) {
-  if (!confirm('¿Eliminar certificado de análisis?')) return;
-  try {
-    await insumosService.eliminarCertAnalisis(item);
-    this.catalogoMsg = `Certificado de análisis eliminado para ${item}`;
-    this.setPdfStatus(item, { cert: false });
-  } catch (e: any) {
-    this.setPdfStatus(item, { cert: false });
-    this.catalogoMsg = e?.message || 'Error eliminando certificado de análisis';
-  }
-}
 
 formatearFecha(fecha: string): string {
   if (!fecha) return '';
@@ -375,7 +301,7 @@ formatearFecha(fecha: string): string {
 }
 
 mostrarDetallesInsumo(insumo: any) {
-  this.insumoSeleccionado = insumo; // puedes renombrar a insumoSeleccionado si quieres
+  this.insumoSeleccionado = insumo;
   this.mostrarDetalles = true;
 }
 
@@ -405,35 +331,6 @@ obtenerNombreTipoRecipiente(id: any): string {
   return recipiente ? recipiente.nombre : 'N/A';
 }
 
-// Visualización de PDFs
-async onVerHojaCatalogo(item: string) {
-  try {
-    const r = await insumosService.obtenerHojaSeguridad(item);
-    const url = r?.url;
-    if (url) {
-      window.open(url, '_blank');
-    } else {
-      this.catalogoMsg = 'Hoja de seguridad no disponible';
-    }
-  } catch (e: any) {
-    this.catalogoMsg = e?.message || 'Hoja de seguridad no disponible';
-  }
-}
-
-async onVerCertCatalogo(item: string) {
-  try {
-    const r = await insumosService.obtenerCertAnalisis(item);
-    const url = r?.url;
-    if (url) {
-      window.open(url, '_blank');
-    } else {
-      this.catalogoMsg = 'Certificado de análisis no disponible';
-    }
-  } catch (e: any) {
-    this.catalogoMsg = e?.message || 'Certificado de análisis no disponible';
-  }
-}
-
 // Selección desde el catálogo
   onItemSeleccionado() {
     const catalogoItem = this.catalogoBaseSig().find(c => 
@@ -443,43 +340,18 @@ async onVerCertCatalogo(item: string) {
     
     this.catalogoSeleccionado = catalogoItem;
     this.nombre = catalogoItem.nombre || '';
-    this.loadDocs(catalogoItem.item); 
   }
 
 onNombreSeleccionado() {
   const catalogoItem = this.catalogoBaseSig().find(c => (c.nombre || '') === (this.nombre || ''));
   if (!catalogoItem) return;
   this.catalogoSeleccionado = catalogoItem;
-  this.item = parseInt(catalogoItem.item) || 0;  
-  this.loadDocs(catalogoItem.item);             
+  this.item = parseInt(catalogoItem.item) || 0;            
 }
 
 // Getters para mantener compatibilidad con el template existente
 get catalogoResultados() { return this.catalogoResultadosSig(); }
 get catalogoBase() { return this.catalogoBaseSig(); }
-
-// Pre-carga de disponibilidad de PDFs (solo estado, no abre ventana)
-  async preloadDocsForVisible(list?: any[]) {
-    const items = list || this.catalogoResultadosSig();
-    const slice = items.slice(0, 20);
-    
-    for (const catalogoItem of slice) {
-      if (!catalogoItem) continue;  // 
-      
-      const item = catalogoItem.item;  // 
-      if (!item || this.pdfStatus[item]) continue;
-      
-      this.pdfStatus[item] = { hoja: null, cert: null };
-      this.checkPdfAvailability(item);
-    }
-  }
-
-private async checkPdfAvailability(item: string) {
-  try { await insumosService.obtenerHojaSeguridad(item); this.setPdfStatus(item, { hoja: true }); }
-  catch { this.setPdfStatus(item, { hoja: false }); }
-  try { await insumosService.obtenerCertAnalisis(item); this.setPdfStatus(item, { cert: true }); }
-  catch { this.setPdfStatus(item, { cert: false }); }
-}
 
 // Resalta coincidencias de búsqueda/filtro dentro de campos
 highlightField(value: string, field:'nombre' | 'otro' | 'item'): SafeHtml {
@@ -506,94 +378,6 @@ highlightField(value: string, field:'nombre' | 'otro' | 'item'): SafeHtml {
   const html = value.replace(re, '<mark>$1</mark>');
   return this.sanitizer.bypassSecurityTrustHtml(html);
 }
-
-private persistPdfStatus() {
-  try { sessionStorage.setItem('pdfStatusCache', JSON.stringify(this.pdfStatus)); } catch {}
-}
-
-async loadDocs(item: string) {
-  this.hojaUrl = null; this.certUrl = null; this.hojaMsg = ''; this.certMsg = '';
-  try {
-    const hoja = await insumosService.obtenerHojaSeguridad(item);
-    this.hojaUrl = hoja?.url || null;
-  } catch {}
-  try {
-    const cert = await insumosService.obtenerCertAnalisis(item);
-    this.certUrl = cert?.url || null;
-  } catch {}
-}
-
-onHojaSelected(ev: any) {
-  const f = ev?.target?.files?.[0];
-  this.hojaFile = f || null;
-}
-
-async subirHoja() {
-  if (!this.catalogoSeleccionado?.item || !this.hojaFile) { 
-    this.hojaMsg = 'Seleccione código y archivo'; 
-    return; 
-  }
-  this.hojaMsg = '';
-  try {
-    const r = await insumosService.subirHojaSeguridad(this.catalogoSeleccionado.item, this.hojaFile);
-    this.hojaUrl = r?.url || null;
-    this.hojaMsg = 'Hoja de seguridad subida';
-    this.hojaFile = null;
-  } catch (e: any) {
-    this.hojaMsg = e?.message || 'Error subiendo hoja';
-  }
-}
-
-async eliminarHoja() {
-  if (!this.catalogoSeleccionado?.item) return;
-  if (!confirm('¿Eliminar hoja de seguridad?')) return;
-  try {
-    await insumosService.eliminarHojaSeguridad(this.catalogoSeleccionado.item);
-    this.hojaUrl = null;
-    this.hojaMsg = 'Hoja de seguridad eliminada';
-    const item = this.catalogoSeleccionado.item;
-    this.setPdfStatus(item, { hoja: false });
-  } catch (e) {
-    this.hojaMsg = 'Error eliminando hoja';
-  }
-}
-
-onCertSelected(ev: any) {
-  const f = ev?.target?.files?.[0];
-  this.certFile = f || null;
-}
-
-async subirCert() {
-  if (!this.catalogoSeleccionado?.item || !this.certFile) { 
-    this.certMsg = 'Seleccione código y archivo'; 
-    return; 
-  }
-  this.certMsg = '';
-  try {
-    const r = await insumosService.subirCertAnalisis(this.catalogoSeleccionado.item, this.certFile);
-    this.certUrl = r?.url || null;
-    this.certMsg = 'Certificado de análisis subido';
-    this.certFile = null;
-  } catch (e: any) {
-    this.certMsg = e?.message || 'Error subiendo certificado';
-  }
-}
-
-async eliminarCert() {
-  if (!this.catalogoSeleccionado?.item) return;
-  if (!confirm('¿Eliminar certificado de análisis?')) return;
-  try {
-    await insumosService.eliminarCertAnalisis(this.catalogoSeleccionado.item);
-    this.certUrl = null;
-    this.certMsg = 'Certificado de análisis eliminado';
-    const item = this.catalogoSeleccionado.item;
-    this.setPdfStatus(item, { cert: false });
-  } catch (e) {
-    this.certMsg = 'Error eliminando certificado';
-  }
-}
-
-
 
 async crearCatalogo(e: Event) {
     e.preventDefault();

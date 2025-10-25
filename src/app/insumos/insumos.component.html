@@ -1,49 +1,4 @@
-<!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <div class="logo-section">
-                <div class="logo">LIBA</div>
-                <div>
-                    <div class="header-title">Laboratorio Integrado de Biociencias Aplicadas</div>
-                    <div class="header-subtitle">Sistema de Gestión de Inventarios ISO 17025</div>
-                </div>
-            </div>
-            <div class="user-menu">
-                <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
-                <span>Usuario Admin</span>
-            </div>
-        </div>
-    </header>
-
-    <!-- Navigation -->
-    <nav class="nav-menu">
-        <div class="nav-content">
-            <a href="#" class="nav-item active" data-section="dashboard">
-                <i class="fas fa-tachometer-alt"></i>
-                Dashboard
-            </a>
-            <a href="#" class="nav-item" data-section="inventory">
-                <i class="fas fa-boxes"></i>
-                Inventario
-            </a>
-            <a href="#" class="nav-item" data-section="reports">
-                <i class="fas fa-chart-bar"></i>
-                Reportes
-            </a>
-            <a href="#" class="nav-item" data-section="requests">
-                <i class="fas fa-clipboard-list"></i>
-                Solicitudes
-            </a>
-            <a href="#" class="nav-item" data-section="config">
-                <i class="fas fa-cog"></i>
-                Configuración
-            </a>
-            <a href="#" class="nav-item" data-section="users">
-                <i class="fas fa-users"></i>
-                Usuarios
-            </a>
-        </div>
-    </nav><div class="liba-theme container insumos-page">
+<div class="liba-theme container insumos-page">
 
     <!-- Catálogo de insumos -->
     <h2>Crear nuevo insumo en catálogo</h2>
@@ -97,99 +52,17 @@
                     <article class="catalog-card" *ngFor="let c of catalogoResultados; trackBy: trackByCatalogo">
                         <div class="card-top">
                             <div class="tags">
-                                <span class="tag"><strong>Item: </strong> <span
-                                        [innerHTML]="highlightField(c.item, 'item')"></span></span>
-                            </div>
-                            <div class="pdf-actions" aria-label="Acciones PDF">
-                                <div class="pdf-group hoja-group">
-                                    <input type="file" accept="application/pdf"
-                                        (change)="onSubirHojaCatalogo($event, c.item)" hidden #hojaInput>
-                                    <button type="button" class="pdf-btn upload" title="Subir hoja de seguridad"
-                                        aria-label="Subir hoja de seguridad" (click)="hojaInput.click()">
-                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                                            <path d="M12 5l0 10" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" />
-                                            <path d="M7 10l5-5 5 5" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round" />
-                                            <path d="M4 19h16" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" class="pdf-btn view" title="Ver hoja de seguridad"
-                                        aria-label="Ver hoja de seguridad" (click)="onVerHojaCatalogo(c.item)">
-                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                                            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor"
-                                                stroke-width="2" fill="none" stroke-linecap="round"
-                                                stroke-linejoin="round" />
-                                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"
-                                                fill="none" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" class="pdf-btn delete" title="Eliminar hoja de seguridad"
-                                        aria-label="Eliminar hoja de seguridad"
-                                        (click)="onEliminarHojaCatalogo(c.item)">
-                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                                            <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <div class="pdf-group cert-group">
-                                    <input type="file" accept="application/pdf"
-                                        (change)="onSubirCertCatalogo($event, c.item)" hidden #certInput>
-                                    <button type="button" class="pdf-btn upload" title="Subir certificado de análisis"
-                                        aria-label="Subir certificado de análisis" (click)="certInput.click()">
-                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                                            <path d="M12 5l0 10" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" />
-                                            <path d="M7 10l5-5 5 5" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round" />
-                                            <path d="M4 19h16" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" class="pdf-btn view" title="Ver certificado de análisis"
-                                        aria-label="Ver certificado de análisis" (click)="onVerCertCatalogo(c.item)">
-                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                                            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor"
-                                                stroke-width="2" fill="none" stroke-linecap="round"
-                                                stroke-linejoin="round" />
-                                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"
-                                                fill="none" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" class="pdf-btn delete"
-                                        title="Eliminar certificado de análisis"
-                                        aria-label="Eliminar certificado de análisis"
-                                        (click)="onEliminarCertCatalogo(c.item)">
-                                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                                            <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-name" [title]="c.nombre">
-                            <span [innerHTML]="highlightField(c.nombre, 'nombre')"></span>
-                            <span class="pdf-badges"
-                                [attr.title]="(pdfStatus[c.item] ? (pdfStatus[c.item].hoja===true?'HS✓': pdfStatus[c.item].hoja===false?'HS✗':'HS…') : 'HS…') + ' • ' + (pdfStatus[c.item] ? (pdfStatus[c.item].cert===true?'CA✓':pdfStatus[c.item].cert===false?'CA✗':'CA…') : 'CA…')"
-                                [attr.aria-label]="(pdfStatus[c.item] ? (pdfStatus[c.item].hoja===true?'Hoja disponible': pdfStatus[c.item].hoja===false?'Hoja no disponible':'Hoja verificando') : 'Hoja verificando') + ' y ' + (pdfStatus[c.item] ? (pdfStatus[c.item].cert===true?'Certificado disponible': pdfStatus[c.item].cert===false?'Certificado no disponible':'Certificado verificando') : 'Certificado verificando')">
-                                <span class="badge" [class.loading]="pdfStatus[c.item] && pdfStatus[c.item].hoja===null"
-                                    [class.ok]="pdfStatus[c.item] && pdfStatus[c.item].hoja === true"
-                                    [class.fail]="pdfStatus[c.item] && pdfStatus[c.item].hoja === false"
-                                    title="Hoja de seguridad" aria-label="Hoja de seguridad">
-                                    HS
+                                <span class="tag"><strong>Item: </strong>
+                                    <span [innerHTML]="highlightField(c.item, 'item')"></span>
                                 </span>
-                                <span class="badge" [class.loading]="pdfStatus[c.item] && pdfStatus[c.item].cert===null"
-                                    [class.ok]="pdfStatus[c.item] && pdfStatus[c.item].cert === true"
-                                    [class.fail]="pdfStatus[c.item] && pdfStatus[c.item].cert === false"
-                                    title="Certificado de análisis" aria-label="Certificado de análisis">
-                                    CA
-                                </span>
-                            </span>
-                        </div>
+                            </div>
+
+                            <div class="card-name" [title]="c.nombre">
+                                <span [innerHTML]="highlightField(c.nombre, 'nombre')"></span>
+                            </div>
+                        </div> 
                     </article>
+
                 </div>
                 <p *ngIf="!catalogoCargando && !catalogoResultados.length">No hay elementos en el catálogo.</p>
             </div>
@@ -227,17 +100,18 @@
                 <input id="marca" [(ngModel)]="marca" name="marca" />
             </div>
             <div>
-                <label for="descripcion">Descripción</label>
-                <textarea id="descripcion" [(ngModel)]="descripcion" name="descripcion" rows="2"></textarea>
+                <label for="ubicacion">Ubicación</label>
+                <input id="ubicacion" [(ngModel)]="ubicacion" name="ubicacion" />
             </div>
             <div>
                 <label for="fecha_adquisicion">Fecha de adquisición</label>
                 <input id="fecha_adquisicion" type="date" [(ngModel)]="fecha_adquisicion" name="fecha_adquisicion" />
             </div>
             <div>
-                <label for="ubicacion">Ubicación</label>
-                <input id="ubicacion" [(ngModel)]="ubicacion" name="ubicacion" />
+                <label for="descripcion">Descripción</label>
+                <textarea id="descripcion" [(ngModel)]="descripcion" name="descripcion" rows="2"></textarea>
             </div>
+
             <div>
                 <label for="observaciones">Observaciones</label>
                 <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" rows="2"></textarea>
@@ -319,4 +193,4 @@
                 <p *ngIf="insumoSeleccionado.observaciones"><strong>Observaciones:</strong> {{
                     insumoSeleccionado.observaciones }}</p>
             </div>
-        </div> 
+        </div>

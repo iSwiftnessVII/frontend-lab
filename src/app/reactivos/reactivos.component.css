@@ -1,113 +1,70 @@
-/* Catalog cards layout */
-.container {
-	max-width: 1400px;
-	margin: 0 auto;
-	padding: 2rem;
-}
-.cards-container { margin-top: 0.5rem; }
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
 
-.catalogo-cards {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: stretch;
-	gap: 1.25rem;
-	justify-content: center;
-}
-
-
-
-
-/* Doblamos el tamaño visual (ancho máximo y espaciamiento) */
-.catalog-card {
-	background: var(--primary-white);
-	border: 1px solid var(--border-gray);
-	border-radius: 10px;
-	padding: 1.2rem 1.4rem;
-	box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-	transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
-	animation: cardFade .4s ease;
-	width: 100%;
-	max-width: none; /* ocupa todo el ancho disponible del section */
-	flex: 1 1 100%;
-}
-.catalog-card:hover {
-	box-shadow: 0 6px 18px rgba(0,0,0,0.16);
+/* ===== Variables CSS ===== */
+:root {
+    --primary-blue: #001f5b;
+    --primary-turquoise: #00b8b5;
+    --primary-white: #ffffff;
+    --alert-yellow: #fff3b0;
+    --alert-orange: #ffd6a5;
+    --alert-red: #ffadad;
+    --text-gray: #4a5568;
+    --light-gray: #f7fafc;
+    --border-gray: #e2e8f0;
 }
 
-/* Contenido interno escalado */
-.catalog-card .tags { gap: 0.9rem; }
-.catalog-card .tag { font-size: 0.85rem; padding: 0.65rem 1rem; }
-.catalog-card .card-name { font-size: 1.25rem; padding: 1rem 1.2rem; border-radius: 10px; }
-.catalog-card .card-name .badge { font-size: 0.65rem; padding: 4px 8px; }
-.pdf-btn { width: 42px; height: 42px; }
-.pdf-btn .icon { width: 20px; height: 20px; }
-
-
-.catalog-card .card-top {
-	display: grid;
-	grid-template-columns: 1fr auto;
-	gap: 0.5rem;
-	align-items: center;
+/* ===== Reset y Configuración Base ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.catalog-card .tags {
-	display: grid;
-	grid-template-columns: 170px 1fr 1fr;
-	gap: 0.55rem;
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--light-gray);
+    color: var(--text-gray);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
 }
 
-
-.catalog-card .tag {
-	background: var(--light-gray);
-	color: var(--text-gray);
-	padding: 0.5rem 0.75rem;
-	border-radius: 30px;
-	font-size: 0.72rem;
-	font-weight: 500;
-	letter-spacing: .3px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	border: 1px solid var(--border-gray);
+/* Eliminar espacios superiores */
+.container,
+.reactivos-page {
+    margin-top: 0;
+    padding-top: 2rem;
 }
 
-
-.catalog-card .card-name {
-	margin-top: 0.75rem;
-	background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%);
-	color: var(--primary-white);
-	padding: 0.75rem 0.9rem;
-	border-radius: 6px;
-	font-size: 0.95rem;
-	font-weight: 600;
-	letter-spacing: .25px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	display:flex;
-	align-items:center;
-	justify-content:space-between;
+/* ===== Header ===== */
+.header {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%);
+    color: var(--primary-white);
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    margin-top: 0;
 }
 
-.catalog-card .card-name .pdf-badges {display:inline-flex; gap:4px; margin-left:8px; align-items:center;}
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
 
-.catalog-card .card-name .badge {
-	background: rgba(255,255,255,0.25);
-	color: #fff;
-	width: 32px;
-	height: 32px;
-	padding: 0;
-	font-size: 0.6rem;
-	font-weight:600;
-	letter-spacing:.5px;
-	border-radius: 8px; /* esquinas curvas */
-	line-height:1;
-	border:1px solid rgba(255,255,255,0.35);
-	position:relative;
-	text-align:center;
-	display:inline-flex;
-	align-items:center;
-	justify-content:center;
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 .catalog-card .card-name .inv-meta {
 	font-weight:500;
@@ -152,145 +109,798 @@
 @keyframes cardFade { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:translateY(0);} }
 @keyframes flashMark { 0%{background:var(--alert-yellow);} 100%{background:var(--alert-yellow);} }
 
-mark { background: var(--alert-yellow); color: #222; padding:0 2px; border-radius:2px; animation: flashMark 1.2s ease 1; }
-.catalog-card .card-name .badge.ok { background: #1fae64; border-color:#1fae64; }
-.catalog-card .card-name .badge.fail { background: #d63d3d; border-color:#d63d3d; }
-
-mark { background: var(--alert-yellow); color: #222; padding:0 2px; border-radius:2px; }
-
-/* ==== Overrides tras adopción de .liba-theme ==== */
-/* Asegura que los formularios alineen grid similar a solicitudes cuando se usan estilos inline de grid */
-.reactivos-page form.form-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 1rem 1.25rem; }
-.reactivos-page form.form-grid > div { display:flex; flex-direction:column; }
-.reactivos-page form.form-grid > div:has(textarea) { grid-column: 1 / -1; }
-
-/* Mantener estilo de botones dentro de tarjetas PDF (evitar que hereden gradiente hover exagerado de .liba-theme) */
-.reactivos-page .catalog-card button { font-weight:600; }
-.reactivos-page .catalog-card .pdf-btn { background: var(--primary-blue); }
-.reactivos-page .catalog-card .pdf-btn.upload { background:#179b34; }
-.reactivos-page .catalog-card .pdf-btn.view { background:#1f6fe0; }
-.reactivos-page .catalog-card .pdf-btn.delete { background:#d11a1a; }
-
-/* Botón + detalles mantiene su tamaño simple */
-.reactivos-page .btn-detalles { background: var(--primary-blue); color: #fff; border: none; padding: 0.25rem 0.55rem; border-radius:6px; cursor:pointer; }
-.reactivos-page .btn-detalles:hover { filter:brightness(1.1); }
-
-/* Filtros catálogo: 2 columnas mitad y mitad */
-.reactivos-page .filters-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:1rem; margin:1rem 0 1rem; align-items:end; }
-.reactivos-page .filters-grid.catalogo-filters { grid-template-columns: repeat(3, 1fr); }
-.reactivos-page .filters-grid.catalogo-filters .reset-cell { display:flex; flex-direction:column; justify-content:flex-end; }
-.reactivos-page .filters-grid.catalogo-filters .btn-reset-filtros {
-	width: fit-content; /* ocupa su columna 1fr, pero no mayor que inputs */
-	padding:0.8rem 0.9rem; /* similar a input (0.8) */
-	font-size:0.95rem;
-	line-height:1.1;
+.logo {
+    width: 50px;
     height: 50px;
-	cursor:pointer;
-	font-weight:500;
-	border-radius:6px;
-	background:linear-gradient(135deg,var(--primary-turquoise) 0%, #009a98 100%); /* igual al botón agregar catálogo */
-	border:1px solid var(--primary-turquoise);
-	color:#fff;
-	transition: box-shadow .18s ease, transform .18s ease, filter .18s ease;
+    background: var(--primary-white);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-blue);
+    font-weight: bold;
+    font-size: 1.2rem;
+    flex-shrink: 0;
 }
-.reactivos-page .filters-grid.catalogo-filters .btn-reset-filtros:hover { filter:brightness(1.05); }
-.reactivos-page .filters-grid.catalogo-filters .btn-reset-filtros:active { transform:translateY(1px); }
-.reactivos-page .filters-grid > div { display:flex; flex-direction:column; }
-@media (max-width:900px){
-	.reactivos-page .filters-grid.catalogo-filters { grid-template-columns: repeat(2, 1fr); }
+
+.header-title {
+    font-size: 1.5rem;
+    font-weight: 600;
 }
-@media (max-width:640px){
-	.reactivos-page .filters-grid { grid-template-columns:1fr; }
-	.reactivos-page .filters-grid.catalogo-filters { grid-template-columns:1fr; }
+
+.header-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.95rem;
+}
+
+/* ===== Navigation ===== */
+.nav-menu {
+    background: var(--primary-white);
+    padding: 0.5rem 2rem;
+    border-bottom: 1px solid var(--border-gray);
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+}
+
+.nav-content {
+    display: flex;
+    gap: 2rem;
+    padding: 0 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.nav-item {
+    padding: 0.8rem 1.5rem;
+    color: var(--text-gray);
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.nav-item:hover, 
+.nav-item.active {
+    background: var(--primary-turquoise);
+    color: var(--primary-white);
+    transform: translateY(-1px);
+}
+
+/* ===== Main Container ===== */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.reactivos-page h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    margin: 2rem 0 1rem 0;
+}
+
+/* ===== Sections ===== */
+section {
+    background: var(--primary-white);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* ===== Forms ===== */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    align-items: end;
+}
+
+.form-grid > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-grid label {
+    font-weight: 500;
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.form-grid input,
+.form-grid textarea,
+.form-grid select {
+    padding: 0.8rem;
+    border: 2px solid var(--border-gray);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-grid input:focus,
+.form-grid textarea:focus,
+.form-grid select:focus {
+    outline: none;
+    border-color: var(--primary-turquoise);
+}
+
+.form-grid textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* ===== Buttons ===== */
+button[type="submit"],
+button[type="button"],
+.btn,
+.btn-primary,
+.btn-secondary {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--primary-turquoise);
+    color: var(--primary-white);
+}
+
+button[type="submit"]:hover,
+button[type="button"]:hover,
+.btn:hover,
+.btn-primary:hover {
+    background: #008e8c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 184, 181, 0.3);
+}
+
+.btn-secondary {
+    background: var(--border-gray);
+    color: var(--text-gray);
+}
+
+.btn-secondary:hover {
+    background: #cbd5e0;
+}
+
+.btn-reset-filtros {
+    background: var(--alert-orange);
+    color: #744210;
+}
+
+.btn-reset-filtros:hover {
+    background: #ffb366;
+}
+
+/* ===== Filters ===== */
+.filters-grid,
+.filters-row,
+.catalogo-filters,
+.reactivos-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: end;
+}
+
+.filters-grid label,
+.filters-row label {
+    font-weight: 500;
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    display: block;
+}
+
+.filters-grid input,
+.filters-row input {
+    padding: 0.7rem;
+    border: 2px solid var(--border-gray);
+    border-radius: 6px;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+    width: 100%;
+}
+
+.filters-grid input:focus,
+.filters-row input:focus {
+    outline: none;
+    border-color: var(--primary-turquoise);
+}
+
+.reset-cell {
+    display: flex;
+    align-items: flex-end;
+}
+
+/* ===== Cards Container (Catálogo) ===== */
+.cards-container {
+    margin-top: 1.5rem;
 }
 
 .catalogo-stats {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-	font-size: 0.85rem;
-	margin: 0.25rem 0 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    margin: 0.25rem 0 1rem;
+    padding: 0.8rem;
+    background: var(--light-gray);
+    border-radius: 6px;
+    color: var(--text-gray);
+    font-weight: 500;
 }
+
 .catalogo-stats button {
-	padding: 0.25rem 0.6rem;
-	font-size: 0.75rem;
-	cursor: pointer;
-
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    cursor: pointer;
 }
 
-/* Filtros de inventario (3 en una fila) */
-.reactivos-filters {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 1rem;
-	margin: 1rem 0;
-}
-.reactivos-filters > div { display: flex; flex-direction: column; }
-@media (max-width: 900px) {
-	.reactivos-filters { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 640px) {
-	.reactivos-filters { grid-template-columns: 1fr; }
+.catalogo-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
 }
 
-/* Red PDF buttons (squares) */
-.pdf-actions { display: flex; gap: 0.5rem; }
-.pdf-group { display: flex; gap: 0.5rem; }
-.pdf-group + .pdf-group { margin-left: 1rem; position: relative; }
-.pdf-group + .pdf-group::before {
-	content: "";
-	position: absolute;
-	left: -0.6rem;
-	top: 4px;
-	bottom: 4px;
-	width: 1px;
-	background: rgba(255,255,255,0.4);
+.catalog-card {
+    background: var(--primary-white);
+    border: 2px solid var(--border-gray);
+    border-radius: 10px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    animation: cardFade 0.4s ease;
 }
+
+.catalog-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-turquoise);
+}
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag {
+    background: var(--light-gray);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-gray);
+}
+
+.card-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    margin-top: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ===== PDF Actions ===== */
+.pdf-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.pdf-group {
+    display: flex;
+    gap: 0.3rem;
+}
+
 .pdf-btn {
-	width: 34px;
-	height: 34px;
-	background: var(--primary-blue);
-	border: 1px solid var(--primary-blue);
-	border-radius: 8px;
-	cursor: pointer;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--primary-white);
-	padding: 0;
-	position: relative;
-	transition: background-color .18s ease, transform .18s ease, box-shadow .18s ease;
-}
-.pdf-btn:hover { filter: brightness(1.05); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
-.pdf-btn:active { transform: translateY(1px); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-.pdf-btn:focus-visible { outline: 2px solid var(--primary-turquoise); outline-offset: 2px; }
-
-.pdf-btn .icon { width: 18px; height: 18px; display: block; }
-
-/* Color variants */
-.pdf-btn.upload { background: #179b34; border-color:#179b34; }
-.pdf-btn.upload:hover { filter: brightness(1.05); }
-.pdf-btn.view { background: #1f6fe0; border-color:#1f6fe0; }
-.pdf-btn.view:hover { filter: brightness(1.05); }
-.pdf-btn.delete { background: #d11a1a; border-color:#d11a1a; }
-.pdf-btn.delete:hover { filter: brightness(1.05); }
-
-/* Divider between pdf groups adapt color */
-.pdf-group + .pdf-group::before { background: var(--border-gray); }
-
-/* Responsive tweaks */
-/* Simplificada: al ocupar 100% no necesitamos max-widths escalonados */
-@media (max-width: 780px) {
-	.catalog-card { padding:1rem 1.05rem; }
-	.catalog-card .card-name { font-size:1rem; }
-	.catalog-card .tags { grid-template-columns: 1fr; }
+    padding: 0.4rem;
+    border: none;
+    background: var(--light-gray);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
 }
 
-/* Centrar el texto del botón "Crear reactivo" dentro del formulario */
+.pdf-btn .icon {
+    width: 16px;
+    height: 16px;
+}
+
+.pdf-btn.upload {
+    color: var(--primary-turquoise);
+}
+
+.pdf-btn.upload:hover {
+    background: var(--primary-turquoise);
+    color: var(--primary-white);
+}
+
+.pdf-btn.view {
+    color: var(--primary-blue);
+}
+
+.pdf-btn.view:hover {
+    background: var(--primary-blue);
+    color: var(--primary-white);
+}
+
+.pdf-btn.delete {
+    color: #e53e3e;
+}
+
+.pdf-btn.delete:hover {
+    background: #e53e3e;
+    color: var(--primary-white);
+}
+
+/* ===== PDF Badges ===== */
+.pdf-badges {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    background: var(--border-gray);
+    color: var(--text-gray);
+}
+
+.badge.loading {
+    background: var(--alert-yellow);
+    color: #744210;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.badge.ok {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.badge.fail {
+    background: var(--alert-red);
+    color: #742a2a;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+@keyframes cardFade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Table ===== */
+.table-container {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.reactivos-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--primary-white);
+}
+
+.reactivos-table caption {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    text-align: left;
+    padding: 1rem 0;
+}
+
+.reactivos-table thead tr {
+    background: var(--light-gray);
+}
+
+.reactivos-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--primary-blue);
+    border-bottom: 2px solid var(--border-gray);
+    white-space: nowrap;
+}
+
+.reactivos-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-gray);
+}
+
+.reactivos-table tbody tr:hover {
+    background: var(--light-gray);
+}
+
+.reactivos-table td button {
+    margin-right: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+/* ===== Detalles Panel ===== */
+.detalles-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--primary-white);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+.detalles-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 2px solid var(--border-gray);
+}
+
+.detalles-header h3 {
+    font-size: 1.3rem;
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.detalles-header button {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--text-gray);
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.detalles-header button:hover {
+    background: var(--alert-red);
+    color: var(--primary-white);
+}
+
+.detalles-content {
+    padding: 1.5rem;
+}
+
+.detalles-content p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.detalles-content strong {
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+/* ===== Messages ===== */
+.success-message,
+.error-message,
+p[role="status"],
+p[aria-live="polite"] {
+    padding: 1rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+    font-weight: 500;
+}
+
+.success-message,
+p[role="status"]:not(.error-message) {
+    background: #c6f6d5;
+    color: #22543d;
+    border-left: 4px solid #22543d;
+}
+
+.error-message {
+    background: var(--alert-red);
+    color: #742a2a;
+    border-left: 4px solid #742a2a;
+}
+
+/* ===== Status Badges ===== */
+.status-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.status-good {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.status-warning {
+    background: var(--alert-yellow);
+    color: #744210;
+}
+
+.status-critical {
+    background: var(--alert-red);
+    color: #742a2a;
+}
+
+/* ===== Utility Classes ===== */
+.hidden {
+    display: none;
+}
+
+mark {
+    background: var(--alert-yellow);
+    color: #222;
+    padding: 0 2px;
+    border-radius: 2px;
+    animation: flashMark 1.2s ease 1;
+}
+
+@keyframes flashMark {
+    0%, 100% { background: var(--alert-yellow); }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ===== PERSONALIZACIONES ESPECÍFICAS DE REACTIVOS ===== */
+
+/* Catalog cards layout optimizado */
+.catalogo-cards {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 1.25rem;
+    justify-content: center;
+}
+
+/* Tarjetas ocupan todo el ancho */
+.catalog-card {
+    width: 100%;
+    max-width: none;
+    flex: 1 1 100%;
+}
+
+/* Contenido interno escalado */
+.catalog-card .tags {
+    display: grid;
+    grid-template-columns: 170px 1fr 1fr;
+    gap: 0.55rem;
+}
+
+.catalog-card .tag {
+    border-radius: 30px;
+    font-size: 0.72rem;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid var(--border-gray);
+}
+
+.catalog-card .card-name {
+    margin-top: 0.75rem;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%);
+    color: var(--primary-white);
+    padding: 0.75rem 0.9rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.25px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.catalog-card .card-name .pdf-badges {
+    display: inline-flex;
+    gap: 4px;
+    margin-left: 8px;
+    align-items: center;
+}
+
+.catalog-card .card-name .badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-radius: 8px;
+    line-height: 1;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.catalog-card .card-name .badge.loading {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.catalog-card .card-name .badge.loading::after {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    border-top-color: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+.catalog-card .card-name .badge.ok {
+    background: #1fae64;
+    border-color: #1fae64;
+}
+
+.catalog-card .card-name .badge.fail {
+    background: #d63d3d;
+    border-color: #d63d3d;
+}
+
+/* Botones PDF con colores específicos */
+.pdf-btn {
+    width: 34px;
+    height: 34px;
+    background: var(--primary-blue);
+    border: 1px solid var(--primary-blue);
+    border-radius: 8px;
+}
+
+.pdf-btn .icon {
+    width: 18px;
+    height: 18px;
+}
+
+.pdf-btn.upload {
+    background: #179b34;
+    border-color: #179b34;
+}
+
+.pdf-btn.view {
+    background: #1f6fe0;
+    border-color: #1f6fe0;
+}
+
+.pdf-btn.delete {
+    background: #d11a1a;
+    border-color: #d11a1a;
+}
+
+.pdf-btn:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.pdf-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Separador entre grupos de PDF */
+.pdf-group + .pdf-group {
+    margin-left: 1rem;
+    position: relative;
+}
+
+.pdf-group + .pdf-group::before {
+    content: "";
+    position: absolute;
+    left: -0.6rem;
+    top: 4px;
+    bottom: 4px;
+    width: 1px;
+    background: var(--border-gray);
+}
+
+/* Filtros catálogo: 3 columnas */
+.reactivos-page .filters-grid.catalogo-filters {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.reactivos-page .filters-grid.catalogo-filters .reset-cell {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.reactivos-page .filters-grid.catalogo-filters .btn-reset-filtros {
+    width: fit-content;
+    padding: 0.8rem 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.1;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-turquoise) 0%, #009a98 100%);
+    border: 1px solid var(--primary-turquoise);
+    color: #fff;
+}
+
+.reactivos-page .filters-grid.catalogo-filters .btn-reset-filtros:hover {
+    filter: brightness(1.05);
+}
+
+/* Filtros de inventario: 3 columnas */
+.reactivos-filters {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* Botón detalles */
+.reactivos-page .btn-detalles {
+    background: var(--primary-blue);
+    color: #fff;
+    border: none;
+    padding: 0.25rem 0.55rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.reactivos-page .btn-detalles:hover {
+    filter: brightness(1.1);
+}
+
+/* Centrar texto del botón submit */
 .reactivos-page form.form-grid button[type="submit"] {
-	display: inline-flex; /* asegura flex para poder centrar */
-	justify-content: center;
-	text-align: center;
+    display: inline-flex;
+    justify-content: center;
+    text-align: center;
 }
 
 /* Botones del modal con tamaño compacto */

@@ -242,21 +242,7 @@ body {
   margin-bottom: 2.5rem;
 }
 
-.brand-circle {
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 1.5rem;
-  background: linear-gradient(135deg, #00b8b5 0%, #009688 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  font-weight: 700;
-  color: white;
-  box-shadow: 0 8px 24px rgba(0, 184, 181, 0.3);
-  animation: brandPulse 2s ease-in-out infinite;
-}
+
 
 @keyframes brandPulse {
   0%, 100% { 
@@ -411,12 +397,6 @@ body {
   cursor: not-allowed;
 }
 
-/* Footer */
-.login-foot {
-  text-align: center;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
-}
 
 .muted {
   font-size: 0.95rem;
@@ -531,11 +511,6 @@ body {
     padding: 2rem;
   }
   
-  .brand-circle {
-    width: 64px;
-    height: 64px;
-    font-size: 1.75rem;
-  }
   
   .login-title {
     font-size: 1.75rem;
@@ -588,13 +563,6 @@ body {
     border-radius: 20px;
   }
 
-  .brand-circle {
-    width: 60px;
-    height: 60px;
-    font-size: 1.6rem;
-    margin-bottom: 1.25rem;
-  }
-
   .login-title {
     font-size: 1.6rem;
   }
@@ -627,12 +595,12 @@ body {
     padding: 1.5rem;
   }
 
-  .brand-circle {
-    width: 56px;
-    height: 56px;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 25px;
+}
 
   .login-title {
     font-size: 1.5rem;
@@ -641,4 +609,42 @@ body {
   .login-sub {
     font-size: 0.9rem;
   }
+}
+/* ==========================================================
+   FIX FULLSCREEN LOGIN (para eliminar bordes y ocupar viewport)
+   ========================================================== */
+:host {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+:host ::ng-deep .container {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  max-width: none;
+  background: #001f5b;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.left-section,
+.login-root {
+  flex: 1 1 50%;
+  min-height: 100vh;
+  width: 50vw;
+  padding: 0;
+  margin: 0;
+}
+
+.particles {
+  width: 100vw;
+  height: 100vh;
 }
