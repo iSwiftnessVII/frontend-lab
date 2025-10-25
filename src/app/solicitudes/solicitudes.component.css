@@ -16,6 +16,15 @@
   box-sizing: border-box;
 }
 
+.check-border span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 4px 8px;
+  border: 1px solid var(--border-gray);
+  border-radius: 6px;
+}
+
 .list-header, .solicitud-item, .cliente-item {
   display: grid;
   /* inherit the grid-template-columns from the parent list wrapper so each list can define proportions */
