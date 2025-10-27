@@ -4,11 +4,11 @@ const API_BASE = (window as any).__env?.API_BASE || 'http://localhost:3000/api/a
 export const authUser = signal<{ id: number; email: string } | null>(null);
 
 export const authService = {
-  async login(email: string, password: string) {
+  async login(email: string, contrasena: string) {
     const res = await fetch(`${API_BASE}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, contrasena })
     });
 
     let data: any = null;
@@ -23,7 +23,7 @@ export const authService = {
         (data && data.message) ||
         (typeof data === 'string' ? data : null) ||
         (await res.text().catch(() => 'Error al iniciar sesión'));
-      if (msg === 'Missing email or password') msg = 'Falta correo o contraseña';
+      if (msg === 'Missing email or contrasena') msg = 'Falta correo o contraseña';
       if (msg === 'Invalid credentials') msg = 'Credenciales inválidas';
       if (msg === 'Internal server error') msg = 'Error interno del servidor';
       throw new Error(msg || 'Error al iniciar sesión');
@@ -41,11 +41,11 @@ export const authService = {
     return dataJson;
   },
 
-  async register(email: string, password: string) {
+  async register(email: string, contrasena: string) {
     const res = await fetch(`${API_BASE}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, contrasena })
     });
 
     let dataR: any = null;
@@ -60,7 +60,7 @@ export const authService = {
         (dataR && dataR.message) ||
         (typeof dataR === 'string' ? dataR : null) ||
         (await res.text().catch(() => 'Error al registrar'));
-      if (msg === 'Missing email or password') msg = 'Falta correo o contraseña';
+      if (msg === 'Missing email or contrasena') msg = 'Falta correo o contraseña';
       if (msg === 'User already exists') msg = 'El usuario ya existe';
       if (msg === 'Internal server error') msg = 'Error interno del servidor';
       throw new Error(msg || 'Error al registrar');

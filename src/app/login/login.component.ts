@@ -13,7 +13,7 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 })
 export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   email = '';
-  password = '';
+  contrasena = '';
   error = '';
   loading = false;
   triedSubmit = false;
@@ -75,7 +75,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     this.loading = true;
     try {
-      await authService.login(this.email, this.password);
+      await authService.login(this.email, this.contrasena);
       this.triedSubmit = false;
       await this.router.navigateByUrl(this.returnUrl);
     } catch (err: any) {
