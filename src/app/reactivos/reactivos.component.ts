@@ -13,7 +13,7 @@ import { reactivosService } from '../services/reactivos.service';
   selector: 'app-reactivos',
   templateUrl: './reactivos.component.html',
   styleUrls: ['./reactivos.component.css'],
-  imports: [CommonModule, NgIf, NgFor, FormsModule, RouterModule]
+  imports: [CommonModule, FormsModule, RouterModule]
 })
 
 export class ReactivosComponent implements OnInit {
