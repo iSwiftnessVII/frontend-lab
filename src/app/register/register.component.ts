@@ -16,6 +16,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
   name = '';
   email = '';
   password = '';
+  showPassword = false;
   error = '';
   success = '';
 
@@ -26,10 +27,12 @@ export class RegisterComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    console.debug('[register] ngOnInit: adding body.auth-page');
     this.renderer.addClass(this.document.body, 'auth-page');
   }
 
   ngOnDestroy(): void {
+    console.debug('[register] ngOnDestroy: removing body.auth-page');
     this.renderer.removeClass(this.document.body, 'auth-page');
   }
 
@@ -47,6 +50,10 @@ export class RegisterComponent implements OnInit, OnDestroy {
     } catch (err: any) {
       this.error = err.message || 'Error en el registro';
     }
+  }
+
+  toggleShowPassword() {
+    this.showPassword = !this.showPassword;
   }
 }
 

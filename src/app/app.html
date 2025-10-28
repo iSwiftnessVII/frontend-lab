@@ -1,5 +1,5 @@
 <!-- ====== HEADER GLOBAL LIBA ====== -->
-<header class="header" *ngIf="user()">
+<header class="header" *ngIf="user() || isAuthInitializing()">
   <div class="header-content">
     <div class="logo-section">
       <div class="logo">LIBA</div>
@@ -30,7 +30,7 @@
 </header>
 
 <!-- ====== NAVIGATION MENU ====== -->
-<nav class="nav-menu" *ngIf="user()">
+<nav class="nav-menu" *ngIf="user() || isAuthInitializing()">
   <div class="nav-content">
     <a
       routerLink="/dashboard"
@@ -62,6 +62,16 @@
 <!-- ====== CONTENIDO PRINCIPAL ====== -->
 <main class="main-content liba-theme">
   <router-outlet></router-outlet>
+
+  <!-- Auth initialization overlay -->
+  <div class="auth-loading-overlay" *ngIf="isAuthInitializing()">
+    <div class="auth-spinner">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="auth-loading-text">Validando sesión…</div>
+  </div>
 </main>
 
 <!-- ====== FOOTER GLOBAL LIBA ====== -->

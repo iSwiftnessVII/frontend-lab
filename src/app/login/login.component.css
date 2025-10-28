@@ -384,7 +384,8 @@ body {
 }
 
 .btn.primary:hover:not(:disabled) {
-  transform: translateY(-2px);
+  /* Solo cambio visual (color/sombra), sin mover el botón */
+  transform: none;
   box-shadow: 0 8px 25px rgba(0, 184, 181, 0.4);
 }
 
@@ -395,6 +396,35 @@ body {
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Password visibility toggle */
+.password-field { position: relative; }
+.password-field input { padding-right: 44px; }
+.toggle-password {
+  all: unset; /* isolate from global styles */
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.toggle-password:hover { color: #001f5b; background: rgba(0,0,0,0.03); }
+.toggle-password i { font-size: 16px; line-height: 1; }
+
+/* Shield the eye button from global .liba-theme button hover effects */
+.password-field .toggle-password::before { content: none !important; }
+.password-field .toggle-password:hover,
+.password-field .toggle-password:active {
+  transform: translateY(-50%) !important; /* keep it vertically centered */
+  box-shadow: none !important; /* prevent global shadow animation */
 }
 
 

@@ -22,10 +22,12 @@ export class ForgotComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    console.debug('[forgot] ngOnInit: adding body.auth-page');
     this.renderer.addClass(this.document.body, 'auth-page');
   }
 
   ngOnDestroy(): void {
+    console.debug('[forgot] ngOnDestroy: removing body.auth-page');
     this.renderer.removeClass(this.document.body, 'auth-page');
   }
 

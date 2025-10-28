@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 const API_BASE = (window as any).__env?.API_BASE || 'http://localhost:3000/api/auth';
 
 export const authUser = signal<{ id: number; email: string } | null>(null);
+export const authInitializing = signal(false);
 
 export const authService = {
   async login(email: string, contrasena: string) {
@@ -79,5 +80,51 @@ export const authService = {
   // Devuelve el token guardado (por si lo necesitas en otras peticiones)
   getToken() {
     return localStorage.getItem('token');
+  }
+  ,
+  async whoami() {
+    const token = this.getToken();
+    authInitializing.set(true);
+    if (!token) {
+      authInitializing.set(false);
+      throw new Error('No token');
+    }
+    let res: Response | null = null;
+    try {
+      console.debug('[auth] whoami: token present, calling /me');
+      res = await fetch(`${API_BASE}/me`, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.debug('[auth] whoami: response status', res.status);
+    } catch (fetchErr) {
+      // Network / CORS / server down — treat as temporary offline: keep token and
+      // create a minimal authUser so UI (header/nav) remains visible.
+      console.warn('[auth] whoami fetch failed (network). Leaving token in place and showing UI optimistically.', fetchErr);
+      authUser.set({ id: 0, email: '' });
+      authInitializing.set(false);
+      return null;
+    }
+    try {
+      if (!res.ok) {
+        // token invalid or expired — clear and error
+        localStorage.removeItem('token');
+        authUser.set(null);
+        let msg = await res.text().catch(() => 'Unknown error');
+        throw new Error(msg || 'Failed to validate token');
+      }
+
+      const data = await res.json().catch(() => null);
+      if (!data || !data.id) {
+        localStorage.removeItem('token');
+        authUser.set(null);
+        throw new Error('Invalid response from auth/me');
+      }
+
+      authUser.set({ id: data.id, email: data.email });
+      return data;
+    } finally {
+      authInitializing.set(false);
+    }
   }
 };

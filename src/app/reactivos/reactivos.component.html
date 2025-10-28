@@ -35,7 +35,7 @@
       </select>
       <span class="field-error" *ngIf="catClasifCtrl.invalid && (catClasifCtrl.touched || submittedCatalogo)">Seleccione una opción</span>
     </div>
-    <div>
+    <div class="full-row">
       <label for="catDescripcion">Descripción</label>
       <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"></textarea>
     </div>
@@ -222,7 +222,7 @@
       <span class="field-error" *ngIf="fechaVencCtrl.invalid && (fechaVencCtrl.touched || submittedReactivo)">Requerido</span>
       <span class="field-error" *ngIf="!fechaVencCtrl.invalid && fechasInconsistentes()">Vencimiento no puede ser anterior a adquisición</span>
     </div>
-    <div>
+    <div class="full-row">
       <label for="observaciones">Observaciones</label>
       <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" rows="2"></textarea>
     </div>
@@ -471,7 +471,7 @@
         <option *ngFor="let a of almacen" [value]="a.id">{{ a.nombre }}</option>
       </select>
     </div>
-    <div>
+    <div class="full-row">
       <label for="edit_obs">Observaciones</label>
       <textarea id="edit_obs" [(ngModel)]="editFormData.observaciones" name="edit_obs" rows="2"></textarea>
     </div>

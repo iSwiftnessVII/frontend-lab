@@ -1,7 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, effect } from '@angular/core';
 import { RouterOutlet, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { authService, authUser } from './services/auth.service';
+import { authService, authUser, authInitializing } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +17,34 @@ export class App {
   readonly isLoggingOut = signal(false);
   readonly currentYear = new Date().getFullYear();
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) {
+    // Try to restore the real user from stored token. Do not block the
+    // constructor (guards may call whoami themselves) but start the async
+    // initialization so the UI will update when the call completes.
+    void this.initAuth();
+    this.constructorEffectSetup();
+  }
+
+  private async initAuth() {
+    try {
+      await authService.whoami();
+    } catch (err) {
+      // If validation fails we ensure logout state is clean (token removed by whoami)
+      console.debug('No valid session on init:', err);
+    }
+  }
+
+  // Expose auth initializing state to the template
+  isAuthInitializing = authInitializing;
+
+  constructorEffectSetup() {
+    // Log auth state changes to help debug menu disappearance
+    effect(() => {
+      const u = authUser();
+      const init = authInitializing();
+      console.debug('[app] auth state change: authUser=', u, 'authInitializing=', init);
+    });
+  }
 
   logout() {
     authService.logout();

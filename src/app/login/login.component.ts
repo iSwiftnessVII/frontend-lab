@@ -14,6 +14,7 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   email = '';
   contrasena = '';
+  showPassword = false;
   error = '';
   loading = false;
   triedSubmit = false;
@@ -35,6 +36,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
+    console.debug('[login] ngOnInit: adding body.auth-page');
     this.renderer.addClass(this.document.body, 'auth-page');
   }
 
@@ -44,6 +46,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
+    console.debug('[login] ngOnDestroy: removing body.auth-page');
     this.renderer.removeClass(this.document.body, 'auth-page');
   }
 
@@ -90,5 +93,9 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   onGoogleSignIn() {
     // implement OAuth redirect or popup here
     console.log('Google sign-in clicked');
+  }
+
+  toggleShowPassword() {
+    this.showPassword = !this.showPassword;
   }
 }

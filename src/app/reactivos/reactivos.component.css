@@ -85,7 +85,7 @@ body {
 
 .reactivo-card .tags { 
 	display: flex; 
-	flex-wrap: wrap; 
+    flex-wrap: wrap; 
 	gap: 6px 8px; 
 }
 .reactivo-card .tags .tag { 
@@ -95,6 +95,55 @@ body {
 	width: fit-content; 
 	max-width: 100%; 
 	padding: 0.35rem 0.55rem; 
+}
+
+/* Mantener los <span> en una sola fila para la lista de inventario (no afecta al catálogo) */
+.reactivos-page .reactivo-card .tags {
+    flex-wrap: nowrap; /* evitar salto de línea */
+    overflow-x: hidden; /* ocultar desbordamiento horizontal para mantener todo en una línea */
+    -webkit-overflow-scrolling: touch;
+    min-width: 0; /* permitir que el contenedor se reduzca si es necesario */
+}
+.reactivos-page .reactivo-card .tags .tag {
+    flex: 0 0 auto; /* no estirar ni encoger, mantener tamaño de contenido */
+}
+
+/* Asegurar también que los chips de la línea meta no se envuelvan en la lista de inventario */
+.reactivos-page .reactivo-card .card-name .meta-line {
+    flex-wrap: nowrap;
+    overflow-x: hidden;
+}
+.reactivos-page .reactivo-card .card-name .meta-line .chip {
+    flex: 0 0 auto;
+}
+
+/* Anular regla de .catalog-card .tags (grid de 3 columnas) sólo para la vista de inventario
+   y forzar que los tags estén en una sola fila. Usamos selectores más específicos y !important
+   para garantizar que sobrescriba la regla definida más abajo que convierte .catalog-card .tags en grid. */
+.reactivos-page article.catalog-card.reactivo-card .tags,
+.reactivos-page .reactivo-card.catalog-card .tags {
+    display: flex !important;
+    grid-template-columns: none !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important; /* permitir desplazamiento horizontal si es necesario */
+    -webkit-overflow-scrolling: touch !important;
+    gap: 6px 8px !important;
+    align-items: center !important;
+}
+.reactivos-page article.catalog-card.reactivo-card .tags .tag,
+.reactivos-page .reactivo-card.catalog-card .tags .tag {
+    flex: 0 0 auto !important;
+}
+
+/* Alineación y comportamiento de la fila superior en la lista de inventario: etiquetas + botones en una sola línea */
+.reactivos-page .reactivo-card .card-top {
+    align-items: center; /* centra verticalmente tags y pdf-actions */
+}
+.reactivos-page .reactivo-card .pdf-actions {
+    flex: 0 0 auto; /* no ocupar espacio extra */
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
 }
 .catalog-card .card-name .badge.loading { background: rgba(255,255,255,0.15); }
 .catalog-card .card-name .badge.loading::after {
@@ -412,8 +461,18 @@ button[type="button"]:hover,
 /* ===== PDF Actions ===== */
 .pdf-actions {
     display: flex;
-    flex-direction: column;
+    flex-direction: row; /* keep buttons in a single horizontal row */
     gap: 0.5rem;
+    align-items: center; /* vertically center buttons */
+    flex-wrap: nowrap; /* prevent wrapping into a column */
+}
+
+/* Forzar layout horizontal en tarjetas de catálogo (may override reglas globales/otros componentes) */
+.catalog-card .pdf-actions {
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 0.5rem !important;
 }
 
 .pdf-group {
@@ -823,6 +882,77 @@ mark {
 .pdf-btn.delete {
     background: #d11a1a;
     border-color: #d11a1a;
+}
+
+/* En el catálogo queremos icon-only con borde y al pasar el mouse se rellena del color de la acción */
+.catalog-card .pdf-btn {
+    --action-color: var(--primary-blue);
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    color: var(--action-color) !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 6px !important; /* mantener zona clicable */
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background-color 180ms ease, color 180ms ease, transform 120ms ease, box-shadow 180ms ease;
+}
+.catalog-card .pdf-btn .icon { width: 18px !important; height: 18px !important; }
+.catalog-card .pdf-btn.upload { --action-color: #179b34 !important; color: var(--action-color) !important; border-color: var(--action-color) !important; }
+.catalog-card .pdf-btn.view { --action-color: #1f6fe0 !important; color: var(--action-color) !important; border-color: var(--action-color) !important; }
+.catalog-card .pdf-btn.delete { --action-color: #d11a1a !important; color: var(--action-color) !important; border-color: var(--action-color) !important; }
+
+/* Hover/focus: rellenar con el color y poner el icono blanco */
+.catalog-card .pdf-btn:hover,
+.catalog-card .pdf-btn:focus {
+    background: var(--action-color) !important;
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08) !important;
+    outline: none !important;
+}
+
+/* Forzar que los SVG usen currentColor (para que cambien a blanco en hover) */
+.catalog-card .pdf-btn .icon { fill: none; stroke: currentColor !important; }
+
+/* Asegurar compatibilidad con reglas más específicas que puedan reaplicar fondo */
+.reactivos-page article.catalog-card .pdf-btn,
+.reactivos-page .catalog-card .pdf-btn {
+    background: transparent !important;
+}
+
+/* Regla aún más específica para asegurarnos que los botones en las tarjetas del catálogo
+   sean icon-only (sin fondo, sin borde) y mantengan el color del icono. */
+article.catalog-card .card-top .pdf-actions .pdf-group .pdf-btn,
+.catalog-card .card-top .pdf-actions .pdf-group .pdf-btn,
+.reactivos-page article.catalog-card .pdf-btn {
+    background: transparent !important;
+    border: 1px solid currentColor !important; /* show border using the icon color */
+    box-shadow: none !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 6px !important;
+    border-radius: 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Forzar el color del icono por tipo de acción (usa currentColor en los SVG) */
+.catalog-card .pdf-btn.upload { color: #179b34 !important; }
+.catalog-card .pdf-btn.view { color: #1f6fe0 !important; }
+.catalog-card .pdf-btn.delete { color: #d11a1a !important; }
+
+/* Asegurar que los SVG usen currentColor y no tengan fondo */
+.catalog-card .pdf-btn .icon { fill: currentColor !important; stroke: currentColor !important; }
+
+/* Evitar que reglas generales vuelvan a pintar fondo con mayor especificidad */
+.catalog-card .pdf-btn.upload[style],
+.catalog-card .pdf-btn.view[style],
+.catalog-card .pdf-btn.delete[style] {
+    background: transparent !important;
 }
 
 .pdf-btn:hover {

@@ -69,8 +69,15 @@
 
           <div class="form-group">
             <label for="contrasena">Contraseña</label>
-            <input id="contrasena" name="contrasena" type="contrasena" autocomplete="current-contrasena"
-              placeholder="Contraseña" [(ngModel)]="contrasena" #contrasenaCtrl="ngModel" required minlength="3">
+            <div class="password-field">
+              <input id="contrasena" name="contrasena"
+                [type]="showPassword ? 'text' : 'password'"
+                autocomplete="current-password"
+                placeholder="Contraseña" [(ngModel)]="contrasena" #contrasenaCtrl="ngModel" required minlength="3">
+              <button type="button" class="toggle-password" (click)="toggleShowPassword()" aria-label="Mostrar/Ocultar contraseña">
+                <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
             <small class="field-error"
               *ngIf="(contrasenaCtrl.touched || triedSubmit) && contrasenaCtrl.errors?.['required']">La contraseña es
               requerida</small>

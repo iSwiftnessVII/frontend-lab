@@ -21,7 +21,12 @@
 
         <div class="form-group">
           <label for="password">Contraseña</label>
-          <input id="password" name="password" type="password" placeholder="Crea una contraseña" [(ngModel)]="password" required>
+          <div class="password-field">
+            <input id="password" name="password" [type]="showPassword ? 'text' : 'password'" placeholder="Crea una contraseña" [(ngModel)]="password" required autocomplete="new-password">
+            <button type="button" class="toggle-password" (click)="toggleShowPassword()" aria-label="Mostrar/Ocultar contraseña">
+              <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+            </button>
+          </div>
         </div>
 
         <div class="actions">

@@ -206,6 +206,25 @@ body.auth-page .container {
 	min-height: 100px;
 }
 
+/* Force textarea and large text fields to occupy a full row inside form/grid layouts globally */
+.liba-theme form .form-grid textarea,
+.form-grid textarea,
+.liba-theme .form-grid textarea,
+.liba-theme form textarea,
+.liba-theme section textarea,
+.liba-theme .card textarea {
+	grid-column: 1 / -1 !important; /* span the entire grid row */
+	width: 100% !important;
+	min-width: 0 !important; /* allow flex/grid containers to shrink properly */
+	display: block !important;
+	box-sizing: border-box !important;
+}
+
+/* Fallback selector: mark parent wrapper divs with class 'full-row' to span full grid row */
+.form-grid > div.full-row {
+	grid-column: 1 / -1 !important;
+}
+
 /* =====================================================
    BUTTONS
    ===================================================== */
