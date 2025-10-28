@@ -56,7 +56,7 @@
         <input id="catalogoNombreQ" [(ngModel)]="nombreFiltro" (input)="filtrarCatalogoPorCampos()" placeholder="Ej: ácido acético" />
       </div>
       <div class="reset-cell">
-        <button type="button" class="btn-reset-filtros" (click)="resetCatalogoPaginado()" aria-label="Reiniciar filtros">Reiniciar filtros</button>
+        <button type="button" class="btn-load-more" (click)="cargarMasCatalogo()" [disabled]="catalogoResultados.length >= (catalogoTotal || 0)" aria-label="Cargar más reactivos">Cargar más reactivos</button>
       </div>
     </div>
 
@@ -455,26 +455,57 @@
             
             @if (isExpanded(r)) {
               <div class="card-expand" (click)="$event.stopPropagation()">
-                <div class="expand-grid">
-                  <div class="section-label">Detalle</div>
-                  <div><strong>Referencia:</strong> {{ r.referencia || '—' }}</div>
-                  <div><strong>CAS:</strong> {{ r.cas || '—' }}</div>
+                <div class="details-grid">
+                  <div class="detail-card">
+                    <div class="detail-label">Referencia</div>
+                    <div class="detail-value">{{ r.referencia || '—' }}</div>
+                  </div>
 
-                  <div class="section-label">Presentación y unidad</div>
-                  <div><strong>Presentación:</strong> {{ r.presentacion || '—' }}</div>
-                  <div><strong>Cant. x presentación:</strong> {{ r.presentacion_cant || '—' }}</div>
-                  <div><strong>Unidad:</strong> {{ obtenerNombreUnidad(r.unidad_id) }}</div>
+                  <div class="detail-card">
+                    <div class="detail-label">CAS</div>
+                    <div class="detail-value">{{ r.cas || '—' }}</div>
+                  </div>
 
-                  <div class="section-label">Manejo y almacenamiento</div>
-                  <div><strong>Almacenamiento:</strong> {{ obtenerNombreAlmacenamiento(r.almacenamiento_id) }}</div>
-                  <div><strong>Recipiente:</strong> {{ obtenerNombreTipoRecipiente(r.tipo_recipiente_id) }}</div>
+                  <div class="detail-card">
+                    <div class="detail-label">Presentación</div>
+                    <div class="detail-value">{{ r.presentacion || '—' }}</div>
+                  </div>
 
-                  <div class="section-label">Fechas</div>
-                  <div><strong>Adquisición:</strong> {{ formatearFecha(r.fecha_adquisicion) }}</div>
-                  <div><strong>Vencimiento:</strong> {{ formatearFecha(r.fecha_vencimiento) }}</div>
+                  <div class="detail-card">
+                    <div class="detail-label">Cant. x presentación</div>
+                    <div class="detail-value">{{ r.presentacion_cant || '—' }}</div>
+                  </div>
+
+                  <div class="detail-card">
+                    <div class="detail-label">Unidad</div>
+                    <div class="detail-value">{{ obtenerNombreUnidad(r.unidad_id) }}</div>
+                  </div>
+
+                  <div class="detail-card">
+                    <div class="detail-label">Almacenamiento</div>
+                    <div class="detail-value">{{ obtenerNombreAlmacenamiento(r.almacenamiento_id) }}</div>
+                  </div>
+
+                  <div class="detail-card">
+                    <div class="detail-label">Recipiente</div>
+                    <div class="detail-value">{{ obtenerNombreTipoRecipiente(r.tipo_recipiente_id) }}</div>
+                  </div>
+
+                  <div class="detail-card">
+                    <div class="detail-label">Adquisición</div>
+                    <div class="detail-value">{{ formatearFecha(r.fecha_adquisicion) }}</div>
+                  </div>
+
+                  <div class="detail-card">
+                    <div class="detail-label">Vencimiento</div>
+                    <div class="detail-value">{{ formatearFecha(r.fecha_vencimiento) }}</div>
+                  </div>
 
                   @if (r.observaciones) {
-                    <div class="full"><strong>Observaciones:</strong> {{ r.observaciones }}</div>
+                    <div class="detail-card detail-full">
+                      <div class="detail-label">Observaciones</div>
+                      <div class="detail-value">{{ r.observaciones }}</div>
+                    </div>
                   }
                 </div>
               </div>

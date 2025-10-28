@@ -1,4 +1,4 @@
-import { Component, signal, effect } from '@angular/core';
+import { Component, signal, effect, OnDestroy } from '@angular/core';
 import { RouterOutlet, Router, RouterModule } from '@angular/router';
 import { CommonModule, NgIf } from '@angular/common';
 import { authService, authUser, authInitializing } from './services/auth.service';
@@ -10,11 +10,12 @@ import { authService, authUser, authInitializing } from './services/auth.service
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
+export class App implements OnDestroy {
   protected readonly title = signal('app-lab');
   // expose the authUser signal to template
   readonly user = authUser;
   readonly isLoggingOut = signal(false);
+  readonly menuOpen = signal(false);
   readonly currentYear = new Date().getFullYear();
 
   constructor(private router: Router) {
@@ -23,6 +24,8 @@ export class App {
     // initialization so the UI will update when the call completes.
     void this.initAuth();
     this.constructorEffectSetup();
+    // Close user menu when clicking outside
+    document.addEventListener('click', this.handleDocumentClick, true);
   }
 
   private async initAuth() {
@@ -48,6 +51,7 @@ export class App {
 
   logout() {
     authService.logout();
+    this.menuOpen.set(false);
     this.router.navigate(['/login']);
   }
 
@@ -62,6 +66,42 @@ export class App {
     } finally {
       this.isLoggingOut.set(false);
     }
+  }
+
+  toggleUserMenu() {
+    this.menuOpen.set(!this.menuOpen());
+  }
+
+  // Derive a short display name from the user's email (part before @)
+  userShortName(): string {
+    try {
+      const email = this.user()?.email ?? '';
+      if (!email) return '';
+      const local = String(email).split('@')[0] || '';
+      // replace dots/underscores with spaces and capitalize words
+      return local.replace(/[._]/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+    } catch (e) {
+      return '';
+    }
+  }
+
+  // Document click handler to close menu when clicking outside .user-menu
+  private handleDocumentClick = (ev: Event) => {
+    try {
+      const menu = document.querySelector('#app-header .user-menu');
+      if (!menu) return;
+      const target = ev.target as Node | null;
+      if (!target) return;
+      if (!menu.contains(target)) {
+        this.menuOpen.set(false);
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  ngOnDestroy(): void {
+    try { document.removeEventListener('click', this.handleDocumentClick, true); } catch (e) {}
   }
 
   showFooter(): boolean {

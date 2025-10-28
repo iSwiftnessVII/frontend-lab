@@ -14,17 +14,39 @@
     </div>
 
     <div class="user-menu">
-      <i class="fas fa-user-circle"></i>
-      <span>{{ user()?.email }}</span>
-      <button
-        class="logout-btn"
-        (click)="onLogout()"
-        [disabled]="isLoggingOut()"
-        title="Cerrar sesión"
-      >
-        <i class="fas fa-sign-out-alt" *ngIf="!isLoggingOut()"></i>
-        {{ isLoggingOut() ? 'Cerrando sesión…' : 'Salir' }}
+      <!-- User initial circle -->
+      <button type="button" class="user-initial" [class.active]="menuOpen()" aria-haspopup="true" [attr.aria-expanded]="menuOpen()" (click)="toggleUserMenu()">
+        {{ (user()?.email || '')[0] | uppercase }}
       </button>
+
+  <!-- Dropdown menu (present but toggled via .open for animation) -->
+  <div class="user-dropdown gh-style" [class.open]="menuOpen()" [attr.aria-hidden]="!menuOpen()" role="menu">
+        <!-- Profile header: larger area showing name and email -->
+        <div class="profile-header">
+          <div class="profile-initial">{{ (user()?.email || '')[0] | uppercase }}</div>
+          <div class="profile-meta">
+            <div class="profile-name">{{ userShortName() }}</div>
+            <div class="profile-email">{{ user()?.email }}</div>
+          </div>
+        </div>
+
+        <div class="profile-actions">
+          <button type="button" class="user-dropdown-item" role="menuitem">
+            <i class="fas fa-user" aria-hidden="true"></i>
+            <span>Perfil</span>
+          </button>
+          <button type="button" class="user-dropdown-item" role="menuitem">
+            <i class="fas fa-cog" aria-hidden="true"></i>
+            <span>Opciones</span>
+          </button>
+        </div>
+
+        <hr class="dropdown-divider"/>
+        <button type="button" class="user-dropdown-item logout" (click)="onLogout()" [disabled]="isLoggingOut()" role="menuitem">
+          <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+          <span>{{ isLoggingOut() ? 'Cerrando sesión…' : 'Salir' }}</span>
+        </button>
+  </div>
     </div>
   </div>
 </header>

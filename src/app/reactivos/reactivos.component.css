@@ -255,6 +255,68 @@ body {
 .reactivo-card .expand-grid .full { grid-column: 1 / -1; }
 .reactivo-card .expand-grid .section-label { grid-column: 1 / -1; font-weight:700; font-size:0.85rem; color:#333; margin-top:6px; padding-top:6px; border-top:1px dashed var(--border-gray); }
 
+/* New detail cards style for expanded reactivo (compact cards with small label strip) */
+.details-grid {
+    display: grid;
+    /* increase min width so cards appear longer on desktop while staying responsive */
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+}
+.detail-card {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-gray);
+    box-shadow: 0 8px 18px rgba(2,6,23,0.06);
+}
+.detail-card .detail-label {
+    background: #e9e9ea;
+    padding: 6px 8px;
+    font-size: 0.72rem; /* ligeramente más pequeña */
+    color: #6b7280;
+    text-align: center;
+}
+.detail-card .detail-value {
+    padding: 8px 10px 10px 10px;
+    font-weight: 400; /* quitar negrilla */
+    font-size: 0.86rem; /* más pequeña */
+    color: #0f172a;
+    text-align: center;
+}
+.detail-full {
+    grid-column: 1 / -1;
+    background: #fff;
+    border-radius: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-gray);
+    box-shadow: 0 6px 12px rgba(2,6,23,0.04);
+    font-size: 0.84rem; /* reducir tamaño de observaciones */
+    color: var(--text-gray);
+}
+
+/* Make Observaciones behave like the other detail cards but with left-aligned, wrapped text */
+.detail-card.detail-full .detail-value {
+    text-align: left;
+    white-space: pre-wrap; /* preserve line breaks */
+    word-break: break-word;
+    font-size: 0.86rem;
+    padding: 10px 12px;
+    font-weight: 400;
+}
+.detail-card.detail-full .detail-label {
+    text-align: left; /* label aligned left for observations */
+    padding-left: 12px;
+}
+
+@media (max-width: 900px) {
+    /* on medium screens allow two columns */
+    .details-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+    /* stack on narrow screens */
+    .details-grid { grid-template-columns: 1fr; }
+}
+
 .reactivo-card .tags { 
 	display: flex; 
     flex-wrap: wrap; 
@@ -1208,6 +1270,25 @@ article.catalog-card .card-top .pdf-actions .pdf-group .pdf-btn,
 .autocomplete-item:hover { background: var(--light-gray); }
 .autocomplete-item .code { font-weight: 700; color: #0b5bd3; }
 .autocomplete-item .name { color: #333; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Force white background and borderless buttons for the autocomplete dropdown
+   to override the global button styles (primary green) used elsewhere. */
+.autocomplete-panel {
+    background: #ffffff !important;
+}
+.autocomplete-panel .autocomplete-item {
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #0b1720 !important; /* dark text */
+}
+.autocomplete-panel .autocomplete-item:hover {
+    background: var(--light-gray) !important;
+}
+.autocomplete-panel .autocomplete-item:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
 
 /* Sugerencias compacto debajo de filtros */
 .catalogo-suggestions-wrap { max-height: 0; overflow: clip; transition: max-height .25s ease, opacity .25s ease; opacity: 0; }

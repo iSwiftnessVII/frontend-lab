@@ -105,6 +105,127 @@ body.auth-page .app-header {
 	font-size: 1.5rem;
 }
 
+/* Initial circle that replaces email and icon */
+.user-menu { position: relative; }
+.user-initial {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--primary-white);
+	/* letter painted with the main button color */
+	color: var(--primary-turquoise);
+	border: 2px solid rgba(255,255,255,0.08);
+	font-weight: 700;
+	cursor: pointer;
+	box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+	transition: transform 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+.user-initial:hover { transform: none; }
+.user-initial.active { transform: scale(0.98); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+
+/* Dropdown menu under the initial */
+.user-dropdown {
+	position: absolute;
+	right: 0;
+	top: calc(100% + 6px);
+	background: #fff;
+	border: 1px solid var(--border-gray);
+	border-radius: 8px;
+	box-shadow: 0 8px 20px rgba(2,6,23,0.10);
+	z-index: 1500;
+	min-width: 130px; /* smaller */
+	padding: 4px; /* tighter */
+	font-size: 0.92rem;
+	/* start hidden for animation */
+	opacity: 0;
+	transform: translateY(-6px) scale(0.995);
+	pointer-events: none;
+	visibility: hidden;
+	transition: opacity 180ms ease, transform 180ms cubic-bezier(.2,.9,.2,1);
+}
+.user-dropdown.open {
+	opacity: 1;
+	transform: translateY(0) scale(1);
+	pointer-events: auto;
+	visibility: visible;
+}
+.user-dropdown-item {
+	width: 100%;
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	padding: 6px 8px; /* smaller */
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	color: var(--text-gray);
+	font-weight: 600;
+	border-radius: 6px;
+	transition: background 120ms ease, color 120ms ease;
+}
+.user-dropdown-item:hover { background: var(--light-gray); }
+
+/* GitHub-like compact menu tweaks */
+.user-dropdown.gh-style {
+	min-width: 320px; /* increase so profile header fits comfortably */
+	padding: 10px 12px; /* a bit more breathing room */
+	border-radius: 12px;
+	box-shadow: 0 10px 30px rgba(2,6,23,0.14);
+}
+.user-dropdown.gh-style .user-dropdown-item { padding: 8px 12px; font-weight:600; color: #222; }
+.user-dropdown.gh-style .user-dropdown-item { padding: 8px 12px; font-weight:600; color: #222; font-size: 0.88rem; }
+.user-dropdown.gh-style .user-dropdown-item i { width:16px; text-align:center; color: var(--primary-blue); font-size: 0.85rem; }
+.user-dropdown.gh-style .user-dropdown-item:nth-child(2) { margin-bottom: 8px; }
+.dropdown-divider { height:1px; border:0; background: var(--border-gray); margin:10px 0 6px 0; }
+.user-dropdown.gh-style .user-dropdown-item.logout { color: #b91c1c; }
+.user-dropdown.gh-style .user-dropdown-item.logout i { color: #b91c1c; }
+
+/* Profile header inside dropdown: bigger area with name and email */
+.profile-header {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	padding: 10px 12px;
+	border-radius: 10px;
+	background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01));
+	margin-bottom: 6px;
+}
+.profile-initial {
+	width: 56px; /* slightly larger visual weight */
+	height: 56px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--primary-white);
+	color: var(--primary-turquoise);
+	font-weight: 800;
+	font-size: 1.15rem;
+	border: 2px solid rgba(0,0,0,0.04);
+}
+.profile-meta {
+	display: flex;
+	flex-direction: column;
+	min-width: 160px; /* allow more room for long emails */
+}
+.profile-name {
+	font-weight: 700;
+	color: #0f172a; /* darker */
+	font-size: 0.88rem; /* reduced as requested */
+	line-height: 1.1;
+}
+.profile-email {
+	font-size: 0.76rem; /* slightly smaller */
+	color: var(--text-gray);
+	margin-top: 2px;
+	word-break: break-all;
+}
+
+.profile-actions { display: flex; flex-direction: column; gap: 4px; }
+
 /* Logout button */
 .logout-btn {
 	background: transparent;
