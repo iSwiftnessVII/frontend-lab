@@ -461,6 +461,11 @@ export class ReactivosComponent implements OnInit {
   async onSubirHojaCatalogo(ev: any, codigo: string) {
     const f = ev?.target?.files?.[0];
     if (!f) return;
+    if (f && f.type !== 'application/pdf' && !String(f.name || '').toLowerCase().endsWith('.pdf')) {
+      this.showToast('Seleccione un archivo PDF');
+      if (ev?.target) ev.target.value = '';
+      return;
+    }
     try {
       await reactivosService.subirHojaSeguridad(codigo, f);
     this.showToast(`Hoja de seguridad subida para ${codigo}`);
@@ -485,6 +490,11 @@ export class ReactivosComponent implements OnInit {
   async onSubirCertCatalogo(ev: any, codigo: string) {
     const f = ev?.target?.files?.[0];
     if (!f) return;
+    if (f && f.type !== 'application/pdf' && !String(f.name || '').toLowerCase().endsWith('.pdf')) {
+      this.showToast('Seleccione un archivo PDF');
+      if (ev?.target) ev.target.value = '';
+      return;
+    }
     try {
       await reactivosService.subirCertAnalisis(codigo, f);
     this.showToast(`Certificado de análisis subido para ${codigo}`);
@@ -612,30 +622,49 @@ export class ReactivosComponent implements OnInit {
   }
 
   async onVerHojaCatalogo(codigo: string) {
+    // Open a blank window synchronously to avoid popup blockers, then set location after we have the URL
+    const win = window.open('', '_blank');
     try {
       const r = await reactivosService.obtenerHojaSeguridad(codigo);
       const url = r?.url;
       if (url) {
-        window.open(url, '_blank');
+        try {
+          if (win) win.location.href = url;
+          else window.open(url, '_blank');
+        } catch (err) {
+          // Fallback: if assigning location fails, try to open normally
+          window.open(url, '_blank');
+        }
       } else {
-        this.catalogoMsg = 'Hoja de seguridad no disponible';
+        if (win) win.close();
+        this.showToast('Hoja de seguridad no disponible');
       }
     } catch (e: any) {
-      this.catalogoMsg = e?.message || 'Hoja de seguridad no disponible';
+      if (win) win.close();
+      this.showToast(e?.message || 'Hoja de seguridad no disponible');
     }
   }
 
   async onVerCertCatalogo(codigo: string) {
+    // Open a blank window synchronously to avoid popup blockers, then set location after we have the URL
+    const win = window.open('', '_blank');
     try {
       const r = await reactivosService.obtenerCertAnalisis(codigo);
       const url = r?.url;
       if (url) {
-        window.open(url, '_blank');
+        try {
+          if (win) win.location.href = url;
+          else window.open(url, '_blank');
+        } catch (err) {
+          window.open(url, '_blank');
+        }
       } else {
-        this.catalogoMsg = 'Certificado de análisis no disponible';
+        if (win) win.close();
+        this.showToast('Certificado de análisis no disponible');
       }
     } catch (e: any) {
-      this.catalogoMsg = e?.message || 'Certificado de análisis no disponible';
+      if (win) win.close();
+      this.showToast(e?.message || 'Certificado de análisis no disponible');
     }
   }
 
@@ -926,10 +955,22 @@ export class ReactivosComponent implements OnInit {
   // Handlers for file inputs in reactivo creation form
   onSdsSelected(ev: any) {
     const f = ev?.target?.files?.[0];
+    if (f && f.type !== 'application/pdf' && !String(f.name || '').toLowerCase().endsWith('.pdf')) {
+      this.showToast('Seleccione un archivo PDF');
+      if (ev?.target) ev.target.value = '';
+      this.reactivoSdsFile = null;
+      return;
+    }
     this.reactivoSdsFile = f || null;
   }
   onCoaSelected(ev: any) {
     const f = ev?.target?.files?.[0];
+    if (f && f.type !== 'application/pdf' && !String(f.name || '').toLowerCase().endsWith('.pdf')) {
+      this.showToast('Seleccione un archivo PDF');
+      if (ev?.target) ev.target.value = '';
+      this.reactivoCoaFile = null;
+      return;
+    }
     this.reactivoCoaFile = f || null;
   }
 
