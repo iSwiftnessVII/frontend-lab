@@ -1,6 +1,6 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectorRef } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { CommonModule, NgIf } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService } from '../services/auth.service';
@@ -13,7 +13,7 @@ import { reactivosService } from '../services/reactivos.service';
   selector: 'app-reactivos',
   templateUrl: './reactivos.component.html',
   styleUrls: ['./reactivos.component.css'],
-  imports: [CommonModule, NgIf, FormsModule, RouterModule]
+  imports: [CommonModule, NgIf, NgFor, FormsModule, RouterModule]
 })
 
 export class ReactivosComponent implements OnInit {
@@ -128,14 +128,34 @@ export class ReactivosComponent implements OnInit {
 
   // Estado de disponibilidad de PDFs por código
   pdfStatus: { [codigo: string]: { hoja: boolean | null; cert: boolean | null } } = {};
+  // Toast ephemeral message (used instead of catalogoMsg for uploads)
+  toastMsg: string = '';
+  private toastTimeout: any = null;
   // Helper para actualizar estado PDF y forzar cambio de referencia
   private setPdfStatus(codigo: string, changes: Partial<{ hoja: boolean | null; cert: boolean | null }>) {
     const prev = this.pdfStatus[codigo] || { hoja: null, cert: null };
     this.pdfStatus = { ...this.pdfStatus, [codigo]: { ...prev, ...changes } };
     this.persistPdfStatus();
+    // Force change detection so badges update as soon as status changes
+    try { this.cdr.detectChanges(); } catch (e) { /* non-fatal */ }
   }
 
-  constructor(private sanitizer: DomSanitizer) {}
+  private showToast(msg: string, duration = 3000) {
+    // Clear existing
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+      this.toastTimeout = null;
+    }
+    this.toastMsg = msg;
+    try { this.cdr.detectChanges(); } catch (e) {}
+    this.toastTimeout = setTimeout(() => {
+      this.toastMsg = '';
+      try { this.cdr.detectChanges(); } catch (e) {}
+      this.toastTimeout = null;
+    }, duration);
+  }
+
+  constructor(private sanitizer: DomSanitizer, private cdr: ChangeDetectorRef) {}
 
   async init() {
     try {
@@ -443,10 +463,10 @@ export class ReactivosComponent implements OnInit {
     if (!f) return;
     try {
       await reactivosService.subirHojaSeguridad(codigo, f);
-      this.catalogoMsg = `Hoja de seguridad subida para ${codigo}`;
-  this.setPdfStatus(codigo, { hoja: true });
+    this.showToast(`Hoja de seguridad subida para ${codigo}`);
+    this.setPdfStatus(codigo, { hoja: true });
     } catch (e: any) {
-      this.catalogoMsg = e?.message || 'Error subiendo hoja de seguridad';
+  this.showToast(e?.message || 'Error subiendo hoja de seguridad');
     } finally {
       if (ev?.target) ev.target.value = '';
     }
@@ -455,11 +475,11 @@ export class ReactivosComponent implements OnInit {
     if (!confirm('¿Eliminar hoja de seguridad?')) return;
     try {
       await reactivosService.eliminarHojaSeguridad(codigo);
-      this.catalogoMsg = `Hoja de seguridad eliminada para ${codigo}`;
-      this.setPdfStatus(codigo, { hoja: false });
+  this.showToast(`Hoja de seguridad eliminada para ${codigo}`);
+  this.setPdfStatus(codigo, { hoja: false });
     } catch (e: any) {
-      this.setPdfStatus(codigo, { hoja: false });
-      this.catalogoMsg = e?.message || 'Error eliminando hoja de seguridad';
+  this.setPdfStatus(codigo, { hoja: false });
+  this.showToast(e?.message || 'Error eliminando hoja de seguridad');
     }
   }
   async onSubirCertCatalogo(ev: any, codigo: string) {
@@ -467,10 +487,10 @@ export class ReactivosComponent implements OnInit {
     if (!f) return;
     try {
       await reactivosService.subirCertAnalisis(codigo, f);
-      this.catalogoMsg = `Certificado de análisis subido para ${codigo}`;
+    this.showToast(`Certificado de análisis subido para ${codigo}`);
   this.setPdfStatus(codigo, { cert: true });
     } catch (e: any) {
-      this.catalogoMsg = e?.message || 'Error subiendo certificado de análisis';
+  this.showToast(e?.message || 'Error subiendo certificado de análisis');
     } finally {
       if (ev?.target) ev.target.value = '';
     }
@@ -479,11 +499,11 @@ export class ReactivosComponent implements OnInit {
     if (!confirm('¿Eliminar certificado de análisis?')) return;
     try {
       await reactivosService.eliminarCertAnalisis(codigo);
-      this.catalogoMsg = `Certificado de análisis eliminado para ${codigo}`;
-      this.setPdfStatus(codigo, { cert: false });
+  this.showToast(`Certificado de análisis eliminado para ${codigo}`);
+  this.setPdfStatus(codigo, { cert: false });
     } catch (e: any) {
-      this.setPdfStatus(codigo, { cert: false });
-      this.catalogoMsg = e?.message || 'Error eliminando certificado de análisis';
+  this.setPdfStatus(codigo, { cert: false });
+  this.showToast(e?.message || 'Error eliminando certificado de análisis');
     }
   }
 
@@ -659,7 +679,8 @@ export class ReactivosComponent implements OnInit {
       const codigo = item.codigo;
       if (!codigo) continue;
       if (!this.pdfStatus[codigo]) {
-        this.pdfStatus[codigo] = { hoja: null, cert: null };
+        // Initialize via setter so persistence and change-detection happen
+        this.setPdfStatus(codigo, { hoja: null, cert: null });
         // Lanzar comprobaciones en paralelo (sin await secuencial bloqueante)
         this.checkPdfAvailability(codigo);
       }

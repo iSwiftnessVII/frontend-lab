@@ -1,12 +1,12 @@
 import { Component, signal, effect } from '@angular/core';
 import { RouterOutlet, Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf } from '@angular/common';
 import { authService, authUser, authInitializing } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterModule, CommonModule],
+  imports: [RouterOutlet, RouterModule, CommonModule, NgIf],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

@@ -65,6 +65,186 @@ body {
 	margin-left: 12px;
 }
 .reactivo-card .card-name { flex-direction: column; align-items: flex-start; gap: 4px; }
+
+/* Posicionar el bloque de botones PDF a la derecha y centrar verticalmente
+   dentro del contenedor .card-name. Reservamos espacio con padding-right
+   para evitar que el nombre se solape con los botones. */
+.reactivo-card .card-name {
+    position: relative; /* necesario para posicionar el bloque absoluto */
+    padding-right: 140px; /* espacio para los botones/etiquetas a la derecha */
+    border-radius: 8px; /* bordes curvos solicitados */
+    padding-left: 8px; /* espacio interior para el texto del nombre */
+}
+.reactivo-card .card-name .name-pdfs {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    gap: 0.8rem; /* un poco más de separación entre controles */
+    align-items: center;
+}
+.reactivo-card .card-name .name-pdfs .pdf-btn { /* tamaño y estilo para los botones cuadrados */
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04) inset;
+}
+.reactivo-card .card-name .name-pdfs .pdf-btn .icon { width: 18px; height: 18px; }
+.reactivo-card .card-name .name-pdfs .pdf-btn.view { background: #1f6fe0; color: #fff; border-color: #185ecf; }
+.reactivo-card .card-name .name-pdfs .pdf-btn.delete { background: #d11a1a; color: #fff; border-color: #b11212; }
+.reactivo-card .card-name .name-pdfs .pdf-btn.upload { background: #179b34; color: #fff; border-color: #12892b; }
+.reactivo-card .card-name .name-pdfs .pdf-btn:hover { transform: translateY(-1px); }
+.reactivo-card .card-name .pdf-availability {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 1px solid var(--border-gray);
+    background: #ffffff; /* fondo blanco solicitado */
+    color: var(--text-gray);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.03) inset;
+}
+.reactivo-card .card-name .pdf-availability.ok {
+    background: #ffffff; /* mantener fondo blanco */
+    color: #16a34a; /* texto verde */
+    border-color: #16a34a;
+}
+.reactivo-card .card-name .pdf-availability.fail {
+    background: #ffffff; /* mantener fondo blanco */
+    color: #ef4444; /* texto rojo */
+    border-color: #ef4444;
+}
+.reactivo-card .card-name .pdf-availability.loading {
+    background: #ffffff;
+    color: #6b7280;
+    border-style: dashed;
+}
+
+/* Encapsular cada grupo (SDS / CoA) en una caja blanca separada */
+.reactivo-card .card-name .name-pdfs .pdf-box {
+    background: #ffffff;
+    padding: 6px 8px;
+    border-radius: 8px;
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    border: 1px solid var(--border-gray);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+/* modifiers (pdf-sds / pdf-coa) are available if specific per-group tweaks are needed */
+
+
+/* Aplicar también a la vista de catálogo: asegurar que el contenedor del nombre
+   tenga bordes curvos y reserve espacio a la derecha para botones/etiquetas. */
+.catalog-card .card-name {
+    position: relative;
+    padding-right: 140px; /* mismo espacio reservado que en inventario */
+    border-radius: 8px;
+    padding-left: 8px;
+}
+.catalog-card .card-name .name-pdfs {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.catalog-card .card-name .name-pdfs .pdf-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+.catalog-card .card-name .name-pdfs .pdf-btn.view { background: #1f6fe0; color: #fff; border-color: #185ecf; }
+.catalog-card .card-name .name-pdfs .pdf-btn.delete { background: #d11a1a; color: #fff; border-color: #b11212; }
+.catalog-card .card-name .name-pdfs .pdf-btn.upload { background: #179b34; color: #fff; border-color: #12892b; }
+.catalog-card .card-name .name-pdfs .pdf-availability {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 1px solid var(--border-gray);
+    background: #ffffff; /* fondo blanco para catálogo también */
+    color: var(--text-gray);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.03) inset;
+}
+.catalog-card .card-name .name-pdfs .pdf-availability.ok {
+    background: #ffffff;
+    color: #16a34a;
+    border-color: #16a34a;
+}
+.catalog-card .card-name .name-pdfs .pdf-availability.fail {
+    background: #ffffff;
+    color: #ef4444;
+    border-color: #ef4444;
+}
+.catalog-card .card-name .name-pdfs .pdf-availability.loading {
+    background: #ffffff;
+    color: #6b7280;
+    border-style: dashed;
+}
+
+/* Equivalente para la vista de catálogo */
+.catalog-card .card-name .name-pdfs .pdf-box {
+    background: #ffffff;
+    padding: 6px 8px;
+    border-radius: 8px;
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    border: 1px solid var(--border-gray);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+/* Separación adicional entre las dos cajas para mayor claridad */
+.reactivo-card .card-name .name-pdfs { gap: 0.6rem; }
+.catalog-card .card-name .name-pdfs { gap: 0.4rem; }
+
+/* Ajustes responsivos: reducir tamaño de botones y padding en pantallas pequeñas */
+@media (max-width: 520px) {
+    .reactivo-card .card-name { padding-right: 100px; }
+    .reactivo-card .card-name .name-pdfs .pdf-btn { width: 30px; height: 30px; border-radius:6px; }
+    .reactivo-card .card-name .name-pdfs .pdf-box { padding: 4px 6px; }
+}
+
+/* Toast styling (bottom-right) */
+.toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    background: #ffffff;
+    color: #0f172a;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-gray);
+    box-shadow: 0 6px 18px rgba(2,6,23,0.12);
+    z-index: 2000;
+    font-weight: 600;
+}
 .reactivo-card .card-name .name-line { font-size: 1.05rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 .reactivo-card .card-name .meta-line { display:flex; flex-wrap: wrap; gap: 6px; opacity: 0.95; }
 .reactivo-card .card-name .meta-line .chip { background: rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); padding: 2px 8px; border-radius: 999px; font-weight: 600; font-size: 0.8rem; }
