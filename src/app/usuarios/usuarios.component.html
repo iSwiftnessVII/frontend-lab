@@ -6,37 +6,22 @@
         <form class="form-grid" (submit)="crearUsuario($event)">
             <div>
                 <label for="email">Email *</label>
-                <input 
-                    id="email" 
-                    type="email" 
-                    [(ngModel)]="email" 
-                    name="email" 
-                    required
-                    placeholder="usuario@ejemplo.com" />
+                <input id="email" type="email" [(ngModel)]="email" name="email" required placeholder="usuario@ejemplo.com" />
             </div>
-            
+
             <div>
                 <label for="contrasena">Contraseña *</label>
-                <input 
-                    id="contrasena" 
-                    type="password" 
-                    [(ngModel)]="contrasena" 
-                    name="contrasena" 
-                    required
-                    minlength="6"
-                    placeholder="Mínimo 6 caracteres" />
+                <input id="contrasena" type="password" [(ngModel)]="contrasena" name="contrasena" required minlength="6" placeholder="Mínimo 6 caracteres" />
             </div>
-            
+
             <div>
                 <label for="rol_id">Rol *</label>
                 <select id="rol_id" [(ngModel)]="rol_id" name="rol_id" required>
                     <option value="">Seleccionar rol</option>
-                    <option *ngFor="let rol of roles" [value]="rol.id_rol">
-                        {{ rol.nombre }}
-                    </option>
+                    <option *ngFor="let rol of roles" [value]="rol.id_rol">{{ rol.nombre }}</option>
                 </select>
             </div>
-            
+
             <div class="form-actions">
                 <button type="submit" class="btn-primary">
                     <i class="fas fa-user-plus"></i>
@@ -44,12 +29,8 @@
                 </button>
             </div>
         </form>
-        
-        <p *ngIf="mensaje" [class]="mensaje.includes('✅') ? 'success-message' : 'error-message'">
-            {{ mensaje }}
-        </p>
 
-        
+        <p *ngIf="mensaje" [class]="mensaje.includes('✅') ? 'success-message' : 'error-message'">{{ mensaje }}</p>
     </section>
 
     <!-- Lista de Usuarios -->
@@ -58,20 +39,14 @@
         <div class="filters-row">
             <div>
                 <label for="emailQ">Buscar por email</label>
-                <input 
-                    id="emailQ" 
-                    [(ngModel)]="emailQ" 
-                    (input)="filtrarUsuarios()"
-                    placeholder="usuario@ejemplo.com" />
+                <input id="emailQ" [(ngModel)]="emailQ" (input)="filtrarUsuarios()" placeholder="usuario@ejemplo.com" />
             </div>
-            
+
             <div>
                 <label for="rolQ">Filtrar por rol</label>
                 <select id="rolQ" [(ngModel)]="rolQ" (change)="filtrarUsuarios()">
                     <option value="">Todos los roles</option>
-                    <option *ngFor="let rol of roles" [value]="rol.id_rol">
-                        {{ rol.nombre }}
-                    </option>
+                    <option *ngFor="let rol of roles" [value]="rol.id_rol">{{ rol.nombre }}</option>
                 </select>
             </div>
 
@@ -85,55 +60,44 @@
             </div>
 
             <div class="reset-cell">
-                <button type="button" class="btn-reset-filtros" (click)="resetFiltros()">
-                    <i class="fas fa-redo"></i>
-                    Reiniciar
-                </button>
+                <button type="button" class="btn-reset-filtros" (click)="resetFiltros()"><i class="fas fa-redo"></i> Reiniciar</button>
             </div>
         </div>
 
         <!-- Estadísticas -->
-        <div class="stats-grid" *ngIf="usuarios.length">
+        <div class="stats-grid" *ngIf="usuariosCount">
             <div class="stat-card">
-                <div class="stat-icon total">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value">{{ usuarios.length }}</div>
-                    <div class="stat-label">Total Usuarios</div>
-                </div>
+                <div class="stat-icon total"><i class="fas fa-users"></i></div>
+                <div class="stat-content"><div class="stat-value">{{ usuariosCount }}</div><div class="stat-label">Total Usuarios</div></div>
             </div>
-
             <div class="stat-card">
-                <div class="stat-icon activo">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value">{{ contarPorEstado('ACTIVO') }}</div>
-                    <div class="stat-label">Activos</div>
-                </div>
+                <div class="stat-icon activo"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-content"><div class="stat-value">{{ contarPorEstado('ACTIVO') }}</div><div class="stat-label">Activos</div></div>
             </div>
-
             <div class="stat-card">
-                <div class="stat-icon inactivo">
-                    <i class="fas fa-ban"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value">{{ contarPorEstado('INACTIVO') }}</div>
-                    <div class="stat-label">Inactivos</div>
-                </div>
+                <div class="stat-icon inactivo"><i class="fas fa-ban"></i></div>
+                <div class="stat-content"><div class="stat-value">{{ contarPorEstado('INACTIVO') }}</div><div class="stat-label">Inactivos</div></div>
             </div>
         </div>
 
         <!-- Tabla de Usuarios -->
-        <div class="table-container">
-            <p *ngIf="cargando" class="loading-message">
-                <i class="fas fa-spinner fa-spin"></i>
-                Cargando usuarios...
-            </p>
+        <div class="table-container" [class.loading]="cargando">
+            <!-- Skeleton placeholder while usuarios are loading -->
+            <div class="table-skeleton" *ngIf="cargando" aria-hidden="true">
+                <div class="skeleton-row" *ngFor="let _ of [1,2,3,4,5]">
+                    <div class="skeleton-cell short"></div>
+                    <div class="skeleton-cell"></div>
+                    <div class="skeleton-cell"></div>
+                    <div class="skeleton-cell short"></div>
+                    <div class="skeleton-cell medium"></div>
+                    <div class="skeleton-cell actions"></div>
+                </div>
+            </div>
 
-            <table class="usuarios-table" *ngIf="!cargando && usuariosFiltrados.length">
-                <caption>Listado de Usuarios del Sistema</caption>
+            <p *ngIf="cargando" class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando usuarios...</p>
+
+            <table class="usuarios-table" *ngIf="!cargando && usuariosFiltradosList.length">
+                
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -145,60 +109,22 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let usuario of usuariosFiltrados" [class.usuario-inactivo]="usuario.estado === 'INACTIVO'">
+                    <tr *ngFor="let usuario of usuariosFiltradosList" [class.usuario-inactivo]="usuario.estado === 'INACTIVO'">
                         <td>{{ usuario.id_usuario }}</td>
-                        <td>
-                            <i class="fas fa-user-tie" style="color: #3182ce; margin-right: 0.5rem;"></i>
-                            {{ usuario.email }}
-                        </td>
-                        <td>
-                            <span class="role-badge">
-                                {{ usuario.rol_nombre || 'Sin rol' }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="estado-badge" [class]="'estado-' + usuario.estado">
-                                <i [class]="usuario.estado === 'ACTIVO' ? 'fas fa-check-circle' : 'fas fa-ban'"></i>
-                                {{ usuario.estado }}
-                            </span>
-                        </td>
+                        <td><i class="fas fa-user-tie" style="color: #3182ce; margin-right: 0.5rem;"></i> {{ usuario.email }}</td>
+                        <td><span class="role-badge">{{ usuario.rol_nombre || 'Sin rol' }}</span></td>
+                        <td><span class="estado-badge" [class]="'estado-' + usuario.estado"><i [class]="usuario.estado === 'ACTIVO' ? 'fas fa-check-circle' : 'fas fa-ban'"></i> {{ usuario.estado }}</span></td>
                         <td>{{ formatearFecha(usuario.created_at) }}</td>
                         <td class="actions-cell">
-                            <!-- Cambiar estado -->
-                            <button 
-                                *ngIf="usuario.estado === 'ACTIVO'"
-                                type="button" 
-                                class="btn-desactivar"
-                                (click)="cambiarEstado(usuario, 'INACTIVO')"
-                                title="Desactivar usuario">
-                                <i class="fas fa-user-lock"></i>
-                            </button>
-                            <button 
-                                *ngIf="usuario.estado === 'INACTIVO'"
-                                type="button" 
-                                class="btn-activar"
-                                (click)="cambiarEstado(usuario, 'ACTIVO')"
-                                title="Activar usuario">
-                                <i class="fas fa-user-check"></i>
-                            </button>
-
-                            <!-- Eliminar -->
-                            <button 
-                                type="button" 
-                                class="btn-delete"
-                                (click)="eliminarUsuario(usuario.id_usuario)"
-                                title="Eliminar usuario">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <button *ngIf="usuario.estado === 'ACTIVO'" type="button" class="btn-desactivar" (click)="cambiarEstado(usuario, 'INACTIVO')" title="Desactivar usuario"><i class="fas fa-user-lock"></i></button>
+                            <button *ngIf="usuario.estado === 'INACTIVO'" type="button" class="btn-activar" (click)="cambiarEstado(usuario, 'ACTIVO')" title="Activar usuario"><i class="fas fa-user-check"></i></button>
+                            <button type="button" class="btn-delete" (click)="eliminarUsuario(usuario.id_usuario)" title="Eliminar usuario"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 </tbody>
             </table>
 
-            <p *ngIf="!cargando && !usuariosFiltrados.length" class="empty-message">
-                <i class="fas fa-user-slash"></i>
-                No se encontraron usuarios
-            </p>
+            <p *ngIf="!cargando && !usuariosFiltradosList.length" class="empty-message"><i class="fas fa-user-slash"></i> No se encontraron usuarios</p>
         </div>
     </section>
 

@@ -35,14 +35,17 @@ html, body {
 	margin: 0;
 	padding: 0;
 	height: 100%;
+	/* Layout: make body a column so footer can stay at bottom even when content is small */
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
 	width: 100%;
 	overflow-x: hidden;
 	box-sizing: border-box;
 }
 *, *::before, *::after { box-sizing: inherit; }
 
-/* Ocultar header/nav global en páginas de autenticación */
-body.auth-page .header,
+/* Ocultar nav global en páginas de autenticación (header handled in app.css) */
 body.auth-page .nav-menu {
 	display: none !important;
 }
@@ -195,6 +198,25 @@ body.auth-page .container {
 	background: linear-gradient(to right, rgba(0, 184, 181, 0.02), transparent);
 }
 
+/* Position form validation messages so they don't push layout when shown.
+	 The .form-group wrapper will act as positioning context and the .field-error
+	 is absolutely positioned below the input. This keeps the space stable when
+	 messages appear or disappear. */
+.form-group { position: relative; }
+.field-error,
+.field-error[role="alert"] {
+	position: absolute;
+	left: 0;
+	top: 100%; /* directly below the input/label area */
+	margin-top: 6px;
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+/* Optional: keep a small reserved height to avoid visual jump in very tight layouts */
+.form-group { padding-bottom: 1.25rem; }
+
 .liba-theme input:hover:not(:focus),
 .liba-theme select:hover:not(:focus),
 .liba-theme textarea:hover:not(:focus) {
@@ -219,6 +241,48 @@ body.auth-page .container {
 	display: block !important;
 	box-sizing: border-box !important;
 }
+
+/* =====================================================
+	 PAGE LAYOUT UNIFICATION & ENTRY ANIMATIONS
+	 Apply consistent header/nav sizing and replicate the solicitudes
+	 entry animation for all sections (h2/h3 + section).
+	 ===================================================== */
+
+@keyframes libaFadeIn {
+	from { opacity: 0; transform: translateY(16px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes libaSlideInLeft {
+	from { opacity: 0; transform: translateX(-18px); }
+	to { opacity: 1; transform: translateX(0); }
+}
+
+/* Apply to all liba-theme pages so insumos, usuarios, reactivos, solicitudes behave equally */
+.liba-theme section { animation: libaFadeIn 420ms ease; }
+.liba-theme h2, .liba-theme h3 { animation: libaSlideInLeft 480ms ease; }
+
+/* Navigation sizing/alignment is managed in app-specific CSS (app.css) to keep
+   header + nav together. Component-specific nav rules may still exist. */
+
+/* Ensure the main container has consistent top spacing to account for header+nav */
+.liba-theme .container { padding-top: 2rem !important; }
+
+/* Small tweak: ensure section titles have consistent top margin */
+.liba-theme h2 { margin-top: 0.5rem; margin-bottom: 1rem; }
+
+/* Ensure the first section title inside the container doesn't sit too high
+	(fix for pages where the title was visually higher than others). */
+.liba-theme .container > h2:first-child,
+.liba-theme .container > h2:first-of-type {
+  margin-top: 0; /* reset any collapsed margin */
+  padding-top: 0.25rem; /* small breathing room from top */
+}
+
+/* Hide any decorative top bar that might appear above the nav/menu in
+	certain pages (prevents the green line you mentioned). */
+.liba-theme section::before { display: none !important; }
+
 
 /* Fallback selector: mark parent wrapper divs with class 'full-row' to span full grid row */
 .form-grid > div.full-row {

@@ -2,7 +2,7 @@
    HEADER GLOBAL LIBA (nuevo)
    ===================================================== */
    
-.header {
+.app-header, #app-header, header#app-header {
 	background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%);
 	color: var(--primary-white);
 	padding: 1rem 2rem;
@@ -16,14 +16,61 @@
 	margin-top: 0;
 }
 
-.header-content {
-	display: flex;
+#app-header .header-content, .app-header .header-content, header#app-header .header-content {
+	display: flex;                /* single row layout */
 	align-items: center;
-	justify-content: space-between;
-	padding: 0 2rem;
+	justify-content: space-between; /* logo left, user-menu right */
+	/* align with main content width and padding */
 	max-width: 1400px;
 	margin: 0 auto;
+	padding: 0 2rem;
 }
+
+/* Hide the global header on auth pages (auth pages add body.auth-page) */
+body.auth-page #app-header,
+body.auth-page .app-header {
+	display: none !important;
+}
+
+.logo-section {
+  display: flex;                /* Para que el logo y el texto estén juntos en línea */
+  align-items: center;
+  gap: 15px;                    /* Espacio entre el logo y el texto */
+	justify-content: flex-start;
+}
+
+
+.text-section {
+  display: flex;
+  flex-direction: column;       /* Título y subtítulo en columna */
+}
+
+.header-title {
+	font-weight: 700;
+	font-size: 1.1rem;
+	color: var(--primary-white);
+	line-height: 1.1;
+}
+
+.header-subtitle {
+	font-size: 0.9rem;
+	color: rgba(255,255,255,0.9);
+	font-weight: 400;
+}
+
+
+
+/* Ensure the logo and title are left-aligned exactly where main content starts */
+.logo-section {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	justify-content: flex-start; /* force left alignment */
+}
+
+
+/* Make header paddings explicit and match .main-content so left edges align */
+
 
 .logo-section {
 	display: flex;
@@ -46,16 +93,6 @@
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.header-title {
-	font-size: 1.4rem;
-	font-weight: 600;
-	line-height: 1.2;
-}
-
-.header-subtitle {
-	font-size: 0.85rem;
-	opacity: 0.9;
-}
 
 .user-menu {
 	display: flex;
@@ -96,7 +133,8 @@
    ===================================================== */
 .nav-menu {
 	background: var(--primary-white);
-	padding: 0.5rem 2rem;
+	/* increase vertical padding so the menu visually matches section spacing */
+	padding: 1rem 2rem;
 	border-bottom: 1px solid var(--border-gray);
 	width: 100vw;
 	margin-left: calc(-50vw + 50%);
@@ -105,26 +143,42 @@
 
 .nav-content {
 	display: flex;
-	justify-content: flex-start;
+	/* distribute items evenly across the available content width */
+	justify-content: space-between;
 	align-items: center;
-	gap: 2rem;
+	gap: 2.5rem; /* slightly larger gap so items don't feel cramped */
 	padding: 0 2rem;
 	max-width: 1400px;
 	margin: 0 auto;
+	flex-wrap: wrap; /* allow items to wrap on smaller widths to avoid crowding */
 }
 
 .nav-item {
-	padding: 0.8rem 1.5rem;
+	padding: 0.9rem 1.6rem; /* match the slightly larger nav padding */
 	color: var(--text-gray);
 	text-decoration: none;
-	border-radius: 6px;
+	border-radius: 8px;
 	transition: all 0.3s ease;
 	display: flex;
 	align-items: center;
 	gap: 0.6rem;
 	cursor: pointer;
-	font-size: 0.95rem;
-	font-weight: 500;
+	font-size: 0.98rem;
+	font-weight: 600;
+	/* make each nav item take equal space so items distribute across the full width */
+	flex: 1 1 0;
+	justify-content: center;
+	text-align: center;
+}
+
+/* Ensure the main content aligns with header/nav widths and centers the page */
+.main-content {
+	max-width: 100%;
+	margin: 0 auto;
+	box-sizing: border-box;
+	/* allow main to grow and push footer to the bottom of the viewport
+	   even when router-outlet content is loading/animating */
+	flex: 1 1 auto;
 }
 
 .nav-item i {
@@ -167,12 +221,8 @@
    RESPONSIVE ADAPTATION
    ===================================================== */
 @media (max-width: 992px) {
-	.header-content {
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 1rem;
-		padding: 0 1rem;
-	}
+
+
 	.nav-content {
 		flex-wrap: wrap;
 		gap: 1rem;
@@ -182,9 +232,8 @@
 	.nav-item {
 		padding: 0.6rem 1rem;
 		font-size: 0.9rem;
-	}
-	.header-title {
-		font-size: 1.2rem;
+		/* on smaller screens allow natural width */
+		flex: 0 1 auto;
 	}
 }
 
@@ -193,9 +242,6 @@
 		width: 40px;
 		height: 40px;
 		font-size: 1rem;
-	}
-	.header-subtitle {
-		display: none;
 	}
 	.user-menu span {
 		display: none;

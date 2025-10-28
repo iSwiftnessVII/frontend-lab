@@ -1,0 +1,82 @@
+.usuarios-page h2 { margin-top: 0.5rem; margin-bottom: 1rem; }
+
+section { padding: 1.5rem; }
+
+/* Form grid like other pages */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  align-items: center;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+}
+
+/* Filters row consistent with other pages */
+.filters-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.stats-grid { display: flex; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+.stat-card { display:flex; gap:0.75rem; align-items:center; background: var(--primary-white); padding:0.8rem; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.04); }
+.stat-icon { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:rgba(0,184,181,0.08); color:var(--primary-blue); }
+.stat-value { font-weight:700; font-size:1.1rem; }
+
+.table-container { margin-top: 0.75rem; }
+.usuarios-table { width:100%; border-collapse: collapse; }
+.usuarios-table th, .usuarios-table td { padding: 0.75rem 0.5rem; text-align: left; border-bottom:1px solid var(--border-gray); }
+.actions-cell { display:flex; gap:0.5rem; justify-content:flex-end; }
+
+.loading-message { color: var(--primary-blue); font-weight:600; }
+.empty-message { color:#6b7280; }
+
+/* Smooth loading: reserve vertical space while the list loads to avoid layout shift
+   The .loading class is toggled via [class.loading] on the container. */
+.table-container {
+  transition: min-height 320ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
+}
+.table-container.loading {
+  /* reserve a reasonable height similar to a small table to avoid footer jumping */
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fade the loading message out when content is ready (keeps smoothness) */
+.table-container .loading-message {
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+.table-container:not(.loading) .loading-message {
+  opacity: 0;
+  transform: translateY(-6px);
+  height: 0;
+  overflow: hidden;
+}
+
+/* Skeleton styles */
+.table-skeleton { width: 100%; }
+.skeleton-row { display: grid; grid-template-columns: 80px 1fr 1fr 110px 160px 110px; gap: 12px; align-items: center; padding: 10px 0; }
+.skeleton-cell { height: 16px; background: linear-gradient(90deg, rgba(0,0,0,0.04), rgba(0,0,0,0.06)); border-radius: 6px; position: relative; overflow: hidden; }
+.skeleton-cell::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,0.0), rgba(255,255,255,0.5), rgba(255,255,255,0.0)); transform: translateX(-100%); animation: shimmer 900ms linear infinite; }
+.skeleton-cell.short { width: 60px; height: 14px; }
+.skeleton-cell.medium { width: 120px; }
+.skeleton-cell.actions { width: 80px; height: 20px; border-radius: 8px; }
+
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+/* Small responsive tweaks */
+@media (max-width: 720px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .filters-row { grid-template-columns: 1fr; }
+  .actions-cell { justify-content:flex-start; }
+}

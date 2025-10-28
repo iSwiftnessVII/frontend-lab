@@ -68,6 +68,9 @@ export class ReactivosComponent implements OnInit {
   certFile: File | null = null;
   hojaMsg = '';
   certMsg = '';
+  // Files selected when creating/editing a reactivo (SDS / CoA at creation time)
+  reactivoSdsFile: File | null = null;
+  reactivoCoaFile: File | null = null;
 
   // Reactivo form
   lote = '';
@@ -251,6 +254,8 @@ export class ReactivosComponent implements OnInit {
     const rows = await reactivosService.listarReactivos(this.reactivosQ || '', limit);
     this.reactivosSig.set(rows || []);
     this.aplicarFiltroReactivos();
+    // Preload PDF availability for items in inventory so badges/buttons reflect state
+    try { this.preloadDocsForVisible(this.reactivosSig()); } catch (e) { /* non-fatal */ }
   }
 
   async buscarCatalogo() {
@@ -869,6 +874,24 @@ export class ReactivosComponent implements OnInit {
         await reactivosService.crearReactivo(payload);
         this.reactivoMsg = 'Reactivo creado correctamente';
       }
+      // If files were selected during creation/edit, upload them now (non-blocking for UI, but await to keep flow)
+      try {
+        const codigo = payload.codigo;
+        if (this.reactivoSdsFile) {
+          await reactivosService.subirHojaSeguridad(codigo, this.reactivoSdsFile);
+          this.setPdfStatus(codigo, { hoja: true });
+          this.reactivoSdsFile = null;
+        }
+        if (this.reactivoCoaFile) {
+          await reactivosService.subirCertAnalisis(codigo, this.reactivoCoaFile);
+          this.setPdfStatus(codigo, { cert: true });
+          this.reactivoCoaFile = null;
+        }
+      } catch (upErr) {
+        // don't fail creation if upload fails; show a message
+        console.warn('Error uploading docs for reactivo:', upErr);
+        this.reactivoMsg += ' (Error subiendo documentos)';
+      }
       await this.loadReactivos();
       // Limpiar modelo y restablecer estado visual del formulario (pristine/untouched)
       this.resetReactivoForm();
@@ -877,6 +900,16 @@ export class ReactivosComponent implements OnInit {
     } catch (err: any) {
       this.reactivoMsg = err?.message || 'Error creando reactivo';
     }
+  }
+
+  // Handlers for file inputs in reactivo creation form
+  onSdsSelected(ev: any) {
+    const f = ev?.target?.files?.[0];
+    this.reactivoSdsFile = f || null;
+  }
+  onCoaSelected(ev: any) {
+    const f = ev?.target?.files?.[0];
+    this.reactivoCoaFile = f || null;
   }
 
   resetReactivoForm() {

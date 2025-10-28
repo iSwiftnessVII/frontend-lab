@@ -1,5 +1,5 @@
 <!-- ====== HEADER GLOBAL LIBA ====== -->
-<header class="header" *ngIf="user() || isAuthInitializing()">
+<header id="app-header" class="header" *ngIf="user() || isAuthInitializing()">
   <div class="header-content">
     <div class="logo-section">
       <div class="logo">LIBA</div>
@@ -54,7 +54,7 @@
     </a>
 
     <a routerLink="/usuarios" routerLinkActive="active" class="nav-item">
-      <i class="fas fa-boxes"></i> Usuarios
+      <i class="fas fa-users"></i> Usuarios
     </a>
   </div>
 </nav>

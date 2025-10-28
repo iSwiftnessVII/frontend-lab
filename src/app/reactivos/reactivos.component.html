@@ -74,43 +74,11 @@
               <span class="tag"><strong>Tipo: </strong> <span [innerHTML]="highlightField(c.tipo_reactivo, 'otro')"></span></span>
               <span class="tag"><strong>Clasificación: </strong> <span [innerHTML]="highlightField(c.clasificacion_sga, 'otro')"></span></span>
             </div>
-            <div class="pdf-actions" aria-label="Acciones PDF">
-              <div class="pdf-group hoja-group">
-                <input type="file" accept="application/pdf" (change)="onSubirHojaCatalogo($event, c.codigo)" hidden #hojaInput>
-                <button type="button" class="pdf-btn upload" title="Subir hoja de seguridad" aria-label="Subir hoja de seguridad" (click)="hojaInput.click()">
-                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 5l0 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 10l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </button>
-                <button type="button" class="pdf-btn view" title="Ver hoja de seguridad" aria-label="Ver hoja de seguridad" (click)="onVerHojaCatalogo(c.codigo)">
-                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                </button>
-                <button type="button" class="pdf-btn delete" title="Eliminar hoja de seguridad" aria-label="Eliminar hoja de seguridad" (click)="onEliminarHojaCatalogo(c.codigo)">
-                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </button>
-              </div>
-              <div class="pdf-group cert-group">
-                <input type="file" accept="application/pdf" (change)="onSubirCertCatalogo($event, c.codigo)" hidden #certInput>
-                <button type="button" class="pdf-btn upload" title="Subir certificado de análisis" aria-label="Subir certificado de análisis" (click)="certInput.click()">
-                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 5l0 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 10l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </button>
-                <button type="button" class="pdf-btn view" title="Ver certificado de análisis" aria-label="Ver certificado de análisis" (click)="onVerCertCatalogo(c.codigo)">
-                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                </button>
-                <button type="button" class="pdf-btn delete" title="Eliminar certificado de análisis" aria-label="Eliminar certificado de análisis" (click)="onEliminarCertCatalogo(c.codigo)">
-                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </button>
-              </div>
-            </div>
+            <!-- PDF controls moved out of catalog cards into reactivo creation workflow -->
           </div>
           <div class="card-name" [title]="c.nombre">
             <span [innerHTML]="highlightField(c.nombre, 'nombre')"></span>
-            <span class="pdf-badges" [attr.title]="(pdfStatus[c.codigo] ? (pdfStatus[c.codigo].hoja===true?'HS✓': pdfStatus[c.codigo].hoja===false?'HS✗':'HS…') : 'HS…') + ' • ' + (pdfStatus[c.codigo] ? (pdfStatus[c.codigo].cert===true?'CA✓': pdfStatus[c.codigo].cert===false?'CA✗':'CA…') : 'CA…')" [attr.aria-label]="(pdfStatus[c.codigo] ? (pdfStatus[c.codigo].hoja===true?'Hoja disponible': pdfStatus[c.codigo].hoja===false?'Hoja no disponible':'Hoja verificando') : 'Hoja verificando') + ' y ' + (pdfStatus[c.codigo] ? (pdfStatus[c.codigo].cert===true?'Certificado disponible': pdfStatus[c.codigo].cert===false?'Certificado no disponible':'Certificado verificando') : 'Certificado verificando')">
-              <span class="badge" [class.loading]="pdfStatus[c.codigo] && pdfStatus[c.codigo].hoja===null" [class.ok]="pdfStatus[c.codigo] && pdfStatus[c.codigo].hoja === true" [class.fail]="pdfStatus[c.codigo] && pdfStatus[c.codigo].hoja === false" title="Hoja de seguridad" aria-label="Hoja de seguridad">
-                HS
-              </span>
-              <span class="badge" [class.loading]="pdfStatus[c.codigo] && pdfStatus[c.codigo].cert===null" [class.ok]="pdfStatus[c.codigo] && pdfStatus[c.codigo].cert === true" [class.fail]="pdfStatus[c.codigo] && pdfStatus[c.codigo].cert === false" title="Certificado de análisis" aria-label="Certificado de análisis">
-                CA
-              </span>
-            </span>
+            <!-- PDF badges removed from catalog; PDFs are shown for reactivos in inventory -->
           </div>
         </article>
       </div>
@@ -227,6 +195,16 @@
       <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" rows="2"></textarea>
     </div>
 
+    <!-- PDF uploads for reactivo creation: SDS (Hoja de seguridad) and CoA (Certificado de análisis) -->
+    <div>
+      <label for="sdsFile">Hoja de seguridad (SDS)</label>
+      <input id="sdsFile" type="file" accept="application/pdf" (change)="onSdsSelected($event)" />
+    </div>
+    <div>
+      <label for="coaFile">Certificado de análisis (CoA)</label>
+      <input id="coaFile" type="file" accept="application/pdf" (change)="onCoaSelected($event)" />
+    </div>
+
     <div>
       <label for="tipo_id">Tipo reactivo</label>
       <select id="tipo_id" [(ngModel)]="tipo_id" name="tipo_id" #tipoIdCtrl="ngModel" required [class.invalid]="tipoIdCtrl.invalid && (tipoIdCtrl.touched || submittedReactivo)">
@@ -322,8 +300,18 @@
                 {{ v.text }}
               </span>
             </div>
+            <div class="pdf-indicators" aria-hidden="true" style="display:flex;gap:0.5rem;align-items:center;margin-left:8px;">
+              <span class="badge" [class.loading]="pdfStatus[r.codigo] && pdfStatus[r.codigo].hoja===null" [class.ok]="pdfStatus[r.codigo] && pdfStatus[r.codigo].hoja===true" [class.fail]="pdfStatus[r.codigo] && pdfStatus[r.codigo].hoja===false" title="Hoja de seguridad">HS</span>
+              <span class="badge" [class.loading]="pdfStatus[r.codigo] && pdfStatus[r.codigo].cert===null" [class.ok]="pdfStatus[r.codigo] && pdfStatus[r.codigo].cert===true" [class.fail]="pdfStatus[r.codigo] && pdfStatus[r.codigo].cert===false" title="Certificado de análisis">CA</span>
+            </div>
             <div class="pdf-actions" aria-label="Acciones del reactivo" (click)="$event.stopPropagation()">
               <div class="pdf-group">
+                <button type="button" class="pdf-btn view" title="Ver hoja de seguridad (SDS)" aria-label="Ver hoja de seguridad" (click)="onVerHojaCatalogo(r.codigo)">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                </button>
+                <button type="button" class="pdf-btn view" title="Ver certificado de análisis (CoA)" aria-label="Ver certificado de análisis" (click)="onVerCertCatalogo(r.codigo)">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                </button>
                 <button type="button" class="pdf-btn view" title="Editar reactivo" aria-label="Editar reactivo" (click)="openEditModal(r)">
                   <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z" fill="currentColor"/><path d="M20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.29a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" fill="currentColor"/></svg>
                 </button>

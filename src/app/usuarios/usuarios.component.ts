@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -29,6 +29,15 @@ export class UsuariosComponent implements OnInit {
   usuarios: Array<any> = [];
   usuariosFiltrados: Array<any> = [];
 
+  // Signals para lista (imitando enfoque usado en Reactivos)
+  usuariosSig = signal<Array<any>>([]);
+  usuariosFiltradosSig = signal<Array<any>>([]);
+
+  // Getters to expose signals to templates (matching pattern used in Reactivos)
+  get usuariosCount() { return this.usuariosSig().length; }
+  get usuariosList() { return this.usuariosSig(); }
+  get usuariosFiltradosList() { return this.usuariosFiltradosSig(); }
+
   // Filtros
   emailQ: string = '';
   rolQ: any = '';
@@ -52,7 +61,13 @@ export class UsuariosComponent implements OnInit {
   async loadUsuarios() {
     this.cargando = true;
     try {
-      this.usuarios = await usuariosService.listarUsuarios();
+      const rows = await usuariosService.listarUsuarios();
+      this.usuarios = rows || [];
+      // actualizar signals para que la plantilla pueda reaccionar inmediatamente
+      this.usuariosSig.set(this.usuarios);
+      // asegurar que la lista filtrada también se inicializa inmediatamente
+      this.usuariosFiltrados = this.usuarios.slice();
+      this.usuariosFiltradosSig.set(this.usuariosFiltrados);
       this.aplicarFiltros();
     } catch (err) {
       console.error('Error cargando usuarios:', err);
@@ -143,6 +158,7 @@ export class UsuariosComponent implements OnInit {
 
     if (!emailQ && !rolQ && !estadoQ) {
       this.usuariosFiltrados = [...this.usuarios];
+      this.usuariosFiltradosSig.set(this.usuariosFiltrados);
       return;
     }
 
@@ -152,6 +168,8 @@ export class UsuariosComponent implements OnInit {
       const estadoMatch = !estadoQ || u.estado === estadoQ;
       return emailMatch && rolMatch && estadoMatch;
     });
+    // actualizar signal con los resultados filtrados
+    this.usuariosFiltradosSig.set(this.usuariosFiltrados);
   }
 
   resetFiltros() {

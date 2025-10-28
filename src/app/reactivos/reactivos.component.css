@@ -52,14 +52,6 @@ body {
     margin-top: 0;
 }
 
-.header-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
-}
 
 .logo-section {
     display: flex;
@@ -189,43 +181,8 @@ body {
     font-size: 0.95rem;
 }
 
-/* ===== Navigation ===== */
-.nav-menu {
-    background: var(--primary-white);
-    padding: 0.5rem 2rem;
-    border-bottom: 1px solid var(--border-gray);
-    width: 100vw;
-    margin-left: calc(-50vw + 50%);
-    margin-right: calc(-50vw + 50%);
-}
-
-.nav-content {
-    display: flex;
-    gap: 2rem;
-    padding: 0 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-.nav-item {
-    padding: 0.8rem 1.5rem;
-    color: var(--text-gray);
-    text-decoration: none;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    font-size: 0.95rem;
-}
-
-.nav-item:hover, 
-.nav-item.active {
-    background: var(--primary-turquoise);
-    color: var(--primary-white);
-    transform: translateY(-1px);
-}
+/* Navigation is centralized in src/app/app.css (scoped to #app-header). */
+/* Component-level nav rules removed to avoid duplication and ensure a single source of truth. */
 
 /* ===== Main Container ===== */
 .container {
