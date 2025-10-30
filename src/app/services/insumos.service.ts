@@ -1,4 +1,4 @@
-const API_BASE = (window as any).__env?.API_INSUMOS || 'http://localhost:3000/api/insumos';
+const API_BASE = (window as any).__env?.API_INSUMOS || 'http://localhost:4000/api/insumos';
 
 export const insumosService = {
     async aux() {

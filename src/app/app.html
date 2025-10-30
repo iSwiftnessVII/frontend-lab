@@ -1,5 +1,5 @@
 <!-- ====== HEADER GLOBAL LIBA ====== -->
-<header id="app-header" class="header" *ngIf="user() || isAuthInitializing()">
+<header id="app-header" class="header" *ngIf="user()">
   <div class="header-content">
     <div class="logo-section">
       <div class="logo">LIBA</div>
@@ -19,14 +19,15 @@
         {{ (user()?.email || '')[0] | uppercase }}
       </button>
 
-  <!-- Dropdown menu (present but toggled via .open for animation) -->
-  <div class="user-dropdown gh-style" [class.open]="menuOpen()" [attr.aria-hidden]="!menuOpen()" role="menu">
+      <!-- Dropdown menu -->
+      <div class="user-dropdown gh-style" [class.open]="menuOpen()" [attr.aria-hidden]="!menuOpen()" role="menu">
         <!-- Profile header: larger area showing name and email -->
         <div class="profile-header">
           <div class="profile-initial">{{ (user()?.email || '')[0] | uppercase }}</div>
           <div class="profile-meta">
             <div class="profile-name">{{ userShortName() }}</div>
             <div class="profile-email">{{ user()?.email }}</div>
+            <div class="profile-role">{{ user()?.rol }}</div>
           </div>
         </div>
 
@@ -46,15 +47,17 @@
           <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
           <span>{{ isLoggingOut() ? 'Cerrando sesión…' : 'Salir' }}</span>
         </button>
-  </div>
+      </div>
     </div>
   </div>
 </header>
 
 <!-- ====== NAVIGATION MENU ====== -->
-<nav class="nav-menu" *ngIf="user() || isAuthInitializing()">
+<nav class="nav-menu" *ngIf="user()">
   <div class="nav-content">
+    <!-- Mostrar estas páginas solo si NO es Superadmin -->
     <a
+      *ngIf="user()?.rol !== 'Superadmin'"
       routerLink="/dashboard"
       routerLinkActive="active"
       [routerLinkActiveOptions]="{ exact: true }"
@@ -63,19 +66,40 @@
       <i class="fas fa-tachometer-alt"></i> Dashboard
     </a>
 
-    <a routerLink="/solicitudes" routerLinkActive="active" class="nav-item">
+    <a 
+      *ngIf="user()?.rol !== 'Superadmin'" 
+      routerLink="/solicitudes" 
+      routerLinkActive="active" 
+      class="nav-item"
+    >
       <i class="fas fa-clipboard-list"></i> Solicitudes
     </a>
 
-    <a routerLink="/reactivos" routerLinkActive="active" class="nav-item">
+    <a 
+      *ngIf="user()?.rol !== 'Superadmin'" 
+      routerLink="/reactivos" 
+      routerLinkActive="active" 
+      class="nav-item"
+    >
       <i class="fas fa-flask"></i> Reactivos
     </a>
 
-    <a routerLink="/insumos" routerLinkActive="active" class="nav-item">
+    <a 
+      *ngIf="user()?.rol !== 'Superadmin'" 
+      routerLink="/insumos" 
+      routerLinkActive="active" 
+      class="nav-item"
+    >
       <i class="fas fa-boxes"></i> Insumos
     </a>
 
-    <a routerLink="/usuarios" routerLinkActive="active" class="nav-item">
+    <!-- Mostrar Usuarios solo si ES Superadmin -->
+    <a 
+      *ngIf="user()?.rol === 'Superadmin'" 
+      routerLink="/usuarios" 
+      routerLinkActive="active" 
+      class="nav-item"
+    >
       <i class="fas fa-users"></i> Usuarios
     </a>
   </div>
@@ -84,16 +108,6 @@
 <!-- ====== CONTENIDO PRINCIPAL ====== -->
 <main class="main-content liba-theme">
   <router-outlet></router-outlet>
-
-  <!-- Auth initialization overlay -->
-  <div class="auth-loading-overlay" *ngIf="isAuthInitializing()">
-    <div class="auth-spinner">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-    </div>
-    <div class="auth-loading-text">Validando sesión…</div>
-  </div>
 </main>
 
 <!-- ====== FOOTER GLOBAL LIBA ====== -->

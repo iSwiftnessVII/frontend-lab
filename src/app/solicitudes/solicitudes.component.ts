@@ -2,9 +2,8 @@ import { Component, signal, OnDestroy, OnInit, ViewEncapsulation } from '@angula
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { authService } from '../services/auth.service';
 
-const API = (window as any).__env?.API_BASE || 'http://localhost:3000/api/solicitudes';
+const API = (window as any).__env?.API_BASE || 'http://localhost:4000/api/solicitudes';
 
 @Component({
   standalone: true,

@@ -1,4 +1,4 @@
-const API_BASE = (window as any).__env?.API_REACTIVOS || 'http://localhost:3000/api/reactivos';
+const API_BASE = (window as any).__env?.API_REACTIVOS || 'http://localhost:4000/api/reactivos';
 
 export const reactivosService = {
   async aux() {

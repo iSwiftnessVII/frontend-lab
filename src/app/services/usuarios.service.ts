@@ -1,4 +1,4 @@
-const API_BASE = (window as any).__env?.API_USUARIOS || 'http://localhost:3000/api/usuarios';
+const API_BASE = (window as any).__env?.API_USUARIOS || 'http://localhost:4000/api/usuarios';
 
 export const usuariosService = {
   /**

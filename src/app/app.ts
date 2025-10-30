@@ -1,7 +1,7 @@
 import { Component, signal, effect, OnDestroy } from '@angular/core';
 import { RouterOutlet, Router, RouterModule } from '@angular/router';
 import { CommonModule, NgIf } from '@angular/common';
-import { authService, authUser, authInitializing } from './services/auth.service';
+import { authService, authUser } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -12,43 +12,52 @@ import { authService, authUser, authInitializing } from './services/auth.service
 })
 export class App implements OnDestroy {
   protected readonly title = signal('app-lab');
-  // expose the authUser signal to template
   readonly user = authUser;
   readonly isLoggingOut = signal(false);
   readonly menuOpen = signal(false);
   readonly currentYear = new Date().getFullYear();
 
   constructor(private router: Router) {
-    // Try to restore the real user from stored token. Do not block the
-    // constructor (guards may call whoami themselves) but start the async
-    // initialization so the UI will update when the call completes.
+    // Inicializar autenticación con TU sistema
     void this.initAuth();
+    
+    // Mantener características UI del repositorio
     this.constructorEffectSetup();
-    // Close user menu when clicking outside
     document.addEventListener('click', this.handleDocumentClick, true);
   }
 
+  // TU sistema de autenticación con checkAuth()
   private async initAuth() {
     try {
-      await authService.whoami();
+      await authService.checkAuth();
     } catch (err) {
-      // If validation fails we ensure logout state is clean (token removed by whoami)
       console.debug('No valid session on init:', err);
     }
   }
 
-  // Expose auth initializing state to the template
-  isAuthInitializing = authInitializing;
-
+  // Mantener el effect para debug (opcional)
   constructorEffectSetup() {
-    // Log auth state changes to help debug menu disappearance
     effect(() => {
       const u = authUser();
-      const init = authInitializing();
-      console.debug('[app] auth state change: authUser=', u, 'authInitializing=', init);
+      console.debug('[app] auth state change: authUser=', u);
     });
   }
 
+  // TUS métodos de roles
+  async ngOnInit() {
+    // Ya se llama en initAuth(), pero lo dejamos por compatibilidad
+    const user = await authService.checkAuth();
+  }
+
+  isSuperadmin(): boolean {
+    return authService.isSuperadmin();
+  }
+
+  isAdminOrAuxiliar(): boolean {
+    return authService.isAdmin() || authService.isAuxiliar();
+  }
+
+  // Métodos del repositorio para UI
   logout() {
     authService.logout();
     this.menuOpen.set(false);
@@ -72,20 +81,17 @@ export class App implements OnDestroy {
     this.menuOpen.set(!this.menuOpen());
   }
 
-  // Derive a short display name from the user's email (part before @)
   userShortName(): string {
     try {
       const email = this.user()?.email ?? '';
       if (!email) return '';
       const local = String(email).split('@')[0] || '';
-      // replace dots/underscores with spaces and capitalize words
       return local.replace(/[._]/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
     } catch (e) {
       return '';
     }
   }
 
-  // Document click handler to close menu when clicking outside .user-menu
   private handleDocumentClick = (ev: Event) => {
     try {
       const menu = document.querySelector('#app-header .user-menu');
@@ -106,7 +112,6 @@ export class App implements OnDestroy {
 
   showFooter(): boolean {
     const url = this.router.url || '';
-    // ocultar en login, registro y olvido de contraseña
     return !url.startsWith('/login') && !url.startsWith('/register') && !url.startsWith('/forgot');
   }
 }

@@ -1,7 +1,14 @@
 import { signal } from '@angular/core';
-const API_BASE = (window as any).__env?.API_BASE || 'http://localhost:3000/api/auth';
+const API_BASE = (window as any).__env?.API_BASE || 'http://localhost:4000/api/auth';
 
-export const authUser = signal<{ id: number; email: string } | null>(null);
+export const authUser = signal<{ 
+  id: number; 
+  email: string; 
+  rol: string;
+  id_rol: number;
+} | null>(null);
+
+// Mantener authInitializing del repositorio para compatibilidad UI
 export const authInitializing = signal(false);
 
 export const authService = {
@@ -20,111 +27,138 @@ export const authService = {
     }
 
     if (!res.ok) {
-      let msg =
-        (data && data.message) ||
-        (typeof data === 'string' ? data : null) ||
-        (await res.text().catch(() => 'Error al iniciar sesión'));
-      if (msg === 'Missing email or contrasena') msg = 'Falta correo o contraseña';
-      if (msg === 'Invalid credentials') msg = 'Credenciales inválidas';
-      if (msg === 'Internal server error') msg = 'Error interno del servidor';
-      throw new Error(msg || 'Error al iniciar sesión');
+      let msg = (data && data.message) || 'Error al iniciar sesión';
+      throw new Error(msg);
     }
 
     const dataJson = data || {};
 
-    // Guarda< el token en localStorage
+    // Guardar token JWT en localStorage
     if (dataJson.token) {
       localStorage.setItem('token', dataJson.token);
     }
 
-    // Guarda los datos del usuario en memoria
-    authUser.set({ id: dataJson.id, email: dataJson.email });
+    // Guardar usuario en memoria y localStorage
+    const userData = {
+      id: dataJson.id_usuario, 
+      email: dataJson.email,
+      rol: dataJson.rol,
+      id_rol: dataJson.id_rol
+    };
+    
+    authUser.set(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+
     return dataJson;
   },
 
-  async register(email: string, contrasena: string) {
-    const res = await fetch(`${API_BASE}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, contrasena })
-    });
+  // TU sistema - Verificar autenticación al cargar la app
+  async checkAuth() {
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (!token || !storedUser) {
+      this.logout();
+      return null;
+    }
 
-    let dataR: any = null;
     try {
-      dataR = await res.json();
-    } catch (e) {
-      dataR = null;
-    }
+      const res = await fetch(`${API_BASE}/me`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    if (!res.ok) {
-      let msg =
-        (dataR && dataR.message) ||
-        (typeof dataR === 'string' ? dataR : null) ||
-        (await res.text().catch(() => 'Error al registrar'));
-      if (msg === 'Missing email or contrasena') msg = 'Falta correo o contraseña';
-      if (msg === 'User already exists') msg = 'El usuario ya existe';
-      if (msg === 'Internal server error') msg = 'Error interno del servidor';
-      throw new Error(msg || 'Error al registrar');
+      if (res.ok) {
+        const user = await res.json();
+        authUser.set(user);
+        return user;
+      } else {
+        this.logout();
+        return null;
+      }
+    } catch (error) {
+      this.logout();
+      return null;
     }
-
-    const dataJsonR = dataR || {};
-    return dataJsonR;
   },
 
-  logout() {
-    // Elimina el token y limpia la sesión
-    localStorage.removeItem('token');
-    authUser.set(null);
-  },
-
-  // Devuelve el token guardado (por si lo necesitas en otras peticiones)
-  getToken() {
-    return localStorage.getItem('token');
-  }
-  ,
+  // whoami - función del repositorio (para compatibilidad)
   async whoami() {
-    const token = this.getToken();
     authInitializing.set(true);
+    const token = this.getToken();
+    
     if (!token) {
       authInitializing.set(false);
       throw new Error('No token');
     }
-    let res: Response | null = null;
+
     try {
-      console.debug('[auth] whoami: token present, calling /me');
-      res = await fetch(`${API_BASE}/me`, {
+      const res = await fetch(`${API_BASE}/me`, {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.debug('[auth] whoami: response status', res.status);
-    } catch (fetchErr) {
-      // Network / CORS / server down — treat as temporary offline: keep token and
-      // create a minimal authUser so UI (header/nav) remains visible.
-      console.warn('[auth] whoami fetch failed (network). Leaving token in place and showing UI optimistically.', fetchErr);
-      authUser.set({ id: 0, email: '' });
-      authInitializing.set(false);
-      return null;
-    }
-    try {
+
       if (!res.ok) {
-        // token invalid or expired — clear and error
         localStorage.removeItem('token');
         authUser.set(null);
-        let msg = await res.text().catch(() => 'Unknown error');
-        throw new Error(msg || 'Failed to validate token');
+        throw new Error('Failed to validate token');
       }
 
-      const data = await res.json().catch(() => null);
+      const data = await res.json();
       if (!data || !data.id) {
         localStorage.removeItem('token');
         authUser.set(null);
         throw new Error('Invalid response from auth/me');
       }
 
-      authUser.set({ id: data.id, email: data.email });
+      // Actualizar con datos completos incluyendo rol
+      const userData = {
+        id: data.id, 
+        email: data.email,
+        rol: data.rol,
+        id_rol: data.id_rol
+      };
+      authUser.set(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
       return data;
+    } catch (error) {
+      this.logout();
+      throw error;
     } finally {
       authInitializing.set(false);
     }
+  },
+
+  // Verificar permisos según rol
+  hasRole(allowedRoles: string[]): boolean {
+    const user = authUser();
+    return user ? allowedRoles.includes(user.rol) : false;
+  },
+
+  // Métodos específicos por rol
+  isSuperadmin(): boolean {
+    return this.hasRole(['Superadmin']);
+  },
+
+  isAdmin(): boolean {
+    return this.hasRole(['Administrador', 'Superadmin']);
+  },
+
+  isAuxiliar(): boolean {
+    return this.hasRole(['Auxiliar', 'Administrador', 'Superadmin']);
+  },
+
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    authUser.set(null);
+    authInitializing.set(false);
+  },
+
+  getToken() {
+    return localStorage.getItem('token');
   }
 };
