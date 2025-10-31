@@ -2,6 +2,7 @@ import { Component, signal, OnDestroy, OnInit, ViewEncapsulation } from '@angula
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { authUser } from '../services/auth.service';
 
 const API = (window as any).__env?.API_BASE || 'http://localhost:4000/api/solicitudes';
 
@@ -950,6 +951,12 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.encuestaMsg = '❌ Error: ' + (err.message || err);
     }
   }
+
+  canDelete(): boolean {
+  const user = authUser();
+  // Solo Administrador y Superadmin pueden eliminar
+  return user?.rol === 'Administrador' || user?.rol === 'Superadmin';
+}
 
   async deleteCliente(id: number) {
     if (!confirm('¿Borrar este cliente?')) return;

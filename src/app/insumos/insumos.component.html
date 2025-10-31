@@ -165,11 +165,11 @@
                         <td>{{ formatearFecha(i.fecha_adquisicion) }}</td>
                         <td>{{ i.observaciones }}</td>
                         <td>
-                            <button type="button" (click)="eliminarInsumo(i.id)">Eliminar</button>
+                            <button type="button" *ngIf="canDelete()" (click)="eliminarInsumo(i.id)">Eliminar</button>
                             <button type="button" (click)="mostrarDetallesInsumo(i)">Detalles</button>
                         </td>
-                    </tr>
-                </tbody>
+                        </tr>
+                        </tbody>
             </table>
             <p *ngIf="!insumos?.length">No hay insumos cargados.</p>
         </div>

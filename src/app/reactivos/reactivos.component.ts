@@ -3,7 +3,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { authService } from '../services/auth.service';
+import { authService, authUser } from '../services/auth.service';
 import { reactivosService } from '../services/reactivos.service';
 
 
@@ -951,6 +951,12 @@ export class ReactivosComponent implements OnInit {
       this.reactivoMsg = err?.message || 'Error creando reactivo';
     }
   }
+
+  canDelete(): boolean {
+  const user = authUser();
+  // Solo Administrador y Superadmin pueden eliminar
+  return user?.rol === 'Administrador' || user?.rol === 'Superadmin';
+}
 
   // Handlers for file inputs in reactivo creation form
   onSdsSelected(ev: any) {

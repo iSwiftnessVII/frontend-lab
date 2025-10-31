@@ -3,7 +3,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { authService } from '../services/auth.service';
+import { authService, authUser } from '../services/auth.service';
 import { insumosService } from '../services/insumos.service';
 
 @Component({  
@@ -458,6 +458,12 @@ resetInsumoForm() {
 
   this.insumoMsg = '';
 }
+
+  canDelete(): boolean {
+    const user = authUser();
+    // Solo Administrador y Superadmin pueden eliminar
+    return user?.rol === 'Administrador' || user?.rol === 'Superadmin';
+  }
 
 
 async onItemInput() {
