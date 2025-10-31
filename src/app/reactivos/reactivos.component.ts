@@ -126,8 +126,10 @@ export class ReactivosComponent implements OnInit {
   isCodigoFocused: boolean = false;
   isNombreFocused: boolean = false;
 
-  // Estado de disponibilidad de PDFs por código
+  // Estado de disponibilidad de PDFs por código (catálogo)
   pdfStatus: { [codigo: string]: { hoja: boolean | null; cert: boolean | null } } = {};
+  // Estado de disponibilidad de PDFs por reactivo (lote)
+  reactivoPdfStatus: { [lote: string]: { hoja: boolean | null; cert: boolean | null } } = {};
   // Toast ephemeral message (used instead of catalogoMsg for uploads)
   toastMsg: string = '';
   private toastTimeout: any = null;
@@ -137,6 +139,13 @@ export class ReactivosComponent implements OnInit {
     this.pdfStatus = { ...this.pdfStatus, [codigo]: { ...prev, ...changes } };
     this.persistPdfStatus();
     // Force change detection so badges update as soon as status changes
+    try { this.cdr.detectChanges(); } catch (e) { /* non-fatal */ }
+  }
+
+  private setReactivoPdfStatus(lote: string, changes: Partial<{ hoja: boolean | null; cert: boolean | null }>) {
+    const prev = this.reactivoPdfStatus[lote] || { hoja: null, cert: null };
+    this.reactivoPdfStatus = { ...this.reactivoPdfStatus, [lote]: { ...prev, ...changes } };
+    this.persistReactivoPdfStatus();
     try { this.cdr.detectChanges(); } catch (e) { /* non-fatal */ }
   }
 
@@ -166,6 +175,12 @@ export class ReactivosComponent implements OnInit {
           this.pdfStatus = JSON.parse(cache);
         }
       } catch {}
+      try {
+        const cacheR = sessionStorage.getItem('reactivoPdfStatusCache');
+        if (cacheR) {
+          this.reactivoPdfStatus = JSON.parse(cacheR);
+        }
+      } catch {}
       // Cargar auxiliares y catálogo en paralelo para reducir tiempo de espera perceptual
       this.catalogoCargando = true;
       await Promise.all([
@@ -178,6 +193,7 @@ export class ReactivosComponent implements OnInit {
       this.aplicarFiltroReactivos();
       // Guardar cache inicial tras carga
       this.persistPdfStatus();
+  this.persistReactivoPdfStatus();
     } catch (err) {
       console.error('Error inicializando Reactivos:', err);
     }
@@ -274,8 +290,8 @@ export class ReactivosComponent implements OnInit {
     const rows = await reactivosService.listarReactivos(this.reactivosQ || '', limit);
     this.reactivosSig.set(rows || []);
     this.aplicarFiltroReactivos();
-    // Preload PDF availability for items in inventory so badges/buttons reflect state
-    try { this.preloadDocsForVisible(this.reactivosSig()); } catch (e) { /* non-fatal */ }
+    // Preload PDF availability for items in inventory (by lote)
+    try { this.preloadDocsForReactivosVisible(this.reactivosSig()); } catch (e) { /* non-fatal */ }
   }
 
   async buscarCatalogo() {
@@ -517,6 +533,66 @@ export class ReactivosComponent implements OnInit {
     }
   }
 
+  // --- Acciones PDF en tarjetas de inventario (por lote) ---
+  async onSubirHojaReactivo(ev: any, lote: string) {
+    const f = ev?.target?.files?.[0];
+    if (!f) return;
+    if (f && f.type !== 'application/pdf' && !String(f.name || '').toLowerCase().endsWith('.pdf')) {
+      this.showToast('Seleccione un archivo PDF');
+      if (ev?.target) ev.target.value = '';
+      return;
+    }
+    try {
+      await reactivosService.subirHojaSeguridadReactivo(lote, f);
+      this.showToast(`Hoja de seguridad subida para lote ${lote}`);
+      this.setReactivoPdfStatus(lote, { hoja: true });
+    } catch (e: any) {
+      this.showToast(e?.message || 'Error subiendo hoja de seguridad');
+    } finally {
+      if (ev?.target) ev.target.value = '';
+    }
+  }
+  async onEliminarHojaReactivo(lote: string) {
+    if (!confirm('¿Eliminar hoja de seguridad?')) return;
+    try {
+      await reactivosService.eliminarHojaSeguridadReactivo(lote);
+      this.showToast(`Hoja de seguridad eliminada para lote ${lote}`);
+      this.setReactivoPdfStatus(lote, { hoja: false });
+    } catch (e: any) {
+      this.setReactivoPdfStatus(lote, { hoja: false });
+      this.showToast(e?.message || 'Error eliminando hoja de seguridad');
+    }
+  }
+  async onSubirCertReactivo(ev: any, lote: string) {
+    const f = ev?.target?.files?.[0];
+    if (!f) return;
+    if (f && f.type !== 'application/pdf' && !String(f.name || '').toLowerCase().endsWith('.pdf')) {
+      this.showToast('Seleccione un archivo PDF');
+      if (ev?.target) ev.target.value = '';
+      return;
+    }
+    try {
+      await reactivosService.subirCertAnalisisReactivo(lote, f);
+      this.showToast(`Certificado de análisis subido para lote ${lote}`);
+      this.setReactivoPdfStatus(lote, { cert: true });
+    } catch (e: any) {
+      this.showToast(e?.message || 'Error subiendo certificado de análisis');
+    } finally {
+      if (ev?.target) ev.target.value = '';
+    }
+  }
+  async onEliminarCertReactivo(lote: string) {
+    if (!confirm('¿Eliminar certificado de análisis?')) return;
+    try {
+      await reactivosService.eliminarCertAnalisisReactivo(lote);
+      this.showToast(`Certificado de análisis eliminado para lote ${lote}`);
+      this.setReactivoPdfStatus(lote, { cert: false });
+    } catch (e: any) {
+      this.setReactivoPdfStatus(lote, { cert: false });
+      this.showToast(e?.message || 'Error eliminando certificado de análisis');
+    }
+  }
+
   formatearFecha(fecha: string): string {
     if (!fecha) return '';
     const date = new Date(fecha);
@@ -668,6 +744,28 @@ export class ReactivosComponent implements OnInit {
     }
   }
 
+  async onVerHojaReactivo(lote: string) {
+    const win = window.open('', '_blank');
+    try {
+      const r = await reactivosService.obtenerHojaSeguridadReactivo(lote);
+      const url = r?.url;
+      if (url) {
+        try { if (win) win.location.href = url; else window.open(url, '_blank'); } catch { window.open(url, '_blank'); }
+      } else { if (win) win.close(); this.showToast('Hoja de seguridad no disponible'); }
+    } catch (e: any) { if (win) win.close(); this.showToast(e?.message || 'Hoja de seguridad no disponible'); }
+  }
+
+  async onVerCertReactivo(lote: string) {
+    const win = window.open('', '_blank');
+    try {
+      const r = await reactivosService.obtenerCertAnalisisReactivo(lote);
+      const url = r?.url;
+      if (url) {
+        try { if (win) win.location.href = url; else window.open(url, '_blank'); } catch { window.open(url, '_blank'); }
+      } else { if (win) win.close(); this.showToast('Certificado de análisis no disponible'); }
+    } catch (e: any) { if (win) win.close(); this.showToast(e?.message || 'Certificado de análisis no disponible'); }
+  }
+
   onCodigoSeleccionado() {
     const item = this.catalogoBaseSig().find(c => (c.codigo || '') === (this.codigo || ''));
     if (!item) return;
@@ -723,6 +821,27 @@ export class ReactivosComponent implements OnInit {
     catch { this.setPdfStatus(codigo, { cert: false }); }
   }
 
+  // Pre-carga de PDFs por lote para inventario
+  async preloadDocsForReactivosVisible(list?: any[]) {
+    const items = list || this.reactivosSig();
+    const slice = items.slice(0, 20);
+    for (const item of slice) {
+      const lote = item?.lote;
+      if (!lote) continue;
+      if (!this.reactivoPdfStatus[lote]) {
+        this.setReactivoPdfStatus(lote, { hoja: null, cert: null });
+        this.checkPdfAvailabilityByLote(lote);
+      }
+    }
+  }
+
+  private async checkPdfAvailabilityByLote(lote: string) {
+    try { await reactivosService.obtenerHojaSeguridadReactivo(lote); this.setReactivoPdfStatus(lote, { hoja: true }); }
+    catch { this.setReactivoPdfStatus(lote, { hoja: false }); }
+    try { await reactivosService.obtenerCertAnalisisReactivo(lote); this.setReactivoPdfStatus(lote, { cert: true }); }
+    catch { this.setReactivoPdfStatus(lote, { cert: false }); }
+  }
+
   // Resalta coincidencias de búsqueda/filtro dentro de campos
   highlightField(value: string, field: 'codigo' | 'nombre' | 'otro' = 'otro'): SafeHtml {
     if (!value) return '';
@@ -753,6 +872,10 @@ export class ReactivosComponent implements OnInit {
     try { sessionStorage.setItem('pdfStatusCache', JSON.stringify(this.pdfStatus)); } catch {}
   }
 
+  private persistReactivoPdfStatus() {
+    try { sessionStorage.setItem('reactivoPdfStatusCache', JSON.stringify(this.reactivoPdfStatus)); } catch {}
+  }
+
   async loadDocs(codigo: string) {
     this.hojaUrl = null; this.certUrl = null; this.hojaMsg = ''; this.certMsg = '';
     try {
@@ -761,6 +884,18 @@ export class ReactivosComponent implements OnInit {
     } catch {}
     try {
       const cert = await reactivosService.obtenerCertAnalisis(codigo);
+      this.certUrl = cert?.url || null;
+    } catch {}
+  }
+
+  async loadDocsByLote(lote: string) {
+    this.hojaUrl = null; this.certUrl = null; this.hojaMsg = ''; this.certMsg = '';
+    try {
+      const hoja = await reactivosService.obtenerHojaSeguridadReactivo(lote);
+      this.hojaUrl = hoja?.url || null;
+    } catch {}
+    try {
+      const cert = await reactivosService.obtenerCertAnalisisReactivo(lote);
       this.certUrl = cert?.url || null;
     } catch {}
   }
@@ -924,17 +1059,17 @@ export class ReactivosComponent implements OnInit {
         await reactivosService.crearReactivo(payload);
         this.reactivoMsg = 'Reactivo creado correctamente';
       }
-      // If files were selected during creation/edit, upload them now (non-blocking for UI, but await to keep flow)
+      // If files were selected during creation/edit, upload them now (by lote)
       try {
-        const codigo = payload.codigo;
+        const lote = payload.lote;
         if (this.reactivoSdsFile) {
-          await reactivosService.subirHojaSeguridad(codigo, this.reactivoSdsFile);
-          this.setPdfStatus(codigo, { hoja: true });
+          await reactivosService.subirHojaSeguridadReactivo(lote, this.reactivoSdsFile);
+          this.setReactivoPdfStatus(lote, { hoja: true });
           this.reactivoSdsFile = null;
         }
         if (this.reactivoCoaFile) {
-          await reactivosService.subirCertAnalisis(codigo, this.reactivoCoaFile);
-          this.setPdfStatus(codigo, { cert: true });
+          await reactivosService.subirCertAnalisisReactivo(lote, this.reactivoCoaFile);
+          this.setReactivoPdfStatus(lote, { cert: true });
           this.reactivoCoaFile = null;
         }
       } catch (upErr) {
@@ -1233,7 +1368,8 @@ export class ReactivosComponent implements OnInit {
     const toMid = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
     const days = Math.floor((toMid(d) - toMid(today)) / 86400000);
 
-    if (days < 0) {
+    // Considerar 0 días restantes como vencido (mostrar "Vencido" en vez de "Vence en 0 días")
+    if (days <= 0) {
       return { text: 'Vencido', bg: '#000000', fg: '#FFFFFF', title: 'El reactivo está vencido' };
     }
     // Mostrar cuenta regresiva en días cuando falta 1 mes o menos

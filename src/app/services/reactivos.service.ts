@@ -1,4 +1,12 @@
+import { authService } from './auth.service';
 const API_BASE = (window as any).__env?.API_REACTIVOS || 'http://localhost:4000/api/reactivos';
+
+function authHeaders(): HeadersInit {
+  const token = authService.getToken?.();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
 
 export const reactivosService = {
   async aux() {
@@ -76,7 +84,7 @@ export const reactivosService = {
     return data;
   },
   async eliminarReactivo(lote: string) {
-    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}`, { method: 'DELETE', headers: { ...authHeaders() } });
     let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error eliminando reactivo');
     return data;
@@ -112,7 +120,7 @@ export const reactivosService = {
     return data;
   },
   async eliminarHojaSeguridad(codigo: string) {
-    const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/hoja-seguridad`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/hoja-seguridad`, { method: 'DELETE', headers: { ...authHeaders() } });
     let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error al eliminar PDF');
     return data;
@@ -146,7 +154,65 @@ export const reactivosService = {
     return data;
   },
   async eliminarCertAnalisis(codigo: string) {
-    const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/cert-analisis`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/cert-analisis`, { method: 'DELETE', headers: { ...authHeaders() } });
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'Error al eliminar PDF');
+    return data;
+  },
+  
+  // PDFs por Reactivo (por lote) - nuevos endpoints acorde a esquema SQL
+  async obtenerHojaSeguridadReactivo(lote: string) {
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}/hoja-seguridad`);
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'No encontrada');
+    try {
+      if (data && data.url && typeof data.url === 'string') {
+        if (!/^https?:\/\//i.test(data.url)) {
+          const base = API_BASE.endsWith('/') ? API_BASE : API_BASE + '/';
+          data.url = base + data.url.replace(/^\/+/, '');
+        }
+      }
+    } catch {}
+    return data;
+  },
+  async subirHojaSeguridadReactivo(lote: string, file: File) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}/hoja-seguridad`, { method: 'POST', body: fd });
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'Error al subir PDF');
+    return data;
+  },
+  async eliminarHojaSeguridadReactivo(lote: string) {
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}/hoja-seguridad`, { method: 'DELETE', headers: { ...authHeaders() } });
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'Error al eliminar PDF');
+    return data;
+  },
+  async obtenerCertAnalisisReactivo(lote: string) {
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}/cert-analisis`);
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'No encontrado');
+    try {
+      if (data && data.url && typeof data.url === 'string') {
+        if (!/^https?:\/\//i.test(data.url)) {
+          const base = API_BASE.endsWith('/') ? API_BASE : API_BASE + '/';
+          data.url = base + data.url.replace(/^\/+/, '');
+        }
+      }
+    } catch {}
+    return data;
+  },
+  async subirCertAnalisisReactivo(lote: string, file: File) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}/cert-analisis`, { method: 'POST', body: fd });
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'Error al subir PDF');
+    return data;
+  },
+  async eliminarCertAnalisisReactivo(lote: string) {
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}/cert-analisis`, { method: 'DELETE', headers: { ...authHeaders() } });
     let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error al eliminar PDF');
     return data;
