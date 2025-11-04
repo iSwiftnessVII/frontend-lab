@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,6 +15,8 @@ import { insumosService } from '../services/insumos.service';
 })
 
 export class InsumosComponent implements OnInit {
+  @ViewChild('insumoFormSection') insumoFormSection?: ElementRef<HTMLElement>;
+  @ViewChild('itemCatalogoInput') itemCatalogoInput?: ElementRef<HTMLInputElement>;
   // Aux lists
   tipos: Array<any> = [];
   clasif: Array<any> = [];
@@ -34,6 +36,7 @@ export class InsumosComponent implements OnInit {
   catItem = '';
   catNombre = '';
   catDescripcion = '';
+  catImagen: File | null = null;
   catalogoMsg = '';
   itemFiltro = '';
 
@@ -63,12 +66,13 @@ export class InsumosComponent implements OnInit {
   hojaMsg = '';
   certMsg = '';
 
-  // Insumo form
-item = 0; // corresponde al campo "item" de la tabla insumos
+  // Insumo form (nuevo esquema)
+  item_catalogo: number | null = null; // FK a catalogo_insumos.item
 
-nombre = '';
-marca = '';
-presentacion: number | null = null;
+  nombre = '';
+  marca = '';
+  presentacion: string = '';
+  referencia: string = '';
 cantidad_adquirida: number | null = null;
 cantidad_existente: number | null = null;
 fecha_adquisicion = '';
@@ -86,6 +90,8 @@ insumosItemQ = '';
 insumosNombreQ = '';
 insumosFiltrados: Array<any> = [];
 insumosQ = '';
+  // Estado de desplegables por tarjeta de insumo
+  private expandedInsumos: Set<number> = new Set<number>();
 
 // Panel de catálogo dentro del formulario (autocompletar)
 mostrarCatalogoFormPanel: boolean = false;
@@ -186,9 +192,10 @@ async loadCatalogoInicial() {
   seleccionarCatalogo(catalogoItem: any) {
     this.catalogoSeleccionado = catalogoItem;
     
-    // ✅ Asignar correctamente: convertir el 'item' del catálogo (string) a number
-    this.item = parseInt(catalogoItem.item) || 0;
+    // ✅ Asignar item_catalogo desde el catálogo
+    this.item_catalogo = parseInt(catalogoItem.item) || null;
     this.nombre = catalogoItem.nombre || '';
+    this.descripcion = catalogoItem.descripcion || '';
     
     // Ocultar panel de catálogo
     this.mostrarCatalogoFormPanel = false;
@@ -289,6 +296,85 @@ async cargarMasCatalogo() {
     return catalogoItem?.item || index;
   }
 
+  // Click en tarjeta del catálogo: precargar datos y enfocar el formulario de crear insumo
+  onCatalogCardClick(c: any) {
+    try {
+      const itemNum = parseInt(String(c?.item), 10);
+      this.item_catalogo = Number.isNaN(itemNum) ? null : itemNum;
+      this.nombre = c?.nombre || '';
+      this.descripcion = c?.descripcion || '';
+      this.mostrarDetalles = false;
+
+      // Desplazar hasta el formulario y enfocar el campo Item catálogo
+      this.scrollToInsumoForm();
+    } catch (e) {
+      console.error('Error al manejar click en tarjeta de catálogo', e);
+    }
+  }
+
+  private scrollToInsumoForm() {
+    try {
+      // Retrasar para asegurar que el *ngIf renderizó el formulario
+      setTimeout(() => {
+        this.insumoFormSection?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Enfocar tras un pequeño delay para permitir el scroll/render
+        setTimeout(() => {
+          this.itemCatalogoInput?.nativeElement?.focus();
+          // Seleccionar valor para facilitar sobreescritura si se desea
+          const el = this.itemCatalogoInput?.nativeElement;
+          if (el) {
+            try { el.setSelectionRange(0, String(el.value || '').length); } catch {}
+          }
+        }, 200);
+      }, 50);
+    } catch {}
+  }
+
+  // ===== Inventario: desplegable en tarjetas =====
+  isInsumoExpanded(i: any): boolean {
+    const id = Number(i?.id);
+    if (!Number.isFinite(id)) return false;
+    return this.expandedInsumos.has(id);
+  }
+
+  toggleInsumoCard(i: any) {
+    const id = Number(i?.id);
+    if (!Number.isFinite(id)) return;
+    if (this.expandedInsumos.has(id)) {
+      this.expandedInsumos.delete(id);
+    } else {
+      this.expandedInsumos.add(id);
+    }
+  }
+
+  onDeleteInsumo(i: any, ev: Event) {
+    ev?.stopPropagation?.();
+    const id = Number(i?.id);
+    if (Number.isFinite(id)) {
+      this.eliminarInsumo(id);
+    }
+  }
+
+  // Porcentaje de existencia vs adquirida, clamped 0-100
+  getExistentePct(i: any): number {
+    try {
+      const adq = Number(i?.cantidad_adquirida);
+      const ex = Number(i?.cantidad_existente);
+      if (!isFinite(adq) || adq <= 0 || !isFinite(ex) || ex < 0) return 0;
+      const pct = (ex / adq) * 100;
+      return Math.max(0, Math.min(100, Math.round(pct)));
+    } catch {
+      return 0;
+    }
+  }
+
+  getExistenteClass(i: any): string {
+    const pct = this.getExistentePct(i);
+    if (pct < 20) return 'bad';
+    if (pct < 50) return 'warn';
+    return 'good';
+  }
+
 
 
 
@@ -334,19 +420,21 @@ obtenerNombreTipoRecipiente(id: any): string {
 // Selección desde el catálogo
   onItemSeleccionado() {
     const catalogoItem = this.catalogoBaseSig().find(c => 
-      String(c.item) === String(this.item) 
+      String(c.item) === String(this.item_catalogo) 
     );
     if (!catalogoItem) return;
     
     this.catalogoSeleccionado = catalogoItem;
     this.nombre = catalogoItem.nombre || '';
+    this.descripcion = catalogoItem.descripcion || '';
   }
 
 onNombreSeleccionado() {
   const catalogoItem = this.catalogoBaseSig().find(c => (c.nombre || '') === (this.nombre || ''));
   if (!catalogoItem) return;
   this.catalogoSeleccionado = catalogoItem;
-  this.item = parseInt(catalogoItem.item) || 0;            
+  this.item_catalogo = parseInt(catalogoItem.item) || null;            
+  this.descripcion = catalogoItem.descripcion || '';
 }
 
 // Getters para mantener compatibilidad con el template existente
@@ -383,24 +471,34 @@ async crearCatalogo(e: Event) {
     e.preventDefault();
     this.catalogoMsg = '';
     
-    if (!this.catItem.trim() || !this.catNombre.trim()) {
+    const itemStr = (this.catItem ?? '').toString().trim();
+    const nombreStr = (this.catNombre ?? '').toString().trim();
+    if (!itemStr || !nombreStr) {
       this.catalogoMsg = 'Item y Nombre son requeridos';
+      return;
+    }
+    // validar item numérico
+    if (isNaN(Number(itemStr))) {
+      this.catalogoMsg = 'El item debe ser numérico';
       return;
     }
     
     try {
-      await insumosService.crearCatalogo({
-        item: this.catItem.trim(),
-        nombre: this.catNombre.trim(),
-        descripcion: this.catDescripcion.trim() || null
-      });
+      const form = new FormData();
+      form.append('nombre', nombreStr);
+      const descStr = (this.catDescripcion ?? '').toString().trim();
+      if (descStr) form.append('descripcion', descStr);
+      if (itemStr) form.append('item', itemStr);
+      if (this.catImagen) form.append('imagen', this.catImagen);
+      await insumosService.crearCatalogo(form);
       
       this.catalogoMsg = ' Catálogo creado correctamente';
       
       // Limpiar formulario
-      this.catItem = '';
+      this.catItem = '' as any;
       this.catNombre = '';
       this.catDescripcion = '';
+      this.catImagen = null;
       
       // Recargar catálogo
       await this.cargarCatalogoBase();
@@ -421,10 +519,11 @@ async crearInsumo(e: Event) {
   this.insumoMsg = ''; // usamos el mensaje correcto
   try {
     const payload = {
-      item: this.item, // o null si lo crea el backend automáticamente
+      item_catalogo: this.item_catalogo,
       nombre: this.nombre.trim(),
       marca: this.marca.trim(),
-      presentacion: this.presentacion,
+      presentacion: this.presentacion?.trim() || null,
+      referencia: this.referencia?.trim() || null,
       cantidad_adquirida: this.cantidad_adquirida,
       cantidad_existente: this.cantidad_existente,
       fecha_adquisicion: this.fecha_adquisicion,
@@ -444,10 +543,11 @@ async crearInsumo(e: Event) {
 
 
 resetInsumoForm() {
-  this.item = 0;
+  this.item_catalogo = null;
   this.nombre = '';
   this.marca = '';
-  this.presentacion = null;
+  this.presentacion = '';
+  this.referencia = '';
   this.cantidad_adquirida = null;
   this.cantidad_existente = null;
   this.fecha_adquisicion = '';
@@ -467,7 +567,7 @@ resetInsumoForm() {
 
 
 async onItemInput() {
-  const q = String(this.item || '').trim();
+  const q = String(this.item_catalogo || '').trim();
   if (q.length >= 1) {
     this.catalogoQ = q;
     await this.buscarCatalogo();
@@ -512,7 +612,7 @@ private aplicarFiltroInsumos() {
   }
 
   this.insumosFiltrados = (this.insumos || []).filter(i => {
-    const itemStr  = normalizar(String(i.item ?? ''));
+    const itemStr  = normalizar(String(i.item_catalogo ?? ''));
     const nombre   = normalizar(String(i.nombre ?? ''));
 
     if (qItem && !itemStr.includes(qItem)) return false;
@@ -541,6 +641,23 @@ async eliminarInsumo(id: number) {
 
 logout() {
   authService.logout();
+}
+
+// Imagen catálogo helper
+getCatalogoImagenUrl(item: number | string) {
+  return insumosService.getCatalogoImagenUrl(item);
+}
+
+onCatImagenChange(ev: any) {
+  const file = ev?.target?.files?.[0];
+  this.catImagen = file || null;
+}
+
+onImgError(ev: any) {
+  try {
+    const img = ev?.target as HTMLImageElement;
+    if (img) img.style.display = 'none';
+  } catch {}
 }
 
 

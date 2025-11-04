@@ -1,4 +1,12 @@
+import { authService } from './auth.service';
 const API_BASE = (window as any).__env?.API_INSUMOS || 'http://localhost:4000/api/insumos';
+
+function authHeaders(): HeadersInit {
+    const token = authService.getToken?.();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+}
 
 export const insumosService = {
     async aux() {
@@ -22,25 +30,31 @@ export const insumosService = {
         if (!res.ok) throw new Error(await res.text());
         return res.json();
     },
-    async crearCatalogo(item: any) {
+    async crearCatalogo(form: FormData) {
         const res = await fetch(`${API_BASE}/catalogo`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item)
+            body: form
         });
         let data: any = null; try { data = await res.json(); } catch { }
         if (!res.ok) throw new Error((data && data.message) || 'Error creando catálogo');
         return data;
     },
-    async actualizarCatalogo(itemId: number, item: any) {
-        const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(String(itemId))}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item)
-        });
+    async actualizarCatalogo(itemId: number, body: FormData | any) {
+        const init: RequestInit = { method: 'PUT' };
+        if (body instanceof FormData) {
+            init.body = body;
+        } else {
+            init.headers = { 'Content-Type': 'application/json' };
+            init.body = JSON.stringify(body);
+        }
+        const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(String(itemId))}`, init);
         let data: any = null; try { data = await res.json(); } catch { }
         if (!res.ok) throw new Error((data && data.message) || 'Error actualizando catálogo');
         return data;
+    },
+
+    getCatalogoImagenUrl(item: number | string) {
+        return `${API_BASE}/catalogo/${encodeURIComponent(String(item))}/imagen`;
     },
 
     // Insumos
@@ -78,7 +92,7 @@ export const insumosService = {
         return resData;
     },
     async eliminarInsumo(item: number) {
-        const res = await fetch(`${API_BASE}/${encodeURIComponent(String(item))}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE}/${encodeURIComponent(String(item))}`, { method: 'DELETE', headers: { ...authHeaders() } });
         let data: any = null; try { data = await res.json(); } catch { }
         if (!res.ok) throw new Error((data && data.message) || 'Error eliminando insumo');
         return data;

@@ -166,7 +166,7 @@ button[type="button"],
 .btn,
 .btn-primary,
 .btn-secondary {
-    padding: 0.8rem 1.5rem;
+    padding: 0.8rem 1.2rem;
     border: none;
     border-radius: 6px;
     font-family: inherit;
@@ -194,6 +194,24 @@ button[type="button"]:hover,
 
 .btn-secondary:hover {
     background: #cbd5e0;
+}
+
+/* Compact button variant to fit text better */
+.btn-compact {
+    padding: 0.7rem 1rem !important; /* más alto para mejor tactilidad */
+    min-height: 40px; /* asegura altura cómoda */
+    font-size: 0.92rem;
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+/* Ensure action cells don't stretch buttons */
+.form-grid .actions {
+    align-self: start;
 }
 
 .btn-reset-filtros {
@@ -274,12 +292,33 @@ button[type="button"]:hover,
     padding: 1.5rem;
     transition: all 0.3s ease;
     position: relative;
+    cursor: pointer;
 }
 
 .catalog-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
     border-color: var(--primary-turquoise);
+}
+
+/* Catalog product image */
+.catalog-card-media {
+    width: 100%;
+    height: 180px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f3f4f6;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.catalog-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .card-top {
@@ -312,6 +351,29 @@ button[type="button"]:hover,
     justify-content: space-between;
     align-items: center;
     gap: 0.5rem;
+}
+
+/* Meta line under catalog name */
+.card-meta {
+    margin-top: 0.25rem;
+    font-size: 0.9rem;
+    color: #556;
+}
+.card-meta .meta {
+    background: var(--light-gray);
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+/* Right-side tag inside the same row as the name */
+.card-name .meta {
+    background: var(--light-gray);
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 /* ===== PDF Actions ===== */
@@ -586,6 +648,176 @@ p[role="status"]:not(.error-message) {
 .status-critical {
     background: var(--alert-red);
     color: #742a2a;
+}
+
+/* ===== Inventario e-commerce cards ===== */
+.insumo-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.insumo-card {
+    background: var(--primary-white);
+    border: 2px solid var(--border-gray);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.insumo-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-turquoise);
+}
+
+.insumo-card-media {
+    width: 100%;
+    height: 180px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.insumo-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.insumo-card-body {
+    padding: 1rem 1rem 1.25rem 1rem;
+}
+
+.insumo-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    margin-bottom: 0.25rem;
+}
+
+.insumo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    color: #556;
+    margin-bottom: 0.5rem;
+}
+
+.insumo-meta .meta {
+    background: var(--light-gray);
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+}
+
+.insumo-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    margin: 0.5rem 0 0.5rem 0;
+    font-size: 0.92rem;
+}
+
+.insumo-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    font-size: 0.82rem;
+    color: #667;
+    margin-bottom: 0.75rem;
+}
+
+.insumo-actions {
+    display: none; /* ocultamos acciones antiguas */
+}
+
+/* Botón eliminar en esquina superior izquierda */
+.insumo-delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px; /* mover a la derecha */
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #e53e3e; /* rojo sólido */
+    color: #fff; /* X siempre blanca */
+    font-size: 28px; /* X más grande */
+    font-weight: 800;
+    line-height: 1;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+}
+
+/* Sin efecto hover */
+.insumo-delete-btn:hover {
+    background: #e53e3e;
+    color: #fff;
+}
+
+/* Chips para cantidades */
+.chip {
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.chip-neutral {
+    background: var(--light-gray);
+    color: #334;
+}
+.chip-good {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* Barra de progreso simple para disponibilidad */
+.insumo-progress {
+    width: 100%;
+    height: 8px;
+    background: #eef2f7;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.insumo-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #22c55e);
+}
+.insumo-progress-bar.good { background: linear-gradient(90deg, #10b981, #22c55e); }
+.insumo-progress-bar.warn { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.insumo-progress-bar.bad  { background: linear-gradient(90deg, #ef4444, #dc2626); }
+.insumo-progress-legend {
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+    color: #556;
+}
+
+/* Desplegable de detalles en tarjetas */
+.insumo-details {
+    display: none;
+    border-top: 1px dashed var(--border-gray);
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    color: #445;
+}
+
+.insumo-details.open {
+    display: block;
+}
+
+.insumo-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.5rem 1rem;
+    font-size: 0.9rem;
 }
 
 /* ===== Utility Classes ===== */
