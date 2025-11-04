@@ -91,6 +91,19 @@ export const insumosService = {
         if (!res.ok) throw new Error((resData && resData.message) || 'Error actualizando insumo');
         return resData;
     },
+    async ajustarExistencias(id: number, opts: { cantidad?: number, delta?: number }) {
+        const body: any = {};
+        if (typeof opts?.cantidad !== 'undefined') body.cantidad = opts.cantidad;
+        if (typeof opts?.delta !== 'undefined') body.delta = opts.delta;
+        const res = await fetch(`${API_BASE}/${encodeURIComponent(String(id))}/existencias`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
+            body: JSON.stringify(body)
+        });
+        let data: any = null; try { data = await res.json(); } catch { }
+        if (!res.ok) throw new Error((data && data.message) || 'Error ajustando existencias');
+        return data; // { id, cantidad_existente }
+    },
     async eliminarInsumo(item: number) {
         const res = await fetch(`${API_BASE}/${encodeURIComponent(String(item))}`, { method: 'DELETE', headers: { ...authHeaders() } });
         let data: any = null; try { data = await res.json(); } catch { }

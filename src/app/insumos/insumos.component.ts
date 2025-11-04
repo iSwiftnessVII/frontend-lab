@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { CommonModule, NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService, authUser } from '../services/auth.service';
@@ -11,7 +11,7 @@ import { insumosService } from '../services/insumos.service';
   selector: 'app-insumos',
   templateUrl: './insumos.component.html',
   styleUrls: ['./insumos.component.css'],
-  imports: [CommonModule, NgIf, FormsModule, RouterModule]
+  imports: [CommonModule, FormsModule, RouterModule]
 })
 
 export class InsumosComponent implements OnInit {
@@ -32,13 +32,30 @@ export class InsumosComponent implements OnInit {
     this.init();
   }
 
-  // Catálogo form
-  catItem = '';
-  catNombre = '';
-  catDescripcion = '';
-  catImagen: File | null = null;
-  catalogoMsg = '';
-  itemFiltro = '';
+  // Catálogo form (signals con accessors para compatibilidad con template)
+  private catItemSig = signal<string>('');
+  get catItem() { return this.catItemSig(); }
+  set catItem(v: string) { this.catItemSig.set(v ?? ''); }
+
+  private catNombreSig = signal<string>('');
+  get catNombre() { return this.catNombreSig(); }
+  set catNombre(v: string) { this.catNombreSig.set(v ?? ''); }
+
+  private catDescripcionSig = signal<string>('');
+  get catDescripcion() { return this.catDescripcionSig(); }
+  set catDescripcion(v: string) { this.catDescripcionSig.set(v ?? ''); }
+
+  private catImagenSig = signal<File | null>(null);
+  get catImagen() { return this.catImagenSig(); }
+  set catImagen(f: File | null) { this.catImagenSig.set(f ?? null); }
+
+  private catalogoMsgSig = signal<string>('');
+  get catalogoMsg() { return this.catalogoMsgSig(); }
+  set catalogoMsg(v: string) { this.catalogoMsgSig.set(v ?? ''); }
+
+  private itemFiltroSig = signal<string>('');
+  get itemFiltro() { return this.itemFiltroSig(); }
+  set itemFiltro(v: string) { this.itemFiltroSig.set(v ?? ''); }
 
 
   // Catálogo búsqueda y selección
@@ -46,15 +63,21 @@ export class InsumosComponent implements OnInit {
   // Signals para catálogo
   catalogoResultadosSig = signal<Array<any>>([]);
   catalogoSeleccionado: any = null;
-  catalogoCargando: boolean = false;
+  private catalogoCargandoSig = signal<boolean>(false);
+  get catalogoCargando() { return this.catalogoCargandoSig(); }
+  set catalogoCargando(v: boolean) { this.catalogoCargandoSig.set(!!v); }
   // Base y listas filtradas para selects (signal)
   catalogoBaseSig = signal<Array<any>>([]);
   catalogoItemResultados: Array<any> = [];
   catalogoNombreResultados: Array<any> = [];
-  nombreFiltro: string = '';
+  private nombreFiltroSig = signal<string>('');
+  get nombreFiltro() { return this.nombreFiltroSig(); }
+  set nombreFiltro(v: string) { this.nombreFiltroSig.set(v ?? ''); }
   // Paginación catálogo
   catalogoVisibleCount: number = 10; // tamaño página frontend respaldo
-  catalogoTotal: number = 0;
+  private catalogoTotalSig = signal<number>(0);
+  get catalogoTotal() { return this.catalogoTotalSig(); }
+  set catalogoTotal(v: number) { this.catalogoTotalSig.set(Number(v) || 0); }
   catalogoOffset: number = 0; // offset usado en backend
   // Paginación del catálogo removida: siempre mostrar todo
 
@@ -67,31 +90,95 @@ export class InsumosComponent implements OnInit {
   certMsg = '';
 
   // Insumo form (nuevo esquema)
-  item_catalogo: number | null = null; // FK a catalogo_insumos.item
+  // Formulario de insumo (signals con accessors)
+  private itemCatalogoSig = signal<number | null>(null);
+  get item_catalogo() { return this.itemCatalogoSig(); }
+  set item_catalogo(v: number | null) {
+    const n = v as any;
+    if (n === null || typeof n === 'undefined' || n === '') { this.itemCatalogoSig.set(null); return; }
+    const num = Number(n);
+    this.itemCatalogoSig.set(Number.isFinite(num) ? num : null);
+  }
 
-  nombre = '';
-  marca = '';
-  presentacion: string = '';
-  referencia: string = '';
-cantidad_adquirida: number | null = null;
-cantidad_existente: number | null = null;
-fecha_adquisicion = '';
-ubicacion = '';
-observaciones = '';
-descripcion = '';
+  private nombreSig = signal<string>('');
+  get nombre() { return this.nombreSig(); }
+  set nombre(v: string) { this.nombreSig.set((v ?? '').toString()); }
 
-// Mensaje de operación
-insumoMsg = '';
+  private marcaSig = signal<string>('');
+  get marca() { return this.marcaSig(); }
+  set marca(v: string) { this.marcaSig.set((v ?? '').toString()); }
 
-// Lista de insumos
-insumos: Array<any> = [];
-// Filtros de inventario
-insumosItemQ = '';
-insumosNombreQ = '';
-insumosFiltrados: Array<any> = [];
+  private presentacionSig = signal<string>('');
+  get presentacion() { return this.presentacionSig(); }
+  set presentacion(v: string) { this.presentacionSig.set((v ?? '').toString()); }
+
+  private referenciaSig = signal<string>('');
+  get referencia() { return this.referenciaSig(); }
+  set referencia(v: string) { this.referenciaSig.set((v ?? '').toString()); }
+
+  private cantAdqSig = signal<number | null>(null);
+  get cantidad_adquirida() { return this.cantAdqSig(); }
+  set cantidad_adquirida(v: number | null) {
+    const n = (v as any);
+    if (n === null || typeof n === 'undefined' || n === '') { this.cantAdqSig.set(null); return; }
+    const num = Number(n);
+    this.cantAdqSig.set(Number.isFinite(num) ? num : null);
+  }
+
+  private cantExSig = signal<number | null>(null);
+  get cantidad_existente() { return this.cantExSig(); }
+  set cantidad_existente(v: number | null) {
+    const n = (v as any);
+    if (n === null || typeof n === 'undefined' || n === '') { this.cantExSig.set(null); return; }
+    const num = Number(n);
+    this.cantExSig.set(Number.isFinite(num) ? num : null);
+  }
+
+  private fechaAdqSig = signal<string>('');
+  get fecha_adquisicion() { return this.fechaAdqSig(); }
+  set fecha_adquisicion(v: string) { this.fechaAdqSig.set((v ?? '').toString()); }
+
+  private ubicacionSig = signal<string>('');
+  get ubicacion() { return this.ubicacionSig(); }
+  set ubicacion(v: string) { this.ubicacionSig.set((v ?? '').toString()); }
+
+  private observacionesSig = signal<string>('');
+  get observaciones() { return this.observacionesSig(); }
+  set observaciones(v: string) { this.observacionesSig.set((v ?? '').toString()); }
+
+  private descripcionSig = signal<string>('');
+  get descripcion() { return this.descripcionSig(); }
+  set descripcion(v: string) { this.descripcionSig.set((v ?? '').toString()); }
+
+// Mensaje de operación (signal)
+private insumoMsgSig = signal<string>('');
+get insumoMsg() { return this.insumoMsgSig(); }
+set insumoMsg(v: string) { this.insumoMsgSig.set(v || ''); }
+
+// Lista y filtros de insumos (signals + accessors para compatibilidad de template)
+private insumosSig = signal<Array<any>>([]);
+get insumos() { return this.insumosSig(); }
+
+private insumosFiltradosSig = signal<Array<any>>([]);
+get insumosFiltrados() { return this.insumosFiltradosSig(); }
+
+private insumosItemQSig = signal<string>('');
+get insumosItemQ() { return this.insumosItemQSig(); }
+set insumosItemQ(v: string) { this.insumosItemQSig.set(v || ''); }
+
+private insumosNombreQSig = signal<string>('');
+get insumosNombreQ() { return this.insumosNombreQSig(); }
+set insumosNombreQ(v: string) { this.insumosNombreQSig.set(v || ''); }
+
 insumosQ = '';
   // Estado de desplegables por tarjeta de insumo
   private expandedInsumos: Set<number> = new Set<number>();
+  // Edición inline de cantidad existente por insumo (señales para botones/estados)
+  editExistMapSig = signal<Record<number, boolean>>({});
+  editExistVal: Record<number, string> = {}; // dejamos valores como objeto simple para [(ngModel)] estable
+  savedExistMapSig = signal<Record<number, boolean>>({});
+  editExistLoadingSig = signal<Record<number, boolean>>({});
+  deleteLoadingSig = signal<Record<number, boolean>>({});
 
 // Panel de catálogo dentro del formulario (autocompletar)
 mostrarCatalogoFormPanel: boolean = false;
@@ -127,7 +214,7 @@ async loadAux() {
 
 async loadInsumos(limit?: number) {
   const rows = await insumosService.listarInsumos(this.insumosQ || '', limit);
-  this.insumos = rows || [];
+  this.insumosSig.set(rows || []);
   this.aplicarFiltroInsumos();
 }
 
@@ -136,7 +223,7 @@ async buscarCatalogo() {
   if (!this.catalogoBaseSig().length) {
     await this.cargarCatalogoBase();
   }
-  this.catalogoCargando = true;
+  this.catalogoCargandoSig.set(true);
   try {
     if (!q) {
       this.catalogoResultadosSig.set(this.catalogoBaseSig().slice());
@@ -148,7 +235,7 @@ async buscarCatalogo() {
       this.catalogoResultadosSig.set(filtered);
     }
   } finally {
-    this.catalogoCargando = false;
+    this.catalogoCargandoSig.set(false);
   }
 }
 
@@ -157,12 +244,12 @@ async cargarCatalogoBase() {
     const resp = await insumosService.buscarCatalogo('', this.catalogoVisibleCount, this.catalogoOffset);
     if (Array.isArray(resp)) {
       this.catalogoBaseSig.set(resp);
-      this.catalogoTotal = resp.length;
+      this.catalogoTotalSig.set(resp.length);
       this.catalogoResultadosSig.set(resp.slice(0, this.catalogoVisibleCount));
     } else {
       const base = resp.rows || [];
       this.catalogoBaseSig.set(base);
-      this.catalogoTotal = resp.total || base.length;
+      this.catalogoTotalSig.set(resp.total || base.length);
       this.catalogoResultadosSig.set(base.slice());
     }
     this.catalogoItemResultados = this.catalogoBaseSig().slice();
@@ -170,22 +257,22 @@ async cargarCatalogoBase() {
 
   } catch (e) {
     console.error('Error cargando catálogo inicial de insumos', e);
-    this.catalogoMsg = 'Error cargando catálogo';
+    this.catalogoMsgSig.set('Error cargando catálogo');
     this.catalogoBaseSig.set([]);
     this.catalogoResultadosSig.set([]);
-    this.catalogoTotal = 0;
+    this.catalogoTotalSig.set(0);
   }
 }
 
 async loadCatalogoInicial() {
   this.catalogoOffset = 0;
   this.catalogoVisibleCount = 10;
-  this.itemFiltro = '';
-  this.nombreFiltro = '';
+  this.itemFiltroSig.set('');
+  this.nombreFiltroSig.set('');
   try {
     await this.cargarCatalogoBase();
   } finally {
-    this.catalogoCargando = false;
+    this.catalogoCargandoSig.set(false);
   }
 }
 
@@ -258,7 +345,7 @@ async filtrarCatalogoPorCampos() {
 
   this.catalogoBaseSig.set(base);
   this.catalogoResultadosSig.set(singleCharQuery ? filtered : filtered.slice(0, this.catalogoVisibleCount));
-  this.catalogoTotal = filtered.length;
+  this.catalogoTotalSig.set(filtered.length);
   this.catalogoItemResultados = this.catalogoBaseSig().slice();
   this.catalogoNombreResultados = this.catalogoBaseSig().slice();
 }
@@ -279,7 +366,7 @@ resetCatalogoPaginado() {
 }
 
 async cargarMasCatalogo() {
-  if (this.catalogoResultadosSig().length >= this.catalogoTotal) return;
+  if (this.catalogoResultadosSig().length >= this.catalogoTotalSig()) return;
   this.catalogoOffset += this.catalogoVisibleCount;
   const resp = await insumosService.buscarCatalogo(this.itemFiltro || this.nombreFiltro || '', this.catalogoVisibleCount, this.catalogoOffset);
   let nuevos: any[] = [];
@@ -287,7 +374,7 @@ async cargarMasCatalogo() {
     nuevos = resp;
   } else {
     nuevos = resp.rows || [];
-    this.catalogoTotal = resp.total || this.catalogoTotal;
+  this.catalogoTotalSig.set(resp.total || this.catalogoTotalSig());
   }
   this.catalogoResultadosSig.set(this.catalogoResultadosSig().concat(nuevos));
 }
@@ -373,6 +460,88 @@ async cargarMasCatalogo() {
     if (pct < 20) return 'bad';
     if (pct < 50) return 'warn';
     return 'good';
+  }
+
+  // ===== Edición inline de 'cantidad_existente' =====
+  isEditingExist(i: any): boolean {
+    const id = Number(i?.id);
+    return Number.isFinite(id) ? !!this.editExistMapSig()[id] : false;
+  }
+
+  startEditExist(i: any, ev?: Event) {
+    ev?.stopPropagation?.();
+    const id = Number(i?.id);
+    if (!Number.isFinite(id)) return;
+    this.editExistMapSig.update(map => ({ ...map, [id]: true }));
+    this.editExistVal[id] = String(i?.cantidad_existente ?? 0);
+  }
+
+  cancelEditExist(i: any, ev?: Event) {
+    ev?.stopPropagation?.();
+    const id = Number(i?.id);
+    if (!Number.isFinite(id)) return;
+    this.editExistMapSig.update(map => {
+      const next = { ...map } as Record<number, boolean>;
+      delete next[id];
+      return next;
+    });
+    delete this.editExistVal[id];
+  }
+
+  async saveEditExist(i: any, ev?: Event) {
+    ev?.stopPropagation?.();
+    const id = Number(i?.id);
+    if (!Number.isFinite(id)) return;
+    if (this.editExistLoadingSig()[id]) return; // evitar doble click
+    const raw = (this.editExistVal[id] ?? '').toString().trim();
+    const num = Number(raw);
+    if (!Number.isFinite(num) || num < 0) {
+      alert('Cantidad inválida (debe ser un número >= 0)');
+      return;
+    }
+    try {
+      this.editExistLoadingSig.update(map => ({ ...map, [id]: true }));
+      const resp = await insumosService.ajustarExistencias(id, { cantidad: num });
+      // Actualizar el modelo local
+      const nuevo = Number(resp?.cantidad_existente);
+      i.cantidad_existente = Number.isFinite(nuevo) ? nuevo : num;
+      // Cerrar edición
+      this.cancelEditExist(i);
+      // Marcar guardado para feedback visual y limpiar luego
+      this.savedExistMapSig.update(map => ({ ...map, [id]: true }));
+      setTimeout(() => {
+        this.savedExistMapSig.update(map => {
+          const next = { ...map } as Record<number, boolean>;
+          delete next[id];
+          return next;
+        });
+      }, 1200);
+    } catch (err: any) {
+      console.error('Error guardando cantidad existente', err);
+      alert(err?.message || 'Error actualizando cantidad existente');
+    }
+    finally {
+      this.editExistLoadingSig.update(map => {
+        const next = { ...map } as Record<number, boolean>;
+        delete next[id];
+        return next;
+      });
+    }
+  }
+
+  wasExistSaved(i: any): boolean {
+    const id = Number(i?.id);
+    return Number.isFinite(id) ? !!this.savedExistMapSig()[id] : false;
+  }
+
+  isLoadingExist(i: any): boolean {
+    const id = Number(i?.id);
+    return Number.isFinite(id) ? !!this.editExistLoadingSig()[id] : false;
+  }
+
+  isDeleteLoading(i: any): boolean {
+    const id = Number(i?.id);
+    return Number.isFinite(id) ? !!this.deleteLoadingSig()[id] : false;
   }
 
 
@@ -516,7 +685,7 @@ async crearCatalogo(e: Event) {
 
 async crearInsumo(e: Event) {
   e.preventDefault();
-  this.insumoMsg = ''; // usamos el mensaje correcto
+  this.insumoMsgSig.set(''); // limpiar mensaje
   try {
     const payload = {
       item_catalogo: this.item_catalogo,
@@ -533,11 +702,11 @@ async crearInsumo(e: Event) {
     };
 
     await insumosService.crearInsumo(payload);
-    this.insumoMsg = 'Insumo creado correctamente';
+  this.insumoMsgSig.set('Insumo creado correctamente');
 
     await this.loadInsumos();
   } catch (err: any) {
-    this.insumoMsg = err?.message || 'Error creando insumo';
+    this.insumoMsgSig.set(err?.message || 'Error creando insumo');
   }
 }
 
@@ -602,16 +771,16 @@ private aplicarFiltroInsumos() {
   const normalizar = (s: string) =>
     (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
-  const qItem = normalizar(this.insumosItemQ || '');
-  const qNom  = normalizar(this.insumosNombreQ || '');
+  const qItem = normalizar(this.insumosItemQSig() || '');
+  const qNom  = normalizar(this.insumosNombreQSig() || '');
 
   // Si no hay filtros, devolver copia completa
   if (!qItem && !qNom) {
-    this.insumosFiltrados = (this.insumos || []).slice();
+    this.insumosFiltradosSig.set((this.insumosSig() || []).slice());
     return;
   }
 
-  this.insumosFiltrados = (this.insumos || []).filter(i => {
+  const filtrados = (this.insumosSig() || []).filter(i => {
     const itemStr  = normalizar(String(i.item_catalogo ?? ''));
     const nombre   = normalizar(String(i.nombre ?? ''));
 
@@ -619,6 +788,7 @@ private aplicarFiltroInsumos() {
     if (qNom  && !nombre.includes(qNom))   return false;
     return true;
   });
+  this.insumosFiltradosSig.set(filtrados);
 }
 
 
@@ -631,11 +801,20 @@ async eliminarInsumo(id: number) {
   if (!confirm('¿Eliminar este insumo?')) return;
   
   try {
+    // marcar botón eliminar en carga
+    this.deleteLoadingSig.update(map => ({ ...map, [id]: true }));
     await insumosService.eliminarInsumo(id);
     await this.loadInsumos();
   } catch (err) {
     console.error('Error eliminando insumo', err);
     alert('Error al eliminar el insumo');
+  }
+  finally {
+    this.deleteLoadingSig.update(map => {
+      const next = { ...map } as Record<number, boolean>;
+      delete next[id];
+      return next;
+    });
   }
 }
 

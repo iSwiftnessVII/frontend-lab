@@ -9,7 +9,7 @@
 	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 	position: sticky;
 	top: 0;
-	z-index: 1000;
+	z-index: 4000; /* above nav so account dropdown always overlays */
 	width: 100vw;
 	margin-left: calc(-50vw + 50%);
 	margin-right: calc(-50vw + 50%);
@@ -135,7 +135,7 @@ body.auth-page .app-header {
 	border: 1px solid var(--border-gray);
 	border-radius: 8px;
 	box-shadow: 0 8px 20px rgba(2,6,23,0.10);
-	z-index: 1500;
+	z-index: 4000; /* ensure above nav dropdown */
 	min-width: 130px; /* smaller */
 	padding: 4px; /* tighter */
 	font-size: 0.92rem;
@@ -260,6 +260,18 @@ body.auth-page .app-header {
 	width: 100vw;
 	margin-left: calc(-50vw + 50%);
 	margin-right: calc(-50vw + 50%);
+		position: relative; /* allow z-index to apply and contain absolute children */
+		z-index: 1200;      /* above page content but below user dropdown */
+	overflow: visible;  /* ensure dropdown is not clipped */
+}
+.dropdown::after {
+	/* Hover bridge so the menu doesn't disappear between button and panel */
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 100%;
+	height: 10px; /* matches the visual gap below */
 }
 
 .nav-content {
@@ -312,6 +324,77 @@ body.auth-page .app-header {
 	color: var(--primary-white);
 	transform: translateY(-1px);
 	box-shadow: 0 3px 10px rgba(0, 184, 181, 0.2);
+}
+
+/* Dropdown inside navigation */
+.dropdown { position: relative; }
+.dropdown > .dropdown-toggle {
+	background: transparent;
+	border: none;
+	color: inherit;
+	width: 100%;
+	text-align: center;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	font: inherit;
+	cursor: pointer;
+}
+.dropdown > .dropdown-toggle .caret {
+	font-size: 0.8rem;
+	transition: transform .18s ease;
+}
+.dropdown:hover > .dropdown-toggle .caret { transform: rotate(180deg); }
+
+.dropdown .dropdown-menu {
+	position: absolute;
+	top: calc(100% + 6px); /* small visual gap below the trigger */
+	left: 0;
+	width: 100%; /* same width as the Inventario button */
+	min-width: unset;
+	background: #fff;
+	border: 1px solid var(--border-gray);
+	border-radius: 10px;
+	box-shadow: 0 10px 30px rgba(2,6,23,0.14);
+	padding: 6px;
+	z-index: 3000; /* over everything (header is 1000) */
+	opacity: 0;
+	transform: translateY(0) scale(1);
+	pointer-events: auto; /* keep interactive during fade */
+	visibility: hidden;
+	transition: opacity 260ms ease, visibility 0s linear 260ms; /* linger a bit before hiding */
+}
+.dropdown:hover .dropdown-menu {
+	opacity: 1;
+	pointer-events: auto;
+	visibility: visible;
+	transition-delay: 0s;
+}
+.dropdown .dropdown-item {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 0.6rem; /* match nav-item gap */
+	padding: 0.9rem 1.6rem; /* match nav-item padding */
+	background: transparent;
+	border: none;
+	border-radius: 8px;
+	color: #0f172a;
+	text-decoration: none;
+	font-weight: 600;
+	font-size: 0.98rem; /* match nav-item font-size */
+	cursor: pointer;
+	min-height: 44px; /* closely matches nav-item height */
+	box-sizing: border-box;
+}
+.dropdown .dropdown-item:hover { background: var(--light-gray); }
+.dropdown .dropdown-item.disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Ensure dropdown stays usable on small screens */
+@media (max-width: 600px) {
+	.dropdown .dropdown-menu { left: 50%; width: 90vw; transform: translate(-50%, 0) scale(0.995); }
+	.dropdown:hover .dropdown-menu { transform: translate(-50%, 0) scale(1); }
 }
 
 /* =====================================================

@@ -23,7 +23,9 @@
             </div>
             <div class="actions"><button class="btn-compact" type="submit">Agregar al catálogo</button></div>
         </form>
-        <p *ngIf="catalogoMsg" aria-live="polite" role="status">{{ catalogoMsg }}</p>
+    @if (catalogoMsg) {
+    <p aria-live="polite" role="status">{{ catalogoMsg }}</p>
+    }
     </section>
 
     <h2>Catálogo de insumos</h2>
@@ -47,36 +49,50 @@
             </div>
 
             <div class="cards-container">
-                <p *ngIf="catalogoCargando">Cargando catálogo...</p>
-                <div class="catalogo-stats" *ngIf="!catalogoCargando && catalogoResultados.length">
-                    <span>Mostrando {{ catalogoResultados.length }} de {{ catalogoTotal || catalogoBase.length }}
-                        insumos</span>
-                </div>
-                <div class="catalogo-cards">
-                    <article class="catalog-card" *ngFor="let c of catalogoResultados; trackBy: trackByCatalogo"
-                             (click)="onCatalogCardClick(c)" role="button" tabindex="0"
-                             (keyup.enter)="onCatalogCardClick(c)" (keyup.space)="onCatalogCardClick(c)">
-                        <div class="catalog-card-media">
-                            <img [src]="getCatalogoImagenUrl(c.item)" alt="Imagen {{ c.nombre }}" (error)="onImgError($event)" />
-                        </div>
-                        <div class="card-name" [title]="c.nombre">
-                            <span [innerHTML]="highlightField(c.nombre, 'nombre')"></span>
-                            <span class="meta">Item: <strong>{{ c.item }}</strong></span>
-                        </div>
-                        <div class="card-desc" *ngIf="c.descripcion">{{ c.descripcion }}</div>
-                    </article>
-                </div>
-                <div class="reset-cell" *ngIf="catalogoResultados.length < (catalogoTotal || 0)">
-                    <button type="button" class="btn-load-more" (click)="cargarMasCatalogo()">Cargar más</button>
-                </div>
-                <p *ngIf="!catalogoCargando && !catalogoResultados.length">No hay elementos en el catálogo.</p>
+                                @if (catalogoCargando) {
+                                    <p>Cargando catálogo...</p>
+                                }
+                                @if (!catalogoCargando && catalogoResultados.length) {
+                                    <div class="catalogo-stats">
+                                        <span>Mostrando {{ catalogoResultados.length }} de {{ catalogoTotal || catalogoBase.length }} insumos</span>
+                                    </div>
+                                }
+                                                <div class="catalogo-cards">
+                                                    @for (c of catalogoResultados; track c.item) {
+                                        <article class="catalog-card"
+                                                         (click)="onCatalogCardClick(c)" role="button" tabindex="0"
+                                                         (keyup.enter)="onCatalogCardClick(c)" (keyup.space)="onCatalogCardClick(c)">
+                                            <div class="catalog-card-media">
+                                                <img [src]="getCatalogoImagenUrl(c.item)" alt="Imagen {{ c.nombre }}" (error)="onImgError($event)" />
+                                            </div>
+                                            <div class="card-name" [title]="c.nombre">
+                                                <span [innerHTML]="highlightField(c.nombre, 'nombre')"></span>
+                                                <span class="meta">Item: <strong>{{ c.item }}</strong></span>
+                                            </div>
+                                            @if (c.descripcion) {
+                                                <div class="card-desc">{{ c.descripcion }}</div>
+                                            }
+                                        </article>
+                                    }
+                                </div>
+                                @if (catalogoResultados.length < (catalogoTotal || 0)) {
+                                    <div class="reset-cell">
+                                        <button type="button" class="btn-load-more" (click)="cargarMasCatalogo()">Cargar más</button>
+                                    </div>
+                                }
+                                @if (!catalogoCargando && !catalogoResultados.length) {
+                                    <p>No hay elementos en el catálogo.</p>
+                                }
             </div>
         </div>
     </section>
 
     <!-- Inventario de insumos -->
-    <h2 *ngIf="item_catalogo != null">Inventario de insumos</h2>
-    <section *ngIf="item_catalogo != null" #insumoFormSection>
+        @if (item_catalogo != null) {
+            <h2>Crear nuevo insumo</h2>
+        }
+        @if (item_catalogo != null) {
+        <section #insumoFormSection>
     <form class="form-grid" (submit)="crearInsumo($event)">
             <div>
                 <label for="item_catalogo">Item catálogo</label>
@@ -129,8 +145,9 @@
                 <button class="btn-compact" type="submit">Crear insumo</button>
             </div>
         </form>
-        <p *ngIf="insumoMsg">{{ insumoMsg }}</p>
+        @if (insumoMsg) { <p>{{ insumoMsg }}</p> }
     </section>
+    }
 
     <h2>Lista de Insumos</h2>
     <!-- Tabla y detalles de insumos -->
@@ -147,53 +164,89 @@
         </div>
 
         <div class="insumo-cards">
-            <article class="insumo-card" *ngFor="let i of insumosFiltrados"
+            @for (i of insumosFiltrados; track i?.id) {
+            <article class="insumo-card"
                      (click)="toggleInsumoCard(i)" role="button" tabindex="0"
                      (keyup.enter)="toggleInsumoCard(i)" (keyup.space)="toggleInsumoCard(i)">
-                <button *ngIf="canDelete()" type="button" class="insumo-delete-btn" aria-label="Eliminar"
-                        (click)="onDeleteInsumo(i, $event)">×</button>
+                                                @if (canDelete()) {
+                                                    <button
+                                                        type="button"
+                                                        class="insumo-delete-btn"
+                                                        title="Eliminar insumo"
+                                                        aria-label="Eliminar insumo"
+                                                        (click)="$event.stopPropagation(); onDeleteInsumo(i, $event)"
+                                                        [disabled]="isDeleteLoading(i)"
+                                                        [attr.aria-busy]="isDeleteLoading(i) ? 'true' : null">&times;</button>
+                                                }
                 <div class="insumo-card-media">
                     <img [src]="getCatalogoImagenUrl(i.item_catalogo)" alt="Imagen {{ i.nombre }}" (error)="onImgError($event)" />
                 </div>
                 <div class="insumo-card-body">
-                    <div class="insumo-title">{{ i.nombre }}</div>
-                    <div class="insumo-meta">
-                        <span class="meta">Item: {{ i.item_catalogo }}</span>
-                        <span class="meta" *ngIf="i.marca">Marca: {{ i.marca }}</span>
+                    <div class="insumo-card-header">
+                        @if (i.marca) { <div class="insumo-brand">Marca: {{ i.marca }}</div> }
+                        <div class="insumo-title-row">
+                            <div class="insumo-title">{{ i.nombre }}</div>
+                            <span class="insumo-item-tag">Item: {{ i.item_catalogo }}</span>
+                        </div>
                     </div>
                     <div class="insumo-stats">
                         <span class="chip chip-neutral" title="Cantidad adquirida">Adquirida: <strong>{{ i.cantidad_adquirida }}</strong></span>
-                        <span class="chip chip-good" title="Cantidad existente">Existente: <strong>{{ i.cantidad_existente }}</strong></span>
+                        @if (!isEditingExist(i)) {
+                          <span class="chip chip-good clickable" title="Cantidad existente"
+                                [class.saved]="wasExistSaved(i)"
+                                role="button" tabindex="0"
+                                (click)="startEditExist(i, $event)"
+                                (keyup.enter)="startEditExist(i, $event)"
+                                (keyup.space)="startEditExist(i, $event)">
+                            Existente: <strong>{{ i.cantidad_existente }}</strong>
+                          </span>
+                        } @else {
+                          <span class="chip chip-good editing" title="Editar cantidad existente" (click)="$event.stopPropagation()">
+                            Existente:
+                <input type="number" min="0" [(ngModel)]="editExistVal[i.id]"
+                    [disabled]="isLoadingExist(i)"
+                    [attr.aria-busy]="isLoadingExist(i) ? 'true' : null"
+                                   (keydown.enter)="saveEditExist(i, $event)" (keydown.escape)="cancelEditExist(i, $event)"
+                                   style="width:80px; margin:0 6px;" />
+                <button type="button" (click)="saveEditExist(i, $event); $event.stopPropagation()" class="btn-compact" [disabled]="isLoadingExist(i)" [attr.aria-busy]="isLoadingExist(i) ? 'true' : null">Guardar</button>
+                <button type="button" (click)="cancelEditExist(i, $event); $event.stopPropagation()" class="btn-compact btn-secondary" [disabled]="isLoadingExist(i)">Cancelar</button>
+                          </span>
+                        }
                     </div>
-                    <div class="insumo-progress" *ngIf="i.cantidad_adquirida">
-                        <div class="insumo-progress-bar" [ngClass]="getExistenteClass(i)" [style.width.%]="getExistentePct(i)" aria-hidden="true"></div>
-                    </div>
-                    <div class="insumo-progress-legend" *ngIf="i.cantidad_adquirida">
-                        <span>{{ getExistentePct(i) | number:'1.0-0' }}% disponible</span>
-                    </div>
+                    @if (i.cantidad_adquirida) {
+                        <div class="insumo-progress">
+                            <div class="insumo-progress-bar" [ngClass]="getExistenteClass(i)" [style.width.%]="getExistentePct(i)" aria-hidden="true"></div>
+                        </div>
+                    }
+                    @if (i.cantidad_adquirida) {
+                        <div class="insumo-progress-legend"><span>{{ getExistentePct(i) | number:'1.0-0' }}% disponible</span></div>
+                    }
 
                     <div class="insumo-details" [class.open]="isInsumoExpanded(i)">
                         <div class="insumo-details-grid">
-                            <div *ngIf="i.presentacion"><strong>Presentación:</strong> {{ i.presentacion }}</div>
-                            <div *ngIf="i.referencia"><strong>Referencia:</strong> {{ i.referencia }}</div>
-                            <div *ngIf="i.descripcion"><strong>Descripción:</strong> {{ i.descripcion }}</div>
-                            <div *ngIf="i.ubicacion"><strong>Ubicación:</strong> {{ i.ubicacion }}</div>
-                            <div *ngIf="i.fecha_adquisicion"><strong>Fecha de adquisición:</strong> {{ formatearFecha(i.fecha_adquisicion) }}</div>
-                            <div *ngIf="i.observaciones"><strong>Observaciones:</strong> {{ i.observaciones }}</div>
+                            @if (i.presentacion) { <div><strong>Presentación:</strong> {{ i.presentacion }}</div> }
+                            @if (i.referencia)   { <div><strong>Referencia:</strong> {{ i.referencia }}</div> }
+                            @if (i.descripcion)  { <div><strong>Descripción:</strong> {{ i.descripcion }}</div> }
+                            @if (i.ubicacion)    { <div><strong>Ubicación:</strong> {{ i.ubicacion }}</div> }
+                            @if (i.fecha_adquisicion) { <div><strong>Fecha de adquisición:</strong> {{ formatearFecha(i.fecha_adquisicion) }}</div> }
+                            @if (i.observaciones) { <div><strong>Observaciones:</strong> {{ i.observaciones }}</div> }
                         </div>
                     </div>
                 </div>
             </article>
+            }
         </div>
-        <p *ngIf="!insumos?.length">No hay insumos cargados.</p>
+    @if (!(insumos.length)) { <p>No hay insumos cargados.</p> }
 
         <!-- Panel de detalles adicionales -->
-        <div *ngIf="mostrarDetalles" class="detalles-panel">
+        @if (mostrarDetalles) {
+        <div class="detalles-panel">
             <div class="detalles-header">
                 <h3>Detalles del insumo</h3>
                 <button type="button" (click)="mostrarDetalles = false">×</button>
             </div>
-            <div class="detalles-content" *ngIf="insumoSeleccionado">
+            @if (insumoSeleccionado) {
+            <div class="detalles-content">
                 <p><strong>Item:</strong> {{ insumoSeleccionado.item }}</p>
                 <p><strong>Nombre:</strong> {{ insumoSeleccionado.nombre }}</p>
                 <p><strong>Cantidad adquirida:</strong> {{ insumoSeleccionado.cantidad_adquirida }}</p>
@@ -203,7 +256,10 @@
                 <p><strong>Descripción:</strong> {{ insumoSeleccionado.descripcion }}</p>
                 <p><strong>Fecha de adquisición:</strong> {{ formatearFecha(insumoSeleccionado.fecha_adquisicion) }}</p>
                 <p><strong>Ubicación:</strong> {{ insumoSeleccionado.ubicacion }}</p>
-                <p *ngIf="insumoSeleccionado.observaciones"><strong>Observaciones:</strong> {{
-                    insumoSeleccionado.observaciones }}</p>
+                @if (insumoSeleccionado.observaciones) {
+                  <p><strong>Observaciones:</strong> {{ insumoSeleccionado.observaciones }}</p>
+                }
             </div>
+            }
         </div>
+        }

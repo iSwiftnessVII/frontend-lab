@@ -15,6 +15,7 @@ export class App implements OnDestroy {
   readonly user = authUser;
   readonly isLoggingOut = signal(false);
   readonly menuOpen = signal(false);
+  readonly inventoryMenuOpen = signal(false);
   readonly currentYear = new Date().getFullYear();
 
   constructor(private router: Router) {
@@ -81,6 +82,15 @@ export class App implements OnDestroy {
     this.menuOpen.set(!this.menuOpen());
   }
 
+  toggleInventoryMenu(ev?: Event) {
+    try { ev?.stopPropagation(); } catch {}
+    this.inventoryMenuOpen.set(!this.inventoryMenuOpen());
+  }
+
+  closeInventoryMenu() {
+    this.inventoryMenuOpen.set(false);
+  }
+
   userShortName(): string {
     try {
       const email = this.user()?.email ?? '';
@@ -95,11 +105,15 @@ export class App implements OnDestroy {
   private handleDocumentClick = (ev: Event) => {
     try {
       const menu = document.querySelector('#app-header .user-menu');
-      if (!menu) return;
       const target = ev.target as Node | null;
-      if (!target) return;
-      if (!menu.contains(target)) {
+      if (target && menu && !menu.contains(target)) {
         this.menuOpen.set(false);
+      }
+
+      // Close inventory dropdown when clicking outside
+      const inv = document.querySelector('.nav-menu .dropdown');
+      if (target && inv && !inv.contains(target)) {
+        this.inventoryMenuOpen.set(false);
       }
     } catch (e) {
       // ignore
