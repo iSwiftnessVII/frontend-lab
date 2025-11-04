@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard, roleGuard } from './services/auth.guard';
 import { InsumosComponent } from './insumos/insumos.component';
+import { PapeleriaComponent } from './papeleria/papeleria.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -29,6 +30,12 @@ export const routes: Routes = [
   { 
     path: 'insumos', 
     component: InsumosComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['Administrador', 'Auxiliar'] }
+  },
+  { 
+    path: 'papeleria', 
+    component: PapeleriaComponent,
     canActivate: [authGuard, roleGuard],
     data: { roles: ['Administrador', 'Auxiliar'] }
   },

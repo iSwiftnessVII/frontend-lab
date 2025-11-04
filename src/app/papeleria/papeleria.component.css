@@ -1,0 +1,49 @@
+.papeleria-page { font-family: 'Poppins', sans-serif; line-height: 1.6; }
+.papeleria-page h2 { font-size: 1.5rem; font-weight: 600; color: var(--primary-blue); margin: 2rem 0 1rem 0; }
+
+/* Reuse catalog styles from Insumos */
+.filters-grid,
+.catalogo-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: end;
+}
+
+.filters-grid label { font-weight: 500; color: var(--primary-blue); margin-bottom: 0.5rem; font-size: 0.9rem; display: block; }
+.filters-grid input { padding: 0.7rem; border: 2px solid var(--border-gray); border-radius: 6px; font-family: inherit; transition: border-color 0.3s ease; width: 100%; }
+.filters-grid input:focus { outline: none; border-color: var(--primary-turquoise); }
+
+.cards-container { margin-top: 1.5rem; }
+.catalogo-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+.catalog-card { background: var(--primary-white); border: 2px solid var(--border-gray); border-radius: 10px; padding: 1.5rem; transition: all 0.3s ease; position: relative; cursor: pointer; }
+.catalog-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); border-color: var(--primary-turquoise); }
+.catalog-card-media { width: 100%; height: 180px; border-radius: 8px; overflow: hidden; background: #f3f4f6; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: center; }
+.catalog-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card-name { font-size: 1.1rem; font-weight: 600; color: var(--primary-blue); margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.card-name .meta { background: var(--light-gray); padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 500; font-size: 0.9rem; white-space: nowrap; }
+.card-desc { color: var(--text-gray); margin-top: 0.5rem; }
+
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; align-items: end; }
+.form-grid .full-row { grid-column: 1 / -1; }
+.form-grid label { font-weight: 500; color: var(--primary-blue); margin-bottom: 0.5rem; font-size: 0.9rem; display: block; }
+.form-grid input, .form-grid textarea, .form-grid select { padding: 0.7rem; border: 2px solid var(--border-gray); border-radius: 6px; font-family: inherit; transition: border-color 0.2s ease; width: 100%; }
+.form-grid input:focus, .form-grid textarea:focus, .form-grid select:focus { outline: none; border-color: var(--primary-turquoise); }
+.actions { display: flex; gap: .5rem; align-items: center; }
+.btn-compact { padding: 0.7rem 1rem !important; min-height: 40px; font-size: 0.92rem; border-radius: 6px; background: var(--primary-turquoise); color: #fff; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; line-height: 1.2; }
+.btn-compact:hover { background: #008e8c; box-shadow: 0 4px 8px rgba(0, 184, 181, 0.3); transform: translateY(-1px); }
+
+/* Botón reset filtros y stats del catálogo (igual que Insumos) */
+.btn-reset-filtros { background: var(--alert-orange); color: #744210; padding: 0.7rem 1rem; border-radius: 6px; border: none; cursor: pointer; }
+.btn-reset-filtros:hover { background: #ffb366; }
+.catalogo-stats { margin-bottom: 1rem; padding: 0.8rem; background: var(--light-gray); border-radius: 6px; color: var(--text-gray); font-weight: 500; }
+
+/* Inventario cards */
+/* Filters */
+.filters-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; align-items: end; }
+.filters-row label { font-weight: 500; color: var(--primary-blue); margin-bottom: 0.5rem; font-size: 0.9rem; display: block; }
+.filters-row input { padding: 0.7rem; border: 2px solid var(--border-gray); border-radius: 6px; font-family: inherit; transition: border-color 0.3s ease; width: 100%; }
+.filters-row input:focus { outline: none; border-color: var(--primary-turquoise); }
+
+/* Inventory list presentation comes from shared inventory-cards.css */
