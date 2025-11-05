@@ -471,20 +471,19 @@
                 <div class="pdf-box pdf-sds" role="group" aria-label="SDS controls">
                   <!-- SDS combinado: icono archivo + estado habilitado/inhabilitado -->
                   <button
-                    *ngIf="reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].hoja===true"
+                    *ngIf="reactivoPdfStatusSig()[r.lote] && reactivoPdfStatusSig()[r.lote].hoja===true"
                     type="button"
                     class="btn pdf-existe"
                     title="Ver hoja de seguridad (SDS)"
                     aria-label="Ver hoja de seguridad (SDS)"
                     (click)="$event.stopPropagation(); onVerHojaReactivo(r.lote)">
-                    <i class="fas fa-eye" aria-hidden="true"></i>
+                    <span class="pdf-acronym" aria-hidden="true">SDS</span>
                   </button>
                   <span
-                    *ngIf="!(reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].hoja===true)"
+                    *ngIf="!(reactivoPdfStatusSig()[r.lote] && reactivoPdfStatusSig()[r.lote].hoja===true)"
                     class="tag pdf-no-existe"
                     aria-label="Hoja de seguridad no disponible">
-                    <i class="fas fa-eye-slash" aria-hidden="true"></i>
-                    Sin PDF
+                    <span class="pdf-acronym" aria-hidden="true">SDS</span>
                   </span>
                   <button type="button" class="pdf-btn delete" *ngIf="canDelete()" title="Eliminar hoja de seguridad"
                     aria-label="Eliminar hoja de seguridad"
@@ -509,20 +508,19 @@
                 <div class="pdf-box pdf-coa" role="group" aria-label="CoA controls">
                   <!-- CoA combinado: icono archivo + estado habilitado/inhabilitado -->
                   <button
-                    *ngIf="reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].cert===true"
+                    *ngIf="reactivoPdfStatusSig()[r.lote] && reactivoPdfStatusSig()[r.lote].cert===true"
                     type="button"
                     class="btn pdf-existe"
                     title="Ver certificado de análisis (CoA)"
                     aria-label="Ver certificado de análisis (CoA)"
                     (click)="$event.stopPropagation(); onVerCertReactivo(r.lote)">
-                    <i class="fas fa-eye" aria-hidden="true"></i>
+                    <span class="pdf-acronym" aria-hidden="true">CoA</span>
                   </button>
                   <span
-                    *ngIf="!(reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].cert===true)"
+                    *ngIf="!(reactivoPdfStatusSig()[r.lote] && reactivoPdfStatusSig()[r.lote].cert===true)"
                     class="tag pdf-no-existe"
                     aria-label="Certificado de análisis no disponible">
-                    <i class="fas fa-eye-slash" aria-hidden="true"></i>
-                    Sin PDF
+                    <span class="pdf-acronym" aria-hidden="true">CoA</span>
                   </span>
                   <button type="button" class="pdf-btn delete" *ngIf="canDelete()"
                     title="Eliminar certificado de análisis" aria-label="Eliminar certificado de análisis"

@@ -151,20 +151,22 @@ body {
     background: #ffffff; /* neutraliza gradiente global */
     border: 1px solid #007bff; /* azul vivo, borde más delgado */
     color: #007bff;
-    width: 33px; /* 1px menos como pediste */
     height: 33px;
-    padding: 0;
+    padding: 0 10px; /* ancho flexible para acrónimo */
     border-radius: 8px !important; /* coincide con otros icon buttons */
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0;
+    gap: 4px;
     font: inherit;
     line-height: 1;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     transition: transform 0.15s ease;
 }
-.reactivo-card .card-name .name-pdfs .btn.pdf-existe i { font-size: 18px; line-height: 1; }
+/* Acrónimo dentro del botón */
+.reactivo-card .card-name .name-pdfs .btn.pdf-existe .pdf-acronym { font-size: 0.85rem; }
 /* cancelamos el ripple/hover global del theme para este botón */
 .reactivo-card .card-name .name-pdfs .btn.pdf-existe::before { content: none !important; }
 .reactivo-card .card-name .name-pdfs .btn.pdf-existe:hover { transform: translateY(-1px); }
@@ -177,7 +179,8 @@ body {
 .reactivo-card .card-name .name-pdfs .tag.pdf-no-existe {
     border: 2px dashed #999;
     color: #999;
-    padding: 6px 12px;
+    padding: 0 10px;
+    height: 33px; /* alinear altura con botón */
     border-radius: 8px;
     display: inline-flex;
     align-items: center;
@@ -187,6 +190,8 @@ body {
     opacity: 0.7;
     background: #ffffff;
 }
+/* Acrónimo gris cuando no hay documento */
+.reactivo-card .card-name .name-pdfs .tag.pdf-no-existe .pdf-acronym { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.02em; }
 
 /* Aplicar también a la vista de catálogo: asegurar que el contenedor del nombre
    tenga bordes curvos y reserve espacio a la derecha para botones/etiquetas. */
