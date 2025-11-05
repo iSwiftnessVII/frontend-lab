@@ -111,6 +111,31 @@
   left: auto !important;
 }
 
+/* Generic square action button (align with Reactivos pdf-btn) */
+.pdf-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04) inset;
+}
+.pdf-btn.delete { background: #d11a1a; color: #fff; border-color: #b11212; }
+.pdf-btn:hover { transform: translateY(-1px); }
+.pdf-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* Position card delete buttons top-right for any card */
+:is(.insumo-card, .inventory-card, .catalog-card) .card-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+}
+
 /* ==========================
    Skeleton loading styles
    ========================== */

@@ -23,9 +23,7 @@
             </div>
             <div class="actions"><button class="btn-compact" type="submit">Agregar al catálogo</button></div>
         </form>
-    @if (catalogoMsg) {
-    <p aria-live="polite" role="status">{{ catalogoMsg }}</p>
-    }
+    
     </section>
 
     <h2>Catálogo de insumos</h2>
@@ -176,7 +174,7 @@
                 <button class="btn-compact" type="submit">Crear insumo</button>
             </div>
         </form>
-        @if (insumoMsg) { <p>{{ insumoMsg }}</p> }
+        
     </section>
     }
 
@@ -202,12 +200,14 @@
                                                 @if (canDelete()) {
                                                     <button
                                                         type="button"
-                                                        class="insumo-delete-btn"
+                                                        class="pdf-btn delete card-delete-btn"
                                                         title="Eliminar insumo"
                                                         aria-label="Eliminar insumo"
                                                         (click)="$event.stopPropagation(); onDeleteInsumo(i, $event)"
                                                         [disabled]="isDeleteLoading(i)"
-                                                        [attr.aria-busy]="isDeleteLoading(i) ? 'true' : null">&times;</button>
+                                                        [attr.aria-busy]="isDeleteLoading(i) ? 'true' : null">
+                                                        <i class="fas fa-trash" aria-hidden="true"></i>
+                                                    </button>
                                                 }
                 <div class="insumo-card-media">
                     <img [src]="getCatalogoImagenUrl(i.item_catalogo)" alt="Imagen {{ i.nombre }}" (error)="onImgError($event)" />

@@ -8,7 +8,8 @@
         <p class="login-sub">Ingresa tu correo para recibir el enlace</p>
       </header>
 
-      <form class="login-form" (submit)="onSubmit($event)" *ngIf="!submitted; else doneTpl">
+      @if (!submitted) {
+      <form class="login-form" (submit)="onSubmit($event)">
         <div class="form-group">
           <label for="email">Correo electrónico</label>
           <input id="email" name="email" type="email" [(ngModel)]="email" required placeholder="tu@ejemplo.com" />
@@ -21,16 +22,14 @@
         <div class="login-foot">
           <a class="link" routerLink="/login">Volver al inicio de sesión</a>
         </div>
-
-        <p class="muted" *ngIf="message">{{ message }}</p>
+        <!-- Mensajes inline eliminados: usar snackbars globales -->
       </form>
-
-      <ng-template #doneTpl>
-        <p class="success">Si el correo está registrado, te enviaremos un enlace para restablecer tu contraseña.</p>
+      }
+      @else {
         <div class="login-foot">
           <a class="link" routerLink="/login">Volver al inicio de sesión</a>
         </div>
-      </ng-template>
+      }
     </section>
   </main>
 </div>

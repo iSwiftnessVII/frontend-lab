@@ -1,5 +1,6 @@
 <!-- ====== HEADER GLOBAL LIBA ====== -->
-<header id="app-header" class="header" *ngIf="user()">
+@if (user()) {
+<header id="app-header" class="header">
   <div class="header-content">
     <div class="logo-section">
       <div class="logo">LIBA</div>
@@ -51,77 +52,82 @@
     </div>
   </div>
 </header>
+}
 
 <!-- ====== NAVIGATION MENU ====== -->
-<nav class="nav-menu" *ngIf="user()">
+@if (user()) {
+<nav class="nav-menu">
   <div class="nav-content">
     <!-- Mostrar estas páginas solo si NO es Superadmin -->
-    <a
-      *ngIf="user()?.rol !== 'Superadmin'"
-      routerLink="/dashboard"
-      routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }"
-      class="nav-item"
-    >
-      <i class="fas fa-tachometer-alt"></i> Dashboard
-    </a>
-
-    <a 
-      *ngIf="user()?.rol !== 'Superadmin'" 
-      routerLink="/solicitudes" 
-      routerLinkActive="active" 
-      class="nav-item"
-    >
-      <i class="fas fa-clipboard-list"></i> Solicitudes
-    </a>
-
-    <!-- Inventario dropdown: hover OR click to open -->
-    <div 
-      *ngIf="user()?.rol !== 'Superadmin'" 
-      class="nav-item dropdown"
-    >
-      <button
-        type="button"
-        class="dropdown-toggle"
-        aria-haspopup="true"
-        aria-expanded="false"
+    @if (user()?.rol !== 'Superadmin') {
+      <a
+        routerLink="/dashboard"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-item"
       >
-        <i class="fas fa-warehouse" aria-hidden="true"></i>
-        <span>Inventario</span>
-        <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
-      </button>
+        <i class="fas fa-tachometer-alt"></i> Dashboard
+      </a>
 
-      <div class="dropdown-menu" role="menu">
-        <a routerLink="/reactivos" class="dropdown-item" role="menuitem">
-          <i class="fas fa-flask" aria-hidden="true"></i>
-          <span>Reactivos</span>
-        </a>
-        <a routerLink="/insumos" class="dropdown-item" role="menuitem">
-          <i class="fas fa-boxes" aria-hidden="true"></i>
-          <span>Insumos</span>
-        </a>
-        <a routerLink="/papeleria" class="dropdown-item" role="menuitem">
-          <i class="fas fa-paperclip" aria-hidden="true"></i>
-          <span>Papelería</span>
-        </a>
-        <button type="button" class="dropdown-item disabled" role="menuitem" disabled>
-          <i class="fas fa-vials" aria-hidden="true"></i>
-          <span>Materiales volumétricos</span>
+      <a 
+        routerLink="/solicitudes" 
+        routerLinkActive="active" 
+        class="nav-item"
+      >
+        <i class="fas fa-clipboard-list"></i> Solicitudes
+      </a>
+
+      <!-- Inventario dropdown: hover OR click to open -->
+      <div class="nav-item dropdown">
+        <button
+          type="button"
+          class="dropdown-toggle"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          <i class="fas fa-warehouse" aria-hidden="true"></i>
+          <span>Inventario</span>
+          <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
         </button>
+
+        <div class="dropdown-menu" role="menu">
+          <a routerLink="/reactivos" class="dropdown-item" role="menuitem">
+            <i class="fas fa-flask" aria-hidden="true"></i>
+            <span>Reactivos</span>
+          </a>
+          <a routerLink="/insumos" class="dropdown-item" role="menuitem">
+            <i class="fas fa-boxes" aria-hidden="true"></i>
+            <span>Insumos</span>
+          </a>
+          <a routerLink="/equipos" class="dropdown-item" role="menuitem">
+            <i class="fas fa-screwdriver-wrench" aria-hidden="true"></i>
+            <span>Equipos</span>
+          </a>
+          <a routerLink="/papeleria" class="dropdown-item" role="menuitem">
+            <i class="fas fa-paperclip" aria-hidden="true"></i>
+            <span>Papelería</span>
+          </a>
+          <button type="button" class="dropdown-item disabled" role="menuitem" disabled>
+            <i class="fas fa-vials" aria-hidden="true"></i>
+            <span>Materiales volumétricos</span>
+          </button>
+        </div>
       </div>
-    </div>
+    }
 
     <!-- Mostrar Usuarios solo si ES Superadmin -->
-    <a 
-      *ngIf="user()?.rol === 'Superadmin'" 
-      routerLink="/usuarios" 
-      routerLinkActive="active" 
-      class="nav-item"
-    >
-      <i class="fas fa-users"></i> Usuarios
-    </a>
+    @if (user()?.rol === 'Superadmin') {
+      <a 
+        routerLink="/usuarios" 
+        routerLinkActive="active" 
+        class="nav-item"
+      >
+        <i class="fas fa-users"></i> Usuarios
+      </a>
+    }
   </div>
 </nav>
+}
 
 <!-- ====== CONTENIDO PRINCIPAL ====== -->
 <main class="main-content liba-theme" [class.route-navigating]="isNavigating()">
@@ -129,9 +135,28 @@
 </main>
 
 <!-- ====== FOOTER GLOBAL LIBA ====== -->
-<footer class="app-footer" *ngIf="showFooter()">
+@if (showFooter()) {
+<footer class="app-footer">
   <p>
     © {{ currentYear }} LIBA - Laboratorio Integrado de Biociencias Aplicadas.
     Todos los derechos reservados.
   </p>
 </footer>
+}
+
+<!-- ====== GLOBAL SNACKBAR ====== -->
+<div class="snackbar" [class.open]="snack.openSig()" [class.success]="snack.typeSig() === 'success'" [class.error]="snack.typeSig() === 'error'" [class.warn]="snack.typeSig() === 'warn'">
+  <div class="snackbar-content">
+    <span class="snackbar-icon" aria-hidden="true">
+      <i class="fas" [ngClass]="{
+        'fa-check-circle': snack.typeSig() === 'success',
+        'fa-exclamation-triangle': snack.typeSig() === 'warn',
+        'fa-times-circle': snack.typeSig() === 'error',
+        'fa-info-circle': snack.typeSig() !== 'success' && snack.typeSig() !== 'warn' && snack.typeSig() !== 'error'
+      }"></i>
+    </span>
+    <span class="snackbar-text">{{ snack.messageSig() }}</span>
+    <button type="button" class="snackbar-close" (click)="snack.close()" aria-label="Cerrar">×</button>
+  </div>
+  <div class="snackbar-timer"></div>
+</div>

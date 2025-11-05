@@ -20,7 +20,7 @@
       </div>
       <div class="actions"><button class="btn-compact" type="submit">Agregar al catálogo</button></div>
     </form>
-    @if (catalogoMsg) { <p aria-live="polite" role="status">{{ catalogoMsg }}</p> }
+    
   </section>
 
   <h2>Catálogo de Papelería</h2>
@@ -159,7 +159,6 @@
         </div>
         <div class="actions">
           <button class="btn-compact" type="submit">Crear</button>
-          @if (papMsg) { <span class="status-msg">{{ papMsg }}</span> }
         </div>
       </form>
     </section>
@@ -184,11 +183,13 @@
                  (click)="toggleInsumoCard(i)" role="button" tabindex="0"
                  (keyup.enter)="toggleInsumoCard(i)" (keyup.space)="toggleInsumoCard(i)">
           @if (canDelete()) {
-            <button type="button" class="insumo-delete-btn" title="Eliminar"
+            <button type="button" class="pdf-btn delete card-delete-btn" title="Eliminar"
                     aria-label="Eliminar"
                     (click)="$event.stopPropagation(); onDeleteInsumo(i, $event)"
                     [disabled]="isDeleteLoading(i)"
-                    [attr.aria-busy]="isDeleteLoading(i) ? 'true' : null">&times;</button>
+                    [attr.aria-busy]="isDeleteLoading(i) ? 'true' : null">
+              <i class="fas fa-trash" aria-hidden="true"></i>
+            </button>
           }
           <div class="insumo-card-media">
             <img [src]="getCatalogoImagenUrl(i.item_catalogo)" alt="Imagen {{ i.nombre }}" (error)="onImgError($event)" />

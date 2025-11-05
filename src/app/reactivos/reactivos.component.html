@@ -107,6 +107,18 @@
                 <span class="tag"><strong>Clasificación: </strong> <span
                     [innerHTML]="highlightField(c.clasificacion_sga, 'otro')"></span></span>
               </div>
+              @if (canDelete()) {
+                <button
+                  type="button"
+                  class="pdf-btn delete"
+                  title="Eliminar del catálogo"
+                  aria-label="Eliminar del catálogo"
+                  (click)="onDeleteCatalogo(c, $event)"
+                  [disabled]="isDeleteCatalogoLoading(c)"
+                  [attr.aria-busy]="isDeleteCatalogoLoading(c) ? 'true' : null">
+                  <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+              }
             </div>
             <div class="card-name" [title]="c.nombre">
               <span [innerHTML]="highlightField(c.nombre, 'nombre')"></span>
@@ -382,11 +394,7 @@
       </div>
     </form>
 
-    <div>
-      @if (reactivoMsg) {
-      <p>{{ reactivoMsg }}</p>
-      }
-    </div>
+    <!-- Mensajes inline eliminados: usar snackbars globales -->
   </section>
 
   <h2>Inventario de Reactivos</h2>
@@ -461,20 +469,23 @@
               <!-- Botones y etiquetas PDF a la derecha -->
               <div class="name-pdfs" (click)="$event.stopPropagation()">
                 <div class="pdf-box pdf-sds" role="group" aria-label="SDS controls">
-                  <!-- SDS group -->
-                  <button type="button" class="pdf-btn view" title="Ver hoja de seguridad (SDS)"
-                    aria-label="Ver hoja de seguridad" (click)="$event.stopPropagation(); onVerHojaReactivo(r.lote)">
-                    <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2"
-                        fill="none" stroke-linecap="round" stroke-linejoin="round" />
-                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none" />
-                    </svg>
+                  <!-- SDS combinado: icono archivo + estado habilitado/inhabilitado -->
+                  <button
+                    *ngIf="reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].hoja===true"
+                    type="button"
+                    class="btn pdf-existe"
+                    title="Ver hoja de seguridad (SDS)"
+                    aria-label="Ver hoja de seguridad (SDS)"
+                    (click)="$event.stopPropagation(); onVerHojaReactivo(r.lote)">
+                    <i class="fas fa-eye" aria-hidden="true"></i>
                   </button>
-                  <span class="pdf-availability"
-                    [title]="(reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].hoja===true) ? 'Subido' : ((reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].hoja===false) ? 'No subido' : 'Comprobando')"
-                    [class.loading]="reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].hoja===null"
-                    [class.ok]="reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].hoja===true"
-                    [class.fail]="reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].hoja===false">SDS</span>
+                  <span
+                    *ngIf="!(reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].hoja===true)"
+                    class="tag pdf-no-existe"
+                    aria-label="Hoja de seguridad no disponible">
+                    <i class="fas fa-eye-slash" aria-hidden="true"></i>
+                    Sin PDF
+                  </span>
                   <button type="button" class="pdf-btn delete" *ngIf="canDelete()" title="Eliminar hoja de seguridad"
                     aria-label="Eliminar hoja de seguridad"
                     (click)="$event.stopPropagation(); onEliminarHojaReactivo(r.lote)">
@@ -496,21 +507,23 @@
                 </div>
 
                 <div class="pdf-box pdf-coa" role="group" aria-label="CoA controls">
-                  <!-- CoA group -->
-                  <button type="button" class="pdf-btn view" title="Ver certificado de análisis (CoA)"
-                    aria-label="Ver certificado de análisis"
+                  <!-- CoA combinado: icono archivo + estado habilitado/inhabilitado -->
+                  <button
+                    *ngIf="reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].cert===true"
+                    type="button"
+                    class="btn pdf-existe"
+                    title="Ver certificado de análisis (CoA)"
+                    aria-label="Ver certificado de análisis (CoA)"
                     (click)="$event.stopPropagation(); onVerCertReactivo(r.lote)">
-                    <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2"
-                        fill="none" stroke-linecap="round" stroke-linejoin="round" />
-                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none" />
-                    </svg>
+                    <i class="fas fa-eye" aria-hidden="true"></i>
                   </button>
-                  <span class="pdf-availability"
-                    [title]="(reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].cert===true) ? 'Subido' : ((reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].cert===false) ? 'No subido' : 'Comprobando')"
-                    [class.loading]="reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].cert===null"
-                    [class.ok]="reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].cert===true"
-                    [class.fail]="reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].cert===false">CoA</span>
+                  <span
+                    *ngIf="!(reactivoPdfStatus[r.lote] && reactivoPdfStatus[r.lote].cert===true)"
+                    class="tag pdf-no-existe"
+                    aria-label="Certificado de análisis no disponible">
+                    <i class="fas fa-eye-slash" aria-hidden="true"></i>
+                    Sin PDF
+                  </span>
                   <button type="button" class="pdf-btn delete" *ngIf="canDelete()"
                     title="Eliminar certificado de análisis" aria-label="Eliminar certificado de análisis"
                     (click)="$event.stopPropagation(); onEliminarCertReactivo(r.lote)">

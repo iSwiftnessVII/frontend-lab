@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, Renderer2, Inject } from '@angular/core';
 import { DOCUMENT, CommonModule } from '@angular/common';
 import { authService } from '../services/auth.service';
+import { SnackbarService } from '../shared/snackbar.service';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 
@@ -24,6 +25,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     private route: ActivatedRoute,
     private renderer: Renderer2,
     @Inject(DOCUMENT) private document: Document,
+    public snack: SnackbarService,
   ) {
     const q = this.route.snapshot.queryParamMap.get('returnUrl');
     // Aceptar sólo rutas internas seguras empezando por '/dashboard'
@@ -73,16 +75,19 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     if (form && form.invalid) {
       // Marcar todos los controles como tocados para mostrar errores
       Object.values(form.controls).forEach((c: any) => c?.control?.markAsTouched?.());
+      this.snack.warn('Completa los campos requeridos');
       return; // No continuar si el formulario es inválido
     }
     this.loading = true;
     try {
       await authService.login(this.email, this.contrasena);
       this.triedSubmit = false;
+      this.snack.success('Bienvenido');
       await this.router.navigateByUrl(this.returnUrl);
     } catch (err: any) {
       console.error('Error al iniciar sesión:', err);
       this.error = err?.message || 'Error al iniciar sesión. Intenta nuevamente.';
+      this.snack.error(this.error);
     } finally {
       this.loading = false;
     }

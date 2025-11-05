@@ -4,6 +4,7 @@ import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService, authUser } from '../services/auth.service';
+import { SnackbarService } from '../shared/snackbar.service';
 import { reactivosService } from '../services/reactivos.service';
 
 
@@ -59,6 +60,7 @@ export class ReactivosComponent implements OnInit {
   catalogoVisibleCount: number = 10; // tamaño página frontend respaldo
   catalogoTotal: number = 0;
   catalogoOffset: number = 0; // offset usado en backend
+  catalogoDeleting = new Set<string>();
   // Paginación del catálogo removida: siempre mostrar todo
 
   // Gestión de PDFs
@@ -164,7 +166,7 @@ export class ReactivosComponent implements OnInit {
     }, duration);
   }
 
-  constructor(private sanitizer: DomSanitizer, private cdr: ChangeDetectorRef) {}
+  constructor(private sanitizer: DomSanitizer, private cdr: ChangeDetectorRef, public snack: SnackbarService) {}
 
   async init() {
     try {
@@ -972,7 +974,7 @@ export class ReactivosComponent implements OnInit {
     this.submittedCatalogo = true;
     if (form && form.invalid) {
       try { form.control.markAllAsTouched(); } catch {}
-      this.catalogoMsg = 'Por favor corrige los campos resaltados.';
+      this.snack.warn('Por favor corrige los campos resaltados.');
       return;
     }
     try {
@@ -983,7 +985,7 @@ export class ReactivosComponent implements OnInit {
         clasificacion_sga: this.catClasificacion.trim(),
         descripcion: this.catDescripcion.trim() || null
       });
-  this.catalogoMsg = 'Catálogo creado correctamente';
+  this.snack.success('Catálogo creado correctamente');
       // limpiar
       this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = this.catDescripcion = '';
   this.submittedCatalogo = false;
@@ -996,7 +998,7 @@ export class ReactivosComponent implements OnInit {
         await this.buscarCatalogo();
       }
     } catch (err: any) {
-      this.catalogoMsg = err?.message || 'Error creando catálogo';
+      this.snack.error(err?.message || 'Error creando catálogo');
     }
   }
 
@@ -1011,13 +1013,13 @@ export class ReactivosComponent implements OnInit {
     }
     if (form && form.invalid) {
       try { form.control.markAllAsTouched(); } catch {}
-      this.reactivoMsg = 'Por favor corrige los campos resaltados.';
+      this.snack.warn('Por favor corrige los campos resaltados.');
       return;
     }
     try {
       // Validación mínima de campos obligatorios
       if (!this.lote.trim() || !this.codigo.trim() || !this.nombre.trim()) {
-        this.reactivoMsg = 'Por favor completa Lote, Código y Nombre.';
+        this.snack.warn('Por favor completa Lote, Código y Nombre.');
         return;
       }
 
@@ -1054,10 +1056,10 @@ export class ReactivosComponent implements OnInit {
       if (this.editMode && this.editOriginalLote) {
         // Actualizar: usar lote original como clave en la URL
         await reactivosService.actualizarReactivo(this.editOriginalLote, payload);
-        this.reactivoMsg = 'Reactivo actualizado correctamente';
+        this.snack.success('Reactivo actualizado correctamente');
       } else {
         await reactivosService.crearReactivo(payload);
-        this.reactivoMsg = 'Reactivo creado correctamente';
+        this.snack.success('Reactivo creado correctamente');
       }
       // If files were selected during creation/edit, upload them now (by lote)
       try {
@@ -1075,7 +1077,7 @@ export class ReactivosComponent implements OnInit {
       } catch (upErr) {
         // don't fail creation if upload fails; show a message
         console.warn('Error uploading docs for reactivo:', upErr);
-        this.reactivoMsg += ' (Error subiendo documentos)';
+        this.snack.warn('Reactivo creado pero ocurrió un error subiendo documentos');
       }
       await this.loadReactivos();
       // Limpiar modelo y restablecer estado visual del formulario (pristine/untouched)
@@ -1083,7 +1085,7 @@ export class ReactivosComponent implements OnInit {
       this.submittedReactivo = false;
       try { if (form) form.resetForm(); } catch {}
     } catch (err: any) {
-      this.reactivoMsg = err?.message || 'Error creando reactivo';
+      this.snack.error(err?.message || 'Error creando reactivo');
     }
   }
 
@@ -1092,6 +1094,30 @@ export class ReactivosComponent implements OnInit {
   // Solo Administrador y Superadmin pueden eliminar
   return user?.rol === 'Administrador' || user?.rol === 'Superadmin';
 }
+
+  isDeleteCatalogoLoading(c: any): boolean {
+    const code = c?.codigo || '';
+    return !!code && this.catalogoDeleting.has(code);
+  }
+
+  async onDeleteCatalogo(c: any, ev?: Event) {
+    try { ev?.stopPropagation(); } catch {}
+    if (!this.canDelete()) return;
+    const codigo = c?.codigo;
+    const nombre = c?.nombre || '';
+    if (!codigo) return;
+    if (!confirm(`¿Eliminar del catálogo el reactivo "${nombre || codigo}"?`)) return;
+    this.catalogoDeleting.add(codigo);
+    try {
+      await reactivosService.eliminarCatalogo(codigo);
+      this.snack.success('Eliminado del catálogo');
+      await this.cargarCatalogoBase();
+    } catch (e: any) {
+      this.snack.error(e?.message || 'Error eliminando del catálogo');
+    } finally {
+      this.catalogoDeleting.delete(codigo);
+    }
+  }
 
   // Handlers for file inputs in reactivo creation form
   onSdsSelected(ev: any) {
@@ -1233,15 +1259,15 @@ export class ReactivosComponent implements OnInit {
     };
     try {
       if (!payload.lote || !payload.codigo || !payload.nombre) {
-        this.reactivoMsg = 'Por favor completa Lote, Código y Nombre.';
+        this.snack.warn('Por favor completa Lote, Código y Nombre.');
         return;
       }
       await reactivosService.actualizarReactivo(this.editFormData.loteOriginal, payload);
-      this.reactivoMsg = 'Reactivo actualizado correctamente';
+      this.snack.success('Reactivo actualizado correctamente');
       this.closeEditModal();
       await this.loadReactivos();
     } catch (e: any) {
-      this.reactivoMsg = e?.message || 'Error actualizando reactivo';
+      this.snack.error(e?.message || 'Error actualizando reactivo');
     }
   }
 

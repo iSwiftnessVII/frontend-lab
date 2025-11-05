@@ -49,6 +49,15 @@ export const reactivosService = {
     if (!res.ok) throw new Error((data && data.message) || 'Error actualizando catálogo');
     return data;
   },
+  async eliminarCatalogo(codigo: string) {
+    const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}`, {
+      method: 'DELETE',
+      headers: { ...authHeaders() }
+    });
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'Error eliminando del catálogo');
+    return data;
+  },
   // Reactivos
   async listarReactivos(q: string, limit?: number) {
     const url = new URL(API_BASE);

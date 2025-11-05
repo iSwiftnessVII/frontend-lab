@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { SnackbarService } from '../shared/snackbar.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -184,7 +185,7 @@ insumosQ = '';
 mostrarCatalogoFormPanel: boolean = false;
 
 
-constructor(private sanitizer: DomSanitizer) {}
+constructor(private sanitizer: DomSanitizer, private snack: SnackbarService) {}
 
 async init() {
   try {
@@ -638,17 +639,17 @@ highlightField(value: string, field:'nombre' | 'otro' | 'item'): SafeHtml {
 
 async crearCatalogo(e: Event) {
     e.preventDefault();
-    this.catalogoMsg = '';
+  this.catalogoMsg = '';
     
     const itemStr = (this.catItem ?? '').toString().trim();
     const nombreStr = (this.catNombre ?? '').toString().trim();
     if (!itemStr || !nombreStr) {
-      this.catalogoMsg = 'Item y Nombre son requeridos';
+      this.snack.warn('Falta completar: Item y Nombre');
       return;
     }
     // validar item numérico
     if (isNaN(Number(itemStr))) {
-      this.catalogoMsg = 'El item debe ser numérico';
+      this.snack.warn('El item debe ser numérico');
       return;
     }
     
@@ -661,7 +662,7 @@ async crearCatalogo(e: Event) {
       if (this.catImagen) form.append('imagen', this.catImagen);
       await insumosService.crearCatalogo(form);
       
-      this.catalogoMsg = ' Catálogo creado correctamente';
+  this.snack.success('Se creó el item de catálogo');
       
       // Limpiar formulario
       this.catItem = '' as any;
@@ -679,13 +680,26 @@ async crearCatalogo(e: Event) {
         await this.buscarCatalogo();
       }
     } catch (err: any) {
-      this.catalogoMsg = '❌ ' + (err?.message || 'Error creando catálogo');
+      this.snack.error(err?.message || 'Error al crear el item de catálogo');
     }
   }
 
 async crearInsumo(e: Event) {
   e.preventDefault();
   this.insumoMsgSig.set(''); // limpiar mensaje
+  // Validación mínima de campos requeridos
+  if (!this.item_catalogo || !(this.nombre || '').trim()) {
+    this.snack.warn('Faltan campos requeridos: Item catálogo y Nombre');
+    return;
+  }
+  if (this.cantidad_adquirida == null || this.cantidad_existente == null) {
+    this.snack.warn('Faltan las cantidades adquirida y existente');
+    return;
+  }
+  if ((this.cantidad_adquirida as any) < 0 || (this.cantidad_existente as any) < 0) {
+    this.snack.warn('Las cantidades deben ser números >= 0');
+    return;
+  }
   try {
     const payload = {
       item_catalogo: this.item_catalogo,
@@ -702,11 +716,11 @@ async crearInsumo(e: Event) {
     };
 
     await insumosService.crearInsumo(payload);
-  this.insumoMsgSig.set('Insumo creado correctamente');
+    this.snack.success('Se creó el insumo');
 
     await this.loadInsumos();
   } catch (err: any) {
-    this.insumoMsgSig.set(err?.message || 'Error creando insumo');
+    this.snack.error(err?.message || 'Error al crear el insumo');
   }
 }
 

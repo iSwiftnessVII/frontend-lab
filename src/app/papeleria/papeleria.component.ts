@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { papeleriaService } from '../services/papeleria.service';
+import { SnackbarService } from '../shared/snackbar.service';
 import { authService, authUser } from '../services/auth.service';
 
 @Component({
@@ -191,6 +192,11 @@ export class PapeleriaComponent implements OnInit {
 
   async crearCatalogo(ev: Event) {
     ev.preventDefault();
+    // Validación mínima
+    const itemStr = (this.catItem ?? '').toString().trim();
+    const nombreStr = (this.catNombre ?? '').toString().trim();
+    if (!itemStr || !nombreStr) { this.snack.warn('Faltan campos requeridos: Item y Nombre'); return; }
+    if (isNaN(Number(itemStr))) { this.snack.warn('El item debe ser numérico'); return; }
     const fd = new FormData();
     fd.set('item', String(this.catItem || ''));
     fd.set('nombre', String(this.catNombre || ''));
@@ -198,7 +204,7 @@ export class PapeleriaComponent implements OnInit {
     if (this.catImagen) fd.set('imagen', this.catImagen);
     try {
       await papeleriaService.crearCatalogo(fd);
-      this.catalogoMsg = 'Agregado al catálogo';
+      this.snack.success('Se creó el item de catálogo');
       // reset simple
       this.catItem = '';
       this.catNombre = '';
@@ -206,14 +212,14 @@ export class PapeleriaComponent implements OnInit {
       this.catImagen = null;
       await this.loadCatalogoInicial();
     } catch (e) {
-      this.catalogoMsg = (e as any)?.message || 'Error creando catálogo';
+      this.snack.error((e as any)?.message || 'Error al crear el item de catálogo');
     }
   }
 
   getCatalogoImagenUrl(item: number|string) { return papeleriaService.getCatalogoImagenUrl(item); }
 
   // Resaltar coincidencias en nombre del catálogo
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor(private sanitizer: DomSanitizer, private snack: SnackbarService) {}
 
   private normalizarTexto(s: string): string {
     return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -273,6 +279,15 @@ export class PapeleriaComponent implements OnInit {
   async crearPapeleria(ev: Event) {
     ev.preventDefault();
     this.papMsg = '';
+    // Validación mínima
+    if (!this.item_catalogo || !this.nombre || this.cantidad_adquirida == null || this.cantidad_existente == null) {
+      this.snack.warn('Faltan campos requeridos del formulario');
+      return;
+    }
+    if ((this.cantidad_adquirida as any) < 0 || (this.cantidad_existente as any) < 0) {
+      this.snack.warn('Las cantidades deben ser números >= 0');
+      return;
+    }
     try {
       const payload = {
         item_catalogo: this.item_catalogo,
@@ -287,10 +302,10 @@ export class PapeleriaComponent implements OnInit {
         observaciones: (this.observaciones || '').trim() || null,
       };
       await papeleriaService.crear(payload);
-      this.papMsg = 'Registro creado correctamente';
+      this.snack.success('Se creó el registro de papelería');
       await this.loadPapeleria();
     } catch (err: any) {
-      this.papMsg = err?.message || 'Error creando registro de papelería';
+      this.snack.error(err?.message || 'Error al crear el registro de papelería');
     }
   }
 

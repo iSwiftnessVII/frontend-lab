@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService } from '../services/auth.service';
+import { SnackbarService } from '../shared/snackbar.service';
 import { usuariosService } from '../services/usuarios.service'
 
 @Component({
@@ -43,6 +44,8 @@ export class UsuariosComponent implements OnInit {
   rolQ: any = '';
   estadoQ: string = '';
 
+  constructor(public snack: SnackbarService) {}
+
   ngOnInit() {
     this.loadRoles();
     this.loadUsuarios();
@@ -71,7 +74,7 @@ export class UsuariosComponent implements OnInit {
       this.aplicarFiltros();
     } catch (err) {
       console.error('Error cargando usuarios:', err);
-      this.mensaje = '❌ Error cargando usuarios';
+      this.snack.error('Error cargando usuarios');
     } finally {
       this.cargando = false;
     }
@@ -85,17 +88,17 @@ export class UsuariosComponent implements OnInit {
 
     // Validaciones
     if (!this.email.trim() || !this.contrasena.trim() || !this.rol_id) {
-      this.mensaje = '⚠️ Todos los campos son requeridos';
+      this.snack.warn('Todos los campos son requeridos');
       return;
     }
 
     if (this.contrasena.length < 6) {
-      this.mensaje = '⚠️ La contraseña debe tener al menos 6 caracteres';
+      this.snack.warn('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
     if (!this.validarEmail(this.email)) {
-      this.mensaje = '⚠️ Email no válido';
+      this.snack.warn('Email no válido');
       return;
     }
 
@@ -105,12 +108,11 @@ export class UsuariosComponent implements OnInit {
         contrasena: this.contrasena,
         rol_id: parseInt(this.rol_id)
       });
-
-      this.mensaje = '✅ Usuario creado correctamente';
+      this.snack.success('Usuario creado correctamente');
       this.resetForm();
       await this.loadUsuarios();
     } catch (err: any) {
-      this.mensaje = '❌ ' + (err?.message || 'Error creando usuario');
+      this.snack.error(err?.message || 'Error creando usuario');
     }
   }
 
@@ -122,10 +124,10 @@ export class UsuariosComponent implements OnInit {
 
     try {
       await usuariosService.cambiarEstado(usuario.id_usuario, nuevoEstado);
-      this.mensaje = `✅ Usuario ${accion === 'activar' ? 'activado' : 'desactivado'} correctamente`;
+      this.snack.success(`Usuario ${accion === 'activar' ? 'activado' : 'desactivado'} correctamente`);
       await this.loadUsuarios();
     } catch (err: any) {
-      this.mensaje = '❌ ' + (err?.message || `Error al ${accion} usuario`);
+      this.snack.error(err?.message || `Error al ${accion} usuario`);
     }
   }
 
@@ -138,10 +140,10 @@ export class UsuariosComponent implements OnInit {
 
     try {
       await usuariosService.eliminarUsuario(id);
-      this.mensaje = '✅ Usuario eliminado correctamente';
+      this.snack.success('Usuario eliminado correctamente');
       await this.loadUsuarios();
     } catch (err: any) {
-      this.mensaje = '❌ ' + (err?.message || 'Error eliminando usuario');
+      this.snack.error(err?.message || 'Error eliminando usuario');
     }
   }
 

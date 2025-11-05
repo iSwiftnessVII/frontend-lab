@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard, roleGuard } from './services/auth.guard';
 import { InsumosComponent } from './insumos/insumos.component';
 import { PapeleriaComponent } from './papeleria/papeleria.component';
+// Equipos will be lazy-loaded like other sections
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -36,6 +37,12 @@ export const routes: Routes = [
   { 
     path: 'papeleria', 
     component: PapeleriaComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['Administrador', 'Auxiliar'] }
+  },
+  { 
+    path: 'equipos', 
+  loadComponent: () => import('./equipos/equipos.component').then(m => m.EquiposComponent),
     canActivate: [authGuard, roleGuard],
     data: { roles: ['Administrador', 'Auxiliar'] }
   },

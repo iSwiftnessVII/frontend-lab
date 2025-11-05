@@ -61,10 +61,12 @@
             <label for="email">Correo electrónico</label>
             <input id="email" name="email" type="email" autocomplete="email" placeholder="tu@ejemplo.com"
               [(ngModel)]="email" #emailCtrl="ngModel" required email>
-            <small class="field-error" *ngIf="(emailCtrl.touched || triedSubmit) && emailCtrl.errors?.['required']">El
-              correo es requerido</small>
-            <small class="field-error" *ngIf="(emailCtrl.touched || triedSubmit) && emailCtrl.errors?.['email']">Formato
-              de correo inválido</small>
+            @if ((emailCtrl.touched || triedSubmit) && emailCtrl.errors?.['required']) {
+              <small class="field-error">El correo es requerido</small>
+            }
+            @if ((emailCtrl.touched || triedSubmit) && emailCtrl.errors?.['email']) {
+              <small class="field-error">Formato de correo inválido</small>
+            }
           </div>
 
           <div class="form-group">
@@ -75,12 +77,12 @@
                 autocomplete="current-password"
                 placeholder="Contraseña" [(ngModel)]="contrasena" #contrasenaCtrl="ngModel" required minlength="3">
             </div>
-            <small class="field-error"
-              *ngIf="(contrasenaCtrl.touched || triedSubmit) && contrasenaCtrl.errors?.['required']">La contraseña es
-              requerida</small>
-            <small class="field-error"
-              *ngIf="(contrasenaCtrl.touched || triedSubmit) && contrasenaCtrl.errors?.['minlength']">Mínimo 3
-              caracteres</small>
+            @if ((contrasenaCtrl.touched || triedSubmit) && contrasenaCtrl.errors?.['required']) {
+              <small class="field-error">La contraseña es requerida</small>
+            }
+            @if ((contrasenaCtrl.touched || triedSubmit) && contrasenaCtrl.errors?.['minlength']) {
+              <small class="field-error">Mínimo 3 caracteres</small>
+            }
           </div>
 
           <div class="form-row">
@@ -89,8 +91,10 @@
           </div>
 
           <div class="actions">
-            <button class="btn primary" type="submit" [disabled]="loading">{{ loading ? 'Ingresando...' : 'Entrar'
-              }}</button>
+            <button class="btn primary" type="submit" [disabled]="loading">
+              @if (loading) { <span class="spinner-circle" aria-hidden="true"></span> }
+              <span>{{ loading ? 'Ingresando...' : 'Entrar' }}</span>
+            </button>
           </div>
         </form>
 

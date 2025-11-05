@@ -1,12 +1,13 @@
 import { Component, signal, effect, OnDestroy } from '@angular/core';
 import { RouterOutlet, Router, RouterModule, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
+import { SnackbarService } from './shared/snackbar.service';
 import { CommonModule, NgIf } from '@angular/common';
 import { authService, authUser } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterModule, CommonModule, NgIf],
+  imports: [RouterOutlet, RouterModule, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -19,14 +20,23 @@ export class App implements OnDestroy {
   readonly currentYear = new Date().getFullYear();
   readonly isNavigating = signal(false);
   private routerSub?: any;
+  private handleSelectClickRef = (ev: Event) => this.handleSelectClick(ev);
+  private handleSelectFocusOutRef = (ev: FocusEvent) => this.handleSelectFocusOut(ev);
+  private handleSelectKeydownRef = (ev: KeyboardEvent) => this.handleSelectKeydown(ev);
 
-  constructor(private router: Router) {
+  constructor(private router: Router, public snack: SnackbarService) {
     // Inicializar autenticación con TU sistema
     void this.initAuth();
     
     // Mantener características UI del repositorio
     this.constructorEffectSetup();
     document.addEventListener('click', this.handleDocumentClick, true);
+    // Global select caret state: toggle data-select-open on parent div to rotate chevron
+    try {
+      document.addEventListener('click', this.handleSelectClickRef, true);
+      document.addEventListener('focusout', this.handleSelectFocusOutRef, true);
+      document.addEventListener('keydown', this.handleSelectKeydownRef, true);
+    } catch {}
 
     // Route transition animation: toggle navigating flag on router events
     this.routerSub = this.router.events.subscribe(ev => {
@@ -133,8 +143,39 @@ export class App implements OnDestroy {
     }
   };
 
+  private handleSelectClick(ev: Event) {
+    const t = ev.target as HTMLElement | null;
+    if (!t || t.tagName !== 'SELECT') return;
+    // Toggle open attribute on the direct wrapper (form-grid > div)
+    const wrapper = t.parentElement as HTMLElement | null;
+    if (!wrapper) return;
+    const isOpen = wrapper.getAttribute('data-select-open') === 'true';
+    wrapper.setAttribute('data-select-open', isOpen ? 'false' : 'true');
+  }
+
+  private handleSelectFocusOut(ev: FocusEvent) {
+    const t = ev.target as HTMLElement | null;
+    if (!t || t.tagName !== 'SELECT') return;
+    const wrapper = t.parentElement as HTMLElement | null;
+    if (!wrapper) return;
+    wrapper.removeAttribute('data-select-open');
+  }
+
+  private handleSelectKeydown(ev: KeyboardEvent) {
+    const t = ev.target as HTMLElement | null;
+    if (!t || t.tagName !== 'SELECT') return;
+    if (ev.key === 'Escape' || ev.key === 'Esc') {
+      const wrapper = t.parentElement as HTMLElement | null;
+      if (!wrapper) return;
+      wrapper.removeAttribute('data-select-open');
+    }
+  }
+
   ngOnDestroy(): void {
     try { document.removeEventListener('click', this.handleDocumentClick, true); } catch (e) {}
+    try { document.removeEventListener('click', this.handleSelectClickRef, true); } catch {}
+    try { document.removeEventListener('focusout', this.handleSelectFocusOutRef, true); } catch {}
+    try { document.removeEventListener('keydown', this.handleSelectKeydownRef, true); } catch {}
     try { this.routerSub?.unsubscribe?.(); } catch {}
   }
 

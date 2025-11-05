@@ -1,0 +1,41 @@
+.equipos-page h2 {
+  margin: 0 0 1rem 0;
+}
+.muted {
+  color: #667085;
+}
+
+/* Responsive two-to-four column form layout */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.2rem 1.5rem;
+  align-items: end; /* align inputs nicely at the bottom */
+}
+
+.form-grid > div { display: flex; flex-direction: column; min-width: 0; }
+.form-grid label { font-weight: 500; color: var(--primary-blue); margin-bottom: 0.5rem; font-size: 0.9rem; }
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  padding: 0.8rem;
+  border: 2px solid var(--border-gray);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease;
+}
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus { outline: none; border-color: var(--primary-turquoise); }
+.form-grid textarea { resize: vertical; min-height: 80px; }
+
+/* Make the action row span full width and keep buttons compact */
+/* Action cell behaves like a regular field column; button fills the column width */
+.form-grid .actions { align-self: start; display: flex; width: 100%; }
+.form-grid .actions .btn-compact { width: 100%; justify-content: center; text-align: center; }
+.btn-compact { padding: 0.7rem 1rem; min-height: 40px; }
+
+/* Ensure stacked field (fecha_adquisicion + button) has nice spacing */
+.stack-field { display: flex; flex-direction: column; }
+.stack-field .actions { margin-top: 0.9rem; }

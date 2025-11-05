@@ -2,6 +2,7 @@ import { Component, Inject, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { SnackbarService } from '../shared/snackbar.service';
 
 @Component({
   standalone: true,
@@ -19,6 +20,7 @@ export class ForgotComponent implements OnInit, OnDestroy {
   constructor(
     private renderer: Renderer2,
     @Inject(DOCUMENT) private document: Document,
+    public snack: SnackbarService,
   ) {}
 
   ngOnInit(): void {
@@ -40,9 +42,9 @@ export class ForgotComponent implements OnInit, OnDestroy {
       // Simulación de solicitud; aquí iría el llamado real a la API si existiera.
       await new Promise((res) => setTimeout(res, 800));
       this.submitted = true;
-      this.message = 'Si el correo está registrado, te enviaremos un enlace para restablecer tu contraseña.';
+      this.snack.success('Si el correo está registrado, te enviaremos un enlace para restablecer tu contraseña.');
     } catch (err) {
-      this.message = 'Ocurrió un error al procesar la solicitud. Intenta nuevamente.';
+      this.snack.error('Ocurrió un error al procesar la solicitud. Intenta nuevamente.');
     } finally {
       this.loading = false;
     }

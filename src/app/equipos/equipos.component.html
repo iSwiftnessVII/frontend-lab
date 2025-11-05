@@ -1,0 +1,78 @@
+<div class="liba-theme container equipos-page">
+	<h2>Registrar equipo</h2>
+	<section>
+		<form class="form-grid" (submit)="crearEquipo($event)">
+			<div>
+				<label for="nombre">Nombre *</label>
+				<input id="nombre" name="nombre" [(ngModel)]="nombre" required placeholder="Ej: Balanza analítica" />
+			</div>
+			<div>
+				<label for="modelo">Modelo</label>
+				<input id="modelo" name="modelo" [(ngModel)]="modelo" />
+			</div>
+			<div>
+				<label for="marca">Marca</label>
+				<input id="marca" name="marca" [(ngModel)]="marca" />
+			</div>
+			<div>
+				<label for="inventario_sena">Inventario SENA</label>
+				<input id="inventario_sena" name="inventario_sena" [(ngModel)]="inventario_sena" />
+			</div>
+
+			<div>
+				<label for="acreditacion">Acreditación</label>
+				<select id="acreditacion" name="acreditacion" [(ngModel)]="acreditacion">
+					<option [ngValue]="''">Seleccione</option>
+					<option [ngValue]="'Si'">Si</option>
+					<option [ngValue]="'No aplica'">No aplica</option>
+				</select>
+			</div>
+			<div>
+				<label for="tipo_manual">Tipo de manual</label>
+				<select id="tipo_manual" name="tipo_manual" [(ngModel)]="tipo_manual">
+					<option [ngValue]="''">Seleccione</option>
+					<option [ngValue]="'Fisico'">Físico</option>
+					<option [ngValue]="'Digital'">Digital</option>
+				</select>
+			</div>
+			<div>
+				<label for="manual_usuario">Manual de usuario</label>
+				<select id="manual_usuario" name="manual_usuario" [(ngModel)]="manual_usuario">
+					<option [ngValue]="''">Seleccione</option>
+					<option [ngValue]="'Si'">Si</option>
+					<option [ngValue]="'No'">No</option>
+				</select>
+			</div>
+
+			<div>
+				<label for="codigo_identificacion">Código de identificación</label>
+				<input id="codigo_identificacion" name="codigo_identificacion" [(ngModel)]="codigo_identificacion" />
+			</div>
+			<div>
+				<label for="numero_serie">Número de serie</label>
+				<input id="numero_serie" name="numero_serie" [(ngModel)]="numero_serie" />
+			</div>
+			<div>
+				<label for="tipo">Tipo</label>
+				<input id="tipo" name="tipo" [(ngModel)]="tipo" />
+			</div>
+			<div>
+				<label for="clasificacion">Clasificación</label>
+				<input id="clasificacion" name="clasificacion" [(ngModel)]="clasificacion" />
+			</div>
+
+			<div>
+				<label for="puesta_en_servicio">Puesta en servicio</label>
+				<input id="puesta_en_servicio" type="date" name="puesta_en_servicio" [(ngModel)]="puesta_en_servicio" />
+			</div>
+			<div class="stack-field">
+				<label for="fecha_adquisicion">Fecha de adquisición</label>
+				<input id="fecha_adquisicion" type="date" name="fecha_adquisicion" [(ngModel)]="fecha_adquisicion" />
+				<div class="actions">
+					<button class="btn-compact" type="submit" [disabled]="creando">{{ creando ? 'Guardando…' : 'Crear equipo' }}</button>
+				</div>
+			</div>
+		</form>
+	</section>
+</div>
+

@@ -138,6 +138,7 @@ body {
     padding: 6px 8px;
     border-radius: 8px;
     display: inline-flex;
+    flex-direction: row; /* botones en horizontal */
     gap: 0.5rem;
     align-items: center;
     border: 1px solid var(--border-gray);
@@ -145,6 +146,47 @@ body {
 }
 /* modifiers (pdf-sds / pdf-coa) are available if specific per-group tweaks are needed */
 
+/* Variante solicitada: botón “Ver PDF” y etiqueta “Sin PDF” */
+.reactivo-card .card-name .name-pdfs .btn.pdf-existe {
+    background: #ffffff; /* neutraliza gradiente global */
+    border: 1px solid #007bff; /* azul vivo, borde más delgado */
+    color: #007bff;
+    width: 33px; /* 1px menos como pediste */
+    height: 33px;
+    padding: 0;
+    border-radius: 8px !important; /* coincide con otros icon buttons */
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    font: inherit;
+    line-height: 1;
+    transition: transform 0.15s ease;
+}
+.reactivo-card .card-name .name-pdfs .btn.pdf-existe i { font-size: 18px; line-height: 1; }
+/* cancelamos el ripple/hover global del theme para este botón */
+.reactivo-card .card-name .name-pdfs .btn.pdf-existe::before { content: none !important; }
+.reactivo-card .card-name .name-pdfs .btn.pdf-existe:hover { transform: translateY(-1px); }
+.reactivo-card .card-name .name-pdfs .btn.pdf-existe:active,
+.reactivo-card .card-name .name-pdfs .btn.pdf-existe:focus {
+    background: #ffffff;
+    transform: none;
+    box-shadow: none;
+}
+.reactivo-card .card-name .name-pdfs .tag.pdf-no-existe {
+    border: 2px dashed #999;
+    color: #999;
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.7;
+    background: #ffffff;
+}
 
 /* Aplicar también a la vista de catálogo: asegurar que el contenedor del nombre
    tenga bordes curvos y reserve espacio a la derecha para botones/etiquetas. */
@@ -1320,8 +1362,9 @@ article.catalog-card .card-top .pdf-actions .pdf-group .pdf-btn,
 }
 
 /* ===== Modal de edición ===== */
-.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index: 1000; }
-.modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; border-radius:10px; border:1px solid var(--border-gray); width:min(900px, 96vw); max-height: 90vh; overflow:auto; z-index: 1001; box-shadow:0 10px 30px rgba(0,0,0,0.25); padding: 0.5rem 1.2rem 1rem; }
+/* Elevate modal above sticky header (z:4000) and sticky nav (z:3000) and snackbar (z:5000) */
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index: 6000; }
+.modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; border-radius:10px; border:1px solid var(--border-gray); width:min(900px, 96vw); max-height: 90vh; overflow:auto; z-index: 6001; box-shadow:0 10px 30px rgba(0,0,0,0.25); padding: 0.5rem 1.2rem 1rem; }
 .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom: 0; }
 .modal .close-btn { background:transparent; border:none; font-size:1.4rem; line-height:1; cursor:pointer; }
 .modal form.form-grid { margin-top: 0; }

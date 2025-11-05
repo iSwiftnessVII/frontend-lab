@@ -176,6 +176,38 @@ body.auth-page .container {
 	box-sizing: border-box;
 }
 
+/* Custom select caret: match Inventario dropdown chevron with open/close animation */
+.liba-theme select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	padding-right: 2.2rem; /* space for custom caret */
+	/* caret as background layer, vertically centered */
+	--liba-select-caret: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+	background-image: var(--liba-select-caret);
+	background-repeat: no-repeat;
+	background-position: right 12px center; /* perfect vertical centering */
+	background-size: 18px 18px; /* slightly larger icon */
+}
+
+/* Place a chevron on the container of any select within form grids */
+/* We now render the chevron as the select's background; hide any previous pseudo-caret */
+.liba-theme .form-grid > div:has(> select) { position: relative; }
+.liba-theme .form-grid > div:has(> select)::after { display: none !important; content: none !important; }
+
+/* Swap to an upward chevron when the select is open (toggled by data-select-open) */
+.liba-theme .form-grid > div[data-select-open="true"] > select {
+	--liba-select-caret: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 15 12 9 18 15'/></svg>");
+}
+
+/* Keep gradient on focus without losing the caret or causing tiling */
+.liba-theme select:focus {
+	background-image: var(--liba-select-caret), linear-gradient(to right, rgba(0, 184, 181, 0.02), transparent);
+	background-repeat: no-repeat, no-repeat;
+	background-position: right 12px center, 0 0;
+	background-size: 18px 18px, auto;
+}
+
 /* Contenedores de campos para evitar desbordes */
 .liba-theme form .form-grid > div,
 .liba-theme form.form-grid > div,
@@ -196,6 +228,11 @@ body.auth-page .container {
 	outline: none;
 	border-color: var(--primary-turquoise);
 	box-shadow: 0 0 0 3px rgba(0, 184, 181, 0.1);
+}
+
+/* Keep subtle gradient only for inputs and textareas; selects use layered background to keep caret */
+.liba-theme input:focus,
+.liba-theme textarea:focus {
 	background: linear-gradient(to right, rgba(0, 184, 181, 0.02), transparent);
 }
 
@@ -293,7 +330,7 @@ body.auth-page .container {
 /* =====================================================
    BUTTONS
    ===================================================== */
-.liba-theme button {
+.liba-theme button:not(.pdf-btn) {
 	background: linear-gradient(135deg, var(--primary-turquoise) 0%, #009a98 100%);
 	color: var(--primary-white);
 	padding: 0.8rem 1.5rem;
@@ -311,7 +348,7 @@ body.auth-page .container {
 	overflow: hidden;
 }
 
-.liba-theme button::before {
+.liba-theme button:not(.pdf-btn)::before {
 	content: '';
 	position: absolute;
 	top: 50%;
@@ -324,18 +361,18 @@ body.auth-page .container {
 	transition: width 0.6s, height 0.6s;
 }
 
-.liba-theme button:hover::before {
+.liba-theme button:not(.pdf-btn):hover::before {
 	width: 300px;
 	height: 300px;
 }
 
-.liba-theme button:hover {
+.liba-theme button:not(.pdf-btn):hover {
 	background: linear-gradient(135deg, #009a98 0%, var(--primary-turquoise) 100%);
 	transform: translateY(-2px);
 	box-shadow: 0 6px 20px rgba(0, 184, 181, 0.4);
 }
 
-.liba-theme button:active {
+.liba-theme button:not(.pdf-btn):active {
 	transform: translateY(0);
 	box-shadow: 0 2px 8px rgba(0, 184, 181, 0.3);
 }
