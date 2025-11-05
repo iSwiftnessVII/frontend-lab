@@ -41,7 +41,40 @@
       </div>
 
       <div class="cards-container">
-        @if (catalogoCargando) { <p>Cargando catálogo...</p> }
+        @if (catalogoCargando) {
+          <div class="catalogo-cards">
+            <article class="catalog-card skeleton-card">
+              <div class="catalog-card-media"><div class="skeleton-box"></div></div>
+              <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
+              <div class="card-desc"><div class="skeleton-line w-90"></div></div>
+            </article>
+            <article class="catalog-card skeleton-card">
+              <div class="catalog-card-media"><div class="skeleton-box"></div></div>
+              <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
+              <div class="card-desc"><div class="skeleton-line w-90"></div></div>
+            </article>
+            <article class="catalog-card skeleton-card">
+              <div class="catalog-card-media"><div class="skeleton-box"></div></div>
+              <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
+              <div class="card-desc"><div class="skeleton-line w-90"></div></div>
+            </article>
+            <article class="catalog-card skeleton-card">
+              <div class="catalog-card-media"><div class="skeleton-box"></div></div>
+              <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
+              <div class="card-desc"><div class="skeleton-line w-90"></div></div>
+            </article>
+            <article class="catalog-card skeleton-card">
+              <div class="catalog-card-media"><div class="skeleton-box"></div></div>
+              <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
+              <div class="card-desc"><div class="skeleton-line w-90"></div></div>
+            </article>
+            <article class="catalog-card skeleton-card">
+              <div class="catalog-card-media"><div class="skeleton-box"></div></div>
+              <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
+              <div class="card-desc"><div class="skeleton-line w-90"></div></div>
+            </article>
+          </div>
+        }
         @if (!catalogoCargando && catalogoResultadosSig().length) {
           <div class="catalogo-stats">
             <span>Mostrando {{ catalogoResultadosSig().length }} de {{ catalogoTotal || catalogoBaseSig().length }} elementos</span>

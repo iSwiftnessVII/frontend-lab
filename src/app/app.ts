@@ -1,5 +1,5 @@
 import { Component, signal, effect, OnDestroy } from '@angular/core';
-import { RouterOutlet, Router, RouterModule } from '@angular/router';
+import { RouterOutlet, Router, RouterModule, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
 import { CommonModule, NgIf } from '@angular/common';
 import { authService, authUser } from './services/auth.service';
 
@@ -17,6 +17,8 @@ export class App implements OnDestroy {
   readonly menuOpen = signal(false);
   readonly inventoryMenuOpen = signal(false);
   readonly currentYear = new Date().getFullYear();
+  readonly isNavigating = signal(false);
+  private routerSub?: any;
 
   constructor(private router: Router) {
     // Inicializar autenticación con TU sistema
@@ -25,6 +27,17 @@ export class App implements OnDestroy {
     // Mantener características UI del repositorio
     this.constructorEffectSetup();
     document.addEventListener('click', this.handleDocumentClick, true);
+
+    // Route transition animation: toggle navigating flag on router events
+    this.routerSub = this.router.events.subscribe(ev => {
+      if (ev instanceof NavigationStart) {
+        this.isNavigating.set(true);
+      }
+      if (ev instanceof NavigationEnd || ev instanceof NavigationCancel || ev instanceof NavigationError) {
+        // small delay to let new view render before removing effect
+        setTimeout(() => this.isNavigating.set(false), 80);
+      }
+    });
   }
 
   // TU sistema de autenticación con checkAuth()
@@ -122,6 +135,7 @@ export class App implements OnDestroy {
 
   ngOnDestroy(): void {
     try { document.removeEventListener('click', this.handleDocumentClick, true); } catch (e) {}
+    try { this.routerSub?.unsubscribe?.(); } catch {}
   }
 
   showFooter(): boolean {

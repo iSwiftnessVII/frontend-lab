@@ -312,6 +312,15 @@ body.auth-page .app-header {
 	/* allow main to grow and push footer to the bottom of the viewport
 	   even when router-outlet content is loading/animating */
 	flex: 1 1 auto;
+  transition: opacity 220ms ease, filter 220ms ease, transform 220ms ease;
+}
+
+/* Route transition effect: subtle fade/blur/slide during navigation */
+.main-content.route-navigating {
+  opacity: 0.35;
+  filter: saturate(0.95) blur(1.5px);
+  transform: translateY(2px);
+  pointer-events: none;
 }
 
 .nav-item i {

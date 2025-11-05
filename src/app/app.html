@@ -124,7 +124,7 @@
 </nav>
 
 <!-- ====== CONTENIDO PRINCIPAL ====== -->
-<main class="main-content liba-theme">
+<main class="main-content liba-theme" [class.route-navigating]="isNavigating()">
   <router-outlet></router-outlet>
 </main>
 
