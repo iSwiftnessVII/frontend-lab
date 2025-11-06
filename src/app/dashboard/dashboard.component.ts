@@ -1,38 +1,133 @@
-import { Component } from '@angular/core';
-import { authService, authUser } from '../services/auth.service';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
+import { insumosService } from '../services/insumos.service';
+import { reactivosService } from '../services/reactivos.service';
+
+const API_SOLICITUDES = (window as any).__env?.API_BASE || 'http://localhost:4000/api/solicitudes';
 
 @Component({
   standalone: true,
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
-  imports: [CommonModule]
+  imports: [CommonModule, RouterModule]
 })
-export class DashboardComponent {
-  user: any = null;
-  constructor(private router: Router) {
-    this.load();
+export class DashboardComponent implements OnInit {
+  // Estado de carga
+  cargando = signal(true);
+  
+  // Métricas principales
+  metricas = signal({
+    totalInsumos: 0,
+    totalReactivos: 0,
+    totalSolicitudes: 0,
+    totalClientes: 0
+  });
+
+  // Datos para gráficos
+  insumosData = signal<any[]>([]);
+  reactivosData = signal<any[]>([]);
+  solicitudesData = signal<any[]>([]);
+  clientesData = signal<any[]>([]);
+
+  // Reactivos próximos a vencer
+  reactivosProximosVencer = signal<any[]>([]);
+
+  constructor() {}
+
+  async ngOnInit() {
+    await this.cargarDashboard();
+    this.cargando.set(false);
   }
 
-  async load() {
+  async cargarDashboard() {
     try {
-      // With session-less client we can use authService or authUser
-      const u = authUser();
-      if (u) this.user = u;
-      else {
-        authService.logout();
-        this.router.navigate(['/login']);
-      }
-    } catch (err) {
-      authService.logout();
-      this.router.navigate(['/login']);
+      // Cargar datos en paralelo
+      await Promise.all([
+        this.cargarInsumos(),
+        this.cargarReactivos(),
+        this.cargarSolicitudes(),
+        this.cargarClientes()
+      ]);
+    } catch (error) {
+      console.error('Error cargando dashboard:', error);
     }
   }
 
-  logout() {
-    authService.logout();
-    this.router.navigate(['/login']);
+  async cargarInsumos() {
+    try {
+      const insumos = await insumosService.listarInsumos('', 1000);
+      this.insumosData.set(insumos);
+      this.metricas.update(m => ({ ...m, totalInsumos: insumos.length }));
+    } catch (error) {
+      console.error('Error cargando insumos:', error);
+    }
+  }
+
+  async cargarReactivos() {
+  try {
+    const reactivos = await reactivosService.listarReactivos('', 1000);
+    this.reactivosData.set(reactivos);
+    this.metricas.update(m => ({ ...m, totalReactivos: reactivos.length }));
+    
+    // Calcular reactivos próximos a vencer (30 días)
+    const hoy = new Date();
+    const limite = new Date();
+    limite.setDate(hoy.getDate() + 30);
+    
+    const proximos = reactivos.filter((reactivo: any) => {
+      if (!reactivo.fecha_vencimiento) return false;
+      const fechaVenc = new Date(reactivo.fecha_vencimiento);
+      return fechaVenc <= limite && fechaVenc >= hoy;
+    });
+    
+    this.reactivosProximosVencer.set(proximos);
+  } catch (error) {
+    console.error('Error cargando reactivos:', error);
+  }
+}
+
+  async cargarSolicitudes() {
+    try {
+      const res = await fetch(API_SOLICITUDES);
+      const solicitudes = await res.json();
+      this.solicitudesData.set(solicitudes);
+      this.metricas.update(m => ({ ...m, totalSolicitudes: solicitudes.length }));
+    } catch (error) {
+      console.error('Error cargando solicitudes:', error);
+    }
+  }
+
+  async cargarClientes() {
+    try {
+      const res = await fetch(API_SOLICITUDES + '/clientes');
+      const clientes = await res.json();
+      this.clientesData.set(clientes);
+      this.metricas.update(m => ({ ...m, totalClientes: clientes.length }));
+    } catch (error) {
+      console.error('Error cargando clientes:', error);
+    }
+  }
+
+  // Métodos para cálculos
+  contarSolicitudesViable(): number {
+    return this.solicitudesData().filter(s => s.servicio_viable).length;
+  }
+
+  contarSolicitudesConOferta(): number {
+    return this.solicitudesData().filter(s => s.genero_cotizacion).length;
+  }
+
+  contarSolicitudesConResultados(): number {
+  return this.solicitudesData().filter((s: any) => s.numero_informe_resultados).length;
+}
+
+  contarClientesPorTipo(tipo: string): number {
+    return this.clientesData().filter(c => c.tipo_usuario === tipo).length;
+  }
+
+  formatearNumero(num: number): string {
+    return num.toLocaleString('es-CO');
   }
 }
