@@ -52,7 +52,7 @@ export const usuariosService = {
     let data: any = null;
     try {
       data = await res.json();
-    } catch {}
+    } catch { }
 
     if (!res.ok) {
       throw new Error((data && data.message) || 'Error creando usuario');
@@ -74,7 +74,7 @@ export const usuariosService = {
     let data: any = null;
     try {
       data = await res.json();
-    } catch {}
+    } catch { }
 
     if (!res.ok) {
       throw new Error((data && data.message) || 'Error cambiando estado');
@@ -95,12 +95,42 @@ export const usuariosService = {
     let data: any = null;
     try {
       data = await res.json();
-    } catch {}
+    } catch { }
 
     if (!res.ok) {
       throw new Error((data && data.message) || 'Error eliminando usuario');
     }
 
     return data;
+  },
+
+  /**
+ * Cambiar rol de un usuario
+ */
+  async cambiarRol(id: number, rol_id: number): Promise<any> {
+  const token = localStorage.getItem('token');
+  
+  const headers = new Headers();
+  headers.append('Content-Type', 'application/json');
+  if (token) {
+    headers.append('Authorization', `Bearer ${token}`);
   }
+  
+  const res = await fetch(`${API_BASE}/rol/${id}`, {
+    method: 'PATCH',
+    headers: headers,
+    body: JSON.stringify({ rol_id })
+  });
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch {}
+
+  if (!res.ok) {
+    throw new Error((data && data.message) || 'Error cambiando rol');
+  }
+
+  return data;
+}
 };

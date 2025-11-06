@@ -80,3 +80,32 @@ section { padding: 1.5rem; }
   .filters-row { grid-template-columns: 1fr; }
   .actions-cell { justify-content:flex-start; }
 }
+
+.role-select {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.9em;
+}
+
+.role-select:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+}
+
+.role-select {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.9em;
+  width: 100%;
+}
+
+.role-select:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+}

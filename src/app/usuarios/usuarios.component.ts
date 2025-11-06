@@ -2,7 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { authService } from '../services/auth.service';
+import { authService, authUser } from '../services/auth.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { usuariosService } from '../services/usuarios.service'
 
@@ -222,6 +222,32 @@ export class UsuariosComponent implements OnInit {
   logout() {
     if (confirm('¿Cerrar sesión?')) {
       authService.logout();
+    }
+  }
+
+   // Función para verificar permisos de cambiar rol
+  canChangeRole(): boolean {
+    const user = authUser();
+    return user?.rol === 'Superadmin';
+  }
+
+  // Función para cambiar el rol
+  async cambiarRol(usuario: any, nuevoRolId: number) {
+    const rolSeleccionado = this.roles.find(r => r.id_rol === nuevoRolId);
+    const nombreRol = rolSeleccionado ? rolSeleccionado.nombre : 'Desconocido';
+
+    if (!confirm(`¿Está seguro de cambiar el rol de ${usuario.email} a ${nombreRol}?`)) {
+      await this.loadUsuarios();
+      return;
+    }
+
+    try {
+      await usuariosService.cambiarRol(usuario.id_usuario, nuevoRolId);
+      this.snack.success('Rol actualizado correctamente');
+      await this.loadUsuarios();
+    } catch (err: any) {
+      this.snack.error(err?.message || 'Error cambiando rol');
+      await this.loadUsuarios();
     }
   }
 }
