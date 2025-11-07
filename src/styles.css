@@ -61,7 +61,7 @@ body.auth-page .container {
    ===================================================== */
 .liba-theme {
 	font-family: 'Poppins', sans-serif;
-	color: var(--text-gray);
+	color: #001F5B;
 }
 
 .liba-theme h2,
@@ -85,7 +85,6 @@ body.auth-page .container {
 }
 
 .liba-theme h3::before {
-	content: '';
 	position: absolute;
 	left: -1rem;
 	top: 50%;

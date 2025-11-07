@@ -89,8 +89,8 @@
                                                 <div class="catalogo-cards">
                                                     @for (c of catalogoResultados; track c.item) {
                                         <article class="catalog-card"
-                                                         (click)="onCatalogCardClick(c)" role="button" tabindex="0"
-                                                         (keyup.enter)="onCatalogCardClick(c)" (keyup.space)="onCatalogCardClick(c)">
+                                                        (click)="onCatalogCardClick(c)" role="button" tabindex="0"
+                                                        (keyup.enter)="onCatalogCardClick(c)" (keyup.space)="onCatalogCardClick(c)">
                                             <div class="catalog-card-media">
                                                 <img [src]="getCatalogoImagenUrl(c.item)" alt="Imagen {{ c.nombre }}" (error)="onImgError($event)" />
                                             </div>
