@@ -8,7 +8,7 @@
       </div>
       <div>
         <label for="catItem">Item</label>
-        <input id="catItem" type="number" min="1" step="1" [(ngModel)]="catItem" name="catItem" required placeholder="Ej: 5001" />
+        <input id="catItem" type="number" min="1" step="1" [(ngModel)]="catItem" name="catItem" required placeholder="Ej: 2001" />
       </div>
       <div>
         <label for="catImagen">Imagen (opcional)</label>
@@ -20,20 +20,19 @@
       </div>
       <div class="actions"><button class="btn-compact" type="submit">Agregar al catálogo</button></div>
     </form>
-    
   </section>
 
-  <h2>Catálogo de Papelería</h2>
+  <h2>Catálogo de papelería</h2>
   <section>
     <div>
       <div class="filters-grid catalogo-filters">
         <div>
           <label for="catalogoItemQ">Filtrar por item</label>
-          <input id="catalogoItemQ" [(ngModel)]="itemFiltro" (input)="filtrarCatalogoPorCampos()" placeholder="Ej: 5001" />
+          <input id="catalogoItemQ" [(ngModel)]="itemFiltro" (input)="filtrarCatalogoPorCampos()" placeholder="Ej: 001" />
         </div>
         <div>
           <label for="catalogoNombreQ">Filtrar por nombre</label>
-          <input id="catalogoNombreQ" [(ngModel)]="nombreFiltro" (input)="filtrarCatalogoPorCampos()" placeholder="Ej: Resmas" />
+          <input id="catalogoNombreQ" [(ngModel)]="nombreFiltro" (input)="filtrarCatalogoPorCampos()" placeholder="Ej: Papel" />
         </div>
         <div class="reset-cell">
           <button type="button" class="btn-reset-filtros" (click)="resetCatalogoPaginado()" aria-label="Reiniciar filtros">Reiniciar filtros</button>
@@ -58,57 +57,45 @@
               <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
               <div class="card-desc"><div class="skeleton-line w-90"></div></div>
             </article>
-            <article class="catalog-card skeleton-card">
-              <div class="catalog-card-media"><div class="skeleton-box"></div></div>
-              <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
-              <div class="card-desc"><div class="skeleton-line w-90"></div></div>
-            </article>
-            <article class="catalog-card skeleton-card">
-              <div class="catalog-card-media"><div class="skeleton-box"></div></div>
-              <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
-              <div class="card-desc"><div class="skeleton-line w-90"></div></div>
-            </article>
-            <article class="catalog-card skeleton-card">
-              <div class="catalog-card-media"><div class="skeleton-box"></div></div>
-              <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
-              <div class="card-desc"><div class="skeleton-line w-90"></div></div>
-            </article>
           </div>
         }
         @if (!catalogoCargando && catalogoResultadosSig().length) {
           <div class="catalogo-stats">
             <span>Mostrando {{ catalogoResultadosSig().length }} de {{ catalogoTotal || catalogoBaseSig().length }} elementos</span>
           </div>
-          <div class="catalogo-cards">
-            @for (c of catalogoResultadosSig(); track c.item) {
-              <article class="catalog-card" (click)="onCatalogCardClick(c)" role="button" tabindex="0"
-                       (keyup.enter)="onCatalogCardClick(c)" (keyup.space)="onCatalogCardClick(c)">
-                <div class="catalog-card-media">
-                  <img [src]="getCatalogoImagenUrl(c.item)" alt="Imagen {{ c.nombre }}" (error)="onImgError($event)" />
-                </div>
-                <div class="card-name" [title]="c.nombre">
-                  <span [innerHTML]="highlightField(c.nombre, 'nombre')"></span>
-                  <span class="meta">Item: <strong>{{ c.item }}</strong></span>
-                </div>
-                @if (c.descripcion) { <div class="card-desc">{{ c.descripcion }}</div> }
-              </article>
-            }
-          </div>
         }
+        <div class="catalogo-cards">
+          @for (c of catalogoResultadosSig(); track c.item) {
+            <article class="catalog-card"
+                     (click)="onCatalogCardClick(c)" role="button" tabindex="0"
+                     (keyup.enter)="onCatalogCardClick(c)" (keyup.space)="onCatalogCardClick(c)">
+              <div class="catalog-card-media">
+                <img [src]="getCatalogoImagenUrl(c.item)" alt="Imagen {{ c.nombre }}" (error)="onImgError($event)" />
+              </div>
+              <div class="card-name" [title]="c.nombre">
+                <span [innerHTML]="highlightField(c.nombre, 'nombre')"></span>
+                <span class="meta">Item: <strong>{{ c.item }}</strong></span>
+              </div>
+              @if (c.descripcion) {
+                <div class="card-desc">{{ c.descripcion }}</div>
+              }
+            </article>
+          }
+        </div>
         @if (catalogoResultadosSig().length < (catalogoTotal || 0)) {
           <div class="reset-cell">
             <button type="button" class="btn-load-more" (click)="cargarMasCatalogo()">Cargar más</button>
           </div>
         }
-        @if (!catalogoCargando && !catalogoResultadosSig().length) { <p>No hay elementos en el catálogo.</p> }
+        @if (!catalogoCargando && !catalogoResultadosSig().length) {
+          <p>No hay elementos en el catálogo.</p>
+        }
       </div>
     </div>
   </section>
 
   @if (item_catalogo != null) {
     <h2>Crear registro de Papelería</h2>
-  }
-  @if (item_catalogo != null) {
     <section #papFormSection>
       <form class="form-grid" (ngSubmit)="crearPapeleria($event)">
         <div>
@@ -164,90 +151,5 @@
     </section>
   }
 
-  <h2>Lista de Papelería</h2>
-  <section>
-    <div class="filters-row insumos-filters">
-      <div>
-        <label for="papItemQ">Item catálogo</label>
-        <input id="papItemQ" [(ngModel)]="papItemQ" (input)="filtrarPapeleria()" />
-      </div>
-      <div>
-        <label for="papNombreQ">Nombre</label>
-        <input id="papNombreQ" [(ngModel)]="papNombreQ" (input)="filtrarPapeleria()" />
-      </div>
-    </div>
-
-    <div class="insumo-cards">
-      @for (i of papeleriaFiltrada; track i?.id) {
-        <article class="insumo-card"
-                 (click)="toggleInsumoCard(i)" role="button" tabindex="0"
-                 (keyup.enter)="toggleInsumoCard(i)" (keyup.space)="toggleInsumoCard(i)">
-          @if (canDelete()) {
-            <button type="button" class="pdf-btn delete card-delete-btn" title="Eliminar"
-                    aria-label="Eliminar"
-                    (click)="$event.stopPropagation(); onDeleteInsumo(i, $event)"
-                    [disabled]="isDeleteLoading(i)"
-                    [attr.aria-busy]="isDeleteLoading(i) ? 'true' : null">
-              <i class="fas fa-trash" aria-hidden="true"></i>
-            </button>
-          }
-          <div class="insumo-card-media">
-            <img [src]="getCatalogoImagenUrl(i.item_catalogo)" alt="Imagen {{ i.nombre }}" (error)="onImgError($event)" />
-          </div>
-          <div class="insumo-card-body">
-            <div class="insumo-card-header">
-              @if (i.marca) { <div class="insumo-brand">Marca: {{ i.marca }}</div> }
-              <div class="insumo-title-row">
-                <div class="insumo-title">{{ i.nombre }}</div>
-                <span class="insumo-item-tag">Item: {{ i.item_catalogo }}</span>
-              </div>
-            </div>
-            <div class="insumo-stats">
-              <span class="chip chip-neutral" title="Cantidad adquirida">Adquirida: <strong>{{ i.cantidad_adquirida }}</strong></span>
-              @if (!isEditingExist(i)) {
-                <span class="chip chip-good clickable" title="Cantidad existente"
-                      [class.saved]="wasExistSaved(i)"
-                      role="button" tabindex="0"
-                      (click)="startEditExist(i, $event)"
-                      (keyup.enter)="startEditExist(i, $event)"
-                      (keyup.space)="startEditExist(i, $event)">
-                  Existente: <strong>{{ i.cantidad_existente }}</strong>
-                </span>
-              } @else {
-                <span class="chip chip-good editing" title="Editar cantidad existente" (click)="$event.stopPropagation()">
-                  Existente:
-                  <input type="number" min="0" [(ngModel)]="editExistVal[i.id]"
-                         [disabled]="isLoadingExist(i)"
-                         [attr.aria-busy]="isLoadingExist(i) ? 'true' : null"
-                         (keydown.enter)="saveEditExist(i, $event)" (keydown.escape)="cancelEditExist(i, $event)"
-                         style="width:80px; margin:0 6px;" />
-                  <button type="button" (click)="saveEditExist(i, $event); $event.stopPropagation()" class="btn-compact" [disabled]="isLoadingExist(i)" [attr.aria-busy]="isLoadingExist(i) ? 'true' : null">Guardar</button>
-                  <button type="button" (click)="cancelEditExist(i, $event); $event.stopPropagation()" class="btn-compact btn-secondary" [disabled]="isLoadingExist(i)">Cancelar</button>
-                </span>
-              }
-            </div>
-            @if (i.cantidad_adquirida) {
-              <div class="insumo-progress">
-                <div class="insumo-progress-bar" [ngClass]="getExistenteClass(i)" [style.width.%]="getExistentePct(i)" aria-hidden="true"></div>
-              </div>
-            }
-            @if (i.cantidad_adquirida) {
-              <div class="insumo-progress-legend"><span>{{ getExistentePct(i) | number:'1.0-0' }}% disponible</span></div>
-            }
-
-            <div class="insumo-details" [class.open]="isInsumoExpanded(i)">
-              <div class="insumo-details-grid">
-                @if (i.presentacion) { <div><strong>Presentación:</strong> {{ i.presentacion }}</div> }
-                @if (i.descripcion)  { <div><strong>Descripción:</strong> {{ i.descripcion }}</div> }
-                @if (i.ubicacion)    { <div><strong>Ubicación:</strong> {{ i.ubicacion }}</div> }
-                @if (i.fecha_adquisicion) { <div><strong>Fecha de adquisición:</strong> {{ formatearFecha(i.fecha_adquisicion) }}</div> }
-                @if (i.observaciones) { <div><strong>Observaciones:</strong> {{ i.observaciones }}</div> }
-              </div>
-            </div>
-          </div>
-        </article>
-      }
-    </div>
-    @if (!(papeleriaLista.length)) { <p>No hay registros de papelería.</p> }
-  </section>
+  
 </div>

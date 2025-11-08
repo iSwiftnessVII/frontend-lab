@@ -516,23 +516,8 @@ section {
     font-size: 0.9rem;
 }
 
-.form-grid input,
-.form-grid textarea,
-.form-grid select {
-    padding: 0.8rem;
-    border: 2px solid var(--border-gray);
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 0.95rem;
-    transition: border-color 0.3s ease;
-}
-
-.form-grid input:focus,
-.form-grid textarea:focus,
-.form-grid select:focus {
-    outline: none;
-    border-color: var(--primary-turquoise);
-}
+/* Base field styles (input/select) now come from global styles.css; keep textarea specifics */
+.form-grid textarea { resize: vertical; min-height: 80px; }
 
 .form-grid textarea {
     resize: vertical;

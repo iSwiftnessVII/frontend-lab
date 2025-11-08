@@ -175,12 +175,21 @@ body.auth-page .container {
 	box-sizing: border-box;
 }
 
-/* Custom select caret: match Inventario dropdown chevron with open/close animation */
-.liba-theme select {
+/* Custom select caret + unified base style (match Reactivos) */
+select {
 	-webkit-appearance: none;
 	-moz-appearance: none;
 	appearance: none;
-	padding-right: 2.2rem; /* space for custom caret */
+	/* Reactivos base look */
+	padding: 0.8rem; /* consistent padding */
+	padding-right: 2.2rem; /* extra space for custom caret */
+	border: 2px solid var(--border-gray);
+	border-radius: 6px;
+	font-family: inherit;
+	font-size: 0.95rem;
+	background-color: var(--primary-white);
+	transition: border-color 0.3s ease;
+	box-sizing: border-box;
 	/* caret as background layer, vertically centered */
 	--liba-select-caret: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
 	background-image: var(--liba-select-caret);
@@ -191,21 +200,34 @@ body.auth-page .container {
 
 /* Place a chevron on the container of any select within form grids */
 /* We now render the chevron as the select's background; hide any previous pseudo-caret */
-.liba-theme .form-grid > div:has(> select) { position: relative; }
-.liba-theme .form-grid > div:has(> select)::after { display: none !important; content: none !important; }
+/* Ensure any wrapper div in form grids doesn't add an extra caret */
+.form-grid > div:has(> select) { position: relative; }
+.form-grid > div:has(> select)::after { display: none !important; content: none !important; }
 
 /* Swap to an upward chevron when the select is open (toggled by data-select-open) */
-.liba-theme .form-grid > div[data-select-open="true"] > select {
+
+/* Rotate caret when select considered open (attribute on wrapper OR select) */
+.form-grid > div[data-select-open="true"] > select,
+div[data-select-open="true"] > select,
+select[data-select-open="true"],
+select[data-open="true"] {
 	--liba-select-caret: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 15 12 9 18 15'/></svg>");
 }
 
 /* Keep gradient on focus without losing the caret or causing tiling */
-.liba-theme select:focus {
+select:focus {
 	background-image: var(--liba-select-caret), linear-gradient(to right, rgba(0, 184, 181, 0.02), transparent);
 	background-repeat: no-repeat, no-repeat;
 	background-position: right 12px center, 0 0;
 	background-size: 18px 18px, auto;
+	outline: none;
+	border-color: var(--primary-turquoise);
+	box-shadow: 0 0 0 3px rgba(0, 184, 181, 0.1);
 }
+
+/* Hover + disabled for consistency */
+select:hover:not(:focus):not(:disabled) { border-color: #cbd5e0; }
+select:disabled { background-color: #f5f7fb; color: #9aa4b2; cursor: not-allowed; opacity: 1; }
 
 /* Contenedores de campos para evitar desbordes */
 .liba-theme form .form-grid > div,

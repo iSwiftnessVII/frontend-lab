@@ -15,19 +15,7 @@
 
 .form-grid > div { display: flex; flex-direction: column; min-width: 0; }
 .form-grid label { font-weight: 500; color: var(--primary-blue); margin-bottom: 0.5rem; font-size: 0.9rem; }
-.form-grid input,
-.form-grid select,
-.form-grid textarea {
-  padding: 0.8rem;
-  border: 2px solid var(--border-gray);
-  border-radius: 6px;
-  font-family: inherit;
-  font-size: 0.95rem;
-  transition: border-color 0.2s ease;
-}
-.form-grid input:focus,
-.form-grid select:focus,
-.form-grid textarea:focus { outline: none; border-color: var(--primary-turquoise); }
+/* Field base styles now globally unified; keep textarea specifics */
 .form-grid textarea { resize: vertical; min-height: 80px; }
 
 /* Make the action row span full width and keep buttons compact */

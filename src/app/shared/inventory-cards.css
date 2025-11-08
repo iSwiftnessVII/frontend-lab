@@ -75,33 +75,11 @@
 :is(.insumo-delete-btn, .inventory-delete-btn):focus { background: #d11a1a !important; color: #ffffff; box-shadow: none !important; outline: none; }
 :is(.insumo-delete-btn, .inventory-delete-btn):disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* Chips */
-.chip { padding: 0.25rem 0.55rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
-.chip-neutral { background: var(--light-gray); color: #334; }
-.chip-good { background: #dcfce7; color: #166534; }
-.chip.clickable { cursor: pointer; transition: background 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease; user-select: none; }
-.chip.clickable:hover { background: #c8f7d6; box-shadow: 0 2px 6px rgba(0,0,0,0.08); transform: translateY(-1px); }
-.chip.clickable:focus-visible { outline: 2px solid var(--primary-turquoise); outline-offset: 2px; }
-.chip.editing { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; border: 2px solid #bbf7d0; }
-.chip.editing input[type="number"] { padding: 0.3rem 0.5rem; border: 2px solid var(--border-gray); border-radius: 6px; font-size: 0.9rem; }
-.chip.editing input[type="number"]:focus { outline: none; border-color: var(--primary-turquoise); }
-.chip-good.saved { background: #bff7cf; box-shadow: 0 0 0 2px #bbf7d0 inset; }
+/* (Estilos de chips eliminados: ya no hay tarjetas de inventario con chips) */
 
-/* Make compact buttons inside chips match Insumos sizing */
-.chip .btn-compact { padding: 0.4rem 0.6rem !important; font-size: 0.85rem !important; }
+/* (Barra de progreso eliminada) */
 
-/* Progress */
-:is(.insumo-progress, .inventory-progress) { width: 100%; height: 8px; background: #eef2f7; border-radius: 999px; overflow: hidden; }
-:is(.insumo-progress-bar, .inventory-progress-bar) { height: 100%; background: linear-gradient(90deg, #10b981, #22c55e); }
-:is(.insumo-progress-bar.good, .inventory-progress-bar.good) { background: linear-gradient(90deg, #10b981, #22c55e); }
-:is(.insumo-progress-bar.warn, .inventory-progress-bar.warn) { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-:is(.insumo-progress-bar.bad,  .inventory-progress-bar.bad)  { background: linear-gradient(90deg, #ef4444, #dc2626); }
-:is(.insumo-progress-legend, .inventory-progress-legend) { margin-top: 0.35rem; font-size: 0.82rem; color: #556; }
-
-/* Details */
-:is(.insumo-details, .inventory-details) { display: none; border-top: 1px dashed var(--border-gray); margin-top: 0.5rem; padding-top: 0.75rem; color: #445; }
-:is(.insumo-details.open, .inventory-details.open) { display: block; }
-:is(.insumo-details-grid, .inventory-details-grid) { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem 1rem; font-size: 0.9rem; }
+/* (Detalles desplegables eliminados) */
 
 /* Stronger safeguard for Papelería: force delete button to top-right */
 .papeleria-page :is(.insumo-delete-btn, .inventory-delete-btn) {

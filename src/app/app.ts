@@ -146,19 +146,22 @@ export class App implements OnDestroy {
   private handleSelectClick(ev: Event) {
     const t = ev.target as HTMLElement | null;
     if (!t || t.tagName !== 'SELECT') return;
-    // Toggle open attribute on the direct wrapper (form-grid > div)
+    // Toggle on wrapper if exists, else on the select itself
     const wrapper = t.parentElement as HTMLElement | null;
-    if (!wrapper) return;
-    const isOpen = wrapper.getAttribute('data-select-open') === 'true';
-    wrapper.setAttribute('data-select-open', isOpen ? 'false' : 'true');
+    const targetEl = (wrapper ?? t) as HTMLElement;
+    const isOpen = targetEl.getAttribute('data-select-open') === 'true' || targetEl.getAttribute('data-open') === 'true';
+    // Use data-select-open for compatibility; also set data-open for simple selectors if needed
+    targetEl.setAttribute('data-select-open', isOpen ? 'false' : 'true');
+    targetEl.setAttribute('data-open', isOpen ? 'false' : 'true');
   }
 
   private handleSelectFocusOut(ev: FocusEvent) {
     const t = ev.target as HTMLElement | null;
     if (!t || t.tagName !== 'SELECT') return;
     const wrapper = t.parentElement as HTMLElement | null;
-    if (!wrapper) return;
-    wrapper.removeAttribute('data-select-open');
+    const targetEl = (wrapper ?? t) as HTMLElement;
+    targetEl.removeAttribute('data-select-open');
+    targetEl.removeAttribute('data-open');
   }
 
   private handleSelectKeydown(ev: KeyboardEvent) {
@@ -166,8 +169,9 @@ export class App implements OnDestroy {
     if (!t || t.tagName !== 'SELECT') return;
     if (ev.key === 'Escape' || ev.key === 'Esc') {
       const wrapper = t.parentElement as HTMLElement | null;
-      if (!wrapper) return;
-      wrapper.removeAttribute('data-select-open');
+      const targetEl = (wrapper ?? t) as HTMLElement;
+      targetEl.removeAttribute('data-select-open');
+      targetEl.removeAttribute('data-open');
     }
   }
 

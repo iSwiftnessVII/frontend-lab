@@ -1,4 +1,4 @@
-.papeleria-page { font-family: 'Poppins', sans-serif; line-height: 1.6; }
+.papeleria-page { font-family: inherit; line-height: inherit; }
 .papeleria-page h2 { font-size: 1.5rem; font-weight: 600; color: var(--primary-blue); margin: 2rem 0 1rem 0; }
 
 /* Reuse catalog styles from Insumos */
@@ -28,8 +28,9 @@
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; align-items: end; }
 .form-grid .full-row { grid-column: 1 / -1; }
 .form-grid label { font-weight: 500; color: var(--primary-blue); margin-bottom: 0.5rem; font-size: 0.9rem; display: block; }
-.form-grid input, .form-grid textarea, .form-grid select { padding: 0.7rem; border: 2px solid var(--border-gray); border-radius: 6px; font-family: inherit; transition: border-color 0.2s ease; width: 100%; }
-.form-grid input:focus, .form-grid textarea:focus, .form-grid select:focus { outline: none; border-color: var(--primary-turquoise); }
+/* Base input/select styles now unified globally; keep textarea sizing tweak */
+.form-grid textarea { padding: 0.7rem; border: 2px solid var(--border-gray); border-radius: 6px; font-family: inherit; transition: border-color 0.2s ease; width: 100%; }
+.form-grid textarea:focus { outline: none; border-color: var(--primary-turquoise); }
 .actions { display: flex; gap: .5rem; align-items: center; }
 .btn-compact { padding: 0.7rem 1rem !important; min-height: 40px; font-size: 0.92rem; border-radius: 6px; background: var(--primary-turquoise); color: #fff; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; line-height: 1.2; }
 .btn-compact:hover { background: #008e8c; box-shadow: 0 4px 8px rgba(0, 184, 181, 0.3); transform: translateY(-1px); }

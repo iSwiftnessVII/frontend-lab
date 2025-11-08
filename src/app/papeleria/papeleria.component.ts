@@ -114,30 +114,9 @@ export class PapeleriaComponent implements OnInit {
   get papMsg() { return this.papMsgSig(); }
   set papMsg(v: string) { this.papMsgSig.set(v || ''); }
 
-  // Lista y filtros
-  private papeleriaSig = signal<Array<any>>([]);
-  get papeleriaLista() { return this.papeleriaSig(); }
-  private papFiltradaSig = signal<Array<any>>([]);
-  get papeleriaFiltrada() { return this.papFiltradaSig(); }
-  private papItemQSig = signal<string>('');
-  get papItemQ() { return this.papItemQSig(); }
-  set papItemQ(v: string) { this.papItemQSig.set(v || ''); }
-  private papNombreQSig = signal<string>('');
-  get papNombreQ() { return this.papNombreQSig(); }
-  set papNombreQ(v: string) { this.papNombreQSig.set(v || ''); }
+  // Inventario listado eliminado: señales y edición inline removidas
 
-  // Estado de tarjetas y edición inline (igual que Insumos)
-  private expandedInsumos: Set<number> = new Set<number>();
-  editExistMapSig = signal<Record<number, boolean>>({});
-  editExistVal: Record<number, string> = {};
-  savedExistMapSig = signal<Record<number, boolean>>({});
-  editExistLoadingSig = signal<Record<number, boolean>>({});
-  deleteLoadingSig = signal<Record<number, boolean>>({});
-
-  ngOnInit() {
-    this.loadCatalogoInicial();
-    this.loadPapeleria(10);
-  }
+  ngOnInit() { this.loadCatalogoInicial(); }
 
   async loadCatalogoInicial() {
     this.catalogoOffset = 0; this.catalogoVisibleCount = 10; this.itemFiltro = ''; this.nombreFiltro = '';
@@ -217,6 +196,7 @@ export class PapeleriaComponent implements OnInit {
   }
 
   getCatalogoImagenUrl(item: number|string) { return papeleriaService.getCatalogoImagenUrl(item); }
+  onImgError(ev: any) { try { const img = ev?.target as HTMLImageElement; if (img) img.style.display = 'none'; } catch {} }
 
   // Resaltar coincidencias en nombre del catálogo
   constructor(private sanitizer: DomSanitizer, private snack: SnackbarService) {}
@@ -269,12 +249,7 @@ export class PapeleriaComponent implements OnInit {
     } catch {}
   }
 
-  // Inventario: cargar y filtrar
-  async loadPapeleria(limit?: number) {
-    const rows = await papeleriaService.listar('', limit);
-    this.papeleriaSig.set(rows || []);
-    this.aplicarFiltroPapeleria();
-  }
+  // Inventario visual eliminado: ya no se carga listado
 
   async crearPapeleria(ev: Event) {
     ev.preventDefault();
@@ -303,130 +278,10 @@ export class PapeleriaComponent implements OnInit {
       };
       await papeleriaService.crear(payload);
       this.snack.success('Se creó el registro de papelería');
-      await this.loadPapeleria();
+  // Inventario visual removido: no recargamos listado
     } catch (err: any) {
       this.snack.error(err?.message || 'Error al crear el registro de papelería');
     }
   }
 
-  async filtrarPapeleria() { this.aplicarFiltroPapeleria(); }
-  private aplicarFiltroPapeleria() {
-    const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-    const qItem = norm(this.papItemQ || '');
-    const qNom = norm(this.papNombreQ || '');
-    if (!qItem && !qNom) { this.papFiltradaSig.set((this.papeleriaSig() || []).slice()); return; }
-    const filtrados = (this.papeleriaSig() || []).filter(i => {
-      const itemStr = norm(String(i.item_catalogo ?? ''));
-      const nombre = norm(String(i.nombre ?? ''));
-      if (qItem && !itemStr.includes(qItem)) return false;
-      if (qNom && !nombre.includes(qNom)) return false;
-      return true;
-    });
-    this.papFiltradaSig.set(filtrados);
-  }
-
-  getExistentePct(i: any): number {
-    try {
-      const adq = Number(i?.cantidad_adquirida);
-      const ex = Number(i?.cantidad_existente);
-      if (!isFinite(adq) || adq <= 0 || !isFinite(ex) || ex < 0) return 0;
-      const pct = (ex / adq) * 100;
-      return Math.max(0, Math.min(100, Math.round(pct)));
-    } catch { return 0; }
-  }
-
-  getExistenteClass(i: any): string {
-    const pct = this.getExistentePct(i);
-    if (pct < 20) return 'bad';
-    if (pct < 50) return 'warn';
-    return 'good';
-  }
-
-  formatearFecha(fecha: string): string {
-    if (!fecha) return '';
-    const d = new Date(fecha);
-    if (isNaN(d.getTime())) return String(fecha);
-    return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()}`;
-  }
-
-  // Expand/collapse cards
-  isInsumoExpanded(i: any): boolean {
-    const id = Number(i?.id);
-    if (!Number.isFinite(id)) return false;
-    return this.expandedInsumos.has(id);
-  }
-  toggleInsumoCard(i: any) {
-    const id = Number(i?.id);
-    if (!Number.isFinite(id)) return;
-    if (this.expandedInsumos.has(id)) this.expandedInsumos.delete(id);
-    else this.expandedInsumos.add(id);
-  }
-
-  // Inline edit cantidad_existente
-  isEditingExist(i: any): boolean {
-    const id = Number(i?.id);
-    return Number.isFinite(id) ? !!this.editExistMapSig()[id] : false;
-  }
-  startEditExist(i: any, ev?: Event) {
-    ev?.stopPropagation?.();
-    const id = Number(i?.id);
-    if (!Number.isFinite(id)) return;
-    this.editExistMapSig.update(map => ({ ...map, [id]: true }));
-    this.editExistVal[id] = String(i?.cantidad_existente ?? 0);
-  }
-  cancelEditExist(i: any, ev?: Event) {
-    ev?.stopPropagation?.();
-    const id = Number(i?.id);
-    if (!Number.isFinite(id)) return;
-    this.editExistMapSig.update(map => { const next = { ...map } as Record<number, boolean>; delete next[id]; return next; });
-    delete this.editExistVal[id];
-  }
-  async saveEditExist(i: any, ev?: Event) {
-    ev?.stopPropagation?.();
-    const id = Number(i?.id);
-    if (!Number.isFinite(id)) return;
-    if (this.editExistLoadingSig()[id]) return;
-    const raw = (this.editExistVal[id] ?? '').toString().trim();
-    const num = Number(raw);
-    if (!Number.isFinite(num) || num < 0) { alert('Cantidad inválida (>= 0)'); return; }
-    try {
-      this.editExistLoadingSig.update(map => ({ ...map, [id]: true }));
-      const resp = await papeleriaService.ajustarExistencias(id, { cantidad: num });
-      const nuevo = Number(resp?.cantidad_existente);
-      i.cantidad_existente = Number.isFinite(nuevo) ? nuevo : num;
-      this.cancelEditExist(i);
-      this.savedExistMapSig.update(map => ({ ...map, [id]: true }));
-      setTimeout(() => {
-        this.savedExistMapSig.update(map => { const next = { ...map } as Record<number, boolean>; delete next[id]; return next; });
-      }, 1200);
-    } catch (err: any) {
-      console.error('Error guardando cantidad existente', err);
-      alert(err?.message || 'Error actualizando cantidad existente');
-    } finally {
-      this.editExistLoadingSig.update(map => { const next = { ...map } as Record<number, boolean>; delete next[id]; return next; });
-    }
-  }
-  wasExistSaved(i: any): boolean { const id = Number(i?.id); return Number.isFinite(id) ? !!this.savedExistMapSig()[id] : false; }
-  isLoadingExist(i: any): boolean { const id = Number(i?.id); return Number.isFinite(id) ? !!this.editExistLoadingSig()[id] : false; }
-  isDeleteLoading(i: any): boolean { const id = Number(i?.id); return Number.isFinite(id) ? !!this.deleteLoadingSig()[id] : false; }
-
-  async eliminarPapeleria(id: number) {
-    if (!confirm('¿Eliminar este registro?')) return;
-    try {
-      this.deleteLoadingSig.update(map => ({ ...map, [id]: true }));
-      await papeleriaService.eliminar(id);
-      await this.loadPapeleria();
-    } catch (err) {
-      console.error('Error eliminando registro', err);
-      alert('Error al eliminar');
-    } finally {
-      this.deleteLoadingSig.update(map => { const next = { ...map } as Record<number, boolean>; delete next[id]; return next; });
-    }
-  }
-  onDeleteInsumo(i: any, ev: Event) { ev?.stopPropagation?.(); const id = Number(i?.id); if (Number.isFinite(id)) this.eliminarPapeleria(id); }
-
-  canDelete(): boolean { const user = authUser(); return user?.rol === 'Administrador' || user?.rol === 'Superadmin'; }
-
-  onImgError(ev: any) { try { const img = ev?.target as HTMLImageElement; if (img) img.style.display = 'none'; } catch {}
-  }
 }

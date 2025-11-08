@@ -137,23 +137,9 @@ section {
     font-size: 0.9rem;
 }
 
-.form-grid input,
-.form-grid textarea,
-.form-grid select {
-    padding: 0.8rem;
-    border: 2px solid var(--border-gray);
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 0.95rem;
-    transition: border-color 0.3s ease;
-}
-
-.form-grid input:focus,
-.form-grid textarea:focus,
-.form-grid select:focus {
-    outline: none;
-    border-color: var(--primary-turquoise);
-}
+/* Base input/textarea/select styling now unified globally (styles.css).
+   Keep only textarea adjustments here to avoid duplication. */
+.form-grid textarea { resize: vertical; min-height: 80px; }
 
 .form-grid textarea {
     resize: vertical;
@@ -650,54 +636,7 @@ p[role="status"]:not(.error-message) {
     color: #742a2a;
 }
 
-/* ===== Inventario e-commerce cards ===== */
-.insumo-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
-}
-
-.insumo-card {
-    background: var(--primary-white);
-    border: 2px solid var(--border-gray);
-    border-radius: 10px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    position: relative;
-    cursor: pointer;
-}
-
-.insumo-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-    border-color: var(--primary-turquoise);
-}
-
-.insumo-card-media {
-    width: 100%;
-    height: 180px;
-    background: #f3f4f6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.insumo-card-media img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.insumo-card-body {
-    padding: 1rem 1rem 1.25rem 1rem;
-}
-
-.insumo-card-header { display: flex; flex-direction: column; gap: 0.15rem; margin-bottom: 0.4rem; }
-.insumo-brand { font-size: 0.82rem; color: #556; }
-.insumo-title-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
-.insumo-title { font-size: 1.05rem; font-weight: 600; color: var(--primary-blue); margin: 0; }
-.insumo-item-tag { background: var(--light-gray); padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600; white-space: nowrap; color: #334; }
+/* (Inventario de insumos listado eliminado: se retiraron estilos de tarjetas .insumo-*) */
 
 /* old .insumo-meta remains for future metadata (left blank intentionally) */
 
@@ -724,161 +663,15 @@ p[role="status"]:not(.error-message) {
 
 /* Botón eliminar en esquina superior izquierda */
 /* Minimal small delete button: small area, large red X, no effects */
-.insumo-delete-btn {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border: 1px solid #b11212 !important;
-    background: #d11a1a !important; /* red button */
-    color: #ffffff; /* white X */
-    font-size: 22px; /* large X */
-    font-weight: 900;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: none !important;
-    transition: none !important;
-    border-radius: 6px; /* subtle rounding */
-    z-index: 2;
-}
-.insumo-delete-btn:hover,
-.insumo-delete-btn:active,
-.insumo-delete-btn:focus {
-    background: #d11a1a !important;
-    color: #ffffff;
-    box-shadow: none !important;
-    outline: none;
-}
-.insumo-delete-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
+/* (Botón eliminar de tarjetas eliminado) */
 
-/* Chips para cantidades */
-.chip {
-    padding: 0.25rem 0.55rem;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-.chip-neutral {
-    background: var(--light-gray);
-    color: #334;
-}
-.chip-good {
-    background: #dcfce7;
-    color: #166534;
-}
-
-/* Inline edit button inside chip */
-.chip-edit-btn {
-    margin-left: 6px;
-    padding: 2px 6px;
-    font-size: 0.8rem;
-    line-height: 1;
-    border-radius: 4px;
-    background: rgba(0,0,0,0.06);
-    color: inherit;
-}
-.chip-edit-btn:hover {
-    background: rgba(0,0,0,0.12);
-}
-
-/* Make chips clickable and pretty */
-.chip.clickable {
-    cursor: pointer;
-    transition: background 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
-    user-select: none;
-}
-.chip.clickable:hover {
-    background: #c8f7d6; /* slightly deeper than #dcfce7 */
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    transform: translateY(-1px);
-}
-.chip.clickable:focus-visible {
-    outline: 2px solid var(--primary-turquoise);
-    outline-offset: 2px;
-}
-
-/* Saved flash state */
-.chip-good.saved {
-    background: #bff7cf;
-    box-shadow: 0 0 0 2px #bbf7d0 inset;
-    animation: existSavedFlash 0.9s ease-out 1;
-}
-@keyframes existSavedFlash {
-    0% { box-shadow: 0 0 0 6px rgba(187,247,208,0.9) inset; }
-    100% { box-shadow: 0 0 0 2px #bbf7d0 inset; }
-}
-
-/* Editing state visuals */
-.chip.editing {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #f0fdf4; /* very light green */
-    border: 2px solid #bbf7d0; /* green border */
-}
-.chip.editing input[type="number"] {
-    padding: 0.3rem 0.5rem;
-    border: 2px solid var(--border-gray);
-    border-radius: 6px;
-    font-size: 0.9rem;
-}
-.chip.editing input[type="number"]:focus {
-    outline: none;
-    border-color: var(--primary-turquoise);
-}
-.chip .btn-compact {
-    padding: 0.4rem 0.6rem !important;
-    font-size: 0.85rem !important;
-}
+/* (Estilos de chips eliminados: listado de insumos retirado) */
 
 /* Barra de progreso simple para disponibilidad */
-.insumo-progress {
-    width: 100%;
-    height: 8px;
-    background: #eef2f7;
-    border-radius: 999px;
-    overflow: hidden;
-}
-.insumo-progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #10b981, #22c55e);
-}
-.insumo-progress-bar.good { background: linear-gradient(90deg, #10b981, #22c55e); }
-.insumo-progress-bar.warn { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-.insumo-progress-bar.bad  { background: linear-gradient(90deg, #ef4444, #dc2626); }
-.insumo-progress-legend {
-    margin-top: 0.35rem;
-    font-size: 0.82rem;
-    color: #556;
-}
+/* (Barra de progreso eliminada) */
 
 /* Desplegable de detalles en tarjetas */
-.insumo-details {
-    display: none;
-    border-top: 1px dashed var(--border-gray);
-    margin-top: 0.5rem;
-    padding-top: 0.75rem;
-    color: #445;
-}
-
-.insumo-details.open {
-    display: block;
-}
-
-.insumo-details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0.5rem 1rem;
-    font-size: 0.9rem;
-}
+/* (Detalles desplegables eliminados) */
 
 /* ===== Utility Classes ===== */
 .hidden {

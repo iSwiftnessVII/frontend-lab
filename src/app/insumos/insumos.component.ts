@@ -156,30 +156,7 @@ private insumoMsgSig = signal<string>('');
 get insumoMsg() { return this.insumoMsgSig(); }
 set insumoMsg(v: string) { this.insumoMsgSig.set(v || ''); }
 
-// Lista y filtros de insumos (signals + accessors para compatibilidad de template)
-private insumosSig = signal<Array<any>>([]);
-get insumos() { return this.insumosSig(); }
-
-private insumosFiltradosSig = signal<Array<any>>([]);
-get insumosFiltrados() { return this.insumosFiltradosSig(); }
-
-private insumosItemQSig = signal<string>('');
-get insumosItemQ() { return this.insumosItemQSig(); }
-set insumosItemQ(v: string) { this.insumosItemQSig.set(v || ''); }
-
-private insumosNombreQSig = signal<string>('');
-get insumosNombreQ() { return this.insumosNombreQSig(); }
-set insumosNombreQ(v: string) { this.insumosNombreQSig.set(v || ''); }
-
-insumosQ = '';
-  // Estado de desplegables por tarjeta de insumo
-  private expandedInsumos: Set<number> = new Set<number>();
-  // Edición inline de cantidad existente por insumo (señales para botones/estados)
-  editExistMapSig = signal<Record<number, boolean>>({});
-  editExistVal: Record<number, string> = {}; // dejamos valores como objeto simple para [(ngModel)] estable
-  savedExistMapSig = signal<Record<number, boolean>>({});
-  editExistLoadingSig = signal<Record<number, boolean>>({});
-  deleteLoadingSig = signal<Record<number, boolean>>({});
+// (Listado de insumos eliminado: señales, filtros y edición inline removidos)
 
 // Panel de catálogo dentro del formulario (autocompletar)
 mostrarCatalogoFormPanel: boolean = false;
@@ -194,7 +171,6 @@ async init() {
     this.catalogoCargando = true;
     await Promise.all([
       this.loadAux(),
-      this.loadInsumos(10),
       this.loadCatalogoInicial()
     ]);
 
@@ -213,11 +189,7 @@ async loadAux() {
   this.almacen = data.almacen || [];
 }
 
-async loadInsumos(limit?: number) {
-  const rows = await insumosService.listarInsumos(this.insumosQ || '', limit);
-  this.insumosSig.set(rows || []);
-  this.aplicarFiltroInsumos();
-}
+async loadInsumos(limit?: number) { /* listado de insumos eliminado */ }
 
 async buscarCatalogo() {
   const q = this.normalizarTexto(this.catalogoQ || '');
@@ -418,174 +390,9 @@ async cargarMasCatalogo() {
     } catch {}
   }
 
-  // ===== Inventario: desplegable en tarjetas =====
-  isInsumoExpanded(i: any): boolean {
-    const id = Number(i?.id);
-    if (!Number.isFinite(id)) return false;
-    return this.expandedInsumos.has(id);
-  }
+  // ===== Inventario: funcionalidades de tarjetas eliminadas =====
 
-  toggleInsumoCard(i: any) {
-    const id = Number(i?.id);
-    if (!Number.isFinite(id)) return;
-    if (this.expandedInsumos.has(id)) {
-      this.expandedInsumos.delete(id);
-    } else {
-      this.expandedInsumos.add(id);
-    }
-  }
-
-  onDeleteInsumo(i: any, ev: Event) {
-    ev?.stopPropagation?.();
-    const id = Number(i?.id);
-    if (Number.isFinite(id)) {
-      this.eliminarInsumo(id);
-    }
-  }
-
-  // Porcentaje de existencia vs adquirida, clamped 0-100
-  getExistentePct(i: any): number {
-    try {
-      const adq = Number(i?.cantidad_adquirida);
-      const ex = Number(i?.cantidad_existente);
-      if (!isFinite(adq) || adq <= 0 || !isFinite(ex) || ex < 0) return 0;
-      const pct = (ex / adq) * 100;
-      return Math.max(0, Math.min(100, Math.round(pct)));
-    } catch {
-      return 0;
-    }
-  }
-
-  getExistenteClass(i: any): string {
-    const pct = this.getExistentePct(i);
-    if (pct < 20) return 'bad';
-    if (pct < 50) return 'warn';
-    return 'good';
-  }
-
-  // ===== Edición inline de 'cantidad_existente' =====
-  isEditingExist(i: any): boolean {
-    const id = Number(i?.id);
-    return Number.isFinite(id) ? !!this.editExistMapSig()[id] : false;
-  }
-
-  startEditExist(i: any, ev?: Event) {
-    ev?.stopPropagation?.();
-    const id = Number(i?.id);
-    if (!Number.isFinite(id)) return;
-    this.editExistMapSig.update(map => ({ ...map, [id]: true }));
-    this.editExistVal[id] = String(i?.cantidad_existente ?? 0);
-  }
-
-  cancelEditExist(i: any, ev?: Event) {
-    ev?.stopPropagation?.();
-    const id = Number(i?.id);
-    if (!Number.isFinite(id)) return;
-    this.editExistMapSig.update(map => {
-      const next = { ...map } as Record<number, boolean>;
-      delete next[id];
-      return next;
-    });
-    delete this.editExistVal[id];
-  }
-
-  async saveEditExist(i: any, ev?: Event) {
-    ev?.stopPropagation?.();
-    const id = Number(i?.id);
-    if (!Number.isFinite(id)) return;
-    if (this.editExistLoadingSig()[id]) return; // evitar doble click
-    const raw = (this.editExistVal[id] ?? '').toString().trim();
-    const num = Number(raw);
-    if (!Number.isFinite(num) || num < 0) {
-      alert('Cantidad inválida (debe ser un número >= 0)');
-      return;
-    }
-    try {
-      this.editExistLoadingSig.update(map => ({ ...map, [id]: true }));
-      const resp = await insumosService.ajustarExistencias(id, { cantidad: num });
-      // Actualizar el modelo local
-      const nuevo = Number(resp?.cantidad_existente);
-      i.cantidad_existente = Number.isFinite(nuevo) ? nuevo : num;
-      // Cerrar edición
-      this.cancelEditExist(i);
-      // Marcar guardado para feedback visual y limpiar luego
-      this.savedExistMapSig.update(map => ({ ...map, [id]: true }));
-      setTimeout(() => {
-        this.savedExistMapSig.update(map => {
-          const next = { ...map } as Record<number, boolean>;
-          delete next[id];
-          return next;
-        });
-      }, 1200);
-    } catch (err: any) {
-      console.error('Error guardando cantidad existente', err);
-      alert(err?.message || 'Error actualizando cantidad existente');
-    }
-    finally {
-      this.editExistLoadingSig.update(map => {
-        const next = { ...map } as Record<number, boolean>;
-        delete next[id];
-        return next;
-      });
-    }
-  }
-
-  wasExistSaved(i: any): boolean {
-    const id = Number(i?.id);
-    return Number.isFinite(id) ? !!this.savedExistMapSig()[id] : false;
-  }
-
-  isLoadingExist(i: any): boolean {
-    const id = Number(i?.id);
-    return Number.isFinite(id) ? !!this.editExistLoadingSig()[id] : false;
-  }
-
-  isDeleteLoading(i: any): boolean {
-    const id = Number(i?.id);
-    return Number.isFinite(id) ? !!this.deleteLoadingSig()[id] : false;
-  }
-
-
-
-
-
-
-formatearFecha(fecha: string): string {
-  if (!fecha) return '';
-  const date = new Date(fecha);
-  return `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-}
-
-mostrarDetallesInsumo(insumo: any) {
-  this.insumoSeleccionado = insumo;
-  this.mostrarDetalles = true;
-}
-
-// Funciones auxiliares para obtener nombres descriptivos
-obtenerNombreTipo(id: any): string {
-  const tipo = this.tipos.find(t => t.id == id);
-  return tipo ? tipo.nombre : 'N/A';
-}
-
-obtenerNombreUnidad(id: any): string {
-  const unidad = this.unidades.find(u => u.id == id);
-  return unidad ? unidad.nombre : 'N/A';
-}
-
-obtenerNombreEstado(id: any): string {
-  const estado = this.estado.find(e => e.id == id);
-  return estado ? estado.nombre : 'N/A';
-}
-
-obtenerNombreAlmacenamiento(id: any): string {
-  const almacen = this.almacen.find(a => a.id == id);
-  return almacen ? almacen.nombre : 'N/A';
-}
-
-obtenerNombreTipoRecipiente(id: any): string {
-  const recipiente = this.recipiente.find(r => r.id == id);
-  return recipiente ? recipiente.nombre : 'N/A';
-}
+// (Helpers de obtención de nombres eliminados al retirar vista de listado de insumos)
 
 // Selección desde el catálogo
   onItemSeleccionado() {
@@ -740,96 +547,6 @@ resetInsumoForm() {
 
 
   this.insumoMsg = '';
-}
-
-  canDelete(): boolean {
-    const user = authUser();
-    // Solo Administrador y Superadmin pueden eliminar
-    return user?.rol === 'Administrador' || user?.rol === 'Superadmin';
-  }
-
-
-async onItemInput() {
-  const q = String(this.item_catalogo || '').trim();
-  if (q.length >= 1) {
-    this.catalogoQ = q;
-    await this.buscarCatalogo();
-    this.mostrarCatalogoFormPanel = true;
-  } else {
-    this.mostrarCatalogoFormPanel = false;
-  }
-}
-
-
-async onNombreInput() {
-  const q = (this.nombre || '').trim();
-  if (q.length >= 1) {
-    this.catalogoQ = q;
-    await this.buscarCatalogo();
-    this.mostrarCatalogoFormPanel = true;
-  } else {
-    this.mostrarCatalogoFormPanel = false;
-  }
-}
-
-cerrarCatalogoFormPanel() {
-  this.mostrarCatalogoFormPanel = false;
-}
-
-async filtrarInsumos() {
-  // Filtrado local por lote, código y nombre (insensible a mayúsculas/acentos)
-  this.aplicarFiltroInsumos();
-}
-
-private aplicarFiltroInsumos() {
-  const normalizar = (s: string) =>
-    (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-
-  const qItem = normalizar(this.insumosItemQSig() || '');
-  const qNom  = normalizar(this.insumosNombreQSig() || '');
-
-  // Si no hay filtros, devolver copia completa
-  if (!qItem && !qNom) {
-    this.insumosFiltradosSig.set((this.insumosSig() || []).slice());
-    return;
-  }
-
-  const filtrados = (this.insumosSig() || []).filter(i => {
-    const itemStr  = normalizar(String(i.item_catalogo ?? ''));
-    const nombre   = normalizar(String(i.nombre ?? ''));
-
-    if (qItem && !itemStr.includes(qItem)) return false;
-    if (qNom  && !nombre.includes(qNom))   return false;
-    return true;
-  });
-  this.insumosFiltradosSig.set(filtrados);
-}
-
-
-async mostrarTodosInsumos() {
-  this.insumosQ = '';
-  await this.loadInsumos(); 
-}
-
-async eliminarInsumo(id: number) {  
-  if (!confirm('¿Eliminar este insumo?')) return;
-  
-  try {
-    // marcar botón eliminar en carga
-    this.deleteLoadingSig.update(map => ({ ...map, [id]: true }));
-    await insumosService.eliminarInsumo(id);
-    await this.loadInsumos();
-  } catch (err) {
-    console.error('Error eliminando insumo', err);
-    alert('Error al eliminar el insumo');
-  }
-  finally {
-    this.deleteLoadingSig.update(map => {
-      const next = { ...map } as Record<number, boolean>;
-      delete next[id];
-      return next;
-    });
-  }
 }
 
 logout() {
