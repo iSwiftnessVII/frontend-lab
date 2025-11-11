@@ -139,5 +139,52 @@ export class EquiposComponent {
 	// Getters para usar Signals en el template sin cambiar binding existentes
 	get lista() { return this.listaSig(); }
 	get listaFiltrada() { return this.listaFiltradaSig(); }
+
+	// --- Utilidades de fecha ---
+	private parseFlexibleDate(value: any): Date | null {
+		if (!value) return null;
+		if (value instanceof Date && !isNaN(value.getTime())) return value;
+		let str = String(value).trim();
+		if (!str) return null;
+		// Normalizar separadores
+		const isoLike = /^\d{4}-\d{2}-\d{2}(?:[Tt].*)?$/;
+		const ymd = /^\d{4}-\d{2}-\d{2}$/;
+		const dmy = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/;
+
+		// ISO o yyyy-MM-dd
+		if (isoLike.test(str)) {
+			const d = new Date(str);
+			return isNaN(d.getTime()) ? null : d;
+		}
+		if (ymd.test(str)) {
+			const [y, m, d] = str.split('-').map(n => parseInt(n, 10));
+			const dt = new Date(y, m - 1, d);
+			return isNaN(dt.getTime()) ? null : dt;
+		}
+
+		// dd/MM/yyyy o dd-MM-yyyy (por defecto día/mes/año)
+		const mDmy = str.match(dmy);
+		if (mDmy) {
+			let dd = parseInt(mDmy[1], 10);
+			let mm = parseInt(mDmy[2], 10);
+			let yy = parseInt(mDmy[3], 10);
+			if (yy < 100) yy += 2000; // manejar años de 2 dígitos como 20xx
+			const dt = new Date(yy, mm - 1, dd);
+			return isNaN(dt.getTime()) ? null : dt;
+		}
+
+		// Intento final con Date.parse
+		const dt = new Date(str);
+		return isNaN(dt.getTime()) ? null : dt;
+	}
+
+	formatFechaPuesta(value: any): string {
+		const dt = this.parseFlexibleDate(value);
+		if (!dt) return '—';
+		const dd = String(dt.getDate()).padStart(2, '0');
+		const mm = String(dt.getMonth() + 1).padStart(2, '0');
+		const yyyy = dt.getFullYear();
+		return `${dd}/${mm}/${yyyy}`;
+	}
 }
 

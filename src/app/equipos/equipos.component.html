@@ -86,54 +86,45 @@
 			</div>
 
 			@if (cargando) { <p>Cargando...</p> }
-			@if (!cargando && listaFiltrada.length) {
-				<div class="catalogo-stats">
-					<span>Mostrando {{ listaFiltrada.length }} de {{ lista.length }} equipos</span>
-				</div>
-				<div class="simple-table-wrapper">
-					<table class="simple-table">
-						<thead>
-							<tr>
-								<th>Nombre</th>
-								<th>Marca</th>
-								<th>Modelo</th>
-								<th>Código</th>
-								<th>Inv. SENA</th>
-								<th>Tipo</th>
-								<th>Clasificación</th>
-								<th>Adquisición</th>
-							</tr>
-						</thead>
-						<tbody>
-							@for (e of listaFiltrada; track trackById($index, e)) {
-							<tr class="row-main" (click)="toggleFila(e)">
-								<td>{{ e.nombre }}</td>
-								<td>{{ e.marca || '—' }}</td>
-								<td>{{ e.modelo || '—' }}</td>
-								<td>{{ e.codigo_identificacion || '—' }}</td>
-								<td>{{ e.inventario_sena || '—' }}</td>
-								<td>{{ e.tipo || '—' }}</td>
-								<td>{{ e.clasificacion || '—' }}</td>
-								<td>{{ e.fecha_adquisicion ? (e.fecha_adquisicion | date:'yyyy-MM-dd') : '—' }}</td>
-							</tr>
+				@if (!cargando && listaFiltrada.length) {
+					<div class="catalogo-stats">
+						<span>Mostrando {{ listaFiltrada.length }} de {{ lista.length }} equipos</span>
+					</div>
+					<div class="lane-list">
+						@for (e of listaFiltrada; track trackById($index, e)) {
+						<article class="equip-lane" (click)="toggleFila(e)" [attr.aria-expanded]="isFilaExpandida(e)" tabindex="0">
+							<div class="lane-header">
+								<div class="chips">
+									@if (e.codigo_identificacion) { <span class="pill"><strong>Código:</strong> {{ e.codigo_identificacion }}</span> }
+									@if (e.marca) { <span class="pill"><strong>Marca:</strong> {{ e.marca }}</span> }
+									@if (e.modelo) { <span class="pill"><strong>Modelo:</strong> {{ e.modelo }}</span> }
+									@if (e.numero_serie) { <span class="pill"><strong>Serie:</strong> {{ e.numero_serie }}</span> }
+									@if (e.tipo) { <span class="pill"><strong>Tipo:</strong> {{ e.tipo }}</span> }
+									@if (e.clasificacion) { <span class="pill"><strong>Clasificación:</strong> {{ e.clasificacion }}</span> }
+								</div>
+								<button type="button" class="icon-btn danger" title="Eliminar" aria-label="Eliminar" (click)="$event.stopPropagation()">
+									<svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+										<path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+									</svg>
+								</button>
+							</div>
+							<div class="lane-title" [title]="e.nombre">{{ e.nombre }}</div>
 							@if (isFilaExpandida(e)) {
-							<tr class="row-details">
-								<td colspan="8">
-									<div class="details-grid">
-										<div class="detail-card"><div class="detail-label">Serie</div><div class="detail-value">{{ e.numero_serie || '—' }}</div></div>
-										<div class="detail-card"><div class="detail-label">Acreditación</div><div class="detail-value">{{ e.acreditacion || '—' }}</div></div>
-										<div class="detail-card"><div class="detail-label">Manual usuario</div><div class="detail-value">{{ e.manual_usuario || '—' }}</div></div>
-										<div class="detail-card"><div class="detail-label">Tipo manual</div><div class="detail-value">{{ e.tipo_manual || '—' }}</div></div>
-										<div class="detail-card"><div class="detail-label">Puesta en servicio</div><div class="detail-value">{{ e.puesta_en_servicio || '—' }}</div></div>
-									</div>
-								</td>
-							</tr>
+							<div class="lane-details" (click)="$event.stopPropagation()">
+								<div class="details-grid">
+									<div class="detail-card"><div class="detail-label">Inventario SENA</div><div class="detail-value">{{ e.inventario_sena || '—' }}</div></div>
+									<div class="detail-card"><div class="detail-label">Acreditación</div><div class="detail-value">{{ e.acreditacion || '—' }}</div></div>
+									<div class="detail-card"><div class="detail-label">Manual usuario</div><div class="detail-value">{{ e.manual_usuario || '—' }}</div></div>
+									<div class="detail-card"><div class="detail-label">Tipo manual</div><div class="detail-value">{{ e.tipo_manual || '—' }}</div></div>
+									<div class="detail-card"><div class="detail-label">Puesta en servicio</div><div class="detail-value">{{ formatFechaPuesta(e.puesta_en_servicio) }}</div></div>
+									<div class="detail-card"><div class="detail-label">Adquisición</div><div class="detail-value">{{ e.fecha_adquisicion ? (e.fecha_adquisicion | date:'yyyy-MM-dd') : '—' }}</div></div>
+								</div>
+							</div>
 							}
-							}
-						</tbody>
-					</table>
-				</div>
-			}
+						</article>
+						}
+					</div>
+				}
 			@if (!cargando && !listaFiltrada.length) { <p>No hay equipos que coincidan con la búsqueda.</p> }
 			@if (!cargando && !lista.length) { <p>No hay equipos registrados.</p> }
 		</div>
