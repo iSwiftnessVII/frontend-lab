@@ -115,8 +115,41 @@ export class PapeleriaComponent implements OnInit {
   set papMsg(v: string) { this.papMsgSig.set(v || ''); }
 
   // Inventario listado eliminado: señales y edición inline removidas
+  // ===== Inventario de Papelería (tarjetas) =====
+  private papeleriaListSig = signal<Array<any>>([]);
+  private papeleriaCargandoSig = signal<boolean>(false);
+  private papeleriaErrorSig = signal<string>('');
+  get papeleriaList() { return this.papeleriaListSig(); }
+  get papeleriaCargando() { return this.papeleriaCargandoSig(); }
+  get papeleriaError() { return this.papeleriaErrorSig(); }
+  skeletonPapeleria = Array.from({ length: 6 });
+
+  // Filtros inventario Papelería
+  private invItemFiltroSig = signal<string>('');
+  get invItemFiltro() { return this.invItemFiltroSig(); }
+  set invItemFiltro(v: string) { this.invItemFiltroSig.set(v ?? ''); }
+  private invNombreFiltroSig = signal<string>('');
+  get invNombreFiltro() { return this.invNombreFiltroSig(); }
+  set invNombreFiltro(v: string) { this.invNombreFiltroSig.set(v ?? ''); }
+
+  // Control de quitar cantidad por tarjeta (Inventario Papelería)
+  private removeQtyMap: Record<number, number | null> = {};
+  private busyIds = new Set<number>();
+  private openItem: any | null = null;
+  getRemoveQty(id: number): number | null { return this.removeQtyMap[id] ?? null; }
+  setRemoveQty(id: number, v: any) {
+    const num = Number(v);
+    this.removeQtyMap[id] = Number.isFinite(num) ? num : null;
+  }
+  isBusy(id: number) { return this.busyIds.has(id); }
+  isValidQty(v: any) { const n = Number(v); return Number.isFinite(n) && n > 0; }
+  isOpen(item: any) { return this.openItem === item; }
+  toggleOpen(item: any) { this.openItem = (this.openItem === item) ? null : item; }
 
   ngOnInit() { this.loadCatalogoInicial(); }
+
+  // Cargar listado inicial de inventario de Papelería al montar
+  ngAfterViewInit() { this.loadPapeleriaList(); }
 
   async loadCatalogoInicial() {
     this.catalogoOffset = 0; this.catalogoVisibleCount = 10; this.itemFiltro = ''; this.nombreFiltro = '';
@@ -250,6 +283,78 @@ export class PapeleriaComponent implements OnInit {
   }
 
   // Inventario visual eliminado: ya no se carga listado
+  // ===== Métodos Inventario Papelería =====
+  async loadPapeleriaList(limit?: number) {
+    this.papeleriaErrorSig.set('');
+    this.papeleriaCargandoSig.set(true);
+    try {
+      const resp = await papeleriaService.listar('', limit || 0);
+      const rows = Array.isArray(resp) ? resp : (resp.rows || resp.data || []);
+      this._papeleriaAll = rows;
+      this.papeleriaListSig.set(rows);
+    } catch (e) {
+      console.error('Error cargando listado de papelería', e);
+      this.papeleriaErrorSig.set('Error cargando papelería');
+      this._papeleriaAll = [];
+      this.papeleriaListSig.set([]);
+    } finally {
+      this.papeleriaCargandoSig.set(false);
+    }
+  }
+
+  private _papeleriaAll: any[] = [];
+  filtrarPapeleriaPorCampos() {
+    const codeQ = (this.invItemFiltro || '').trim().toLowerCase();
+    const nameQ = (this.invNombreFiltro || '').trim().toLowerCase();
+    let filtered = this._papeleriaAll;
+    if (codeQ) filtered = filtered.filter(x => String(x.item_catalogo || '').toLowerCase().includes(codeQ));
+    if (nameQ) filtered = filtered.filter(x => String(x.nombre || '').toLowerCase().includes(nameQ));
+    this.papeleriaListSig.set(filtered);
+  }
+
+  async quitar(item: any) {
+    try {
+      const id = Number(item?.id);
+      const qty = this.getRemoveQty(id);
+      if (!this.isValidQty(qty)) { this.snack.warn('Ingresa una cantidad válida (> 0)'); return; }
+      this.busyIds.add(id);
+      const delta = -Math.abs(Number(qty));
+      const resp = await papeleriaService.ajustarExistencias(id, { delta });
+      const nuevo = (resp as any)?.cantidad_existente;
+      if (typeof nuevo !== 'undefined') {
+        const updater = (arr: any[]) => arr.map(x => x.id === id ? { ...x, cantidad_existente: nuevo } : x);
+        this._papeleriaAll = updater(this._papeleriaAll);
+        this.papeleriaListSig.set(updater(this.papeleriaListSig()));
+      }
+      this.setRemoveQty(id, null);
+      this.snack.success('Existencias actualizadas');
+    } catch (e: any) {
+      this.snack.error(e?.message || 'Error al ajustar existencias');
+    } finally {
+      try { const id = Number(item?.id); this.busyIds.delete(id); } catch {}
+    }
+  }
+
+  async eliminar(item: any) {
+    const id = Number(item?.id);
+    if (!Number.isFinite(id)) { this.snack.warn('No se pudo determinar el ID'); return; }
+    const ok = window.confirm(`¿Eliminar el registro de papelería "${item?.nombre || ''}"? Esta acción no se puede deshacer.`);
+    if (!ok) return;
+    try {
+      this.busyIds.add(id);
+      await papeleriaService.eliminar(id);
+  this._papeleriaAll = this._papeleriaAll.filter(x => x.id !== id);
+  const filtered = this.papeleriaListSig().filter(x => x.id !== id);
+  this.papeleriaListSig.set(filtered);
+      delete this.removeQtyMap[id];
+      if (this.openItem === item) this.openItem = null;
+      this.snack.success('Registro eliminado');
+    } catch (e: any) {
+      this.snack.error(e?.message || 'Error al eliminar');
+    } finally {
+      this.busyIds.delete(id);
+    }
+  }
 
   async crearPapeleria(ev: Event) {
     ev.preventDefault();

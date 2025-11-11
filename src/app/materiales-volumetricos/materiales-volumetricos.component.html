@@ -1,0 +1,151 @@
+<div class="liba-theme container mat-vol-page">
+  <h2>Materiales volumétricos</h2>
+  <section>
+    <form class="form-grid" (ngSubmit)="crear($event)">
+      <div>
+        <label for="item">Item</label>
+        <input id="item" type="number" [(ngModel)]="item" name="item" required placeholder="Ej: 3001" />
+      </div>
+      <div>
+        <label for="nombre_material">Nombre material</label>
+        <input id="nombre_material" [(ngModel)]="nombre_material" name="nombre_material" required placeholder="Ej: Pipeta volumétrica 25 mL" />
+      </div>
+      <div>
+        <label for="clase">Clase</label>
+        <input id="clase" [(ngModel)]="clase" name="clase" placeholder="Ej: Clase A" />
+      </div>
+      <div>
+        <label for="marca">Marca</label>
+        <input id="marca" [(ngModel)]="marca" name="marca" />
+      </div>
+      <div>
+        <label for="referencia">Referencia</label>
+        <input id="referencia" [(ngModel)]="referencia" name="referencia" />
+      </div>
+      <div>
+        <label for="fecha_adquisicion">Fecha adquisición</label>
+        <input id="fecha_adquisicion" type="date" [(ngModel)]="fecha_adquisicion" name="fecha_adquisicion" />
+      </div>
+      <div>
+        <label for="cantidad">Cantidad</label>
+        <input id="cantidad" type="number" min="0" [(ngModel)]="cantidad" name="cantidad" />
+      </div>
+      <div>
+        <label for="codigo_calibrado">Código calibrado</label>
+        <input id="codigo_calibrado" [(ngModel)]="codigo_calibrado" name="codigo_calibrado" />
+      </div>
+      <div>
+        <label for="fecha_calibracion">Fecha calibración</label>
+        <input id="fecha_calibracion" type="date" [(ngModel)]="fecha_calibracion" name="fecha_calibracion" />
+      </div>
+      <div>
+        <label for="codigo_en_uso">Código en uso</label>
+        <input id="codigo_en_uso" [(ngModel)]="codigo_en_uso" name="codigo_en_uso" />
+      </div>
+      <div>
+        <label for="codigo_fuera_de_uso">Código fuera de uso</label>
+        <input id="codigo_fuera_de_uso" [(ngModel)]="codigo_fuera_de_uso" name="codigo_fuera_de_uso" />
+      </div>
+      <div class="full-row">
+        <label for="observaciones">Observaciones</label>
+        <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" rows="2"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn-compact" type="submit" [disabled]="creando">{{ creando ? 'Creando...' : 'Crear material' }}</button>
+        <button class="btn-compact btn-secondary" type="button" (click)="resetForm()" [disabled]="creando">Limpiar</button>
+      </div>
+    </form>
+  </section>
+
+  <h2>Inventario de Materiales Volumétricos</h2>
+  <section>
+    <div class="cards-container">
+      @if (cargando) {
+        <p>Cargando...</p>
+      }
+
+      @if (!cargando && lista.length) {
+        <div class="catalogo-cards">
+          @for (m of lista; track m.id) {
+            <article class="catalog-card reactivo-card" (click)="toggleExpand(m)" [attr.aria-expanded]="isExpanded(m)" tabindex="0">
+              <div class="card-top">
+                <div class="tags">
+                  <span class="tag"><strong>Item:</strong> {{ m.item }}</span>
+                  @if (m.clase) { <span class="tag"><strong>Clase:</strong> {{ m.clase }}</span> }
+                  @if (m.marca) { <span class="tag"><strong>Marca:</strong> {{ m.marca }}</span> }
+                  @if (m.codigo_calibrado) { <span class="tag"><strong>Calibrado:</strong> {{ m.codigo_calibrado }}</span> }
+                </div>
+                <div class="pdf-actions" aria-label="Acciones del material" (click)="$event.stopPropagation()">
+                  <div class="pdf-group">
+                    <button type="button" class="pdf-btn delete" title="Eliminar material" aria-label="Eliminar material" (click)="eliminar(m)">
+                      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                        <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-name" [title]="m.nombre_material">
+                <div class="name-line">{{ m.nombre_material }}</div>
+                <div class="meta-line">
+                  <span class="chip">Cantidad: {{ m.cantidad ?? 0 }}</span>
+                  @if (m.fecha_adquisicion) { <span class="chip">Fecha de Adquisición: {{ m.fecha_adquisicion | date:'yyyy-MM-dd' }}</span> }
+                </div>
+
+              </div>
+
+              @if (isExpanded(m)) {
+                <div class="card-expand" (click)="$event.stopPropagation()">
+                  <div class="details-grid">
+                    @if (m.referencia) {
+                      <div class="detail-card">
+                        <div class="detail-label">Referencia</div>
+                        <div class="detail-value">{{ m.referencia }}</div>
+                      </div>
+                    }
+                    @if (m.codigo_calibrado) {
+                      <div class="detail-card">
+                        <div class="detail-label">Código calibrado</div>
+                        <div class="detail-value">{{ m.codigo_calibrado }}</div>
+                      </div>
+                    }
+                    @if (m.fecha_calibracion) {
+                      <div class="detail-card">
+                        <div class="detail-label">Fecha calibración</div>
+                        <div class="detail-value">{{ m.fecha_calibracion | date:'yyyy-MM-dd' }}</div>
+                      </div>
+                    }
+                    @if (m.codigo_en_uso) {
+                      <div class="detail-card">
+                        <div class="detail-label">Código en uso</div>
+                        <div class="detail-value">{{ m.codigo_en_uso }}</div>
+                      </div>
+                    }
+                    @if (m.codigo_fuera_de_uso) {
+                      <div class="detail-card">
+                        <div class="detail-label">Código fuera de uso</div>
+                        <div class="detail-value">{{ m.codigo_fuera_de_uso }}</div>
+                      </div>
+                    }
+                    @if (m.observaciones) {
+                      <div class="detail-card detail-full">
+                        <div class="detail-label">Observaciones</div>
+                        <div class="detail-value">{{ m.observaciones }}</div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </article>
+          }
+        </div>
+      }
+
+      @if (!cargando && !lista.length) {
+        <p>No hay materiales registrados.</p>
+      }
+      @if (error) { <p class="error">{{ error }}</p> }
+    </div>
+  </section>
+</div>

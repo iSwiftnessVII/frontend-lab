@@ -1,0 +1,63 @@
+.mat-vol-page h2 { font-size: 1.5rem; font-weight: 600; color: var(--primary-blue); margin: 2rem 0 1rem 0; }
+section { background: var(--primary-white); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; align-items: end; }
+.form-grid .full-row { grid-column: 1 / -1; }
+.form-grid label { font-weight: 500; color: var(--primary-blue); margin-bottom: 0.5rem; font-size: 0.9rem; display: block; }
+.actions { display: flex; gap: .5rem; align-items: center; }
+.btn-compact { padding: 0.7rem 1rem !important; min-height: 40px; font-size: 0.92rem; border-radius: 6px; background: var(--primary-turquoise); color: #fff; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; line-height: 1.2; }
+.btn-secondary { background: var(--border-gray) !important; color: var(--text-gray) !important; }
+
+/* ===== Lista estilo Reactivos ===== */
+.cards-container { width: 100%; }
+.catalogo-cards { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+.catalog-card { width: 100%; max-width: none; }
+.catalog-card {
+	background: var(--primary-white);
+	border: 2px solid var(--border-gray);
+	border-radius: 10px;
+	padding: 1.5rem;
+	transition: all 0.3s ease;
+	position: relative;
+}
+.catalog-card:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+	border-color: var(--primary-turquoise);
+}
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+.tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.tag { background: var(--light-gray); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.85rem; color: var(--text-gray); border: 1px solid var(--border-gray); }
+.card-name { font-size: 1.1rem; font-weight: 600; color: var(--primary-blue); margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; position: relative; }
+.card-name .meta-line { display:flex; flex-wrap: wrap; gap: 6px; opacity: 0.95; }
+.card-name .meta-line .chip { background: rgba(0,0,0,0.03); border:1px solid var(--border-gray); padding: 2px 8px; border-radius: 999px; font-weight: 600; font-size: 0.8rem; }
+.card-name .toggle-icon { position: absolute; right: 12px; top: 8px; transition: transform .18s ease; }
+.card-name .toggle-icon.open { transform: rotate(180deg); }
+.card-expand { background: #fff; border: 1px solid var(--border-gray); border-radius: 8px; margin-top: 10px; padding: 10px; }
+.details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.detail-card { background: var(--light-gray); border: 1px solid var(--border-gray); border-radius: 8px; padding: 10px; }
+.detail-card .detail-label { font-size: 0.8rem; font-weight: 600; color: var(--primary-blue); opacity: 0.9; }
+.detail-card .detail-value { font-size: 0.95rem; color: var(--text-gray); }
+.detail-full { grid-column: 1/-1; }
+@media (max-width: 720px){ .details-grid { grid-template-columns: 1fr; } }
+
+/* Ajustes para que se vea como Reactivos */
+.mat-vol-page .catalog-card .card-name {
+	background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%);
+	color: var(--primary-white);
+	padding: 0.75rem 0.9rem;
+	border-radius: 8px;
+}
+.mat-vol-page .catalog-card .card-name .meta-line .chip{
+	background: rgba(255,255,255,0.2);
+	border:1px solid rgba(255,255,255,0.35);
+	color: #fff;
+}
+.mat-vol-page .catalog-card .card-name .toggle-icon{ color: #fff; }
+
+/* Acciones (botón eliminar) más compacto */
+.mat-vol-page .pdf-actions { display:flex; gap: .4rem; align-items:center; }
+.mat-vol-page .pdf-actions .pdf-group { display:flex; gap: .3rem; }
+.mat-vol-page .pdf-actions .pdf-btn { width: 28px; height: 28px; border-radius: 6px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; background: var(--light-gray); border: 1px solid var(--border-gray); }
+.mat-vol-page .pdf-actions .pdf-btn .icon { width: 14px; height: 14px; }
+.mat-vol-page .pdf-actions .pdf-btn.delete { color: #e53e3e; border-color: #e53e3e; background: #fff; }
+.mat-vol-page .pdf-actions .pdf-btn.delete:hover { background: #e53e3e; color: #fff; }

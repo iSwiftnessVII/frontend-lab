@@ -5,6 +5,8 @@
     <section>
         <form class="form-grid" (submit)="crearCatalogo($event)">
             <div>
+
+
                 <label for="catNombre">Nombre</label>
                 <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required
                     placeholder="Ej: Guantes de nitrilo" />
@@ -178,4 +180,84 @@
     </section>
     }
 
-    
+        <!-- ===== Listado de insumos (tarjetas) al final de la página ===== -->
+    <div>
+        <h2>Listado de insumos</h2>
+        <section>
+            <div class="cards-container">
+                <div class="filters-grid">
+                    <div>
+                        <label for="invItemQ">Filtrar por item</label>
+                        <input id="invItemQ" [(ngModel)]="invItemFiltro" (input)="filtrarInsumosPorCampos()" placeholder="Ej: 001" />
+                    </div>
+                    <div>
+                        <label for="invNombreQ">Filtrar por nombre</label>
+                        <input id="invNombreQ" [(ngModel)]="invNombreFiltro" (input)="filtrarInsumosPorCampos()" placeholder="Ej: Guantes" />
+                    </div>
+                </div>
+                @if (insumosCargando) {
+                    <div class="catalogo-cards">
+                        @for (s of skeletonInsumos; track $index) {
+                            <article class="catalog-card skeleton-card">
+                                <div class="catalog-card-media"><div class="skeleton-box"></div></div>
+                                <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
+                                <div class="card-desc"><div class="skeleton-line w-90"></div></div>
+                            </article>
+                        }
+                    </div>
+                }
+                @if (!insumosCargando && insumosList.length) {
+                    <div class="catalogo-cards">
+                                                  @for (ins of insumosList; track $index) {
+                                                    <article class="catalog-card" role="button" tabindex="0" [class.open]="isOpen(ins)"
+                                                                     (click)="toggleOpen(ins)" (keyup.enter)="toggleOpen(ins)" (keyup.space)="toggleOpen(ins)">
+                                <div class="catalog-card-media" *ngIf="ins.item_catalogo as ic">
+                                    <img [src]="getCatalogoImagenUrl(ic)" alt="Imagen catálogo" (error)="onImgError($event)" />
+                                </div>
+                                <div class="card-name" [title]="ins.nombre">
+                                    <span>{{ ins.nombre }}</span>
+                                    <span class="meta">Item: <strong>{{ ins.item_catalogo }}</strong></span>
+                                </div>
+                                        <!-- Cantidad disponible arriba de los campos -->
+                                        <div class="card-meta">
+                                            <span class="meta">Cantidad disponible: <strong>{{ ins.cantidad_existente }}</strong></span>
+                                        </div>
+                                        <!-- Fila con número y botón Quitar -->
+                                                        <div class="insumo-actions-row" (click)="$event.stopPropagation()">
+                                            <input type="number" min="1" step="1"
+                                                         [ngModel]="getRemoveQty(ins.id)"
+                                                         (ngModelChange)="setRemoveQty(ins.id, $event)"
+                                                         placeholder="Cantidad" />
+                                                            <button type="button" class="btn-compact btn-remove"
+                                                            [disabled]="isBusy(ins.id) || !isValidQty(getRemoveQty(ins.id))"
+                                                                            (click)="$event.stopPropagation(); quitar(ins)">Quitar</button>
+                                        </div>
+                                                                        @if (isOpen(ins)) {
+                                                            <div class="insumo-details-panel">
+                                                                <div class="detail-row"><strong>Adquirida:</strong> {{ ins.cantidad_adquirida }}</div>
+                                                                @if (ins.presentacion) { <div class="detail-row"><strong>Presentación:</strong> {{ ins.presentacion }}</div> }
+                                                                @if (ins.marca) { <div class="detail-row"><strong>Marca:</strong> {{ ins.marca }}</div> }
+                                                                @if (ins.referencia) { <div class="detail-row"><strong>Referencia:</strong> {{ ins.referencia }}</div> }
+                                                                @if (ins.ubicacion) { <div class="detail-row"><strong>Ubicación:</strong> {{ ins.ubicacion }}</div> }
+                                                                  @if (ins.fecha_adquisicion) { <div class="detail-row"><strong>Fecha adquisición:</strong> {{ ins.fecha_adquisicion | date:'yyyy-MM-dd' }}</div> }
+                                                                @if (ins.descripcion) { <div class="detail-row"><strong>Descripción:</strong> {{ ins.descripcion }}</div> }
+                                                                @if (ins.observaciones) { <div class="detail-row"><strong>Observaciones:</strong> {{ ins.observaciones }}</div> }
+                                                                                                <div class="panel-actions">
+                                                                                                    <button type="button" class="btn-delete"
+                                                                                                                    [disabled]="isBusy(ins.id)"
+                                                                                                                    (click)="$event.stopPropagation(); eliminar(ins)">
+                                                                                                        Eliminar
+                                                                                                    </button>
+                                                                                                </div>
+                                                            </div>
+                                                        }
+                            </article>
+                        }
+                    </div>
+                }
+                @if (!insumosCargando && !insumosList.length) {
+                    <p>No hay insumos registrados.</p>
+                }
+            </div>
+        </section>
+    </div>

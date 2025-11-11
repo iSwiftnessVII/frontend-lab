@@ -82,6 +82,66 @@ export class InsumosComponent implements OnInit {
   catalogoOffset: number = 0; // offset usado en backend
   // Paginación del catálogo removida: siempre mostrar todo
 
+  // ===== Listado de insumos (tarjetas) =====
+  private insumosAllSig = signal<Array<any>>([]);
+  private insumosListSig = signal<Array<any>>([]);
+  private insumosCargandoSig = signal<boolean>(false);
+  private insumosErrorSig = signal<string>('');
+  get insumosList() { return this.insumosListSig(); }
+  get insumosCargando() { return this.insumosCargandoSig(); }
+  get insumosError() { return this.insumosErrorSig(); }
+  skeletonInsumos = Array.from({ length: 6 });
+
+  // Filtros de inventario
+  private invItemFiltroSig = signal<string>('');
+  get invItemFiltro() { return this.invItemFiltroSig(); }
+  set invItemFiltro(v: string) { this.invItemFiltroSig.set(v ?? ''); }
+  private invNombreFiltroSig = signal<string>('');
+  get invNombreFiltro() { return this.invNombreFiltroSig(); }
+  set invNombreFiltro(v: string) { this.invNombreFiltroSig.set(v ?? ''); }
+
+  // Control de quitar cantidad por tarjeta
+  private removeQtyMap: Record<number, number | null> = {};
+  private busyIds = new Set<number>();
+  private openItem: any | null = null;
+  getRemoveQty(id: number): number | null { return this.removeQtyMap[id] ?? null; }
+  setRemoveQty(id: number, v: any) {
+    const num = Number(v);
+    this.removeQtyMap[id] = Number.isFinite(num) ? num : null;
+  }
+  isBusy(id: number) { return this.busyIds.has(id); }
+  isValidQty(v: any) {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0;
+  }
+  isOpen(item: any) { return this.openItem === item; }
+  toggleOpen(item: any) {
+    this.openItem = (this.openItem === item) ? null : item;
+  }
+
+  async eliminar(ins: any) {
+    const id = Number(ins?.id);
+    if (!Number.isFinite(id)) { this.snack.warn('No se pudo determinar el ID del insumo'); return; }
+    const ok = window.confirm(`¿Eliminar el insumo "${ins?.nombre || ''}"? Esta acción no se puede deshacer.`);
+    if (!ok) return;
+    try {
+      this.busyIds.add(id);
+      await insumosService.eliminarInsumo(id);
+  // actualizar listas locales (base y filtrada)
+  const removeFrom = (arr: any[]) => arr.filter(x => x.id !== id);
+  this.insumosAllSig.set(removeFrom(this.insumosAllSig()));
+  this.insumosListSig.set(removeFrom(this.insumosListSig()));
+      // limpiar estados asociados
+      delete this.removeQtyMap[id];
+      if (this.openItem === ins) this.openItem = null;
+      this.snack.success('Insumo eliminado');
+    } catch (e: any) {
+      this.snack.error(e?.message || 'Error al eliminar el insumo');
+    } finally {
+      this.busyIds.delete(id);
+    }
+  }
+
   // Gestión de PDFs
   hojaUrl: string | null = null;
   certUrl: string | null = null;
@@ -171,7 +231,8 @@ async init() {
     this.catalogoCargando = true;
     await Promise.all([
       this.loadAux(),
-      this.loadCatalogoInicial()
+      this.loadCatalogoInicial(),
+      this.loadInsumos()
     ]);
 
   } catch (err) {
@@ -189,7 +250,57 @@ async loadAux() {
   this.almacen = data.almacen || [];
 }
 
-async loadInsumos(limit?: number) { /* listado de insumos eliminado */ }
+async loadInsumos(limit?: number) {
+  this.insumosErrorSig.set('');
+  this.insumosCargandoSig.set(true);
+  try {
+    const rows = await insumosService.listarInsumos('', limit || 0);
+    const list = Array.isArray(rows) ? rows : [];
+    this.insumosAllSig.set(list);
+    this.insumosListSig.set(list);
+  } catch (e) {
+    console.error('Error cargando listado de insumos', e);
+    this.insumosErrorSig.set('Error cargando insumos');
+    this.insumosListSig.set([]);
+    this.insumosAllSig.set([]);
+  } finally {
+    this.insumosCargandoSig.set(false);
+  }
+}
+
+filtrarInsumosPorCampos() {
+  const codeQ = (this.invItemFiltro || '').trim().toLowerCase();
+  const nameQ = (this.invNombreFiltro || '').trim().toLowerCase();
+  let filtered = this.insumosAllSig();
+  if (codeQ) filtered = filtered.filter(x => String(x.item_catalogo || '').toLowerCase().includes(codeQ));
+  if (nameQ) filtered = filtered.filter(x => String(x.nombre || '').toLowerCase().includes(nameQ));
+  this.insumosListSig.set(filtered);
+}
+
+async quitar(ins: any) {
+  try {
+    const id = Number(ins?.id);
+    const qty = this.getRemoveQty(id);
+    if (!this.isValidQty(qty)) { this.snack.warn('Ingresa una cantidad válida (> 0)'); return; }
+    this.busyIds.add(id);
+    const delta = -Math.abs(Number(qty));
+    const resp = await insumosService.ajustarExistencias(id, { delta });
+    const nuevo = (resp as any)?.cantidad_existente;
+    if (typeof nuevo !== 'undefined') {
+      // Actualizar en listas locales
+      const updater = (arr: any[]) => arr.map(x => x.id === id ? { ...x, cantidad_existente: nuevo } : x);
+      this.insumosAllSig.set(updater(this.insumosAllSig()));
+      this.insumosListSig.set(updater(this.insumosListSig()));
+    }
+    this.setRemoveQty(id, null);
+    this.snack.success('Existencias actualizadas');
+  } catch (e: any) {
+    this.snack.error(e?.message || 'Error al ajustar existencias');
+  } finally {
+    // ensure removal of busy flag
+    try { const id = Number(ins?.id); this.busyIds.delete(id); } catch {}
+  }
+}
 
 async buscarCatalogo() {
   const q = this.normalizarTexto(this.catalogoQ || '');

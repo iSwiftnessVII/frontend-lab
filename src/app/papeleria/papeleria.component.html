@@ -151,5 +151,83 @@
     </section>
   }
 
-  
+  <!-- ===== Listado de papelería (tarjetas) al final de la página ===== -->
+  <div>
+    <h2>Listado de papelería</h2>
+    <section>
+      <div class="cards-container">
+        <div class="filters-grid">
+          <div>
+            <label for="papInvItemQ">Filtrar por item</label>
+            <input id="papInvItemQ" [(ngModel)]="invItemFiltro" (input)="filtrarPapeleriaPorCampos()" placeholder="Ej: 001" />
+          </div>
+          <div>
+            <label for="papInvNombreQ">Filtrar por nombre</label>
+            <input id="papInvNombreQ" [(ngModel)]="invNombreFiltro" (input)="filtrarPapeleriaPorCampos()" placeholder="Ej: Papel" />
+          </div>
+        </div>
+        @if (papeleriaCargando) {
+          <div class="catalogo-cards">
+            @for (s of skeletonPapeleria; track $index) {
+              <article class="catalog-card skeleton-card">
+                <div class="catalog-card-media"><div class="skeleton-box"></div></div>
+                <div class="card-name"><span class="skeleton-line w-70"></span><span class="skeleton-line w-30"></span></div>
+                <div class="card-desc"><div class="skeleton-line w-90"></div></div>
+              </article>
+            }
+          </div>
+        }
+        @if (!papeleriaCargando && papeleriaList.length) {
+          <div class="catalogo-cards">
+            @for (p of papeleriaList; track $index) {
+              <article class="catalog-card" role="button" tabindex="0" [class.open]="isOpen(p)"
+                       (click)="toggleOpen(p)" (keyup.enter)="toggleOpen(p)" (keyup.space)="toggleOpen(p)">
+                @if (p.item_catalogo) {
+                  <div class="catalog-card-media">
+                    <img [src]="getCatalogoImagenUrl(p.item_catalogo)" alt="Imagen catálogo" (error)="onImgError($event)" />
+                  </div>
+                }
+                <div class="card-name" [title]="p.nombre">
+                  <span>{{ p.nombre }}</span>
+                  <span class="meta">Item: <strong>{{ p.item_catalogo }}</strong></span>
+                </div>
+                <div class="card-meta">
+                  <span class="meta">Cantidad disponible: <strong>{{ p.cantidad_existente }}</strong></span>
+                </div>
+                <div class="insumo-actions-row" (click)="$event.stopPropagation()">
+                  <input type="number" min="1" step="1"
+                         [ngModel]="getRemoveQty(p.id)"
+                         (ngModelChange)="setRemoveQty(p.id, $event)"
+                         placeholder="Cantidad" />
+                  <button type="button" class="btn-compact btn-remove"
+                          [disabled]="isBusy(p.id) || !isValidQty(getRemoveQty(p.id))"
+                          (click)="$event.stopPropagation(); quitar(p)">Quitar</button>
+                </div>
+                @if (isOpen(p)) {
+                  <div class="insumo-details-panel">
+                    <div class="detail-row"><strong>Adquirida:</strong> {{ p.cantidad_adquirida }}</div>
+                    @if (p.presentacion) { <div class="detail-row"><strong>Presentación:</strong> {{ p.presentacion }}</div> }
+                    @if (p.marca) { <div class="detail-row"><strong>Marca:</strong> {{ p.marca }}</div> }
+                    @if (p.referencia) { <div class="detail-row"><strong>Referencia:</strong> {{ p.referencia }}</div> }
+                    @if (p.ubicacion) { <div class="detail-row"><strong>Ubicación:</strong> {{ p.ubicacion }}</div> }
+                    @if (p.fecha_adquisicion) { <div class="detail-row"><strong>Fecha adquisición:</strong> {{ p.fecha_adquisicion | date:'yyyy-MM-dd' }}</div> }
+                    @if (p.descripcion) { <div class="detail-row"><strong>Descripción:</strong> {{ p.descripcion }}</div> }
+                    @if (p.observaciones) { <div class="detail-row"><strong>Observaciones:</strong> {{ p.observaciones }}</div> }
+                    <div class="panel-actions">
+                      <button type="button" class="btn-delete"
+                              [disabled]="isBusy(p.id)"
+                              (click)="$event.stopPropagation(); eliminar(p)">Eliminar</button>
+                    </div>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        }
+        @if (!papeleriaCargando && !papeleriaList.length) {
+          <p>No hay registros de papelería.</p>
+        }
+      </div>
+    </section>
+  </div>
 </div>

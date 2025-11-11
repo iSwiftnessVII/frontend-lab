@@ -47,6 +47,12 @@ export const routes: Routes = [
     data: { roles: ['Administrador', 'Auxiliar'] }
   },
   { 
+    path: 'materiales-volumetricos', 
+    loadComponent: () => import('./materiales-volumetricos/materiales-volumetricos.component').then(m => m.MaterialesVolumetricosComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['Administrador', 'Auxiliar'] }
+  },
+  { 
     path: 'usuarios', 
     loadComponent: () => import('./usuarios/usuarios.component').then(m => m.UsuariosComponent), 
     canActivate: [authGuard, roleGuard],

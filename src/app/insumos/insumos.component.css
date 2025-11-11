@@ -269,6 +269,7 @@ button[type="button"]:hover,
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 1.5rem;
+    align-items: start; /* permite que cada tarjeta conserve su propia altura y no se estiren todas al tamaño de la más alta */
 }
 
 .catalog-card {
@@ -276,9 +277,11 @@ button[type="button"]:hover,
     border: 2px solid var(--border-gray);
     border-radius: 10px;
     padding: 1.5rem;
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     cursor: pointer;
+    display: flex;           /* que el contenido defina la altura */
+    flex-direction: column;  /* detalles se apilan verticalmente */
 }
 
 .catalog-card:hover {
@@ -351,6 +354,83 @@ button[type="button"]:hover,
     border-radius: 6px;
     display: inline-block;
 }
+
+/* ===== Insumo actions row (input + quitar) ===== */
+.insumo-actions-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: .75rem;
+    align-items: center;
+    margin: .6rem 0 .4rem;
+}
+.insumo-actions-row input[type=number] {
+    padding: 0.6rem 0.75rem;
+    border: 2px solid var(--border-gray);
+    border-radius: 8px;
+    font: inherit;
+    width: 100%;
+    transition: border-color .25s ease;
+}
+.insumo-actions-row input[type=number]:focus { outline: none; border-color: var(--primary-turquoise); }
+.insumo-actions-row .btn-remove {
+    background: #dc2626;
+    color: #fff;
+    border: none;
+    padding: 0.65rem 1.1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s ease, transform .2s ease;
+}
+.insumo-actions-row .btn-remove:hover:not(:disabled) { background:#b91c1c; }
+.insumo-actions-row .btn-remove:disabled { opacity:.55; cursor:not-allowed; }
+.insumo-actions-row .btn-remove:active:not(:disabled){ transform:translateY(1px); }
+
+/* ===== Details toggle and panel ===== */
+/* Card open state visual cue */
+.catalog-card[role="button"] { outline: none; }
+.catalog-card[role="button"]:focus { box-shadow: 0 0 0 3px rgba(0,184,181,0.35); }
+.catalog-card.open { border-color: var(--primary-turquoise); box-shadow: 0 6px 20px rgba(0, 184, 181, 0.25); }
+
+/* Panel de detalles con transición suave sin afectar otras tarjetas */
+.insumo-details-panel { overflow: hidden; }
+.catalog-card.open .insumo-details-panel { padding-top: 0.25rem; }
+
+/* (Opcional) Si quisieras animación: descomenta lo siguiente y renderiza siempre el div (aunque vacío cuando esté cerrado)
+.insumo-details-panel { max-height: 0; opacity: 0; transition: max-height .28s ease, opacity .24s ease; }
+.catalog-card.open .insumo-details-panel { max-height: 800px; opacity: 1; }
+*/
+
+.insumo-details-panel {
+    margin-top: .6rem;
+    padding: .75rem;
+    background: #fafafa;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+}
+.insumo-details-panel .detail-row { font-size:.95rem; color:#334155; padding:.2rem 0; }
+
+.panel-actions { display:block; margin-top:.6rem; }
+.btn-delete {
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s ease, transform .2s ease;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-delete:hover:not(:disabled) { background:#dc2626; }
+.btn-delete:disabled { opacity:.55; cursor:not-allowed; }
+.btn-delete:active:not(:disabled) { transform: translateY(1px); }
 
 /* Right-side tag inside the same row as the name */
 .card-name .meta {
