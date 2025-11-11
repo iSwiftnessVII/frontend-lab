@@ -222,6 +222,11 @@ export class PapeleriaComponent implements OnInit {
       this.catNombre = '';
       this.catDescripcion = '';
       this.catImagen = null;
+      // limpiar input file explícitamente
+      try {
+        const input = document.getElementById('catImagen') as HTMLInputElement | null;
+        if (input) input.value = '';
+      } catch {}
       await this.loadCatalogoInicial();
     } catch (e) {
       this.snack.error((e as any)?.message || 'Error al crear el item de catálogo');
@@ -447,6 +452,21 @@ export class PapeleriaComponent implements OnInit {
       };
       await papeleriaService.crear(payload);
       this.snack.success('Se creó el registro de papelería');
+      // limpiar formulario inventario
+      this.item_catalogo = null;
+      this.nombre = '';
+      this.cantidad_adquirida = null;
+      this.cantidad_existente = null;
+      this.presentacion = '';
+      this.marca = '';
+      this.descripcion = '';
+      this.fecha_adquisicion = '';
+      this.ubicacion = '';
+      this.observaciones = '';
+      try {
+        const input = document.getElementById('catImagen') as HTMLInputElement | null;
+        if (input) input.value = '';
+      } catch {}
   // Inventario visual removido: no recargamos listado
     } catch (err: any) {
       this.snack.error(err?.message || 'Error al crear el registro de papelería');

@@ -646,6 +646,11 @@ async crearCatalogo(e: Event) {
       this.catNombre = '';
       this.catDescripcion = '';
       this.catImagen = null;
+      // Limpiar input file explícitamente (si existe)
+      try {
+        const input = document.getElementById('catImagen') as HTMLInputElement | null;
+        if (input) input.value = '';
+      } catch {}
       
       // Recargar catálogo
       await this.cargarCatalogoBase();
@@ -696,6 +701,8 @@ async crearInsumo(e: Event) {
     this.snack.success('Se creó el insumo');
 
     await this.loadInsumos();
+    // Reset campos y limpiar input file del catálogo si estuvo precargado
+    this.resetInsumoForm();
   } catch (err: any) {
     this.snack.error(err?.message || 'Error al crear el insumo');
   }
@@ -717,6 +724,10 @@ resetInsumoForm() {
 
 
   this.insumoMsg = '';
+  try {
+    const input = document.getElementById('catImagen') as HTMLInputElement | null;
+    if (input) input.value = '';
+  } catch {}
 }
 
 logout() {
