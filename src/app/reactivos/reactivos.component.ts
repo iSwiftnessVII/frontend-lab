@@ -1389,28 +1389,48 @@ export class ReactivosComponent implements OnInit {
   // Estado visual de vencimiento: negro (vencido), rojo (<=2 meses), amarillo (<=6 meses)
   getVencimientoInfo(fecha: string | null | undefined): { text: string; bg: string; fg: string; title: string } | null {
     if (!fecha) return null;
-    const d = new Date(fecha);
-    if (isNaN(d.getTime())) return null;
+    let d = new Date(fecha);
+    // Fallback para formato dd-mm-yyyy insertado manualmente por SQL
+    if (isNaN(d.getTime())) {
+      const m = /^([0-3]?\d)-([0-1]?\d)-(\d{4})$/.exec(fecha.trim());
+      if (m) {
+        const dd = m[1].padStart(2, '0');
+        const mm = m[2].padStart(2, '0');
+        const yyyy = m[3];
+        d = new Date(`${yyyy}-${mm}-${dd}`);
+      }
+    }
+    if (isNaN(d.getTime())) return null; // Fecha definitivamente inválida
+
     const today = new Date();
     const toMid = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
     const days = Math.floor((toMid(d) - toMid(today)) / 86400000);
 
-    // Considerar 0 días restantes como vencido (mostrar "Vencido" en vez de "Vence en 0 días")
+    // 0 o negativo -> vencido
     if (days <= 0) {
       return { text: 'Vencido', bg: '#000000', fg: '#FFFFFF', title: 'El reactivo está vencido' };
     }
-    // Mostrar cuenta regresiva en días cuando falta 1 mes o menos
+    // <= 30 días -> cuenta regresiva exacta
     if (days <= 30) {
       const plural = days === 1 ? '' : 's';
       return { text: `Vence en ${days} día${plural}`, bg: '#FF0000', fg: '#FFFFFF', title: `El reactivo vence en ${days} día${plural}` };
     }
+    // <= 60 días (aprox 2 meses)
     if (days <= 60) {
       return { text: 'Vence ≤ 2 meses', bg: '#FF0000', fg: '#FFFFFF', title: 'El reactivo vence en 2 meses o menos' };
     }
+    // <= 180 días (<= 6 meses)
     if (days <= 180) {
       return { text: 'Vence ≤ 6 meses', bg: '#FFC107', fg: '#000000', title: 'El reactivo vence en 6 meses o menos' };
     }
-    return null;
+    // <= 365 días: mostrar meses aproximados
+    if (days <= 365) {
+      const months = Math.round(days / 30); // aproximación
+      return { text: `Vence en ~${months} mes${months === 1 ? '' : 'es'}`, bg: '#4CAF50', fg: '#FFFFFF', title: `Aproximadamente ${months} mes${months === 1 ? '' : 'es'} restantes` };
+    }
+    // > 1 año: mostrar años aproximados
+    const years = Math.round(days / 365);
+    return { text: `Vence en ~${years} año${years === 1 ? '' : 's'}`, bg: '#1976D2', fg: '#FFFFFF', title: `Aproximadamente ${years} año${years === 1 ? '' : 's'} restantes` };
   }
   logout() {
     authService.logout();

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -30,7 +30,62 @@ export class EquiposComponent {
 
 	creando = false;
 
-	constructor(public snack: SnackbarService) {}
+	// Listado de equipos (simple) con Signals
+	listaSig = signal<any[]>([]);
+	listaFiltradaSig = signal<any[]>([]);
+	cargando = false;
+	error = '';
+	// filtro único
+	q = '';
+
+	// control de expansión por id
+	expandido = new Set<string>();
+
+	constructor(public snack: SnackbarService, private cdr: ChangeDetectorRef) {}
+
+	async ngOnInit() {
+		await this.cargarLista();
+	}
+
+	// Nota: lista simple, sin expand/collapse ni acciones
+
+	async cargarLista() {
+		this.cargando = true; this.error = '';
+		try {
+			const resp = await equiposService.listarEquipos('');
+			const rows = Array.isArray(resp) ? resp : (resp.rows || resp.data || []);
+			this.listaSig.set(rows);
+			this.listaFiltradaSig.set(rows);
+			try { this.cdr.detectChanges(); } catch {}
+		} catch (e: any) {
+			this.error = e?.message || 'Error cargando equipos';
+			this.listaSig.set([]); this.listaFiltradaSig.set([]);
+			try { this.cdr.detectChanges(); } catch {}
+		} finally { this.cargando = false; try { this.cdr.detectChanges(); } catch {} }
+	}
+
+	filtrar() {
+		const q = (this.q || '').toLowerCase().trim();
+		const filtered = !q ? this.listaSig() : this.listaSig().filter(x => {
+			const nombre = String(x.nombre||'').toLowerCase();
+			const marca = String(x.marca||'').toLowerCase();
+			const codigo = String(x.codigo_identificacion||'').toLowerCase();
+			const inv = String(x.inventario_sena||'').toLowerCase();
+			return nombre.includes(q) || marca.includes(q) || codigo.includes(q) || inv.includes(q);
+		});
+		this.listaFiltradaSig.set(filtered);
+		try { this.cdr.detectChanges(); } catch {}
+	}
+
+	toggleFila(e: any) {
+		const key = this.getKey(e);
+		if (!key) return;
+		if (this.expandido.has(key)) this.expandido.delete(key); else this.expandido.add(key);
+		try { this.cdr.detectChanges(); } catch {}
+	}
+	isFilaExpandida(e: any): boolean { const key = this.getKey(e); return key ? this.expandido.has(key) : false; }
+	private getKey(e: any): string { return String(e?.id ?? e?.codigo_identificacion ?? e?.numero_serie ?? ''); }
+	trackById(index: number, e: any) { return e?.id ?? e?.codigo_identificacion ?? index; }
 
 	async crearEquipo(ev: Event) {
 		ev.preventDefault();
@@ -80,5 +135,9 @@ export class EquiposComponent {
 		this.puesta_en_servicio = '';
 		this.fecha_adquisicion = '';
 	}
+
+	// Getters para usar Signals en el template sin cambiar binding existentes
+	get lista() { return this.listaSig(); }
+	get listaFiltrada() { return this.listaFiltradaSig(); }
 }
 

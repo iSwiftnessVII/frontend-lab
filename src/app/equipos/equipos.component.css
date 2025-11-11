@@ -27,3 +27,24 @@
 /* Ensure stacked field (fecha_adquisicion + button) has nice spacing */
 .stack-field { display: flex; flex-direction: column; }
 .stack-field .actions { margin-top: 0.9rem; }
+
+/* ===== Listado de equipos (paridad con Reactivos) ===== */
+.catalogo-stats { margin: 0.5rem 0 1rem 0; padding: 0.6rem 0.8rem; background: var(--light-gray); border-radius: 6px; color: var(--text-gray); font-weight: 500; }
+.filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; align-items: end; margin-bottom: 1.2rem; }
+.filters-grid label { font-weight: 500; color: var(--primary-blue); margin-bottom: 0.5rem; font-size: 0.9rem; display: block; }
+.filters-grid input { padding: 0.7rem; border: 2px solid var(--border-gray); border-radius: 6px; font-family: inherit; transition: border-color 0.3s ease; width: 100%; }
+.filters-grid input:focus { outline: none; border-color: var(--primary-turquoise); }
+
+/* Tabla simple */
+.simple-table-wrapper { overflow: auto; border: 1px solid var(--border-gray); border-radius: 8px; background: var(--primary-white); }
+.simple-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.simple-table th, .simple-table td { padding: 0.65rem 0.8rem; border-bottom: 1px solid var(--border-gray); text-align: left; }
+.simple-table thead th { background: #f3f6fb; color: var(--primary-blue); position: sticky; top: 0; z-index: 1; }
+.simple-table tbody tr:hover { background: #fafcff; }
+.row-main { cursor: pointer; }
+.row-main:hover { background: #f0f6ff; }
+.row-details td { background: #ffffff; padding: 0.9rem 1.1rem; border-top: 1px solid var(--border-gray); }
+.details-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); }
+.detail-card { background: var(--light-gray); padding: 0.6rem 0.7rem; border-radius: 6px; border:1px solid var(--border-gray); }
+.detail-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight:600; color: var(--primary-blue); margin-bottom: 2px; }
+.detail-value { font-size: 0.85rem; font-weight:500; color: var(--text-gray); }

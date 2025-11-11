@@ -74,5 +74,69 @@
 			</div>
 		</form>
 	</section>
+
+	<h2>Listado de equipos</h2>
+	<section>
+		<div class="cards-container">
+			<div class="filters-grid">
+				<div>
+					<label for="eqQ">Buscar</label>
+					<input id="eqQ" [(ngModel)]="q" (input)="filtrar()" placeholder="Nombre, marca o código" />
+				</div>
+			</div>
+
+			@if (cargando) { <p>Cargando...</p> }
+			@if (!cargando && listaFiltrada.length) {
+				<div class="catalogo-stats">
+					<span>Mostrando {{ listaFiltrada.length }} de {{ lista.length }} equipos</span>
+				</div>
+				<div class="simple-table-wrapper">
+					<table class="simple-table">
+						<thead>
+							<tr>
+								<th>Nombre</th>
+								<th>Marca</th>
+								<th>Modelo</th>
+								<th>Código</th>
+								<th>Inv. SENA</th>
+								<th>Tipo</th>
+								<th>Clasificación</th>
+								<th>Adquisición</th>
+							</tr>
+						</thead>
+						<tbody>
+							@for (e of listaFiltrada; track trackById($index, e)) {
+							<tr class="row-main" (click)="toggleFila(e)">
+								<td>{{ e.nombre }}</td>
+								<td>{{ e.marca || '—' }}</td>
+								<td>{{ e.modelo || '—' }}</td>
+								<td>{{ e.codigo_identificacion || '—' }}</td>
+								<td>{{ e.inventario_sena || '—' }}</td>
+								<td>{{ e.tipo || '—' }}</td>
+								<td>{{ e.clasificacion || '—' }}</td>
+								<td>{{ e.fecha_adquisicion ? (e.fecha_adquisicion | date:'yyyy-MM-dd') : '—' }}</td>
+							</tr>
+							@if (isFilaExpandida(e)) {
+							<tr class="row-details">
+								<td colspan="8">
+									<div class="details-grid">
+										<div class="detail-card"><div class="detail-label">Serie</div><div class="detail-value">{{ e.numero_serie || '—' }}</div></div>
+										<div class="detail-card"><div class="detail-label">Acreditación</div><div class="detail-value">{{ e.acreditacion || '—' }}</div></div>
+										<div class="detail-card"><div class="detail-label">Manual usuario</div><div class="detail-value">{{ e.manual_usuario || '—' }}</div></div>
+										<div class="detail-card"><div class="detail-label">Tipo manual</div><div class="detail-value">{{ e.tipo_manual || '—' }}</div></div>
+										<div class="detail-card"><div class="detail-label">Puesta en servicio</div><div class="detail-value">{{ e.puesta_en_servicio || '—' }}</div></div>
+									</div>
+								</td>
+							</tr>
+							}
+							}
+						</tbody>
+					</table>
+				</div>
+			}
+			@if (!cargando && !listaFiltrada.length) { <p>No hay equipos que coincidan con la búsqueda.</p> }
+			@if (!cargando && !lista.length) { <p>No hay equipos registrados.</p> }
+		</div>
+	</section>
 </div>
 
