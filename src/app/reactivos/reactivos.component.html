@@ -414,6 +414,18 @@
           <label for="reactNombreQ">Filtrar por Nombre</label>
           <input id="reactNombreQ" [(ngModel)]="reactivosNombreQ" (input)="filtrarReactivos()" />
         </div>
+        @if (canDelete()) {
+        <div class="reset-cell">
+          <button type="button"
+                  class="btn-delete-all"
+                  (click)="eliminarReactivosListado()"
+                  [disabled]="bulkDeletingReactivos || !reactivosFiltrados.length"
+                  [attr.aria-busy]="bulkDeletingReactivos ? 'true' : null"
+                  title="Eliminar todos los reactivos filtrados">
+            {{ bulkDeletingReactivos ? 'Eliminando…' : ('Eliminar todos (' + reactivosFiltrados.length + ')') }}
+          </button>
+        </div>
+        }
       </div>
 
       <div class="cards-container">

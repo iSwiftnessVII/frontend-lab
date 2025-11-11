@@ -611,6 +611,25 @@ button[type="button"]:hover,
     align-items: flex-end;
 }
 
+/* Botón eliminar todos (inventario) */
+.btn-delete-all {
+    background: #b91c1c; /* rojo oscuro */
+    color: #fff;
+    border: 1px solid #991b1b;
+    padding: 0.6rem 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn-delete-all[aria-busy="true"],
+.btn-delete-all:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+.btn-delete-all:hover:not(:disabled) {
+    background: #dc2626;
+}
+
 /* ===== Cards Container (Catálogo) ===== */
 .cards-container {
     margin-top: 1.5rem;

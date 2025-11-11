@@ -989,7 +989,9 @@ export class ReactivosComponent implements OnInit {
   this.snack.success('Catálogo creado correctamente');
       // limpiar
       this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = this.catDescripcion = '';
-  this.submittedCatalogo = false;
+      // Resetear estado del formulario para limpiar touched/dirty y evitar resaltar en rojo
+      try { if (form) form.resetForm(); } catch {}
+      this.submittedCatalogo = false;
       // Recargar base y re-aplicar filtros/búsqueda para que el nuevo elemento aparezca
       await this.cargarCatalogoBase();
       if ((this.codigoFiltro || '').trim() || (this.nombreFiltro || '').trim()) {
@@ -1374,6 +1376,48 @@ export class ReactivosComponent implements OnInit {
     } catch (err) {
       console.error('Error eliminando reactivo', err);
       await this.loadReactivos();
+    }
+  }
+
+  // Eliminación masiva de reactivos actualmente filtrados
+  bulkDeletingReactivos = false;
+  async eliminarReactivosListado() {
+    if (!this.canDelete()) return;
+    const lista = this.reactivosFiltradosSig();
+    if (!lista.length) {
+      this.snack.warn('No hay reactivos filtrados para eliminar');
+      return;
+    }
+    if (!confirm(`¿Eliminar ${lista.length} reactivo(s) filtrado(s)? Esta acción no se puede deshacer.`)) return;
+    this.bulkDeletingReactivos = true;
+    const lotesEliminados: string[] = [];
+    const errores: string[] = [];
+    // Eliminación secuencial para evitar saturar backend y permitir fallback
+    for (const r of lista) {
+      const lote = String(r.lote || '').trim();
+      if (!lote) continue;
+      try {
+        await reactivosService.eliminarReactivo(lote);
+        lotesEliminados.push(lote);
+      } catch (e: any) {
+        console.error('Fallo eliminando lote', lote, e);
+        errores.push(lote);
+      }
+    }
+    // Actualizar listado local eliminando los exitosos
+    if (lotesEliminados.length) {
+      const prev = this.reactivosSig();
+      const restantes = prev.filter(r => !lotesEliminados.includes(String(r.lote)));
+      this.reactivosSig.set(restantes);
+      this.aplicarFiltroReactivos();
+    }
+    this.bulkDeletingReactivos = false;
+    if (errores.length && lotesEliminados.length) {
+      this.snack.warn(`Eliminados ${lotesEliminados.length}, fallaron ${errores.length}`);
+    } else if (errores.length && !lotesEliminados.length) {
+      this.snack.error('No se pudo eliminar ningún reactivo');
+    } else {
+      this.snack.success(`Eliminados ${lotesEliminados.length} reactivo(s)`);
     }
   }
 
