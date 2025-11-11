@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { SnackbarService } from '../shared/snackbar.service';
 import { CommonModule } from '@angular/common';
@@ -74,12 +74,10 @@ export class InsumosComponent implements OnInit {
   private nombreFiltroSig = signal<string>('');
   get nombreFiltro() { return this.nombreFiltroSig(); }
   set nombreFiltro(v: string) { this.nombreFiltroSig.set(v ?? ''); }
-  // Paginación catálogo
-  catalogoVisibleCount: number = 10; // tamaño página frontend respaldo
+  // Catálogo sin paginación: traer todo y filtrar localmente
   private catalogoTotalSig = signal<number>(0);
   get catalogoTotal() { return this.catalogoTotalSig(); }
   set catalogoTotal(v: number) { this.catalogoTotalSig.set(Number(v) || 0); }
-  catalogoOffset: number = 0; // offset usado en backend
   // Paginación del catálogo removida: siempre mostrar todo
 
   // ===== Listado de insumos (tarjetas) =====
@@ -117,6 +115,90 @@ export class InsumosComponent implements OnInit {
   isOpen(item: any) { return this.openItem === item; }
   toggleOpen(item: any) {
     this.openItem = (this.openItem === item) ? null : item;
+  }
+
+  // ===== Menú contextual (click derecho) =====
+  contextMenuVisible = false;
+  contextMenuX = 0;
+  contextMenuY = 0;
+  contextMenuTarget: any = null;
+
+  // Cierre global del menú: cualquier clic izquierdo en el documento
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(ev: MouseEvent) {
+    if (!this.contextMenuVisible) return;
+    if (ev.button !== 0) return; // solo clic izquierdo
+    this.closeContextMenu();
+  }
+
+  onCatalogContextMenu(ev: MouseEvent, item: any) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const { clientX, clientY } = ev;
+    // Posicionar menú; ajustar si se acerca al borde inferior
+    const viewportH = window.innerHeight;
+    const menuHeight = 90; // altura estimada
+    let y = clientY;
+    if (clientY + menuHeight > viewportH - 8) {
+      y = viewportH - menuHeight - 8;
+    }
+    this.contextMenuX = clientX;
+    this.contextMenuY = y;
+    this.contextMenuTarget = item;
+    this.contextMenuVisible = true;
+  }
+
+  closeContextMenu() {
+    this.contextMenuVisible = false;
+    this.contextMenuTarget = null;
+  }
+
+  onContextMenuEliminar() {
+    if (!this.contextMenuTarget) { this.closeContextMenu(); return; }
+    const target = this.contextMenuTarget;
+    this.closeContextMenu();
+    // Diferenciar si es catálogo (tiene .item y no .id) o inventario (tiene .id)
+    const isCatalogo = typeof target?.item !== 'undefined' && typeof target?.id === 'undefined';
+    if (isCatalogo) {
+      const codigo = target.item;
+      if (!window.confirm(`¿Eliminar del catálogo el insumo "${target?.nombre || codigo}"?`)) return;
+      insumosService.eliminarCatalogoInsumos(codigo)
+        .then((res: any) => {
+          // Tras éxito, recargar desde backend para asegurar consistencia
+          this.cargarCatalogoBase();
+          const deleted = (res && typeof res.deleted !== 'undefined') ? Number(res.deleted) : 1;
+          this.snack.success(deleted > 0 ? 'Item de catálogo eliminado' : 'Operación completada');
+        })
+        .catch(e => {
+          const status = (e as any)?.status;
+          if (status === 401) {
+            this.snack.error('Debes iniciar sesión para eliminar del catálogo');
+          } else if (status === 403) {
+            this.snack.error('No tienes permisos para eliminar del catálogo');
+          } else if (status === 409) {
+            this.snack.error('No se puede eliminar: hay insumos que usan este item de catálogo');
+          } else if (status === 404) {
+            this.snack.error('El item no existe (ya fue eliminado)');
+            // Refrescar para reflejar el estado real
+            this.cargarCatalogoBase();
+          } else {
+            this.snack.error(e?.message || 'Error eliminando del catálogo');
+          }
+          console.error('Error eliminando catálogo insumos:', e);
+        });
+    } else {
+      this.eliminar(target);
+    }
+  }
+
+  // Cerrar al hacer click en cualquier parte
+  onGlobalClick(ev: any) {
+    if (!this.contextMenuVisible) return;
+    try {
+      // Cerrar solo con click primario (izquierdo) para no interferir con right-click
+      if (ev instanceof MouseEvent && ev.button !== 0) return;
+    } catch {}
+    this.closeContextMenu();
   }
 
   async eliminar(ins: any) {
@@ -325,15 +407,15 @@ async buscarCatalogo() {
 
 async cargarCatalogoBase() {
   try {
-    const resp = await insumosService.buscarCatalogo('', this.catalogoVisibleCount, this.catalogoOffset);
+    const resp = await insumosService.buscarCatalogo('');
     if (Array.isArray(resp)) {
       this.catalogoBaseSig.set(resp);
       this.catalogoTotalSig.set(resp.length);
-      this.catalogoResultadosSig.set(resp.slice(0, this.catalogoVisibleCount));
+      this.catalogoResultadosSig.set(resp.slice());
     } else {
       const base = resp.rows || [];
       this.catalogoBaseSig.set(base);
-      this.catalogoTotalSig.set(resp.total || base.length);
+      this.catalogoTotalSig.set(base.length);
       this.catalogoResultadosSig.set(base.slice());
     }
     this.catalogoItemResultados = this.catalogoBaseSig().slice();
@@ -349,8 +431,6 @@ async cargarCatalogoBase() {
 }
 
 async loadCatalogoInicial() {
-  this.catalogoOffset = 0;
-  this.catalogoVisibleCount = 10;
   this.itemFiltroSig.set('');
   this.nombreFiltroSig.set('');
   try {
@@ -395,27 +475,20 @@ async filtrarCatalogoPorCampos() {
   const nameQraw = (this.nombreFiltro || '').trim();
   const codeQ = this.normalizarTexto(codeQraw);
   const nameQ = this.normalizarTexto(nameQraw);
-  this.catalogoOffset = 0;
-
-  // Estrategia: no mezclamos. Si sólo hay código -> buscar por código; si sólo nombre -> buscar por nombre; si ambos -> cargar base limitada y filtrar local con AND.
+  // Estrategia sin paginado: si sólo hay código o sólo nombre, consultamos backend con ese término; si ambos, traemos todo y filtramos local con AND
   let backendQuery = '';
-  if (codeQ && !nameQ) backendQuery = codeQraw; // enviar tal cual para backend
-  else if (nameQ && !codeQ) backendQuery = nameQraw; // sólo nombre
-  else backendQuery = ''; // ambos o ninguno -> traer primer page y filtrar local
+  if (codeQ && !nameQ) backendQuery = codeQraw;
+  else if (nameQ && !codeQ) backendQuery = nameQraw;
+  else backendQuery = '';
 
-  // Si la búsqueda es de un único carácter (código o nombre), ampliamos límite para no truncar demasiados resultados.
-  const singleCharQuery = (backendQuery && backendQuery.length === 1);
-  const effectiveLimit = singleCharQuery ? 0 : this.catalogoVisibleCount; // 0 => backend sin límite
-
-  // Usar insumosService
-  const resp = await insumosService.buscarCatalogo(backendQuery, effectiveLimit, this.catalogoOffset);
+  const resp = await insumosService.buscarCatalogo(backendQuery);
   let base: any[] = [];
   if (Array.isArray(resp)) {
     base = resp;
     this.catalogoTotal = resp.length;
   } else {
     base = resp.rows || [];
-    this.catalogoTotal = resp.total || base.length;
+    this.catalogoTotal = base.length;
   }
 
   // Filtrado exclusivo (local)
@@ -428,7 +501,7 @@ async filtrarCatalogoPorCampos() {
   }
 
   this.catalogoBaseSig.set(base);
-  this.catalogoResultadosSig.set(singleCharQuery ? filtered : filtered.slice(0, this.catalogoVisibleCount));
+  this.catalogoResultadosSig.set(filtered);
   this.catalogoTotalSig.set(filtered.length);
   this.catalogoItemResultados = this.catalogoBaseSig().slice();
   this.catalogoNombreResultados = this.catalogoBaseSig().slice();
@@ -442,25 +515,11 @@ normalizarTexto(s: string): string {
     .trim();
 }
 
-// Sin cargarMasCatalogo: se muestra todo
+// Reiniciar filtros y recargar catálogo completo
 resetCatalogoPaginado() {
-  this.catalogoVisibleCount = 10;
-  this.catalogoOffset = 0;
+  this.itemFiltroSig.set('');
+  this.nombreFiltroSig.set('');
   this.cargarCatalogoBase();
-}
-
-async cargarMasCatalogo() {
-  if (this.catalogoResultadosSig().length >= this.catalogoTotalSig()) return;
-  this.catalogoOffset += this.catalogoVisibleCount;
-  const resp = await insumosService.buscarCatalogo(this.itemFiltro || this.nombreFiltro || '', this.catalogoVisibleCount, this.catalogoOffset);
-  let nuevos: any[] = [];
-  if (Array.isArray(resp)) {
-    nuevos = resp;
-  } else {
-    nuevos = resp.rows || [];
-  this.catalogoTotalSig.set(resp.total || this.catalogoTotalSig());
-  }
-  this.catalogoResultadosSig.set(this.catalogoResultadosSig().concat(nuevos));
 }
 
  trackByCatalogo(index: number, catalogoItem: any) {

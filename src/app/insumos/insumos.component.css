@@ -432,6 +432,39 @@ button[type="button"]:hover,
 .btn-delete:disabled { opacity:.55; cursor:not-allowed; }
 .btn-delete:active:not(:disabled) { transform: translateY(1px); }
 
+/* ===== Menú contextual (click derecho) ===== */
+.context-menu {
+    position: fixed;
+    z-index: 7000;
+    background: #ffffff;
+    border: 1px solid var(--border-gray);
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(2,6,23,0.18);
+    padding: 8px;
+    width: 160px;
+    animation: ctxIn 160ms ease;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+@keyframes ctxIn { from { opacity:0; transform: scale(.96); } to { opacity:1; transform: scale(1); } }
+.context-menu .ctx-item {
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 0.86rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: #334155;
+    transition: background 120ms ease, color 120ms ease;
+}
+.context-menu .ctx-item:hover { background: var(--light-gray); }
+.context-menu .ctx-item.delete { color: #b91c1c; }
+.context-menu .ctx-item.delete:hover { background: #fee2e2; color:#7f1d1d; }
+
 /* Right-side tag inside the same row as the name */
 .card-name .meta {
     background: var(--light-gray);

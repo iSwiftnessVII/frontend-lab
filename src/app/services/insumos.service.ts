@@ -53,6 +53,33 @@ export const insumosService = {
         return data;
     },
 
+    // Eliminar del catálogo de Insumos (nombre específico)
+    async eliminarCatalogoInsumos(item: number | string) {
+        const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(String(item))}`, {
+            method: 'DELETE',
+            headers: { ...authHeaders() }
+        });
+        let data: any = null;
+        try {
+            data = await res.json();
+        } catch {
+            // fallback a texto si no es JSON
+            try {
+                const txt = await res.text();
+                data = { message: txt };
+            } catch { data = null; }
+        }
+        if (!res.ok) {
+            const msg = (data && data.message) || 'Error eliminando catálogo';
+            const err = new Error(msg);
+            (err as any).status = res.status;
+            throw err;
+        }
+        return data;
+    },
+
+    // Nota: eliminarCatalogo fue eliminado para evitar ambigüedad entre módulos
+
     getCatalogoImagenUrl(item: number | string) {
         return `${API_BASE}/catalogo/${encodeURIComponent(String(item))}/imagen`;
     },

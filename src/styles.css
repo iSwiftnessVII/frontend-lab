@@ -1,9 +1,71 @@
-/* =====================================================
-   GLOBAL STYLES & THEME VARIABLES
-   ===================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 @import url('./app/shared/inventory-cards.css');
+
+/* Hint icon used for inline help tooltips on labels */
+.hint-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	margin-left: 6px;
+	border-radius: 50%;
+	font-size: 12px;
+	font-weight: 700;
+	background: #eef3ff;
+	color: #2d3a63;
+	border: 1px solid #cfd8ff;
+	cursor: help;
+	user-select: none;
+}
+.hint-icon:hover { background: #e3ecff; }
+.hint-icon:focus { outline: 2px solid #98b0ff; outline-offset: 2px; }
+
+/* Custom tooltip bubble above hint icon */
+.hint-icon[data-tooltip] {
+	position: relative;
+}
+.hint-icon[data-tooltip]:hover::after,
+.hint-icon[data-tooltip]:focus::after {
+	content: attr(data-tooltip);
+	position: absolute;
+	left: 50%;
+	top: -8px;
+	transform: translate(-50%, -100%);
+	background: #ffffff;
+	color: #1f2a44;
+	padding: 8px 10px;
+	font-size: 12px;
+	line-height: 1.25;
+	min-width: 220px;
+	max-width: 280px;
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+	border: 1px solid #d9e2f7;
+	z-index: 20;
+	text-align: center;
+	white-space: pre-line;
+}
+.hint-icon[data-tooltip]:hover::before,
+.hint-icon[data-tooltip]:focus::before {
+	content: '';
+	position: absolute;
+	left: 50%;
+	top: -8px;
+	transform: translate(-50%, -50%);
+	width: 14px;
+	height: 14px;
+	background: #ffffff;
+	border: 1px solid #d9e2f7;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+	z-index: 19;
+	border-radius: 4px;
+	rotate: 45deg;
+}
+/* =====================================================
+	GLOBAL STYLES & THEME VARIABLES
+	===================================================== */
 
 /* LIBA theme variables (global) */
 :root {
@@ -107,7 +169,7 @@ body.auth-page .container {
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 	transition: transform 0.3s ease, box-shadow 0.3s ease;
 	position: relative;
-	overflow: hidden;
+	overflow: visible; /* allow tooltips and context menus to overflow */
 }
 
 .liba-theme section::before {
@@ -143,7 +205,7 @@ body.auth-page .container {
 	position: relative;
 	padding-left: 8px;
 	white-space: nowrap;
-	overflow: hidden;
+	overflow: visible; /* prevent clipping of hint-icon tooltip */
 	text-overflow: ellipsis;
 }
 

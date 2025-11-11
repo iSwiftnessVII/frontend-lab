@@ -1,4 +1,4 @@
-<div class="liba-theme container insumos-page">
+<div class="liba-theme container insumos-page" (click)="onGlobalClick($event)">
 
     <!-- Catálogo de insumos -->
     <h2>Crear nuevo insumo en catálogo</h2>
@@ -15,10 +15,12 @@
                 <label for="catItem">Item</label>
                 <input id="catItem" type="number" min="1" step="1" [(ngModel)]="catItem" name="catItem" required placeholder="Ej: 1001" />
             </div>
-            <div>
-                <label for="catImagen">Imagen (opcional)</label>
-                <input id="catImagen" type="file" accept="image/*" (change)="onCatImagenChange($event)" />
-            </div>
+                        <div>
+                                                <label for="catImagen">Imagen
+                                                    <span class="hint-icon" tabindex="0" data-tooltip="Peso máximo: 5 MB.">?</span>
+                                                </label>
+                                <input id="catImagen" type="file" accept="image/*" (change)="onCatImagenChange($event)" />
+                        </div>
             <div class="full-row">
                 <label for="catDescripcion">Descripción</label>
                 <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"></textarea>
@@ -91,6 +93,7 @@
                                                 <div class="catalogo-cards">
                                                     @for (c of catalogoResultados; track c.item) {
                                         <article class="catalog-card"
+                                                        (contextmenu)="onCatalogContextMenu($event, c)"
                                                         (click)="onCatalogCardClick(c)" role="button" tabindex="0"
                                                         (keyup.enter)="onCatalogCardClick(c)" (keyup.space)="onCatalogCardClick(c)">
                                             <div class="catalog-card-media">
@@ -106,11 +109,7 @@
                                         </article>
                                     }
                                 </div>
-                                @if (catalogoResultados.length < (catalogoTotal || 0)) {
-                                    <div class="reset-cell">
-                                        <button type="button" class="btn-load-more" (click)="cargarMasCatalogo()">Cargar más</button>
-                                    </div>
-                                }
+                                
                                 @if (!catalogoCargando && !catalogoResultados.length) {
                                     <p>No hay elementos en el catálogo.</p>
                                 }
@@ -185,6 +184,7 @@
         <h2>Listado de insumos</h2>
         <section>
             <div class="cards-container">
+                
                 <div class="filters-grid">
                     <div>
                         <label for="invItemQ">Filtrar por item</label>
@@ -210,6 +210,7 @@
                     <div class="catalogo-cards">
                                                   @for (ins of insumosList; track $index) {
                                                     <article class="catalog-card" role="button" tabindex="0" [class.open]="isOpen(ins)"
+                                                                     (contextmenu)="onCatalogContextMenu($event, ins)"
                                                                      (click)="toggleOpen(ins)" (keyup.enter)="toggleOpen(ins)" (keyup.space)="toggleOpen(ins)">
                                 <div class="catalog-card-media" *ngIf="ins.item_catalogo as ic">
                                     <img [src]="getCatalogoImagenUrl(ic)" alt="Imagen catálogo" (error)="onImgError($event)" />
@@ -261,3 +262,10 @@
             </div>
         </section>
     </div>
+
+    <!-- Menú contextual (click derecho) para catálogo de insumos -->
+    @if (contextMenuVisible) {
+        <div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" (click)="$event.stopPropagation()" (contextmenu)="$event.preventDefault()">
+            <button type="button" class="ctx-item delete" (click)="onContextMenuEliminar()">Eliminar</button>
+        </div>
+    }

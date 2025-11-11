@@ -145,18 +145,13 @@
 }
 
 <!-- ====== GLOBAL SNACKBAR ====== -->
-<div class="snackbar" [class.open]="snack.openSig()" [class.success]="snack.typeSig() === 'success'" [class.error]="snack.typeSig() === 'error'" [class.warn]="snack.typeSig() === 'warn'">
+<div class="snackbar" role="status" aria-live="polite"
+  [class.open]="snack.openSig()"
+  [class.success]="snack.typeSig() === 'success'"
+  [class.error]="snack.typeSig() === 'error'"
+  [class.warn]="snack.typeSig() === 'warn'"
+  [class.info]="snack.typeSig() === 'info'">
   <div class="snackbar-content">
-    <span class="snackbar-icon" aria-hidden="true">
-      <i class="fas" [ngClass]="{
-        'fa-check-circle': snack.typeSig() === 'success',
-        'fa-exclamation-triangle': snack.typeSig() === 'warn',
-        'fa-times-circle': snack.typeSig() === 'error',
-        'fa-info-circle': snack.typeSig() !== 'success' && snack.typeSig() !== 'warn' && snack.typeSig() !== 'error'
-      }"></i>
-    </span>
     <span class="snackbar-text">{{ snack.messageSig() }}</span>
-    <button type="button" class="snackbar-close" (click)="snack.close()" aria-label="Cerrar">×</button>
   </div>
-  <div class="snackbar-timer"></div>
 </div>

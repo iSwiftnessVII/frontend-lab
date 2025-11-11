@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -269,6 +269,70 @@ export class PapeleriaComponent implements OnInit {
       this.descripcion = c?.descripcion || '';
       this.scrollToPapForm();
     } catch {}
+  }
+
+  // ===== Menú contextual (click derecho) =====
+  contextMenuVisible = false;
+  contextMenuX = 0;
+  contextMenuY = 0;
+  contextMenuTarget: any = null;
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(ev: MouseEvent) {
+    if (!this.contextMenuVisible) return;
+    if (ev.button !== 0) return;
+    this.closeContextMenu();
+  }
+
+  onCatalogContextMenu(ev: MouseEvent, item: any) {
+    ev.preventDefault(); ev.stopPropagation();
+    const { clientX, clientY } = ev;
+    const viewportH = window.innerHeight;
+    const menuHeight = 90;
+    let y = clientY;
+    if (clientY + menuHeight > viewportH - 8) { y = viewportH - menuHeight - 8; }
+    this.contextMenuX = clientX; this.contextMenuY = y;
+    this.contextMenuTarget = item; this.contextMenuVisible = true;
+  }
+  closeContextMenu() { this.contextMenuVisible = false; this.contextMenuTarget = null; }
+  onGlobalClick(ev: any) {
+    if (!this.contextMenuVisible) return;
+    try { if (ev instanceof MouseEvent && ev.button !== 0) return; } catch {}
+    this.closeContextMenu();
+  }
+  onContextMenuEliminar() {
+    const target = this.contextMenuTarget; this.closeContextMenu(); if (!target) return;
+    const isCatalogo = typeof target?.item !== 'undefined' && typeof target?.id === 'undefined';
+    if (isCatalogo) {
+      const codigo = target.item;
+      if (!window.confirm(`¿Eliminar del catálogo el item "${target?.nombre || codigo}"?`)) return;
+      papeleriaService.eliminarCatalogoPapeleria(codigo)
+        .then((res: any) => {
+          // Tras éxito, recargar desde backend para asegurar consistencia
+          this.loadCatalogoInicial();
+          const deleted = (res && typeof res.deleted !== 'undefined') ? Number(res.deleted) : 1;
+          this.snack.success(deleted > 0 ? 'Item de catálogo eliminado' : 'Operación completada');
+        })
+        .catch((e: any) => {
+          const status = e?.status;
+          if (status === 401) {
+            this.snack.error('Debes iniciar sesión para eliminar del catálogo');
+          } else if (status === 403) {
+            this.snack.error('No tienes permisos para eliminar del catálogo');
+          } else if (status === 409) {
+            this.snack.error('No se puede eliminar: hay registros que usan este item de catálogo');
+          } else if (status === 404) {
+            this.snack.error('El item no existe (ya fue eliminado)');
+            // Refrescar para reflejar el estado real
+            this.loadCatalogoInicial();
+          } else {
+            this.snack.error(e?.message || 'Error eliminando del catálogo');
+          }
+          console.error('Error eliminando catálogo papelería:', e);
+        });
+    } else {
+      this.eliminar(target);
+    }
   }
 
   private scrollToPapForm() {

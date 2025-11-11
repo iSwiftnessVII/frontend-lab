@@ -30,6 +30,22 @@ export const papeleriaService = {
     if (!res.ok) throw new Error((data && data.message) || 'Error creando catálogo');
     return data;
   },
+  // Eliminar del catálogo de Papelería (nombre específico)
+  async eliminarCatalogoPapeleria(item: number | string) {
+    const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(String(item))}`, { method: 'DELETE', headers: { ...authHeaders() } });
+    let data: any = null;
+    try { data = await res.json(); }
+    catch {
+      try { const txt = await res.text(); data = { message: txt }; }
+      catch { data = null; }
+    }
+    if (!res.ok) {
+      const err = new Error((data && data.message) || 'Error eliminando catálogo');
+      (err as any).status = res.status;
+      throw err;
+    }
+    return data;
+  },
   getCatalogoImagenUrl(item: number | string) {
     return `${API_BASE}/catalogo/${encodeURIComponent(String(item))}/imagen`;
   },

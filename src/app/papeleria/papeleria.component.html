@@ -1,4 +1,4 @@
-<div class="liba-theme container papeleria-page">
+<div class="liba-theme container papeleria-page" (click)="onGlobalClick($event)">
   <h2>Crear nuevo item en catálogo (Papelería)</h2>
   <section>
     <form class="form-grid" (ngSubmit)="crearCatalogo($event)">
@@ -11,7 +11,9 @@
         <input id="catItem" type="number" min="1" step="1" [(ngModel)]="catItem" name="catItem" required placeholder="Ej: 2001" />
       </div>
       <div>
-        <label for="catImagen">Imagen (opcional)</label>
+        <label for="catImagen">Imagen
+          <span class="hint-icon" tabindex="0" data-tooltip="Peso máximo: 5 MB.">?</span>
+        </label>
         <input id="catImagen" type="file" accept="image/*" (change)="onCatImagenChange($event)" />
       </div>
       <div class="full-row">
@@ -67,6 +69,7 @@
         <div class="catalogo-cards">
           @for (c of catalogoResultadosSig(); track c.item) {
             <article class="catalog-card"
+                     (contextmenu)="onCatalogContextMenu($event, c)"
                      (click)="onCatalogCardClick(c)" role="button" tabindex="0"
                      (keyup.enter)="onCatalogCardClick(c)" (keyup.space)="onCatalogCardClick(c)">
               <div class="catalog-card-media">
@@ -93,6 +96,13 @@
       </div>
     </div>
   </section>
+
+  <!-- Menú contextual (catálogo de papelería) -->
+  @if (contextMenuVisible) {
+    <div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" (click)="$event.stopPropagation()" (contextmenu)="$event.preventDefault()">
+      <button type="button" class="ctx-item delete" (click)="onContextMenuEliminar()">Eliminar</button>
+    </div>
+  }
 
   @if (item_catalogo != null) {
     <h2>Crear registro de Papelería</h2>
@@ -152,7 +162,7 @@
   }
 
   <!-- ===== Listado de papelería (tarjetas) al final de la página ===== -->
-  <div>
+  <div (click)="onGlobalClick($event)">
     <h2>Listado de papelería</h2>
     <section>
       <div class="cards-container">
@@ -181,7 +191,8 @@
           <div class="catalogo-cards">
             @for (p of papeleriaList; track $index) {
               <article class="catalog-card" role="button" tabindex="0" [class.open]="isOpen(p)"
-                       (click)="toggleOpen(p)" (keyup.enter)="toggleOpen(p)" (keyup.space)="toggleOpen(p)">
+                       (click)="toggleOpen(p)" (keyup.enter)="toggleOpen(p)" (keyup.space)="toggleOpen(p)"
+                       (contextmenu)="onCatalogContextMenu($event, p)">
                 @if (p.item_catalogo) {
                   <div class="catalog-card-media">
                     <img [src]="getCatalogoImagenUrl(p.item_catalogo)" alt="Imagen catálogo" (error)="onImgError($event)" />
