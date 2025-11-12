@@ -113,6 +113,17 @@
           </a>
         </div>
       </div>
+
+      <!--  AUDITORÍA SOLO PARA ADMINISTRADOR -->
+      @if (user()?.rol === 'Administrador') {
+        <a 
+          routerLink="/auditoria" 
+          routerLinkActive="active" 
+          class="nav-item"
+        >
+          <i class="fas fa-clipboard-check"></i> Auditoría
+        </a>
+      }
     }
 
     <!-- Mostrar Usuarios solo si ES Superadmin -->
@@ -124,6 +135,8 @@
       >
         <i class="fas fa-users"></i> Usuarios
       </a>
+      
+      <!-- El Superadmin NO ve esta auditoría, tendrá su propia auditoría después -->
     }
   </div>
 </nav>

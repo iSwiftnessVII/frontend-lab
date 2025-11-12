@@ -58,4 +58,10 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { roles: ['Superadmin'] } 
   },
+  { 
+  path: 'auditoria', 
+  loadComponent: () => import('./logs/logs.component').then(m => m.LogsComponent), 
+  canActivate: [authGuard, roleGuard],
+  data: { roles: ['Administrador'] } 
+}
 ];

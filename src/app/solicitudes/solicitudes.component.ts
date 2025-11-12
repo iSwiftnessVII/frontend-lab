@@ -2,9 +2,16 @@ import { Component, signal, OnDestroy, OnInit, ViewEncapsulation } from '@angula
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { authUser } from '../services/auth.service';
+import { authUser, authService } from '../services/auth.service';
 
 const API = (window as any).__env?.API_BASE || 'http://localhost:4000/api/solicitudes';
+
+function authHeaders(): Record<string, string> {
+  const token = authService.getToken?.();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
 
 @Component({
   standalone: true,
@@ -715,7 +722,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
         registro_realizado_por: this.clienteRegistroPor,
         observaciones: this.clienteObservaciones
       };
-      const res = await fetch(API + '/clientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const res = await fetch(API + '/clientes', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(payload) });
       if (!res.ok) throw new Error(await res.text());
 
       this.clienteMsg = '✅ Cliente creado exitosamente';
@@ -777,7 +784,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
       const res = await fetch(API, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body)
       });
 
@@ -830,7 +837,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
       const res = await fetch(API + '/' + this.ofertaSolicitudId, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body)
       });
 
@@ -876,7 +883,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
       const res = await fetch(API + '/' + this.resultadoSolicitudId, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body)
       });
 
@@ -923,7 +930,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
       const res = await fetch(API + '/encuestas', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body)
       });
 
@@ -961,7 +968,10 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   async deleteCliente(id: number) {
     if (!confirm('¿Borrar este cliente?')) return;
     try {
-      const res = await fetch(API + '/clientes/' + id, { method: 'DELETE' });
+      const res = await fetch(API + '/clientes/' + id, { 
+        method: 'DELETE',
+        headers: { ...authHeaders() }  
+      });
       if (!res.ok) throw new Error(await res.text());
       await this.loadClientes();
     } catch (err) {
@@ -978,7 +988,15 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       } else {
         body[field] = value ? 1 : 0;
       }
-      const res = await fetch(API + '/solicitudes/' + s.id_solicitud, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      
+      const res = await fetch(API + '/solicitudes/' + s.id_solicitud, { 
+        method: 'PUT', 
+        headers: { 
+          'Content-Type': 'application/json',
+          ...authHeaders() 
+        }, 
+        body: JSON.stringify(body) 
+      });
       if (!res.ok) throw new Error(await res.text());
       // update local copy
       s[field] = body[field];
@@ -990,7 +1008,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   async deleteSolicitud(id: number) {
     if (!confirm('¿Borrar esta solicitud?')) return;
     try {
-      const res = await fetch(API + '/' + id, { method: 'DELETE' });
+      const res = await fetch(API + '/' + id, { method: 'DELETE', headers: { ...authHeaders() } });
       if (!res.ok) throw new Error(await res.text());
       await this.loadSolicitudes();
     } catch (err) {

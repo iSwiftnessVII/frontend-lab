@@ -33,6 +33,7 @@ export const insumosService = {
     async crearCatalogo(form: FormData) {
         const res = await fetch(`${API_BASE}/catalogo`, {
             method: 'POST',
+            headers: { ...authHeaders() }, 
             body: form
         });
         let data: any = null; try { data = await res.json(); } catch { }
@@ -42,9 +43,10 @@ export const insumosService = {
     async actualizarCatalogo(itemId: number, body: FormData | any) {
         const init: RequestInit = { method: 'PUT' };
         if (body instanceof FormData) {
+            init.headers = { ...authHeaders() };
             init.body = body;
         } else {
-            init.headers = { 'Content-Type': 'application/json' };
+            init.headers = { 'Content-Type': 'application/json', ...authHeaders() };
             init.body = JSON.stringify(body);
         }
         const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(String(itemId))}`, init);
@@ -89,7 +91,7 @@ export const insumosService = {
         const url = new URL(API_BASE);
         if (q) url.searchParams.set('q', q);
         if (limit && limit > 0) url.searchParams.set('limit', String(limit));
-        const res = await fetch(url);
+        const res = await fetch(url, { headers: { ...authHeaders() } }); 
         if (!res.ok) throw new Error(await res.text());
         return res.json();
     },
@@ -101,7 +103,7 @@ export const insumosService = {
     async crearInsumo(item: any) {
         const res = await fetch(API_BASE, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...authHeaders() }, 
             body: JSON.stringify(item)
         });
         let data: any = null; try { data = await res.json(); } catch { }
@@ -111,7 +113,7 @@ export const insumosService = {
     async actualizarInsumo(item: number, data: any) {
         const res = await fetch(`${API_BASE}/${encodeURIComponent(String(item))}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...authHeaders() }, 
             body: JSON.stringify(data)
         });
         let resData: any = null; try { resData = await res.json(); } catch { }
@@ -137,6 +139,4 @@ export const insumosService = {
         if (!res.ok) throw new Error((data && data.message) || 'Error eliminando insumo');
         return data;
     },
-
- 
-}
+};
