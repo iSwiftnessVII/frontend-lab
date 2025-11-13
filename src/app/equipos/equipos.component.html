@@ -75,6 +75,124 @@
 		</form>
 	</section>
 
+	<h2>Registrar mantenimiento de equipo</h2>
+	<section>
+		<form class="form-grid" (submit)="crearMantenimiento($event)">
+			<div>
+				<label for="m_equipo_id">Equipo *</label>
+				<select id="m_equipo_id" name="m_equipo_id" [(ngModel)]="m_equipo_id" required>
+					<option [ngValue]="null">Seleccione equipo</option>
+					@for (e of lista; track e.id) {
+						<option [ngValue]="e.id">{{ e.nombre }} {{ e.modelo ? ('· ' + e.modelo) : '' }} {{ e.marca ? ('(' + e.marca + ')') : '' }}</option>
+					}
+				</select>
+			</div>
+
+				<!-- Fila superior reemplaza a requerimientos: los 4 campos agrupados -->
+				<div class="inline-row col-span-full">
+					<div>
+						<label for="m_elementos_v">Elementos V</label>
+						<select id="m_elementos_v" name="m_elementos_v" [(ngModel)]="m_elementos_v">
+							<option [ngValue]="''">Seleccione</option>
+							<option [ngValue]="'Si'">Si</option>
+							<option [ngValue]="'No'">No</option>
+						</select>
+					</div>
+					<div>
+						<label for="m_voltaje">Voltaje</label>
+						<input id="m_voltaje" name="m_voltaje" [(ngModel)]="m_voltaje" placeholder="Ej: 110V AC" />
+					</div>
+					<div>
+						<label for="m_elementos_f">Elementos F</label>
+						<select id="m_elementos_f" name="m_elementos_f" [(ngModel)]="m_elementos_f">
+							<option [ngValue]="''">Seleccione</option>
+							<option [ngValue]="'Si'">Si</option>
+							<option [ngValue]="'No'">No</option>
+						</select>
+					</div>
+					<div>
+						<label for="m_frecuencia">Frecuencia</label>
+						<input id="m_frecuencia" name="m_frecuencia" [(ngModel)]="m_frecuencia" placeholder="Ej: Mensual / Trimestral / 60 Hz" />
+					</div>
+				</div>
+					<!-- Fila inferior: requerimientos ocupa toda la anchura -->
+					<div class="stack-field col-span-full">
+						<label for="m_requerimientos_equipo">Requerimientos del equipo</label>
+						<input id="m_requerimientos_equipo" type="text" name="m_requerimientos_equipo" [(ngModel)]="m_requerimientos_equipo" placeholder="Descripción de requerimientos, insumos, cuidados, etc." />
+					</div>
+					<!-- Botón en su propia fila (recreado) -->
+					<div class="actions">
+						<button class="btn-compact" type="submit" [disabled]="m_guardando">{{ m_guardando ? 'Guardando…' : 'Guardar mantenimiento' }}</button>
+					</div>
+		</form>
+	</section>
+
+	<h2>Registrar verificación / calibración / calificación</h2>
+	<section>
+		<form class="form-grid" (submit)="crearVcc($event)">
+			<div>
+				<label for="v_equipo_id">Equipo *</label>
+				<select id="v_equipo_id" name="v_equipo_id" [(ngModel)]="v_equipo_id" required>
+					<option [ngValue]="null">Seleccione equipo</option>
+					@for (e of lista; track e.id) {
+						<option [ngValue]="e.id">{{ e.nombre }} {{ e.modelo ? ('· ' + e.modelo) : '' }} {{ e.marca ? ('(' + e.marca + ')') : '' }}</option>
+					}
+				</select>
+			</div>
+
+			<div class="inline-row col-span-full">
+				<div>
+					<label for="v_campo_medicion">Campo de medición</label>
+					<input id="v_campo_medicion" name="v_campo_medicion" [(ngModel)]="v_campo_medicion" placeholder="Ej: Masa / Temperatura" />
+				</div>
+				<div>
+					<label for="v_exactitud">Exactitud</label>
+					<input id="v_exactitud" name="v_exactitud" [(ngModel)]="v_exactitud" placeholder="Ej: ±0.01 g" />
+				</div>
+				<div>
+					<label for="v_resolucion_division">Resolución/División</label>
+					<input id="v_resolucion_division" name="v_resolucion_division" [(ngModel)]="v_resolucion_division" placeholder="Ej: 0.001 g" />
+				</div>
+			</div>
+
+			<div class="inline-row col-span-full">
+				<div>
+					<label for="v_sujeto_verificar">Sujeto a verificar</label>
+					<select id="v_sujeto_verificar" name="v_sujeto_verificar" [(ngModel)]="v_sujeto_verificar">
+						<option [ngValue]="''">Seleccione</option>
+						<option [ngValue]="'Si'">Si</option>
+						<option [ngValue]="'No'">No</option>
+					</select>
+				</div>
+				<div>
+					<label for="v_sujeto_calibracion">Sujeto a calibración</label>
+					<select id="v_sujeto_calibracion" name="v_sujeto_calibracion" [(ngModel)]="v_sujeto_calibracion">
+						<option [ngValue]="''">Seleccione</option>
+						<option [ngValue]="'Si'">Si</option>
+						<option [ngValue]="'No'">No</option>
+					</select>
+				</div>
+				<div>
+					<label for="v_sujeto_calificacion">Sujeto a calificación</label>
+					<select id="v_sujeto_calificacion" name="v_sujeto_calificacion" [(ngModel)]="v_sujeto_calificacion">
+						<option [ngValue]="''">Seleccione</option>
+						<option [ngValue]="'Si'">Si</option>
+						<option [ngValue]="'No'">No</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="stack-field col-span-full">
+				<label for="v_accesorios">Accesorios</label>
+				<textarea id="v_accesorios" name="v_accesorios" [(ngModel)]="v_accesorios" placeholder="Describa accesorios relevantes"></textarea>
+			</div>
+
+			<div class="actions">
+				<button class="btn-compact" type="submit" [disabled]="v_guardando">{{ v_guardando ? 'Guardando…' : 'Guardar VCC' }}</button>
+			</div>
+		</form>
+	</section>
+
 	<h2>Listado de equipos</h2>
 	<section>
 		<div class="cards-container">
@@ -118,6 +236,48 @@
 									<div class="detail-card"><div class="detail-label">Tipo manual</div><div class="detail-value">{{ e.tipo_manual || '—' }}</div></div>
 									<div class="detail-card"><div class="detail-label">Puesta en servicio</div><div class="detail-value">{{ formatFechaPuesta(e.puesta_en_servicio) }}</div></div>
 									<div class="detail-card"><div class="detail-label">Adquisición</div><div class="detail-value">{{ e.fecha_adquisicion ? (e.fecha_adquisicion | date:'yyyy-MM-dd') : '—' }}</div></div>
+								</div>
+								<!-- Separador pedido: guion para separar de la info de mantenimiento -->
+								<div class="section-sep">-</div>
+									<div class="mantenimiento-block">
+										<div class="m-header">Mantenimiento</div>
+										@if (mLoading[e.id]) { <p class="muted">Cargando mantenimiento…</p> }
+										@else if (mError[e.id]) { <p class="error">{{ mError[e.id] }}</p> }
+										@else {
+											@if (mMap[e.id]?.length) {
+												<div class="details-grid">
+													@for (m of mMap[e.id]; track m.id) {
+														<div class="detail-card"><div class="detail-label">Requerimientos</div><div class="detail-value">{{ m.requerimientos_equipo || '—' }}</div></div>
+														<div class="detail-card"><div class="detail-label">Elementos V</div><div class="detail-value">{{ m.elementos_v || '—' }}</div></div>
+														<div class="detail-card"><div class="detail-label">Voltaje</div><div class="detail-value">{{ m.voltaje || '—' }}</div></div>
+														<div class="detail-card"><div class="detail-label">Elementos F</div><div class="detail-value">{{ m.elementos_f || '—' }}</div></div>
+														<div class="detail-card"><div class="detail-label">Frecuencia</div><div class="detail-value">{{ m.frecuencia || '—' }}</div></div>
+													}
+												</div>
+											} @else { <p class="muted">Sin registros de mantenimiento.</p> }
+										}
+								</div>
+								<!-- Separador entre mantenimiento y VCC -->
+								<div class="section-sep">-</div>
+								<div class="vcc-block">
+									<div class="m-header">Verificación / Calibración / Calificación</div>
+									@if (vLoading[e.id]) { <p class="muted">Cargando VCC…</p> }
+									@else if (vError[e.id]) { <p class="error">{{ vError[e.id] }}</p> }
+									@else {
+										@if (vMap[e.id]?.length) {
+											<div class="details-grid">
+												@for (v of vMap[e.id]; track v.id) {
+													<div class="detail-card"><div class="detail-label">Campo medición</div><div class="detail-value">{{ v.campo_medicion || '—' }}</div></div>
+													<div class="detail-card"><div class="detail-label">Exactitud</div><div class="detail-value">{{ v.exactitud || '—' }}</div></div>
+													<div class="detail-card"><div class="detail-label">Suj. verificar</div><div class="detail-value">{{ v.sujeto_verificar || '—' }}</div></div>
+													<div class="detail-card"><div class="detail-label">Suj. calibración</div><div class="detail-value">{{ v.sujeto_calibracion || '—' }}</div></div>
+													<div class="detail-card"><div class="detail-label">Resolución</div><div class="detail-value">{{ v.resolucion_division || '—' }}</div></div>
+													<div class="detail-card"><div class="detail-label">Suj. calificación</div><div class="detail-value">{{ v.sujeto_calificacion || '—' }}</div></div>
+													<div class="detail-card"><div class="detail-label">Accesorios</div><div class="detail-value">{{ v.accesorios || '—' }}</div></div>
+												}
+											</div>
+										} @else { <p class="muted">Sin registros VCC.</p> }
+									}
 								</div>
 							</div>
 							}

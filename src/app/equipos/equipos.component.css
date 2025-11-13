@@ -17,11 +17,22 @@
 .form-grid label { font-weight: 500; color: var(--primary-blue); margin-bottom: 0.5rem; font-size: 0.9rem; }
 /* Field base styles now globally unified; keep textarea specifics */
 .form-grid textarea { resize: vertical; min-height: 80px; }
+/* Full row helper for grid-spanning fields */
+.form-grid .col-span-full { grid-column: 1 / -1; }
+/* Ensure inputs fill their column width */
+.form-grid input, .form-grid select, .form-grid textarea { width: 100%; }
+/* Inline row for grouped maintenance fields */
+.form-grid .inline-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1.1rem 1.3rem; align-items: end; }
+/* Button field styled like input cell */
+.btn-field { display:flex; flex-direction:column; }
+.btn-field .invisible-label { visibility:hidden; height:0; margin:0; padding:0; }
+.btn-field .btn-compact.full { width:100%; height:100%; min-height:40px; }
+/* Mantenimiento: fila de acción recreada */
 
 /* Make the action row span full width and keep buttons compact */
 /* Action cell behaves like a regular field column; button fills the column width */
 .form-grid .actions { align-self: start; display: flex; width: 100%; }
-.form-grid .actions .btn-compact { width: 100%; justify-content: center; text-align: center; }
+.form-grid .actions .btn-compact { width: 100%; align-items: center; justify-content: center; }
 .btn-compact { padding: 0.7rem 1rem; min-height: 40px; }
 
 /* Ensure stacked field (fecha_adquisicion + button) has nice spacing */
@@ -87,3 +98,12 @@
 .equip-lane .detail-card { background:#f7fafc; }
 .equip-lane .detail-label { color:#0f3d5d; }
 .equip-lane .detail-card:hover { background:#eef5fa; }
+
+/* ===== Mantenimiento in lane details ===== */
+.section-sep { text-align:center; color:#a0aec0; font-weight:700; margin: 0.6rem 0; }
+.mantenimiento-block { margin-top: 0.3rem; }
+.mantenimiento-block .m-header { font-weight: 600; color: var(--primary-blue); margin-bottom: 0.35rem; }
+.m-list { display: flex; flex-direction: column; gap: 0.35rem; padding-left: 1rem; }
+.m-list li { list-style: disc; }
+.m-item { margin-right: 10px; }
+.error { color: #c53030; }
