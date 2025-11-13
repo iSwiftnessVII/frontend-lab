@@ -1,4 +1,4 @@
-import { Component, signal, ChangeDetectorRef } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -61,17 +61,25 @@ export class EquiposComponent {
 	// control de expansión por id
 	expandido = new Set<string>();
 
-	// Mantenimientos por equipo (cache y estados)
-	mMap: Record<number, any[]> = {};
-	mLoading: Record<number, boolean> = {};
-	mError: Record<number, string> = {};
+	// Mantenimientos por equipo (cache y estados) usando Signals (zoneless-friendly)
+	private mMapSig = signal<Record<number, any[]>>({});
+	private mLoadingSig = signal<Record<number, boolean>>({});
+	private mErrorSig = signal<Record<number, string>>({});
 
-	// VCC por equipo (cache y estados)
-	vMap: Record<number, any[]> = {};
-	vLoading: Record<number, boolean> = {};
-	vError: Record<number, string> = {};
+	// VCC por equipo (cache y estados) usando Signals
+	private vMapSig = signal<Record<number, any[]>>({});
+	private vLoadingSig = signal<Record<number, boolean>>({});
+	private vErrorSig = signal<Record<number, string>>({});
 
-	constructor(public snack: SnackbarService, private cdr: ChangeDetectorRef) {}
+	// Exponer getters para mantener el template intacto (mMap[e.id], mLoading[e.id], etc.)
+	get mMap() { return this.mMapSig(); }
+	get mLoading() { return this.mLoadingSig(); }
+	get mError() { return this.mErrorSig(); }
+	get vMap() { return this.vMapSig(); }
+	get vLoading() { return this.vLoadingSig(); }
+	get vError() { return this.vErrorSig(); }
+
+	constructor(public snack: SnackbarService) {}
 
 	async ngOnInit() {
 		await this.cargarLista();
@@ -82,29 +90,29 @@ export class EquiposComponent {
 	async cargarLista() {
 		this.cargando = true; this.error = '';
 		try {
-			const resp = await equiposService.listarEquipos('');
+				const resp = await equiposService.listarEquipos('');
 			const rows = Array.isArray(resp) ? resp : (resp.rows || resp.data || []);
 			this.listaSig.set(rows);
 			this.listaFiltradaSig.set(rows);
-			try { this.cdr.detectChanges(); } catch {}
 		} catch (e: any) {
 			this.error = e?.message || 'Error cargando equipos';
 			this.listaSig.set([]); this.listaFiltradaSig.set([]);
-			try { this.cdr.detectChanges(); } catch {}
-		} finally { this.cargando = false; try { this.cdr.detectChanges(); } catch {} }
+			} finally { this.cargando = false; }
 	}
 
 	filtrar() {
 		const q = (this.q || '').toLowerCase().trim();
-		const filtered = !q ? this.listaSig() : this.listaSig().filter(x => {
-			const nombre = String(x.nombre||'').toLowerCase();
-			const marca = String(x.marca||'').toLowerCase();
-			const codigo = String(x.codigo_identificacion||'').toLowerCase();
-			const inv = String(x.inventario_sena||'').toLowerCase();
-			return nombre.includes(q) || marca.includes(q) || codigo.includes(q) || inv.includes(q);
+		// Defer update to next microtask to avoid ExpressionChanged after input events
+		queueMicrotask(() => {
+			const filtered = !q ? this.listaSig() : this.listaSig().filter(x => {
+				const nombre = String(x.nombre||'').toLowerCase();
+				const marca = String(x.marca||'').toLowerCase();
+				const codigo = String(x.codigo_identificacion||'').toLowerCase();
+				const inv = String(x.inventario_sena||'').toLowerCase();
+				return nombre.includes(q) || marca.includes(q) || codigo.includes(q) || inv.includes(q);
+			});
+			this.listaFiltradaSig.set(filtered);
 		});
-		this.listaFiltradaSig.set(filtered);
-		try { this.cdr.detectChanges(); } catch {}
 	}
 
 	async toggleFila(e: any) {
@@ -116,11 +124,11 @@ export class EquiposComponent {
 			this.expandido.add(key);
 			const idNum = Number(e?.id);
 			if (!isNaN(idNum)) {
-				await this.cargarMantenimientosSiNecesario(idNum);
-				await this.cargarVccSiNecesario(idNum);
+				// Fire-and-forget the async loads to the next microtasks
+				Promise.resolve().then(() => this.cargarMantenimientosSiNecesario(idNum));
+				Promise.resolve().then(() => this.cargarVccSiNecesario(idNum));
 			}
 		}
-		try { this.cdr.detectChanges(); } catch {}
 	}
 	isFilaExpandida(e: any): boolean { const key = this.getKey(e); return key ? this.expandido.has(key) : false; }
 	private getKey(e: any): string { return String(e?.id ?? e?.codigo_identificacion ?? e?.numero_serie ?? ''); }
@@ -128,28 +136,30 @@ export class EquiposComponent {
 
 	private async cargarMantenimientosSiNecesario(equipoId: number) {
 		if (!equipoId) return;
-		if (this.mMap[equipoId]) return; // ya cargado
-		this.mLoading[equipoId] = true; this.mError[equipoId] = '';
+		if (this.mMapSig()[equipoId]) return; // ya cargado
+		this.mLoadingSig.update(s => ({ ...s, [equipoId]: true }));
+		this.mErrorSig.update(s => ({ ...s, [equipoId]: '' }));
 		try {
 			const rows = await equiposService.listarMantenimientos(equipoId);
-			this.mMap[equipoId] = Array.isArray(rows) ? rows : [];
+			this.mMapSig.update(s => ({ ...s, [equipoId]: Array.isArray(rows) ? rows : [] }));
 		} catch (e: any) {
-			this.mError[equipoId] = e?.message || 'Error cargando mantenimientos';
-			this.mMap[equipoId] = [];
-		} finally { this.mLoading[equipoId] = false; try { this.cdr.detectChanges(); } catch {} }
+			this.mErrorSig.update(s => ({ ...s, [equipoId]: e?.message || 'Error cargando mantenimientos' }));
+			this.mMapSig.update(s => ({ ...s, [equipoId]: [] }));
+		} finally { this.mLoadingSig.update(s => ({ ...s, [equipoId]: false })); }
 	}
 
 	private async cargarVccSiNecesario(equipoId: number) {
 		if (!equipoId) return;
-		if (this.vMap[equipoId]) return; // ya cargado
-		this.vLoading[equipoId] = true; this.vError[equipoId] = '';
+		if (this.vMapSig()[equipoId]) return; // ya cargado
+		this.vLoadingSig.update(s => ({ ...s, [equipoId]: true }));
+		this.vErrorSig.update(s => ({ ...s, [equipoId]: '' }));
 		try {
 			const rows = await equiposService.listarVerificaciones(equipoId);
-			this.vMap[equipoId] = Array.isArray(rows) ? rows : [];
+			this.vMapSig.update(s => ({ ...s, [equipoId]: Array.isArray(rows) ? rows : [] }));
 		} catch (e: any) {
-			this.vError[equipoId] = e?.message || 'Error cargando verificaciones/calibraciones/calificaciones';
-			this.vMap[equipoId] = [];
-		} finally { this.vLoading[equipoId] = false; try { this.cdr.detectChanges(); } catch {} }
+			this.vErrorSig.update(s => ({ ...s, [equipoId]: e?.message || 'Error cargando verificaciones/calibraciones/calificaciones' }));
+			this.vMapSig.update(s => ({ ...s, [equipoId]: [] }));
+		} finally { this.vLoadingSig.update(s => ({ ...s, [equipoId]: false })); }
 	}
 
 	async crearEquipo(ev: Event) {
@@ -255,16 +265,18 @@ export class EquiposComponent {
 		try {
 			await equiposService.crearVerificacion(this.v_equipo_id, payload);
 			this.snack.success('Registro VCC guardado');
-			// refrescar si expandido
-			const expKeys = Array.from(this.expandido);
-			for (const k of expKeys) {
-				const idNum = Number(k);
-				if (!isNaN(idNum) && idNum === this.v_equipo_id) {
-					try {
-						const rows = await equiposService.listarVerificaciones(idNum);
-						this.vMap[idNum] = Array.isArray(rows) ? rows : [];
-					} catch {}
+			// Refrescar SIEMPRE la lista del equipo afectado usando signals (dispara CD en zoneless)
+			try {
+				const idNum = Number(this.v_equipo_id);
+				if (!isNaN(idNum)) {
+					this.vLoadingSig.update(s => ({ ...s, [idNum]: true }));
+					const rows = await equiposService.listarVerificaciones(idNum);
+					this.vMapSig.update(s => ({ ...s, [idNum]: Array.isArray(rows) ? rows : [] }));
 				}
+			} catch {}
+			finally {
+				const idNum = Number(this.v_equipo_id);
+				if (!isNaN(idNum)) this.vLoadingSig.update(s => ({ ...s, [idNum]: false }));
 			}
 			// limpiar
 			this.v_equipo_id = null;
