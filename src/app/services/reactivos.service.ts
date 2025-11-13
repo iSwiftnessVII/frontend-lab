@@ -20,7 +20,7 @@ export const reactivosService = {
     if (q) url.searchParams.set('q', q);
     if (limit && limit > 0) url.searchParams.set('limit', String(limit));
     if (offset && offset > 0) url.searchParams.set('offset', String(offset));
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: { ...authHeaders() } }); // ← AGREGADO
     if (!res.ok) throw new Error(await res.text());
     return res.json(); // Puede ser array o {rows,total}
   },
@@ -32,7 +32,7 @@ export const reactivosService = {
   async crearCatalogo(item: any) {
     const res = await fetch(`${API_BASE}/catalogo`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() }, // ← AGREGADO
       body: JSON.stringify(item)
     });
     let data: any = null; try { data = await res.json(); } catch { }
@@ -42,7 +42,7 @@ export const reactivosService = {
   async actualizarCatalogo(codigo: string, item: any) {
     const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() }, // ← AGREGADO
       body: JSON.stringify(item)
     });
     let data: any = null; try { data = await res.json(); } catch { }
@@ -63,7 +63,7 @@ export const reactivosService = {
     const url = new URL(API_BASE);
     if (q) url.searchParams.set('q', q);
     if (limit && limit > 0) url.searchParams.set('limit', String(limit));
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: { ...authHeaders() } }); // ← AGREGADO
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
@@ -75,7 +75,7 @@ export const reactivosService = {
   async crearReactivo(item: any) {
     const res = await fetch(API_BASE, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() }, // ← AGREGADO
       body: JSON.stringify(item)
     });
     let data: any = null; try { data = await res.json(); } catch { }
@@ -85,7 +85,7 @@ export const reactivosService = {
   async actualizarReactivo(lote: string, item: any) {
     const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() }, // ← AGREGADO
       body: JSON.stringify(item)
     });
     let data: any = null; try { data = await res.json(); } catch { }
@@ -122,6 +122,7 @@ export const reactivosService = {
     fd.append('file', file);
     const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/hoja-seguridad`, {
       method: 'POST',
+      headers: { ...authHeaders() }, // ← AGREGADO
       body: fd
     });
     let data: any = null; try { data = await res.json(); } catch { }
@@ -156,6 +157,7 @@ export const reactivosService = {
     fd.append('file', file);
     const res = await fetch(`${API_BASE}/catalogo/${encodeURIComponent(codigo)}/cert-analisis`, {
       method: 'POST',
+      headers: { ...authHeaders() }, // ← AGREGADO
       body: fd
     });
     let data: any = null; try { data = await res.json(); } catch { }
@@ -187,7 +189,11 @@ export const reactivosService = {
   async subirHojaSeguridadReactivo(lote: string, file: File) {
     const fd = new FormData();
     fd.append('file', file);
-    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}/hoja-seguridad`, { method: 'POST', body: fd });
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}/hoja-seguridad`, { 
+      method: 'POST', 
+      headers: { ...authHeaders() }, // ← AGREGADO
+      body: fd 
+    });
     let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error al subir PDF');
     return data;
@@ -215,7 +221,11 @@ export const reactivosService = {
   async subirCertAnalisisReactivo(lote: string, file: File) {
     const fd = new FormData();
     fd.append('file', file);
-    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}/cert-analisis`, { method: 'POST', body: fd });
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}/cert-analisis`, { 
+      method: 'POST', 
+      headers: { ...authHeaders() }, // ← AGREGADO
+      body: fd 
+    });
     let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error al subir PDF');
     return data;

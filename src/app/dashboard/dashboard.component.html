@@ -76,6 +76,7 @@
 
   <!-- Sección de Alertas -->
   <div *ngIf="!cargando() && reactivosProximosVencer().length > 0" class="alert-section">
+<<<<<<< Updated upstream
     <h2>
       <i class="fas fa-exclamation-triangle"></i>
       Alertas Importantes
@@ -83,6 +84,11 @@
     <div class="alert-card warning">
       <div class="alert-header">
         <i class="fas fa-exclamation-circle"></i>
+=======
+    <h2>Alertas Importantes</h2>
+    <div class="alert-card warning">
+      <div class="alert-header">
+>>>>>>> Stashed changes
         <h3>Reactivos Próximos a Vencer</h3>
       </div>
       <div class="alert-content">
@@ -180,13 +186,17 @@
         <i class="fas fa-plus-circle"></i>
         <span>Agregar Reactivo</span>
       </a>
+      <a routerLink="/equipos" class="action-card">
+        <i class="fas fa-plus"></i>
+        <span>Registrar Equipo</span>
+      </a>
       <a routerLink="/solicitudes" class="action-card">
         <i class="fas fa-plus-circle"></i>
         <span>Crear Solicitud</span>
       </a>
-      <a routerLink="/usuarios" class="action-card">
-        <i class="fas fa-user-plus"></i>
-        <span>Gestionar Usuarios</span>
+      <a routerLink="/papeleria" class="action-card">
+        <i class="fas fa-plus"></i>
+        <span>Crear Item en Papeleria</span>
       </a>
     </div>
   </div>
