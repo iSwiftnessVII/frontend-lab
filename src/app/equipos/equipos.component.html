@@ -210,7 +210,7 @@
 					</div>
 					<div class="lane-list">
 						@for (e of listaFiltrada; track trackById($index, e)) {
-						<article class="equip-lane" (click)="toggleFila(e)" [attr.aria-expanded]="isFilaExpandida(e)" tabindex="0">
+						<article class="equip-lane" (click)="toggleFila(e)" [attr.aria-expanded]="isFilaExpandida(e)" [class.just-created]="e.id === lastCreatedEquipoId" tabindex="0">
 							<div class="lane-header">
 								<div class="chips">
 									@if (e.codigo_identificacion) { <span class="pill"><strong>Código:</strong> {{ e.codigo_identificacion }}</span> }

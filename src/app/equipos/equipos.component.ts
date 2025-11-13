@@ -13,42 +13,76 @@ import { equiposService } from '../services/equipos.service';
 	imports: [CommonModule, FormsModule, RouterModule]
 })
 export class EquiposComponent {
-	// Form model
-	nombre = '';
-	modelo = '';
-	marca = '';
-	inventario_sena = '';
-	acreditacion: 'Si' | 'No aplica' | '' = '';
-	tipo_manual: 'Fisico' | 'Digital' | '' = '';
-	codigo_identificacion = '';
-	numero_serie = '';
-	tipo = '';
-	clasificacion = '';
-	manual_usuario: 'Si' | 'No' | '' = '';
-	puesta_en_servicio = '';
-	fecha_adquisicion = '';
+	// ===== Form model signals (wrappers preserve existing template bindings) =====
+	private nombreSig = signal<string>('');
+	get nombre() { return this.nombreSig(); } set nombre(v: string) { this.nombreSig.set(v); }
+	private modeloSig = signal<string>('');
+	get modelo() { return this.modeloSig(); } set modelo(v: string) { this.modeloSig.set(v); }
+	private marcaSig = signal<string>('');
+	get marca() { return this.marcaSig(); } set marca(v: string) { this.marcaSig.set(v); }
+	private inventarioSenaSig = signal<string>('');
+	get inventario_sena() { return this.inventarioSenaSig(); } set inventario_sena(v: string) { this.inventarioSenaSig.set(v); }
+	private acreditacionSig = signal<'Si' | 'No aplica' | ''>('');
+	get acreditacion() { return this.acreditacionSig(); } set acreditacion(v: 'Si' | 'No aplica' | '') { this.acreditacionSig.set(v); }
+	private tipoManualSig = signal<'Fisico' | 'Digital' | ''>('');
+	get tipo_manual() { return this.tipoManualSig(); } set tipo_manual(v: 'Fisico' | 'Digital' | '') { this.tipoManualSig.set(v); }
+	private codigoIdentificacionSig = signal<string>('');
+	get codigo_identificacion() { return this.codigoIdentificacionSig(); } set codigo_identificacion(v: string) { this.codigoIdentificacionSig.set(v); }
+	private numeroSerieSig = signal<string>('');
+	get numero_serie() { return this.numeroSerieSig(); } set numero_serie(v: string) { this.numeroSerieSig.set(v); }
+	private tipoSig = signal<string>('');
+	get tipo() { return this.tipoSig(); } set tipo(v: string) { this.tipoSig.set(v); }
+	private clasificacionSig = signal<string>('');
+	get clasificacion() { return this.clasificacionSig(); } set clasificacion(v: string) { this.clasificacionSig.set(v); }
+	private manualUsuarioSig = signal<'Si' | 'No' | ''>('');
+	get manual_usuario() { return this.manualUsuarioSig(); } set manual_usuario(v: 'Si' | 'No' | '') { this.manualUsuarioSig.set(v); }
+	private puestaEnServicioSig = signal<string>('');
+	get puesta_en_servicio() { return this.puestaEnServicioSig(); } set puesta_en_servicio(v: string) { this.puestaEnServicioSig.set(v); }
+	private fechaAdquisicionSig = signal<string>('');
+	get fecha_adquisicion() { return this.fechaAdquisicionSig(); } set fecha_adquisicion(v: string) { this.fechaAdquisicionSig.set(v); }
 
-	creando = false;
+	private creandoSig = signal<boolean>(false);
+	get creando() { return this.creandoSig(); } set creando(v: boolean) { this.creandoSig.set(v); }
 
-	// Formulario de mantenimiento (dentro del apartado Equipos)
-	m_equipo_id: number | null = null;
-	m_requerimientos_equipo = '';
-	m_elementos_v: 'Si' | 'No' | '' = '';
-	m_voltaje = '';
-	m_elementos_f: 'Si' | 'No' | '' = '';
-	m_frecuencia = '';
-	m_guardando = false;
+	// ===== Formulario de mantenimiento =====
+	private mEquipoIdSig = signal<number | null>(null);
+	get m_equipo_id() { return this.mEquipoIdSig(); } set m_equipo_id(v: number | null) { this.mEquipoIdSig.set(v); }
+	private mRequerimientosSig = signal<string>('');
+	get m_requerimientos_equipo() { return this.mRequerimientosSig(); } set m_requerimientos_equipo(v: string) { this.mRequerimientosSig.set(v); }
+	private mElementosVSig = signal<'Si' | 'No' | ''>('');
+	get m_elementos_v() { return this.mElementosVSig(); } set m_elementos_v(v: 'Si' | 'No' | '') { this.mElementosVSig.set(v); }
+	private mVoltajeSig = signal<string>('');
+	get m_voltaje() { return this.mVoltajeSig(); } set m_voltaje(v: string) { this.mVoltajeSig.set(v); }
+	private mElementosFSig = signal<'Si' | 'No' | ''>('');
+	get m_elementos_f() { return this.mElementosFSig(); } set m_elementos_f(v: 'Si' | 'No' | '') { this.mElementosFSig.set(v); }
+	private mFrecuenciaSig = signal<string>('');
+	get m_frecuencia() { return this.mFrecuenciaSig(); } set m_frecuencia(v: string) { this.mFrecuenciaSig.set(v); }
+	private mGuardandoSig = signal<boolean>(false);
+	get m_guardando() { return this.mGuardandoSig(); } set m_guardando(v: boolean) { this.mGuardandoSig.set(v); }
 
-	// Formulario VCC (Verificación/Calibración/Calificación)
-	v_equipo_id: number | null = null;
-	v_campo_medicion = '';
-	v_exactitud = '';
-	v_sujeto_verificar: 'Si' | 'No' | '' = '';
-	v_sujeto_calibracion: 'Si' | 'No' | '' = '';
-	v_resolucion_division = '';
-	v_sujeto_calificacion: 'Si' | 'No' | '' = '';
-	v_accesorios = '';
-	v_guardando = false;
+	// ===== Formulario VCC =====
+	private vEquipoIdSig = signal<number | null>(null);
+	get v_equipo_id() { return this.vEquipoIdSig(); } set v_equipo_id(v: number | null) { this.vEquipoIdSig.set(v); }
+	private vCampoMedicionSig = signal<string>('');
+	get v_campo_medicion() { return this.vCampoMedicionSig(); } set v_campo_medicion(v: string) { this.vCampoMedicionSig.set(v); }
+	private vExactitudSig = signal<string>('');
+	get v_exactitud() { return this.vExactitudSig(); } set v_exactitud(v: string) { this.vExactitudSig.set(v); }
+	private vSujVerificarSig = signal<'Si' | 'No' | ''>('');
+	get v_sujeto_verificar() { return this.vSujVerificarSig(); } set v_sujeto_verificar(v: 'Si' | 'No' | '') { this.vSujVerificarSig.set(v); }
+	private vSujCalibracionSig = signal<'Si' | 'No' | ''>('');
+	get v_sujeto_calibracion() { return this.vSujCalibracionSig(); } set v_sujeto_calibracion(v: 'Si' | 'No' | '') { this.vSujCalibracionSig.set(v); }
+	private vResolucionSig = signal<string>('');
+	get v_resolucion_division() { return this.vResolucionSig(); } set v_resolucion_division(v: string) { this.vResolucionSig.set(v); }
+	private vSujCalificacionSig = signal<'Si' | 'No' | ''>('');
+	get v_sujeto_calificacion() { return this.vSujCalificacionSig(); } set v_sujeto_calificacion(v: 'Si' | 'No' | '') { this.vSujCalificacionSig.set(v); }
+	private vAccesoriosSig = signal<string>('');
+	get v_accesorios() { return this.vAccesoriosSig(); } set v_accesorios(v: string) { this.vAccesoriosSig.set(v); }
+	private vGuardandoSig = signal<boolean>(false);
+	get v_guardando() { return this.vGuardandoSig(); } set v_guardando(v: boolean) { this.vGuardandoSig.set(v); }
+
+	// Highlight last created equipo
+	private lastCreatedEquipoIdSig = signal<number | null>(null);
+	get lastCreatedEquipoId() { return this.lastCreatedEquipoIdSig(); }
 
 	// Listado de equipos (simple) con Signals
 	listaSig = signal<any[]>([]);
@@ -185,8 +219,32 @@ export class EquiposComponent {
 		};
 		this.creando = true;
 		try {
-			await equiposService.crearEquipo(payload);
+			const creado = await equiposService.crearEquipo(payload);
 			this.snack.success('Equipo creado');
+			// Insertar placeholder y luego reemplazar por el registro completo desde el backend
+			const nuevoId = Number(creado?.id);
+			let insertado: any = creado;
+			if (!isNaN(nuevoId)) {
+				try {
+					const fullRow = await equiposService.obtenerEquipo(nuevoId);
+					insertado = fullRow || creado;
+				} catch {
+					// si falla, usamos lo que devolvió el POST
+				}
+			}
+			this.listaSig.update(arr => [insertado, ...arr]);
+			this.filtrar();
+			// Expandir automáticamente el nuevo equipo y precargar (vacío) mantenimiento/VCC
+			if (!isNaN(nuevoId)) {
+				this.expandido.add(String(nuevoId));
+				// preload empty arrays (reactive) so UI muestra bloques sin esperar fetch
+				this.mMapSig.update(s => ({ ...s, [nuevoId]: [] }));
+				this.vMapSig.update(s => ({ ...s, [nuevoId]: [] }));
+				// Lanzar carga real en segundo plano
+				Promise.resolve().then(() => this.cargarMantenimientosSiNecesario(nuevoId));
+				Promise.resolve().then(() => this.cargarVccSiNecesario(nuevoId));
+				this.lastCreatedEquipoIdSig.set(nuevoId);
+			}
 			this.resetForm();
 		} catch (e: any) {
 			this.snack.error(e?.message || 'Error creando equipo');
@@ -225,15 +283,14 @@ export class EquiposComponent {
 		try {
 			await equiposService.crearMantenimiento(this.m_equipo_id, payload);
 			this.snack.success('Mantenimiento registrado');
-			// refrescar mantenimientos si el equipo está expandido
-			const expKeys = Array.from(this.expandido);
-			for (const k of expKeys) {
-				const idNum = Number(k);
-				if (!isNaN(idNum) && idNum === this.m_equipo_id) {
-					try {
-						const rows = await equiposService.listarMantenimientos(idNum);
-						this.mMap[idNum] = Array.isArray(rows) ? rows : [];
-					} catch {}
+			const idNum = Number(this.m_equipo_id);
+			if (!isNaN(idNum)) {
+				// Refetch completo para obtener todos los campos (requerimientos, enums normalizados, etc.)
+				try {
+					const rows = await equiposService.listarMantenimientos(idNum);
+					this.mMapSig.update(s => ({ ...s, [idNum]: Array.isArray(rows) ? rows : [] }));
+				} catch (e) {
+					// En caso de fallo mantener lista previa
 				}
 			}
 			this.m_equipo_id = null;
@@ -265,18 +322,13 @@ export class EquiposComponent {
 		try {
 			await equiposService.crearVerificacion(this.v_equipo_id, payload);
 			this.snack.success('Registro VCC guardado');
-			// Refrescar SIEMPRE la lista del equipo afectado usando signals (dispara CD en zoneless)
-			try {
-				const idNum = Number(this.v_equipo_id);
-				if (!isNaN(idNum)) {
-					this.vLoadingSig.update(s => ({ ...s, [idNum]: true }));
+			const idNum = Number(this.v_equipo_id);
+			if (!isNaN(idNum)) {
+				// Refetch para tener todos los campos normalizados
+				try {
 					const rows = await equiposService.listarVerificaciones(idNum);
 					this.vMapSig.update(s => ({ ...s, [idNum]: Array.isArray(rows) ? rows : [] }));
-				}
-			} catch {}
-			finally {
-				const idNum = Number(this.v_equipo_id);
-				if (!isNaN(idNum)) this.vLoadingSig.update(s => ({ ...s, [idNum]: false }));
+				} catch {}
 			}
 			// limpiar
 			this.v_equipo_id = null;

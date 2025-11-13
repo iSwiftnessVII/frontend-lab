@@ -11,6 +11,12 @@ export const equiposService = {
     if (!res.ok) throw new Error((data && data.message) || 'Error creando equipo');
     return data;
   },
+  async obtenerEquipo(id: number) {
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(String(id))}`);
+    let data: any = null; try { data = await res.json(); } catch {}
+    if (!res.ok) throw new Error((data && data.message) || 'Error obteniendo equipo');
+    return data;
+  },
   async listarEquipos(q: string = '') {
     const url = new URL(API_BASE);
     if (q) url.searchParams.set('q', q);

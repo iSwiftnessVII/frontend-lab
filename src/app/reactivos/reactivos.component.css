@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+/* Fonts and icons loaded globally via index.html */
 
 /* ===== Variables CSS ===== */
 :root {
@@ -302,67 +301,7 @@ body {
 .reactivo-card .expand-grid .full { grid-column: 1 / -1; }
 .reactivo-card .expand-grid .section-label { grid-column: 1 / -1; font-weight:700; font-size:0.85rem; color:#333; margin-top:6px; padding-top:6px; border-top:1px dashed var(--border-gray); }
 
-/* New detail cards style for expanded reactivo (compact cards with small label strip) */
-.details-grid {
-    display: grid;
-    /* increase min width so cards appear longer on desktop while staying responsive */
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 12px;
-}
-.detail-card {
-    background: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid var(--border-gray);
-    box-shadow: 0 8px 18px rgba(2,6,23,0.06);
-}
-.detail-card .detail-label {
-    background: #e9e9ea;
-    padding: 6px 8px;
-    font-size: 0.72rem; /* ligeramente más pequeña */
-    color: #6b7280;
-    text-align: center;
-}
-.detail-card .detail-value {
-    padding: 8px 10px 10px 10px;
-    font-weight: 400; /* quitar negrilla */
-    font-size: 0.86rem; /* más pequeña */
-    color: #0f172a;
-    text-align: center;
-}
-.detail-full {
-    grid-column: 1 / -1;
-    background: #fff;
-    border-radius: 10px;
-    padding: 8px 10px;
-    border: 1px solid var(--border-gray);
-    box-shadow: 0 6px 12px rgba(2,6,23,0.04);
-    font-size: 0.84rem; /* reducir tamaño de observaciones */
-    color: var(--text-gray);
-}
-
-/* Make Observaciones behave like the other detail cards but with left-aligned, wrapped text */
-.detail-card.detail-full .detail-value {
-    text-align: left;
-    white-space: pre-wrap; /* preserve line breaks */
-    word-break: break-word;
-    font-size: 0.86rem;
-    padding: 10px 12px;
-    font-weight: 400;
-}
-.detail-card.detail-full .detail-label {
-    text-align: left; /* label aligned left for observations */
-    padding-left: 12px;
-}
-
-@media (max-width: 900px) {
-    /* on medium screens allow two columns */
-    .details-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 480px) {
-    /* stack on narrow screens */
-    .details-grid { grid-template-columns: 1fr; }
-}
+/* Detail card/grid styles moved to global styles.css to avoid duplication */
 
 .reactivo-card .tags { 
 	display: flex; 
@@ -502,6 +441,15 @@ section {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1.5rem;
     align-items: end;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 0.95rem;
+    /* container-neutral: avoid coloring form wrappers */
+    background: transparent;
+    color: inherit;
 }
 
 .form-grid > div {
@@ -519,10 +467,7 @@ section {
 /* Base field styles (input/select) now come from global styles.css; keep textarea specifics */
 .form-grid textarea { resize: vertical; min-height: 80px; }
 
-.form-grid textarea {
-    resize: vertical;
-    min-height: 80px;
-}
+/* duplicate rule removed (kept textarea specifics once) */
 
 /* ===== Buttons ===== */
 button[type="submit"],
@@ -541,55 +486,6 @@ button[type="button"],
     background: var(--primary-turquoise);
     color: var(--primary-white);
 }
-
-button[type="submit"]:hover,
-button[type="button"]:hover,
-.btn:hover,
-.btn-primary:hover {
-    background: #008e8c;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 184, 181, 0.3);
-}
-
-.btn-secondary {
-    background: var(--border-gray);
-    color: var(--text-gray);
-}
-
-.btn-secondary:hover {
-    background: #cbd5e0;
-}
-
-.btn-reset-filtros {
-    background: var(--alert-orange);
-    color: #744210;
-}
-
-.btn-reset-filtros:hover {
-    background: #ffb366;
-}
-
-/* ===== Filters ===== */
-.filters-grid,
-.filters-row,
-.catalogo-filters,
-.reactivos-filters {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    align-items: end;
-}
-
-.filters-grid label,
-.filters-row label {
-    font-weight: 500;
-    color: var(--primary-blue);
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-    display: block;
-}
-
 .filters-grid input,
 .filters-row input {
     padding: 0.7rem;
@@ -599,6 +495,8 @@ button[type="button"]:hover,
     transition: border-color 0.3s ease;
     width: 100%;
 }
+
+/* Single-row filter layout is defined globally in styles.css */
 
 .filters-grid input:focus,
 .filters-row input:focus {

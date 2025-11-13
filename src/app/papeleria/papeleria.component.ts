@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -119,9 +119,12 @@ export class PapeleriaComponent implements OnInit {
   private papeleriaListSig = signal<Array<any>>([]);
   private papeleriaCargandoSig = signal<boolean>(false);
   private papeleriaErrorSig = signal<string>('');
+  // Señal para último registro creado (sirve para efectos o destacar recién creado)
+  private papeleriaLastCreatedSig = signal<any | null>(null);
   get papeleriaList() { return this.papeleriaListSig(); }
   get papeleriaCargando() { return this.papeleriaCargandoSig(); }
   get papeleriaError() { return this.papeleriaErrorSig(); }
+  get papeleriaLastCreated() { return this.papeleriaLastCreatedSig(); }
   skeletonPapeleria = Array.from({ length: 6 });
 
   // Filtros inventario Papelería
@@ -136,6 +139,58 @@ export class PapeleriaComponent implements OnInit {
   private removeQtyMap: Record<number, number | null> = {};
   private busyIds = new Set<number>();
   private openItem: any | null = null;
+  // Context menu state (catálogo + inventario)
+  private contextMenuVisibleSig = signal<boolean>(false);
+  get contextMenuVisible() { return this.contextMenuVisibleSig(); }
+  contextMenuX = 0;
+  contextMenuY = 0;
+  private contextTarget: any | null = null;
+
+  onGlobalClick(ev: Event) {
+    // Cerrar menú contextual si el click está fuera del propio menú
+    const target = ev.target as HTMLElement | null;
+    if (this.contextMenuVisible && target && !target.closest('.context-menu')) {
+      this.contextMenuVisibleSig.set(false);
+      this.contextTarget = null;
+    }
+  }
+
+  onCatalogContextMenu(ev: MouseEvent, item: any) {
+    ev.preventDefault(); ev.stopPropagation();
+    this.contextTarget = item;
+    // Posicionar el menú cerca del cursor
+    this.contextMenuX = ev.pageX;
+    this.contextMenuY = ev.pageY;
+    this.contextMenuVisibleSig.set(true);
+  }
+
+  async onContextMenuEliminar() {
+    if (!this.contextTarget) { this.contextMenuVisibleSig.set(false); return; }
+    // Si es item de catálogo (tiene 'item' numérico) eliminar del catálogo, si tiene 'id' eliminar del inventario
+    try {
+      if (typeof this.contextTarget.item !== 'undefined') {
+        const code = this.contextTarget.item;
+        const ok = window.confirm(`¿Eliminar del catálogo el item ${code}?`);
+        if (!ok) return;
+        await papeleriaService.eliminarCatalogoPapeleria(code);
+        this.snack.success('Item de catálogo eliminado');
+        await this.loadCatalogoInicial();
+      } else if (typeof this.contextTarget.id !== 'undefined') {
+        const inv = this.contextTarget;
+        const ok = window.confirm(`¿Eliminar registro de papelería "${inv?.nombre || ''}"?`);
+        if (!ok) return;
+        await papeleriaService.eliminar(Number(inv.id));
+        this._papeleriaAll = this._papeleriaAll.filter(x => x.id !== inv.id);
+        this.filtrarPapeleriaPorCampos();
+        this.snack.success('Registro de papelería eliminado');
+      }
+    } catch (e: any) {
+      this.snack.error(e?.message || 'Error eliminando');
+    } finally {
+      this.contextMenuVisibleSig.set(false);
+      this.contextTarget = null;
+    }
+  }
   getRemoveQty(id: number): number | null { return this.removeQtyMap[id] ?? null; }
   setRemoveQty(id: number, v: any) {
     const num = Number(v);
@@ -222,11 +277,6 @@ export class PapeleriaComponent implements OnInit {
       this.catNombre = '';
       this.catDescripcion = '';
       this.catImagen = null;
-      // limpiar input file explícitamente
-      try {
-        const input = document.getElementById('catImagen') as HTMLInputElement | null;
-        if (input) input.value = '';
-      } catch {}
       await this.loadCatalogoInicial();
     } catch (e) {
       this.snack.error((e as any)?.message || 'Error al crear el item de catálogo');
@@ -274,70 +324,6 @@ export class PapeleriaComponent implements OnInit {
       this.descripcion = c?.descripcion || '';
       this.scrollToPapForm();
     } catch {}
-  }
-
-  // ===== Menú contextual (click derecho) =====
-  contextMenuVisible = false;
-  contextMenuX = 0;
-  contextMenuY = 0;
-  contextMenuTarget: any = null;
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(ev: MouseEvent) {
-    if (!this.contextMenuVisible) return;
-    if (ev.button !== 0) return;
-    this.closeContextMenu();
-  }
-
-  onCatalogContextMenu(ev: MouseEvent, item: any) {
-    ev.preventDefault(); ev.stopPropagation();
-    const { clientX, clientY } = ev;
-    const viewportH = window.innerHeight;
-    const menuHeight = 90;
-    let y = clientY;
-    if (clientY + menuHeight > viewportH - 8) { y = viewportH - menuHeight - 8; }
-    this.contextMenuX = clientX; this.contextMenuY = y;
-    this.contextMenuTarget = item; this.contextMenuVisible = true;
-  }
-  closeContextMenu() { this.contextMenuVisible = false; this.contextMenuTarget = null; }
-  onGlobalClick(ev: any) {
-    if (!this.contextMenuVisible) return;
-    try { if (ev instanceof MouseEvent && ev.button !== 0) return; } catch {}
-    this.closeContextMenu();
-  }
-  onContextMenuEliminar() {
-    const target = this.contextMenuTarget; this.closeContextMenu(); if (!target) return;
-    const isCatalogo = typeof target?.item !== 'undefined' && typeof target?.id === 'undefined';
-    if (isCatalogo) {
-      const codigo = target.item;
-      if (!window.confirm(`¿Eliminar del catálogo el item "${target?.nombre || codigo}"?`)) return;
-      papeleriaService.eliminarCatalogoPapeleria(codigo)
-        .then((res: any) => {
-          // Tras éxito, recargar desde backend para asegurar consistencia
-          this.loadCatalogoInicial();
-          const deleted = (res && typeof res.deleted !== 'undefined') ? Number(res.deleted) : 1;
-          this.snack.success(deleted > 0 ? 'Item de catálogo eliminado' : 'Operación completada');
-        })
-        .catch((e: any) => {
-          const status = e?.status;
-          if (status === 401) {
-            this.snack.error('Debes iniciar sesión para eliminar del catálogo');
-          } else if (status === 403) {
-            this.snack.error('No tienes permisos para eliminar del catálogo');
-          } else if (status === 409) {
-            this.snack.error('No se puede eliminar: hay registros que usan este item de catálogo');
-          } else if (status === 404) {
-            this.snack.error('El item no existe (ya fue eliminado)');
-            // Refrescar para reflejar el estado real
-            this.loadCatalogoInicial();
-          } else {
-            this.snack.error(e?.message || 'Error eliminando del catálogo');
-          }
-          console.error('Error eliminando catálogo papelería:', e);
-        });
-    } else {
-      this.eliminar(target);
-    }
   }
 
   private scrollToPapForm() {
@@ -450,9 +436,47 @@ export class PapeleriaComponent implements OnInit {
         ubicacion: (this.ubicacion || '').trim() || null,
         observaciones: (this.observaciones || '').trim() || null,
       };
-      await papeleriaService.crear(payload);
-      this.snack.success('Se creó el registro de papelería');
-      // limpiar formulario inventario
+      const created = await papeleriaService.crear(payload);
+      // Intentar obtener el registro completo (algunos endpoints sólo devuelven id o mensaje)
+      let full = created;
+      try {
+        const idLike = (created as any)?.id || (created as any)?.insertId || (created as any)?.lastId;
+        if (idLike) {
+          const fetched = await papeleriaService.obtener(Number(idLike));
+          if (fetched && typeof fetched === 'object') full = fetched;
+        }
+      } catch {
+        // Ignorar errores de fetch individual y usar objeto creado + payload como fallback
+      }
+      // Determinar id real devuelto
+      const idReal = (full as any)?.id || (created as any)?.id || (created as any)?.insertId || (created as any)?.lastId;
+      if (!idReal || !Number.isFinite(Number(idReal))) {
+        // Si no hay id confiable, recargar listado completo para obtenerlo correctamente
+        await this.loadPapeleriaList();
+        this.snack.success('Se creó el registro de papelería');
+      } else {
+        // Construir registro fusionado con id válido
+        const record = {
+          id: Number(idReal),
+          ...payload,
+          ...full,
+          item_catalogo: payload.item_catalogo,
+          nombre: (full as any)?.nombre ?? payload.nombre,
+          cantidad_adquirida: (full as any)?.cantidad_adquirida ?? payload.cantidad_adquirida,
+          cantidad_existente: (full as any)?.cantidad_existente ?? payload.cantidad_existente,
+          presentacion: (full as any)?.presentacion ?? payload.presentacion,
+          marca: (full as any)?.marca ?? payload.marca,
+          descripcion: (full as any)?.descripcion ?? payload.descripcion,
+          fecha_adquisicion: (full as any)?.fecha_adquisicion ?? payload.fecha_adquisicion,
+          ubicacion: (full as any)?.ubicacion ?? payload.ubicacion,
+          observaciones: (full as any)?.observaciones ?? payload.observaciones,
+        };
+        this.snack.success('Se creó el registro de papelería');
+        this.papeleriaLastCreatedSig.set(record);
+        this._papeleriaAll = [record, ...this._papeleriaAll];
+        this.filtrarPapeleriaPorCampos();
+      }
+      // Limpiar campos del formulario después de crear
       this.item_catalogo = null;
       this.nombre = '';
       this.cantidad_adquirida = null;
@@ -463,11 +487,8 @@ export class PapeleriaComponent implements OnInit {
       this.fecha_adquisicion = '';
       this.ubicacion = '';
       this.observaciones = '';
-      try {
-        const input = document.getElementById('catImagen') as HTMLInputElement | null;
-        if (input) input.value = '';
-      } catch {}
-  // Inventario visual removido: no recargamos listado
+      // Reset de input de imagen del catálogo si existiera reutilizada
+      try { const input = document.getElementById('catImagen') as HTMLInputElement | null; if (input) input.value = ''; } catch {}
     } catch (err: any) {
       this.snack.error(err?.message || 'Error al crear el registro de papelería');
     }
