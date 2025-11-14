@@ -25,7 +25,11 @@ export const papeleriaService = {
     return res.json();
   },
   async crearCatalogo(form: FormData) {
-    const res = await fetch(`${API_BASE}/catalogo`, { method: 'POST', body: form });
+    const res = await fetch(`${API_BASE}/catalogo`, {
+      method: 'POST',
+      headers: { ...authHeaders() },
+      body: form
+    });
     let data: any = null; try { data = await res.json(); } catch {}
     if (!res.ok) throw new Error((data && data.message) || 'Error creando catálogo');
     return data;
@@ -67,7 +71,7 @@ export const papeleriaService = {
   async crear(body: any) {
     const res = await fetch(API_BASE, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(body)
     });
     let data: any = null; try { data = await res.json(); } catch {}
@@ -77,7 +81,7 @@ export const papeleriaService = {
   async actualizar(id: number, body: any) {
     const res = await fetch(`${API_BASE}/${encodeURIComponent(String(id))}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(body)
     });
     let data: any = null; try { data = await res.json(); } catch {}
