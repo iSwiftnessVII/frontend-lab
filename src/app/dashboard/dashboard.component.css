@@ -108,10 +108,11 @@
 
 .metric-card {
     background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%);
+    cursor: pointer;
     border-radius: 20px;
     padding: 1.5rem;
     box-shadow: var(--shadow-md);
-    border: 2px solid transparent;
+    border: 2px solid var(--border-gray);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
@@ -134,7 +135,6 @@
 }
 
 .metric-card::after {
-    content: '';
     position: absolute;
     bottom: -2px;
     left: 0;

@@ -6,46 +6,43 @@
   <section>
 
     <form (submit)="createCliente($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
+      <div class="form-grid">
 
         <!-- Nombre -->
-        <div>
+        <div class="form-field">
           <label for="clienteNombre">Nombre:</label>
           <input id="clienteNombre" [(ngModel)]="clienteNombre" name="clienteNombre" required
-            [style.border-color]="clienteErrors['nombre'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['nombre']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['nombre']" />
+          <small *ngIf="clienteErrors['nombre']" class="error-message">
             ⚠️ {{ clienteErrors['nombre'] }}
           </small>
         </div>
 
         <!-- Número -->
-        <div>
+        <div class="form-field">
           <label for="clienteNumero">Número:</label>
           <input id="clienteNumero" type="number" [(ngModel)]="clienteNumero" name="clienteNumero"
-            [style.border-color]="clienteErrors['numero'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['numero']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['numero']" />
+          <small *ngIf="clienteErrors['numero']" class="error-message">
             ⚠️ {{ clienteErrors['numero'] }}
           </small>
         </div>
 
         <!-- Fecha vinculación -->
-        <div>
+        <div class="form-field">
           <label for="clienteFechaVinc">Fecha vinculación:</label>
           <input id="clienteFechaVinc" type="date" [(ngModel)]="clienteFechaVinc" name="clienteFechaVinc"
-            [style.border-color]="clienteErrors['fechaVinc'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['fechaVinc']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['fechaVinc']" />
+          <small *ngIf="clienteErrors['fechaVinc']" class="error-message">
             ⚠️ {{ clienteErrors['fechaVinc'] }}
           </small>
         </div>
 
         <!-- Tipo usuario -->
-        <div>
+        <div class="form-field">
           <label for="clienteTipoUsuario">Tipo cliente:</label>
           <select id="clienteTipoUsuario" [(ngModel)]="clienteTipoUsuario" name="clienteTipoUsuario"
-            [style.border-color]="clienteErrors['tipoUsuario'] ? '#dc3545' : ''">
+            [class.error]="clienteErrors['tipoUsuario']">
             <option value="">Seleccionar tipo de cliente</option>
             <option value="Emprendedor">Emprendedor</option>
             <option value="Persona Natural">Persona Natural</option>
@@ -54,39 +51,36 @@
             <option value="Instructor SENA">Instructor SENA</option>
             <option value="Centros SENA">Centros SENA</option>
           </select>
-          <small *ngIf="clienteErrors['tipoUsuario']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+          <small *ngIf="clienteErrors['tipoUsuario']" class="error-message">
             ⚠️ {{ clienteErrors['tipoUsuario'] }}
           </small>
         </div>
 
         <!-- Razón social -->
-        <div>
+        <div class="form-field">
           <label for="clienteRazonSocial">Razón social:</label>
           <input id="clienteRazonSocial" [(ngModel)]="clienteRazonSocial" name="clienteRazonSocial"
-            [style.border-color]="clienteErrors['razonSocial'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['razonSocial']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['razonSocial']" />
+          <small *ngIf="clienteErrors['razonSocial']" class="error-message">
             ⚠️ {{ clienteErrors['razonSocial'] }}
           </small>
         </div>
 
         <!-- NIT -->
-        <div>
+        <div class="form-field">
           <label for="clienteNit">NIT:</label>
           <input id="clienteNit" [(ngModel)]="clienteNit" name="clienteNit"
-            [style.border-color]="clienteErrors['nit'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['nit']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['nit']" />
+          <small *ngIf="clienteErrors['nit']" class="error-message">
             ⚠️ {{ clienteErrors['nit'] }}
           </small>
         </div>
 
         <!-- Tipo identificación -->
-        <div>
+        <div class="form-field">
           <label for="clienteTipoId">Tipo identificación:</label>
           <select id="clienteTipoId" [(ngModel)]="clienteTipoId" name="clienteTipoId"
-            [style.border-color]="clienteErrors['tipoId'] ? '#dc3545' : ''">
+            [class.error]="clienteErrors['tipoId']">
             <option value="">Seleccionar tipo de id</option>
             <option value="CC">CC - Cédula de Ciudadanía</option>
             <option value="TI">TI - Tarjeta de Identidad</option>
@@ -95,152 +89,139 @@
             <option value="PASAPORTE">Pasaporte</option>
             <option value="OTRO">Otro</option>
           </select>
-          <small *ngIf="clienteErrors['tipoId']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+          <small *ngIf="clienteErrors['tipoId']" class="error-message">
             ⚠️ {{ clienteErrors['tipoId'] }}
           </small>
         </div>
 
         <!-- Número identificación -->
-        <div>
+        <div class="form-field">
           <label for="clienteIdNum">Número identificación:</label>
           <input id="clienteIdNum" [(ngModel)]="clienteIdNum" name="clienteIdNum" required
-            [style.border-color]="clienteErrors['idNum'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['idNum']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['idNum']" />
+          <small *ngIf="clienteErrors['idNum']" class="error-message">
             ⚠️ {{ clienteErrors['idNum'] }}
           </small>
         </div>
 
         <!-- Sexo -->
-        <div>
+        <div class="form-field">
           <label for="clienteSexo">Sexo:</label>
           <select id="clienteSexo" [(ngModel)]="clienteSexo" name="clienteSexo"
-            [style.border-color]="clienteErrors['sexo'] ? '#dc3545' : ''">
+            [class.error]="clienteErrors['sexo']">
             <option value="">Seleccionar sexo</option>
             <option value="M">Masculino</option>
             <option value="F">Femenino</option>
             <option value="Otro">Otro</option>
           </select>
-          <small *ngIf="clienteErrors['sexo']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+          <small *ngIf="clienteErrors['sexo']" class="error-message">
             ⚠️ {{ clienteErrors['sexo'] }}
           </small>
         </div>
 
         <!-- Tipo población -->
-        <div>
+        <div class="form-field">
           <label for="clienteTipoPobl">Tipo población:</label>
           <input id="clienteTipoPobl" [(ngModel)]="clienteTipoPobl" name="clienteTipoPobl"
-            [style.border-color]="clienteErrors['tipoPobl'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['tipoPobl']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['tipoPobl']" />
+          <small *ngIf="clienteErrors['tipoPobl']" class="error-message">
             ⚠️ {{ clienteErrors['tipoPobl'] }}
           </small>
         </div>
 
         <!-- Dirección -->
-        <div>
+        <div class="form-field">
           <label for="clienteDireccion">Dirección:</label>
           <input id="clienteDireccion" [(ngModel)]="clienteDireccion" name="clienteDireccion"
-            [style.border-color]="clienteErrors['direccion'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['direccion']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['direccion']" />
+          <small *ngIf="clienteErrors['direccion']" class="error-message">
             ⚠️ {{ clienteErrors['direccion'] }}
           </small>
         </div>
 
         <!-- Ciudad -->
-        <div>
+        <div class="form-field">
           <label for="clienteCiudad">Ciudad:</label>
           <input id="clienteCiudad" [(ngModel)]="clienteCiudad" name="clienteCiudad"
-            [style.border-color]="clienteErrors['ciudad'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['ciudad']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['ciudad']" />
+          <small *ngIf="clienteErrors['ciudad']" class="error-message">
             ⚠️ {{ clienteErrors['ciudad'] }}
           </small>
         </div>
 
         <!-- Departamento -->
-        <div>
+        <div class="form-field">
           <label for="clienteDepartamento">Departamento:</label>
           <input id="clienteDepartamento" [(ngModel)]="clienteDepartamento" name="clienteDepartamento"
-            [style.border-color]="clienteErrors['departamento'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['departamento']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['departamento']" />
+          <small *ngIf="clienteErrors['departamento']" class="error-message">
             ⚠️ {{ clienteErrors['departamento'] }}
           </small>
         </div>
 
         <!-- Celular -->
-        <div>
+        <div class="form-field">
           <label for="clienteCelular">Celular:</label>
           <input id="clienteCelular" [(ngModel)]="clienteCelular" name="clienteCelular"
-            [style.border-color]="clienteErrors['celular'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['celular']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['celular']" />
+          <small *ngIf="clienteErrors['celular']" class="error-message">
             ⚠️ {{ clienteErrors['celular'] }}
           </small>
         </div>
 
         <!-- Teléfono -->
-        <div>
+        <div class="form-field">
           <label for="clienteTelefono">Teléfono:</label>
           <input id="clienteTelefono" [(ngModel)]="clienteTelefono" name="clienteTelefono"
-            [style.border-color]="clienteErrors['telefono'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['telefono']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['telefono']" />
+          <small *ngIf="clienteErrors['telefono']" class="error-message">
             ⚠️ {{ clienteErrors['telefono'] }}
           </small>
         </div>
 
         <!-- Correo -->
-        <div>
+        <div class="form-field">
           <label for="clienteEmail">Correo:</label>
           <input id="clienteEmail" [(ngModel)]="clienteEmail" name="clienteEmail"
-            [style.border-color]="clienteErrors['email'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['email']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['email']" />
+          <small *ngIf="clienteErrors['email']" class="error-message">
             ⚠️ {{ clienteErrors['email'] }}
           </small>
         </div>
 
         <!-- Tipo vinculación -->
-        <div>
+        <div class="form-field">
           <label for="clienteTipoVinc">Tipo vinculación:</label>
           <input id="clienteTipoVinc" [(ngModel)]="clienteTipoVinc" name="clienteTipoVinc"
-            [style.border-color]="clienteErrors['tipoVinc'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['tipoVinc']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['tipoVinc']" />
+          <small *ngIf="clienteErrors['tipoVinc']" class="error-message">
             ⚠️ {{ clienteErrors['tipoVinc'] }}
           </small>
         </div>
 
         <!-- Registro realizado por -->
-        <div>
+        <div class="form-field">
           <label for="clienteRegistroPor">Registro realizado por:</label>
           <input id="clienteRegistroPor" [(ngModel)]="clienteRegistroPor" name="clienteRegistroPor"
-            [style.border-color]="clienteErrors['registroPor'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['registroPor']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['registroPor']" />
+          <small *ngIf="clienteErrors['registroPor']" class="error-message">
             ⚠️ {{ clienteErrors['registroPor'] }}
           </small>
         </div>
 
         <!-- Observaciones -->
-        <div>
+        <div class="form-field">
           <label for="clienteObservaciones">Observaciones:</label>
           <input id="clienteObservaciones" [(ngModel)]="clienteObservaciones" name="clienteObservaciones"
-            [style.border-color]="clienteErrors['observaciones'] ? '#dc3545' : ''" />
-          <small *ngIf="clienteErrors['observaciones']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="clienteErrors['observaciones']" />
+          <small *ngIf="clienteErrors['observaciones']" class="error-message">
             ⚠️ {{ clienteErrors['observaciones'] }}
           </small>
         </div>
       </div>
-      <div style="margin-top:1rem"><button type="submit">Agregar cliente</button></div>
+      <div class="form-actions"><button type="submit">Agregar cliente</button></div>
     </form>
-    <p *ngIf="clienteMsg">{{ clienteMsg }}</p>
+    <p *ngIf="clienteMsg" class="success-message">{{ clienteMsg }}</p>
   </section>
 
   <!-- SECCIÓN: AGREGAR SOLICITUD-->
@@ -248,139 +229,122 @@
   <section>
 
     <form (submit)="createSolicitud($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
+      <div class="form-grid">
 
         <!-- Cliente -->
-        <div>
+        <div class="form-field">
           <label for="solicitudClienteId">Cliente:</label>
           <select id="solicitudClienteId" [(ngModel)]="solicitudClienteId" name="solicitudClienteId" required
-            [style.border-color]="solicitudErrors['clienteId'] ? '#dc3545' : ''">
+            [class.error]="solicitudErrors['clienteId']">
             <option value="">Seleccionar cliente</option>
             <option *ngFor="let u of clientes()" [value]="u.id_cliente">
               {{ u.nombre_solicitante }} ({{ u.numero_identificacion }})
             </option>
           </select>
-          <small *ngIf="solicitudErrors['clienteId']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+          <small *ngIf="solicitudErrors['clienteId']" class="error-message">
             ⚠️ {{ solicitudErrors['clienteId'] }}
           </small>
         </div>
 
         <!-- Tipo de solicitud -->
-        <div>
+        <div class="form-field">
           <label for="solicitudTipo">Tipo de solicitud:</label>
           <select id="solicitudTipo" [(ngModel)]="solicitudTipo" name="solicitudTipo"
-            [style.border-color]="solicitudErrors['tipo'] ? '#dc3545' : ''">
+            [class.error]="solicitudErrors['tipo']">
             <option value="">Seleccionar tipo de solicitud</option>
             <option value="AF">AF - Apoyo Formación</option>
             <option value="EN">EN - Ensayos</option>
             <option value="UI">UI - Uso Infraestructura</option>
             <option value="IA">IA - Investigación Aplicada</option>
           </select>
-          <small *ngIf="solicitudErrors['tipo']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+          <small *ngIf="solicitudErrors['tipo']" class="error-message">
             ⚠️ {{ solicitudErrors['tipo'] }}
           </small>
         </div>
 
         <!-- Nombre de muestra/producto -->
-        <div>
+        <div class="form-field">
           <label for="solicitudNombre">Nombre de la muestra:</label>
           <input id="solicitudNombre" [(ngModel)]="solicitudNombre" name="solicitudNombre"
-            [style.border-color]="solicitudErrors['nombre'] ? '#dc3545' : ''"
-            [style.border-width]="solicitudErrors['nombre'] ? '2px' : ''" placeholder="Ej: Suero lácteo" />
-          <small *ngIf="solicitudErrors['nombre']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="solicitudErrors['nombre']" placeholder="Ej: Suero lácteo" />
+          <small *ngIf="solicitudErrors['nombre']" class="error-message">
             ⚠️ {{ solicitudErrors['nombre'] }}
           </small>
         </div>
 
         <!-- Lote -->
-        <div>
+        <div class="form-field">
           <label for="solicitudLote">Lote del producto:</label>
           <input id="solicitudLote" [(ngModel)]="solicitudLote" name="solicitudLote"
-            [style.border-color]="solicitudErrors['lote'] ? '#dc3545' : ''"
-            [style.border-width]="solicitudErrors['lote'] ? '2px' : ''" placeholder="Ej: L202501" />
-          <small *ngIf="solicitudErrors['lote']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="solicitudErrors['lote']" placeholder="Ej: L202501" />
+          <small *ngIf="solicitudErrors['lote']" class="error-message">
             ⚠️ {{ solicitudErrors['lote'] }}
           </small>
         </div>
 
         <!-- Fecha de vencimiento -->
-        <div>
+        <div class="form-field">
           <label for="solicitudFechaVenc">Fecha de vencimiento:</label>
           <input id="solicitudFechaVenc" type="date" [(ngModel)]="solicitudFechaVenc" name="solicitudFechaVenc"
-            [style.border-color]="solicitudErrors['fechaVenc'] ? '#dc3545' : ''" />
-          <small *ngIf="solicitudErrors['fechaVenc']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="solicitudErrors['fechaVenc']" />
+          <small *ngIf="solicitudErrors['fechaVenc']" class="error-message">
             ⚠️ {{ solicitudErrors['fechaVenc'] }}
           </small>
         </div>
 
         <!-- Tipo de muestra -->
-        <div>
+        <div class="form-field">
           <label for="solicitudTipoMuestra">Tipo de muestra:</label>
           <input id="solicitudTipoMuestra" [(ngModel)]="solicitudTipoMuestra" name="solicitudTipoMuestra"
-            [style.border-color]="solicitudErrors['tipoMuestra'] ? '#dc3545' : ''"
-            [style.border-width]="solicitudErrors['tipoMuestra'] ? '2px' : ''" placeholder="Ej: Líquido, Sólido, Gas" />
-          <small *ngIf="solicitudErrors['tipoMuestra']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="solicitudErrors['tipoMuestra']" placeholder="Ej: Líquido, Sólido, Gas" />
+          <small *ngIf="solicitudErrors['tipoMuestra']" class="error-message">
             ⚠️ {{ solicitudErrors['tipoMuestra'] }}
           </small>
         </div>
 
         <!-- Condiciones de empaque -->
-        <div>
+        <div class="form-field">
           <label for="solicitudCondEmpaque">Condiciones de empaque:</label>
           <input id="solicitudCondEmpaque" [(ngModel)]="solicitudCondEmpaque" name="solicitudCondEmpaque"
-            [style.border-color]="solicitudErrors['condEmpaque'] ? '#dc3545' : ''"
-            [style.border-width]="solicitudErrors['condEmpaque'] ? '2px' : ''"
-            placeholder="Ej: Refrigerado, sellado al vacío" />
-          <small *ngIf="solicitudErrors['condEmpaque']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="solicitudErrors['condEmpaque']" placeholder="Ej: Refrigerado, sellado al vacío" />
+          <small *ngIf="solicitudErrors['condEmpaque']" class="error-message">
             ⚠️ {{ solicitudErrors['condEmpaque'] }}
           </small>
         </div>
 
         <!-- Tipo de análisis -->
-        <div>
+        <div class="form-field">
           <label for="solicitudTipoAnalisis">Tipo de análisis requerido:</label>
           <input id="solicitudTipoAnalisis" [(ngModel)]="solicitudTipoAnalisis" name="solicitudTipoAnalisis"
-            [style.border-color]="solicitudErrors['tipoAnalisis'] ? '#dc3545' : ''"
-            [style.border-width]="solicitudErrors['tipoAnalisis'] ? '2px' : ''"
-            placeholder="Ej: Microbiológico, Fisicoquímico" />
-          <small *ngIf="solicitudErrors['tipoAnalisis']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="solicitudErrors['tipoAnalisis']" placeholder="Ej: Microbiológico, Fisicoquímico" />
+          <small *ngIf="solicitudErrors['tipoAnalisis']" class="error-message">
             ⚠️ {{ solicitudErrors['tipoAnalisis'] }}
           </small>
         </div>
 
         <!-- Cantidad de muestras -->
-        <div>
+        <div class="form-field">
           <label for="solicitudCantidad">Cantidad de muestras:</label>
           <input id="solicitudCantidad" type="number" [(ngModel)]="solicitudCantidad" name="solicitudCantidad" min="1"
-            max="1000" [style.border-color]="solicitudErrors['cantidad'] ? '#dc3545' : ''" placeholder="Ej: 3" />
-          <small *ngIf="solicitudErrors['cantidad']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            max="1000" [class.error]="solicitudErrors['cantidad']" placeholder="Ej: 3" />
+          <small *ngIf="solicitudErrors['cantidad']" class="error-message">
             ⚠️ {{ solicitudErrors['cantidad'] }}
           </small>
         </div>
 
         <!-- Fecha estimada de entrega -->
-        <div>
+        <div class="form-field">
           <label for="solicitudFechaEstimada">Fecha estimada entrega:</label>
           <input id="solicitudFechaEstimada" type="date" [(ngModel)]="solicitudFechaEstimada"
-            name="solicitudFechaEstimada" [style.border-color]="solicitudErrors['fechaEstimada'] ? '#dc3545' : ''" />
-          <small *ngIf="solicitudErrors['fechaEstimada']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            name="solicitudFechaEstimada" [class.error]="solicitudErrors['fechaEstimada']" />
+          <small *ngIf="solicitudErrors['fechaEstimada']" class="error-message">
             ⚠️ {{ solicitudErrors['fechaEstimada'] }}
           </small>
         </div>
 
         <!-- Requiere varios análisis -->
-        <div>
-          <label for="solicitudRequiereVarios" style="display:flex; align-items:center; gap:0.5rem;">
+        <div class="form-field checkbox-field">
+          <label for="solicitudRequiereVarios">
             <input id="solicitudRequiereVarios" type="checkbox" [(ngModel)]="solicitudRequiereVarios"
               name="solicitudRequiereVarios" />
             ¿Requiere varios análisis?
@@ -388,8 +352,8 @@
         </div>
 
         <!-- Puede suministrar información adicional -->
-        <div>
-          <label for="solicitudPuedeSuministrar" style="display:flex; align-items:center; gap:0.5rem;">
+        <div class="form-field checkbox-field">
+          <label for="solicitudPuedeSuministrar">
             <input id="solicitudPuedeSuministrar" type="checkbox" [(ngModel)]="solicitudPuedeSuministrar"
               name="solicitudPuedeSuministrar" />
             ¿Suministra info adicional?
@@ -397,17 +361,17 @@
         </div>
 
         <!-- El servicio es viable -->
-        <div>
-          <label for="solicitudServicioViable" style="display:flex; align-items:center; gap:0.5rem;">
+        <div class="form-field checkbox-field">
+          <label for="solicitudServicioViable">
             <input id="solicitudServicioViable" type="checkbox" [(ngModel)]="solicitudServicioViable"
               name="solicitudServicioViable" />
             ¿El servicio es viable?
           </label>
         </div>
       </div>
-      <div style="margin-top:1rem"><button type="submit">Agregar solicitud</button></div>
+      <div class="form-actions"><button type="submit">Agregar solicitud</button></div>
     </form>
-    <p *ngIf="solicitudMsg">{{ solicitudMsg }}</p>
+    <p *ngIf="solicitudMsg" class="success-message">{{ solicitudMsg }}</p>
   </section>
 
   <!-- SECCIÓN: AGREGAR OFERTA -->
@@ -415,65 +379,56 @@
   <section>
 
     <form (submit)="createOferta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
+      <div class="form-grid">
 
         <!-- Solicitud -->
-        <div>
+        <div class="form-field">
           <label for="ofertaSolicitudId">Solicitud:</label>
           <select id="ofertaSolicitudId" [(ngModel)]="ofertaSolicitudId" name="ofertaSolicitudId" required
-            [style.border-color]="ofertaErrors['solicitudId'] ? '#dc3545' : ''"
-            [style.border-width]="ofertaErrors['solicitudId'] ? '2px' : ''">
+            [class.error]="ofertaErrors['solicitudId']">
             <option value="">Seleccionar solicitud</option>
             <option *ngFor="let s of solicitudes()" [value]="s.id_solicitud">
               {{ s.nombre_solicitante }} - {{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
             </option>
           </select>
-          <small *ngIf="ofertaErrors['solicitudId']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+          <small *ngIf="ofertaErrors['solicitudId']" class="error-message">
             ⚠️ {{ ofertaErrors['solicitudId'] }}
           </small>
         </div>
 
         <!-- Valor -->
-        <div>
+        <div class="form-field">
           <label for="ofertaValor">Valor:</label>
           <input id="ofertaValor" type="number" [(ngModel)]="ofertaValor" name="ofertaValor" min="0" step="0.01"
-            [style.border-color]="ofertaErrors['valor'] ? '#dc3545' : ''"
-            [style.border-width]="ofertaErrors['valor'] ? '2px' : ''" placeholder="Ej: 150000" />
-          <small *ngIf="ofertaErrors['valor']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="ofertaErrors['valor']" placeholder="Ej: 150000" />
+          <small *ngIf="ofertaErrors['valor']" class="error-message">
             ⚠️ {{ ofertaErrors['valor'] }}
           </small>
         </div>
 
         <!-- Fecha de envío -->
-        <div>
+        <div class="form-field">
           <label for="ofertaFechaEnvio">Fecha de envío de la oferta:</label>
           <input id="ofertaFechaEnvio" type="date" [(ngModel)]="ofertaFechaEnvio" name="ofertaFechaEnvio"
-            [style.border-color]="ofertaErrors['fechaEnvio'] ? '#dc3545' : ''"
-            [style.border-width]="ofertaErrors['fechaEnvio'] ? '2px' : ''" />
-          <small *ngIf="ofertaErrors['fechaEnvio']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="ofertaErrors['fechaEnvio']" />
+          <small *ngIf="ofertaErrors['fechaEnvio']" class="error-message">
             ⚠️ {{ ofertaErrors['fechaEnvio'] }}
           </small>
         </div>
 
         <!-- Observación -->
-        <div>
+        <div class="form-field">
           <label for="ofertaObservacion">Observación:</label>
           <input id="ofertaObservacion" [(ngModel)]="ofertaObservacion" name="ofertaObservacion"
-            [style.border-color]="ofertaErrors['observacion'] ? '#dc3545' : ''"
-            [style.border-width]="ofertaErrors['observacion'] ? '2px' : ''"
-            placeholder="Observaciones sobre la oferta" />
-          <small *ngIf="ofertaErrors['observacion']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="ofertaErrors['observacion']" placeholder="Observaciones sobre la oferta" />
+          <small *ngIf="ofertaErrors['observacion']" class="error-message">
             ⚠️ {{ ofertaErrors['observacion'] }}
           </small>
         </div>
 
         <!-- ¿Se generó cotización? -->
-        <div>
-          <label for="ofertaGeneroCotizacion" style="display:flex; align-items:center; gap:0.5rem;">
+        <div class="form-field checkbox-field">
+          <label for="ofertaGeneroCotizacion">
             <input id="ofertaGeneroCotizacion" type="checkbox" [(ngModel)]="ofertaGeneroCotizacion"
               name="ofertaGeneroCotizacion" />
             ¿Se generó cotización?
@@ -481,17 +436,17 @@
         </div>
 
         <!-- ¿Se realizó seguimiento? -->
-        <div>
-          <label for="ofertaRealizoSeguimiento" style="display:flex; align-items:center; gap:0.5rem;">
+        <div class="form-field checkbox-field">
+          <label for="ofertaRealizoSeguimiento">
             <input id="ofertaRealizoSeguimiento" type="checkbox" [(ngModel)]="ofertaRealizoSeguimiento"
               name="ofertaRealizoSeguimiento" />
             ¿Se realizó seguimiento a la oferta?
           </label>
         </div>
       </div>
-      <div style="margin-top:1rem"><button type="submit">Agregar oferta</button></div>
+      <div class="form-actions"><button type="submit">Agregar oferta</button></div>
     </form>
-    <p *ngIf="ofertaMsg">{{ ofertaMsg }}</p>
+    <p *ngIf="ofertaMsg" class="success-message">{{ ofertaMsg }}</p>
   </section>
 
   <!-- SECCIÓN: AGREGAR RESULTADOS -->
@@ -499,64 +454,56 @@
   <section>
 
     <form (submit)="createResultado($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
+      <div class="form-grid">
 
         <!-- Solicitud -->
-        <div>
+        <div class="form-field">
           <label for="resultadoSolicitudId">Solicitud:</label>
           <select id="resultadoSolicitudId" [(ngModel)]="resultadoSolicitudId" name="resultadoSolicitudId" required
-            [style.border-color]="resultadoErrors['solicitudId'] ? '#dc3545' : ''"
-            [style.border-width]="resultadoErrors['solicitudId'] ? '2px' : ''">
+            [class.error]="resultadoErrors['solicitudId']">
             <option value="">Seleccionar solicitud</option>
             <option *ngFor="let s of solicitudes()" [value]="s.id_solicitud">
               {{ s.nombre_solicitante }} - {{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
             </option>
           </select>
-          <small *ngIf="resultadoErrors['solicitudId']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+          <small *ngIf="resultadoErrors['solicitudId']" class="error-message">
             ⚠️ {{ resultadoErrors['solicitudId'] }}
           </small>
         </div>
 
         <!-- Fecha límite -->
-        <div>
-          <label for="resultadoFechaLimite">Fecha límite para la entrega de resultados:</label>
+        <div class="form-field">
+          <label for="resultadoFechaLimite">Fecha límite para la entrega:</label>
           <input id="resultadoFechaLimite" type="date" [(ngModel)]="resultadoFechaLimite" name="resultadoFechaLimite"
-            [style.border-color]="resultadoErrors['fechaLimite'] ? '#dc3545' : ''"
-            [style.border-width]="resultadoErrors['fechaLimite'] ? '2px' : ''" />
-          <small *ngIf="resultadoErrors['fechaLimite']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="resultadoErrors['fechaLimite']" />
+          <small *ngIf="resultadoErrors['fechaLimite']" class="error-message">
             ⚠️ {{ resultadoErrors['fechaLimite'] }}
           </small>
         </div>
 
         <!-- Número de informe -->
-        <div>
+        <div class="form-field">
           <label for="resultadoNumeroInforme">Número del informe de resultados:</label>
           <input id="resultadoNumeroInforme" [(ngModel)]="resultadoNumeroInforme" name="resultadoNumeroInforme"
-            [style.border-color]="resultadoErrors['numeroInforme'] ? '#dc3545' : ''"
-            [style.border-width]="resultadoErrors['numeroInforme'] ? '2px' : ''" placeholder="Ej: INF-2025-001" />
-          <small *ngIf="resultadoErrors['numeroInforme']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="resultadoErrors['numeroInforme']" placeholder="Ej: INF-2025-001" />
+          <small *ngIf="resultadoErrors['numeroInforme']" class="error-message">
             ⚠️ {{ resultadoErrors['numeroInforme'] }}
           </small>
         </div>
 
         <!-- Fecha de envío -->
-        <div>
+        <div class="form-field">
           <label for="resultadoFechaEnvio">Fecha de envío de resultados:</label>
           <input id="resultadoFechaEnvio" type="date" [(ngModel)]="resultadoFechaEnvio" name="resultadoFechaEnvio"
-            [style.border-color]="resultadoErrors['fechaEnvio'] ? '#dc3545' : ''"
-            [style.border-width]="resultadoErrors['fechaEnvio'] ? '2px' : ''" />
-          <small *ngIf="resultadoErrors['fechaEnvio']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="resultadoErrors['fechaEnvio']" />
+          <small *ngIf="resultadoErrors['fechaEnvio']" class="error-message">
             ⚠️ {{ resultadoErrors['fechaEnvio'] }}
           </small>
         </div>
       </div>
-      <div style="margin-top:1rem"><button type="submit">Agregar resultados</button></div>
+      <div class="form-actions"><button type="submit">Agregar resultados</button></div>
     </form>
-    <p *ngIf="resultadoMsg">{{ resultadoMsg }}</p>
+    <p *ngIf="resultadoMsg" class="success-message">{{ resultadoMsg }}</p>
   </section>
 
   <!-- SECCIÓN: AGREGAR ENCUESTA -->
@@ -564,65 +511,56 @@
   <section>
 
     <form (submit)="createEncuesta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.5rem;">
+      <div class="form-grid">
 
         <!-- Solicitud -->
-        <div>
+        <div class="form-field">
           <label for="encuestaSolicitudId">Solicitud:</label>
           <select id="encuestaSolicitudId" [(ngModel)]="encuestaSolicitudId" name="encuestaSolicitudId" required
-            [style.border-color]="encuestaErrors['solicitudId'] ? '#dc3545' : ''"
-            [style.border-width]="encuestaErrors['solicitudId'] ? '2px' : ''">
+            [class.error]="encuestaErrors['solicitudId']">
             <option value="">Seleccionar solicitud</option>
             <option *ngFor="let s of solicitudes()" [value]="s.id_solicitud">
               {{ s.nombre_solicitante }} - {{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
             </option>
           </select>
-          <small *ngIf="encuestaErrors['solicitudId']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+          <small *ngIf="encuestaErrors['solicitudId']" class="error-message">
             ⚠️ {{ encuestaErrors['solicitudId'] }}
           </small>
         </div>
 
         <!-- Fecha de encuesta -->
-        <div>
+        <div class="form-field">
           <label for="encuestaFecha">Fecha de la encuesta:</label>
           <input id="encuestaFecha" type="date" [(ngModel)]="encuestaFecha" name="encuestaFecha"
-            [style.border-color]="encuestaErrors['fecha'] ? '#dc3545' : ''"
-            [style.border-width]="encuestaErrors['fecha'] ? '2px' : ''" />
-          <small *ngIf="encuestaErrors['fecha']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="encuestaErrors['fecha']" />
+          <small *ngIf="encuestaErrors['fecha']" class="error-message">
             ⚠️ {{ encuestaErrors['fecha'] }}
           </small>
         </div>
 
         <!-- Puntuación -->
-        <div>
+        <div class="form-field">
           <label for="encuestaPuntuacion">Puntuación de satisfacción:</label>
           <input id="encuestaPuntuacion" type="number" min="1" max="10" [(ngModel)]="encuestaPuntuacion"
-            name="encuestaPuntuacion" [style.border-color]="encuestaErrors['puntuacion'] ? '#dc3545' : ''"
-            [style.border-width]="encuestaErrors['puntuacion'] ? '2px' : ''" placeholder="Puntuación del 1 al 10" />
-          <small *ngIf="encuestaErrors['puntuacion']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            name="encuestaPuntuacion" [class.error]="encuestaErrors['puntuacion']" placeholder="Puntuación del 1 al 10" />
+          <small *ngIf="encuestaErrors['puntuacion']" class="error-message">
             ⚠️ {{ encuestaErrors['puntuacion'] }}
           </small>
         </div>
 
         <!-- Comentarios -->
-        <div>
+        <div class="form-field">
           <label for="encuestaComentarios">Comentarios:</label>
           <textarea id="encuestaComentarios" [(ngModel)]="encuestaComentarios" name="encuestaComentarios"
-            [style.border-color]="encuestaErrors['comentarios'] ? '#dc3545' : ''"
-            [style.border-width]="encuestaErrors['comentarios'] ? '2px' : ''"
-            placeholder="Comentarios del cliente"></textarea>
-          <small *ngIf="encuestaErrors['comentarios']"
-            style="color: #dc3545; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+            [class.error]="encuestaErrors['comentarios']" placeholder="Comentarios del cliente"></textarea>
+          <small *ngIf="encuestaErrors['comentarios']" class="error-message">
             ⚠️ {{ encuestaErrors['comentarios'] }}
           </small>
         </div>
 
         <!-- ¿Recomendaría el servicio? -->
-        <div>
-          <label for="encuestaRecomendaria" style="display:flex; align-items:center; gap:0.5rem;">
+        <div class="form-field checkbox-field">
+          <label for="encuestaRecomendaria">
             <input id="encuestaRecomendaria" type="checkbox" [(ngModel)]="encuestaRecomendaria"
               name="encuestaRecomendaria" />
             ¿Recomendaría el servicio?
@@ -630,8 +568,8 @@
         </div>
 
         <!-- ¿El cliente respondió? -->
-        <div>
-          <label for="encuestaClienteRespondio" style="display:flex; align-items:center; gap:0.5rem;">
+        <div class="form-field checkbox-field">
+          <label for="encuestaClienteRespondio">
             <input id="encuestaClienteRespondio" type="checkbox" [(ngModel)]="encuestaClienteRespondio"
               name="encuestaClienteRespondio" />
             ¿El cliente respondió la encuesta?
@@ -639,38 +577,37 @@
         </div>
 
         <!-- ¿Se solicitó nueva encuesta? -->
-        <div>
-          <label for="encuestaSolicitoNueva" style="display:flex; align-items:center; gap:0.5rem;">
+        <div class="form-field checkbox-field">
+          <label for="encuestaSolicitoNueva">
             <input id="encuestaSolicitoNueva" type="checkbox" [(ngModel)]="encuestaSolicitoNueva"
               name="encuestaSolicitoNueva" />
             ¿Se solicitó nueva encuesta?
           </label>
         </div>
       </div>
-      <div style="margin-top:1rem"><button type="submit">Agregar encuesta</button></div>
+      <div class="form-actions"><button type="submit">Agregar encuesta</button></div>
     </form>
-    <p *ngIf="encuestaMsg">{{ encuestaMsg }}</p>
+    <p *ngIf="encuestaMsg" class="success-message">{{ encuestaMsg }}</p>
   </section>
 
   <!-- SECCIÓN: Lista rápida de solicitudes -->
   <h2>Catalogo de Solicitudes</h2>
   <section>
 
-    <div style="margin-bottom:1rem">
+    <div class="search-container">
       <label for="solicitudesQ">
         Buscar solicitud (ID, código, nombre, tipo, muestra, análisis o cliente):
       </label>
       <input id="solicitudesQ" [(ngModel)]="solicitudesQ" (input)="filtrarSolicitudes()"
-        placeholder="Escribe para buscar..." style="width:100%; margin-top:0.25rem;" />
+        placeholder="Escribe para buscar..." />
 
       <!-- Mostrar contador de resultados -->
-      <small style="color: #666; display: block; margin-top: 0.5rem;">
+      <small class="result-counter">
         Mostrando {{ solicitudesFiltradas().length }} de {{ solicitudes().length }} solicitudes
       </small>
 
       <!-- Mensaje cuando no hay resultados -->
-      <small *ngIf="solicitudesQ.trim() && solicitudesFiltradas().length === 0"
-        style="color: #dc3545; display: block; margin-top: 0.5rem;">
+      <small *ngIf="solicitudesQ.trim() && solicitudesFiltradas().length === 0" class="no-results">
         ⚠️ No se encontraron solicitudes con el término "{{ solicitudesQ }}"
       </small>
     </div>
@@ -703,7 +640,7 @@
             </div>
           </div>
           <div class="card-name" [title]="s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud)">
-            <div class="name-line">{{ 'SOLICITUD: ' +s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
+            <div class="name-line">{{ 'SOLICITUD: ' + (s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud)) }}
             </div>
             <span class="toggle-icon" [class.open]="isSolicitudExpanded(s)" aria-hidden="true">▾</span>
           </div>
@@ -729,7 +666,7 @@
           </div>
         </article>
       </div>
-      <p *ngIf="solicitudesFiltradas().length === 0">No hay solicitudes para mostrar</p>
+      <p *ngIf="solicitudesFiltradas().length === 0" class="empty-message">No hay solicitudes para mostrar</p>
     </div>
   </section>
 
@@ -737,21 +674,19 @@
   <h2>Catalogo de Clientes</h2>
   <section>
 
-    <div style="margin-bottom:1rem">
+    <div class="search-container">
       <label for="clientesQ">
         Buscar cliente (nombre, correo, identificación, ciudad, departamento, celular):
       </label>
-      <input id="clientesQ" [(ngModel)]="clientesQ" (input)="filtrarClientes()" placeholder="Escribe para buscar..."
-        style="width:100%; margin-top:0.25rem;" />
+      <input id="clientesQ" [(ngModel)]="clientesQ" (input)="filtrarClientes()" placeholder="Escribe para buscar..." />
 
       <!-- Mostrar contador de resultados -->
-      <small style="color: #666; display: block; margin-top: 0.5rem;">
+      <small class="result-counter">
         👥 Mostrando {{ clientesFiltrados().length }} de {{ clientes().length }} clientes
       </small>
 
       <!-- Mensaje cuando no hay resultados -->
-      <small *ngIf="clientesQ.trim() && clientesFiltrados().length === 0"
-        style="color: #dc3545; display: block; margin-top: 0.5rem;">
+      <small *ngIf="clientesQ.trim() && clientesFiltrados().length === 0" class="no-results">
         ⚠️ No se encontraron clientes con el término "{{ clientesQ }}"
       </small>
     </div>
@@ -893,8 +828,6 @@
     </div>
   </section>
 </div>
-
-<!-- FOOTER moved to app-root global footer -->
 
 <!-- Global toast -->
 <div class="global-toast" *ngIf="lastCopiedMessage">{{ lastCopiedMessage }}</div>

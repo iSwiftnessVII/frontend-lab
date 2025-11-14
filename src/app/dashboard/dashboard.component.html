@@ -13,7 +13,7 @@
   <!-- Métricas Principales -->
   <div *ngIf="!cargando()" class="metrics-grid">
     <!-- Tarjeta Insumos -->
-    <div class="metric-card">
+    <div class="metric-card" routerLink="/insumos">
       <div class="metric-icon insumos">
         <i class="fas fa-boxes"></i>
       </div>
@@ -25,7 +25,7 @@
     </div>
 
     <!-- Tarjeta Reactivos -->
-    <div class="metric-card">
+    <div class="metric-card" routerLink="/reactivos">
       <div class="metric-icon reactivos">
         <i class="fas fa-flask"></i>
       </div>
@@ -46,7 +46,7 @@
     </div>
 
     <!-- Tarjeta Solicitudes -->
-    <div class="metric-card">
+    <div class="metric-card" routerLink="/solicitudes">
       <div class="metric-icon solicitudes">
         <i class="fas fa-clipboard-list"></i>
       </div>

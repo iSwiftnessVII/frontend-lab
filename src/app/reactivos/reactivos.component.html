@@ -1,4 +1,8 @@
 <div class="liba-theme container reactivos-page">
+  <h1>
+    <i class="fas fa-flask"></i>
+    | Reactivos
+  </h1>
   <h2>Crear nuevo reactivo en Catalogo</h2>
   <section>
     <form class="form-grid" #catalogoForm="ngForm" (ngSubmit)="crearCatalogo($event, catalogoForm)">
@@ -385,7 +389,7 @@
         }
       </div>
 
-      <div class="form-actions">
+      <div>
         <button type="submit" class="btn-create">{{ editMode ? 'Guardar cambios' : 'Crear reactivo' }}</button>
         @if (editMode) {
         <button type="button" (click)="resetReactivoForm()"
