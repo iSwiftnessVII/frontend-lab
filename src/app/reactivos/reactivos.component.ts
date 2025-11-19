@@ -115,6 +115,9 @@ export class ReactivosComponent implements OnInit {
 
   // Lista de reactivos (signals para refresco inmediato)
   reactivosSig = signal<Array<any>>([]);
+  reactivosTotal: number = 0; // total real de reactivos en BD
+  allReactivosLoaded: boolean = false; // indica si ya tenemos todo el universo cargado para filtros locales
+  reactivosPageSize: number = 10; // tamaño de página inicial para inventario
   // Filtros de inventario (3 campos en una fila)
   reactivosLoteQ = '';
   reactivosCodigoQ = '';
@@ -188,7 +191,7 @@ export class ReactivosComponent implements OnInit {
       this.catalogoCargando = true;
       await Promise.all([
         this.loadAux(),
-        this.loadReactivos(10),
+        this.loadReactivos(10, 0),
         this.loadCatalogoInicial()
       ]);
       // Asegurar re-render de tarjetas una vez que auxiliares y reactivos estén listos
@@ -289,12 +292,39 @@ export class ReactivosComponent implements OnInit {
     this.almacen = data.almacen || [];
   }
 
-  async loadReactivos(limit?: number) {
-    const rows = await reactivosService.listarReactivos(this.reactivosQ || '', limit);
+  async loadReactivos(limit?: number, offset?: number) {
+    const resp = await reactivosService.listarReactivos(this.reactivosQ || '', limit, offset);
+    let rows: any[] = [];
+    if (Array.isArray(resp)) {
+      rows = resp;
+      this.reactivosTotal = resp.length;
+    } else {
+      rows = resp.rows || [];
+      this.reactivosTotal = resp.total || rows.length;
+    }
     this.reactivosSig.set(rows || []);
     this.aplicarFiltroReactivos();
     // Preload PDF availability for items in inventory (by lote)
     try { this.preloadDocsForReactivosVisible(this.reactivosSig()); } catch (e) { /* non-fatal */ }
+
+    // Fallback: si el total coincide artificialmente con el tamaño de página y limit se pidió, obtener total real
+    if (limit && limit > 0 && this.reactivosTotal === rows.length) {
+      try {
+        const t = await reactivosService.totalReactivos();
+        if (t && typeof t.total === 'number' && t.total >= rows.length) {
+          this.reactivosTotal = t.total;
+        }
+      } catch (e) {
+        // silencioso: mantener valor existente
+      }
+    }
+    // Marcar si ya tenemos todo (cuando la cantidad cargada alcanza el total estimado)
+    // Actualizar bandera de universo cargado según el contexto (limit 0 => todo cargado)
+    if (!limit || limit === 0) {
+      this.allReactivosLoaded = true;
+    } else {
+      this.allReactivosLoaded = this.reactivosSig().length >= this.reactivosTotal;
+    }
   }
 
   async buscarCatalogo() {
@@ -979,18 +1009,19 @@ export class ReactivosComponent implements OnInit {
       return;
     }
     try {
+      const safeTrim = (v: any): string => typeof v === 'string' ? v.trim() : '';
       await reactivosService.crearCatalogo({
-        codigo: this.catCodigo.trim(),
-        nombre: this.catNombre.trim(),
-        tipo_reactivo: this.catTipo.trim(),
-        clasificacion_sga: this.catClasificacion.trim(),
-        descripcion: this.catDescripcion.trim() || null
+        codigo: safeTrim(this.catCodigo),
+        nombre: safeTrim(this.catNombre),
+        tipo_reactivo: safeTrim(this.catTipo),
+        clasificacion_sga: safeTrim(this.catClasificacion),
+        descripcion: (() => { const d = safeTrim(this.catDescripcion); return d ? d : null; })()
       });
   this.snack.success('Catálogo creado correctamente');
       // limpiar
       this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = this.catDescripcion = '';
       // Resetear estado del formulario para limpiar touched/dirty y evitar resaltar en rojo
-      try { if (form) form.resetForm(); } catch {}
+      try { if (form) form.resetForm({ catCodigo:'', catNombre:'', catTipo:'', catClasificacion:'', catDescripcion:'' }); } catch {}
       this.submittedCatalogo = false;
       // Recargar base y re-aplicar filtros/búsqueda para que el nuevo elemento aparezca
       await this.cargarCatalogoBase();
@@ -1329,7 +1360,34 @@ export class ReactivosComponent implements OnInit {
 
 
   async filtrarReactivos() {
-    // Filtrado local por lote, código y nombre (insensible a mayúsculas/acentos)
+    const qLote = (this.reactivosLoteQ || '').trim();
+    const qCod = (this.reactivosCodigoQ || '').trim();
+    const qNom = (this.reactivosNombreQ || '').trim();
+    const hayFiltro = qLote || qCod || qNom;
+
+    if (hayFiltro) {
+      // Construir consulta base para el backend (usa OR sobre lote/codigo/nombre/marca)
+      // Prioriza un campo si solo hay uno; si hay varios, usa el primero no vacío para reducir dataset
+      const q = qLote || qCod || qNom;
+      this.reactivosQ = q;
+      try {
+        await this.loadReactivos(0, 0); // sin límite: obtener solo coincidencias del backend
+      } catch (e) {
+        console.error('No se pudo cargar coincidencias desde el servidor para filtrar', e);
+      }
+      // Aplicar filtro local adicional (AND) sobre los tres campos
+      this.aplicarFiltroReactivos();
+      return;
+    }
+
+    // No hay filtros: restablecer a primera página y limpiar consulta del backend
+    this.reactivosQ = '';
+    try {
+      await this.loadReactivos(this.reactivosPageSize, 0);
+    } catch (e) {
+      console.error('No se pudo recargar la primera página de reactivos', e);
+    }
+    // Mostrar la página sin filtros
     this.aplicarFiltroReactivos();
   }
 
@@ -1381,19 +1439,49 @@ export class ReactivosComponent implements OnInit {
 
   // Eliminación masiva de reactivos actualmente filtrados
   bulkDeletingReactivos = false;
+  bulkDeleteProgress: number = 0; // porcentaje 0-100
+  bulkDeleteTotal: number = 0; // total de items a eliminar en operación actual
   async eliminarReactivosListado() {
     if (!this.canDelete()) return;
-    const lista = this.reactivosFiltradosSig();
+    // Construir lista global filtrada: si el total real supera lo cargado actualmente, traer todos sin límite
+    let lista = this.reactivosFiltradosSig();
+    let usedFullDataset = false;
+    if (this.reactivosTotal > this.reactivosSig().length) {
+      try {
+        const respAll = await reactivosService.listarReactivos(this.reactivosQ || '', 0, 0); // sin límite
+        const allRows = Array.isArray(respAll) ? respAll : (respAll.rows || []);
+        usedFullDataset = true;
+        // Reaplicar filtros locales (lote, codigo, nombre)
+        const normalizar = (v: string) => (v || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').trim();
+        const qLote = normalizar(this.reactivosLoteQ || '');
+        const qCod = normalizar(this.reactivosCodigoQ || '');
+        const qNom = normalizar(this.reactivosNombreQ || '');
+        lista = allRows.filter((r: any) => {
+          const lote = normalizar(String(r.lote ?? ''));
+          const codigo = normalizar(String(r.codigo ?? ''));
+          const nombre = normalizar(String(r.nombre ?? ''));
+          if (qLote && !lote.includes(qLote)) return false;
+          if (qCod && !codigo.includes(qCod)) return false;
+          if (qNom && !nombre.includes(qNom)) return false;
+          return true;
+        });
+      } catch (e) {
+        console.error('Fallo obteniendo lista completa para borrado masivo, se usa subset cargado', e);
+      }
+    }
     if (!lista.length) {
       this.snack.warn('No hay reactivos filtrados para eliminar');
       return;
     }
-    if (!confirm(`¿Eliminar ${lista.length} reactivo(s) filtrado(s)? Esta acción no se puede deshacer.`)) return;
+    if (!confirm(`¿Eliminar ${lista.length} reactivo(s) filtrado(s) de un total de ${this.reactivosTotal}? Esta acción no se puede deshacer.`)) return;
     this.bulkDeletingReactivos = true;
+    this.bulkDeleteProgress = 0;
+    this.bulkDeleteTotal = lista.length;
     const lotesEliminados: string[] = [];
     const errores: string[] = [];
     // Eliminación secuencial para evitar saturar backend y permitir fallback
-    for (const r of lista) {
+    for (let i = 0; i < lista.length; i++) {
+      const r: any = lista[i];
       const lote = String(r.lote || '').trim();
       if (!lote) continue;
       try {
@@ -1403,6 +1491,9 @@ export class ReactivosComponent implements OnInit {
         console.error('Fallo eliminando lote', lote, e);
         errores.push(lote);
       }
+      // Actualizar progreso después de cada intento (éxito o error)
+      this.bulkDeleteProgress = Math.round(((i + 1) / this.bulkDeleteTotal) * 100);
+      try { this.cdr.detectChanges(); } catch {}
     }
     // Actualizar listado local eliminando los exitosos
     if (lotesEliminados.length) {
@@ -1419,6 +1510,29 @@ export class ReactivosComponent implements OnInit {
     } else {
       this.snack.success(`Eliminados ${lotesEliminados.length} reactivo(s)`);
     }
+
+    // Actualizar total real tras eliminación usando backend para evitar inconsistencias
+    try {
+      const t = await reactivosService.totalReactivos();
+      if (t && typeof t.total === 'number') {
+        this.reactivosTotal = t.total;
+      } else if (!usedFullDataset) {
+        // fallback si no hubo respuesta estructurada
+        this.reactivosTotal = Math.max(0, this.reactivosTotal - lotesEliminados.length);
+      }
+    } catch {
+      if (!usedFullDataset) {
+        this.reactivosTotal = Math.max(0, this.reactivosTotal - lotesEliminados.length);
+      }
+    }
+
+    // Si usamos dataset completo, recargar la página inicial para reflejar estado consistente
+    if (usedFullDataset) {
+      try { await this.loadReactivos(10, 0); } catch {}
+    }
+    // Reset visual tras terminar
+    this.bulkDeleteTotal = 0;
+    this.bulkDeleteProgress = 0;
   }
 
   // Validación cruzada simple: vencimiento >= adquisición

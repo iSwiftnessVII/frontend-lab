@@ -420,14 +420,22 @@
         </div>
         @if (canDelete()) {
         <div class="reset-cell">
-          <button type="button"
-                  class="btn-delete-all"
-                  (click)="eliminarReactivosListado()"
-                  [disabled]="bulkDeletingReactivos || !reactivosFiltrados.length"
-                  [attr.aria-busy]="bulkDeletingReactivos ? 'true' : null"
-                  title="Eliminar todos los reactivos filtrados">
-            {{ bulkDeletingReactivos ? 'Eliminando…' : ('Eliminar todos (' + reactivosFiltrados.length + ')') }}
-          </button>
+          <div class="bulk-delete-wrapper">
+            <button type="button"
+                    class="btn-delete-all"
+                    (click)="eliminarReactivosListado()"
+                    [disabled]="bulkDeletingReactivos || !reactivosFiltrados.length"
+                    [attr.aria-busy]="bulkDeletingReactivos ? 'true' : null"
+                    title="Eliminar todos los reactivos filtrados">
+              {{ bulkDeletingReactivos ? ('Eliminando… ' + bulkDeleteProgress + '%') : ('Eliminar Reactivos') }}
+            </button>
+            @if (bulkDeletingReactivos) {
+              <div class="progress-line" role="progressbar" [attr.aria-valuenow]="bulkDeleteProgress" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-fill" [style.width]="bulkDeleteProgress + '%'">&nbsp;</div>
+              </div>
+              <div class="progress-caption">Eliminando {{ bulkDeleteTotal }} reactivos…</div>
+            }
+          </div>
         </div>
         }
       </div>
@@ -435,7 +443,7 @@
       <div class="cards-container">
         @if (reactivos && reactivos.length) {
         <div class="catalogo-stats">
-          <span>🧪 Mostrando {{ reactivosFiltrados.length }} de {{ reactivos.length }} reactivos</span>
+          <span>🧪 Mostrando {{ reactivosFiltrados.length }} de {{ reactivosTotal }} reactivos</span>
         </div>
         }
 

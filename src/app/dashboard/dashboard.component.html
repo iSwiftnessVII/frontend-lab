@@ -75,14 +75,14 @@
   </div>
 
   <!-- Sección de Alertas -->
-  <div *ngIf="!cargando() && reactivosProximosVencer().length > 0" class="alert-section">
+  <div *ngIf="!cargando() && (reactivosProximosVencer().length > 0 || reactivosVencidos().length > 0)" class="alert-section">
 
     <h2>
       <i class="fas fa-exclamation-triangle"></i>
       Alertas Importantes
     </h2>
 
-    <div class="alert-card warning">
+    <div *ngIf="reactivosProximosVencer().length > 0" class="alert-card warning">
       <div class="alert-header">
 
         <h3>Reactivos Próximos a Vencer</h3>
@@ -100,6 +100,29 @@
             <span class="reactivo-fecha">
               <i class="fas fa-calendar-times"></i>
               Vence: {{ reactivo.fecha_vencimiento | date:'dd/MM/yyyy' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="reactivosVencidos().length > 0" class="alert-card danger" style="margin-top: 1rem;">
+      <div class="alert-header">
+        <h3>Reactivos Vencidos</h3>
+      </div>
+      <div class="alert-content">
+        <p>Hay <strong>{{ reactivosVencidos().length }}</strong> reactivos vencidos:</p>
+        <div class="reactivos-list">
+          <div *ngFor="let reactivo of reactivosVencidos()" class="reactivo-item">
+            <i class="fas fa-flask reactivo-icon"></i>
+            <span class="reactivo-name">{{ reactivo.nombre }}</span>
+            <span class="reactivo-lote">
+              <i class="fas fa-barcode"></i>
+              Lote: {{ reactivo.lote }}
+            </span>
+            <span class="reactivo-fecha">
+              <i class="fas fa-calendar-times"></i>
+              Vencido: {{ reactivo.fecha_vencimiento | date:'dd/MM/yyyy' }}
             </span>
           </div>
         </div>

@@ -59,13 +59,21 @@ export const reactivosService = {
     return data;
   },
   // Reactivos
-  async listarReactivos(q: string, limit?: number) {
+  async listarReactivos(q: string, limit?: number, offset?: number) {
     const url = new URL(API_BASE);
     if (q) url.searchParams.set('q', q);
-    if (limit && limit > 0) url.searchParams.set('limit', String(limit));
-    const res = await fetch(url, { headers: { ...authHeaders() } }); // ← AGREGADO
+    if (limit && limit > 0) {
+      url.searchParams.set('limit', String(limit));
+      url.searchParams.set('offset', String(offset ?? 0));
+    }
+    const res = await fetch(url, { headers: { ...authHeaders() } });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
+  },
+  async totalReactivos() {
+    const res = await fetch(`${API_BASE}/total`, { headers: { ...authHeaders() } });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json(); // { total }
   },
   async obtenerReactivo(lote: string) {
     const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}`);

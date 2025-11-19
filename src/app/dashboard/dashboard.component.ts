@@ -33,6 +33,8 @@ export class DashboardComponent implements OnInit {
 
   // Reactivos próximos a vencer
   reactivosProximosVencer = signal<any[]>([]);
+  // Reactivos vencidos
+  reactivosVencidos = signal<any[]>([]);
 
   constructor() {}
 
@@ -67,9 +69,11 @@ export class DashboardComponent implements OnInit {
 
   async cargarReactivos() {
   try {
-    const reactivos = await reactivosService.listarReactivos('', 1000);
+    const resp = await reactivosService.listarReactivos('', 1000);
+    const reactivos = Array.isArray(resp) ? resp : (resp?.rows || []);
+    const total = Array.isArray(resp) ? resp.length : (resp?.total ?? reactivos.length);
     this.reactivosData.set(reactivos);
-    this.metricas.update(m => ({ ...m, totalReactivos: reactivos.length }));
+    this.metricas.update(m => ({ ...m, totalReactivos: total }));
     
     // Calcular reactivos próximos a vencer (30 días)
     const hoy = new Date();
@@ -83,6 +87,14 @@ export class DashboardComponent implements OnInit {
     });
     
     this.reactivosProximosVencer.set(proximos);
+
+    // Vencidos: fecha_vencimiento estrictamente menor a hoy
+    const vencidos = reactivos.filter((reactivo: any) => {
+      if (!reactivo.fecha_vencimiento) return false;
+      const fechaVenc = new Date(reactivo.fecha_vencimiento);
+      return fechaVenc < hoy;
+    });
+    this.reactivosVencidos.set(vencidos);
   } catch (error) {
     console.error('Error cargando reactivos:', error);
   }
