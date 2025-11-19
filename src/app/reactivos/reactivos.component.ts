@@ -1441,6 +1441,7 @@ export class ReactivosComponent implements OnInit {
   bulkDeletingReactivos = false;
   bulkDeleteProgress: number = 0; // porcentaje 0-100
   bulkDeleteTotal: number = 0; // total de items a eliminar en operación actual
+  exportandoExcel: boolean = false;
   async eliminarReactivosListado() {
     if (!this.canDelete()) return;
     // Construir lista global filtrada: si el total real supera lo cargado actualmente, traer todos sin límite
@@ -1533,6 +1534,29 @@ export class ReactivosComponent implements OnInit {
     // Reset visual tras terminar
     this.bulkDeleteTotal = 0;
     this.bulkDeleteProgress = 0;
+  }
+
+  async descargarReactivosExcel() {
+    if (this.exportandoExcel) return;
+    this.exportandoExcel = true;
+    try {
+      const blob = await reactivosService.exportarReactivosExcel();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+      a.download = `reactivos_${ts}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      this.snack.success('Archivo Excel generado');
+    } catch (e: any) {
+      console.error('Error exportando Excel', e);
+      this.snack.error(e?.message || 'Error exportando Excel');
+    } finally {
+      this.exportandoExcel = false;
+    }
   }
 
   // Validación cruzada simple: vencimiento >= adquisición

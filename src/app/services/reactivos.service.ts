@@ -244,4 +244,10 @@ export const reactivosService = {
     if (!res.ok) throw new Error((data && data.message) || 'Error al eliminar PDF');
     return data;
   },
+  async exportarReactivosExcel() {
+    const res = await fetch(`${API_BASE}/export/excel`, { headers: { ...authHeaders() } });
+    if (!res.ok) throw new Error(await res.text());
+    const blob = await res.blob();
+    return blob;
+  },
 };

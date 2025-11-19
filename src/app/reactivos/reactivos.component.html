@@ -433,7 +433,7 @@
               <div class="progress-line" role="progressbar" [attr.aria-valuenow]="bulkDeleteProgress" aria-valuemin="0" aria-valuemax="100">
                 <div class="progress-fill" [style.width]="bulkDeleteProgress + '%'">&nbsp;</div>
               </div>
-              <div class="progress-caption">Eliminando {{ bulkDeleteTotal }} reactivos…</div>
+              
             }
           </div>
         </div>
@@ -444,6 +444,15 @@
         @if (reactivos && reactivos.length) {
         <div class="catalogo-stats">
           <span>🧪 Mostrando {{ reactivosFiltrados.length }} de {{ reactivosTotal }} reactivos</span>
+            <button type="button"
+                    class="btn-export"
+                    (click)="descargarReactivosExcel()"
+                    [disabled]="exportandoExcel"
+                    [attr.aria-busy]="exportandoExcel ? 'true' : null"
+                    title="Descargar Excel con todos los reactivos">
+              <i class="fas fa-file-excel"></i>
+              {{ exportandoExcel ? 'Generando...' : 'Exportar Excel' }}
+            </button>
         </div>
         }
 

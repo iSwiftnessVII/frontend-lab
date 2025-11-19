@@ -72,6 +72,42 @@
         </div>
       </div>
     </div>
+
+    <!-- Tarjeta Equipos -->
+    <div class="metric-card" routerLink="/equipos">
+      <div class="metric-icon equipos">
+        <i class="fas fa-cogs"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value">{{ formatearNumero(metricas().totalEquipos) }}</div>
+        <div class="metric-label">Total Equipos</div>
+        <div class="metric-subtitle">Instrumentos registrados</div>
+      </div>
+    </div>
+
+    <!-- Tarjeta Papelería -->
+    <div class="metric-card" routerLink="/papeleria">
+      <div class="metric-icon papeleria">
+        <i class="fas fa-file-alt"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value">{{ formatearNumero(metricas().totalPapeleria) }}</div>
+        <div class="metric-label">Total Papelería</div>
+        <div class="metric-subtitle">Ítems de catálogo</div>
+      </div>
+    </div>
+
+    <!-- Tarjeta Materiales Volumétricos -->
+    <div class="metric-card" routerLink="/materiales-volumetricos">
+      <div class="metric-icon volumetricos">
+        <i class="fas fa-vial"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value">{{ formatearNumero(metricas().totalMaterialesVolumetricos) }}</div>
+        <div class="metric-label">Materiales Volumétricos</div>
+        <div class="metric-subtitle">Activos en inventario</div>
+      </div>
+    </div>
   </div>
 
   <!-- Sección de Alertas -->

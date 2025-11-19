@@ -22,7 +22,10 @@ export class DashboardComponent implements OnInit {
     totalInsumos: 0,
     totalReactivos: 0,
     totalSolicitudes: 0,
-    totalClientes: 0
+    totalClientes: 0,
+    totalEquipos: 0,
+    totalPapeleria: 0,
+    totalMaterialesVolumetricos: 0
   });
 
   // Datos para gráficos
@@ -52,8 +55,27 @@ export class DashboardComponent implements OnInit {
         this.cargarSolicitudes(),
         this.cargarClientes()
       ]);
+      await this.cargarMetricasBackend();
     } catch (error) {
       console.error('Error cargando dashboard:', error);
+    }
+  }
+
+  async cargarMetricasBackend() {
+    try {
+      const base = (window as any).__env?.API_BASE || 'http://localhost:4000/api';
+      const res = await fetch(base + '/dashboard/metricas-principales');
+      if (!res.ok) throw new Error('Error obteniendo métricas backend');
+      const data = await res.json();
+      // Actualizar sólo si vienen los campos esperados
+      this.metricas.update(m => ({
+        ...m,
+        totalEquipos: data.totalEquipos ?? m.totalEquipos,
+        totalPapeleria: data.totalPapeleria ?? m.totalPapeleria,
+        totalMaterialesVolumetricos: data.totalMaterialesVolumetricos ?? m.totalMaterialesVolumetricos
+      }));
+    } catch (e) {
+      console.error('No se pudieron cargar métricas adicionales (equipos/papelería/materiales):', e);
     }
   }
 
