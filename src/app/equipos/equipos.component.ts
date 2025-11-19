@@ -80,6 +80,20 @@ export class EquiposComponent {
 	private vGuardandoSig = signal<boolean>(false);
 	get v_guardando() { return this.vGuardandoSig(); } set v_guardando(v: boolean) { this.vGuardandoSig.set(v); }
 
+	// ===== Formulario Historial Instrumento =====
+	private hEquipoIdSig = signal<number | null>(null); get h_equipo_id() { return this.hEquipoIdSig(); } set h_equipo_id(v: number | null) { this.hEquipoIdSig.set(v); }
+	private hNumeroSig = signal<string>(''); get h_numero() { return this.hNumeroSig(); } set h_numero(v: string) { this.hNumeroSig.set(v); }
+	private hFechaSig = signal<string>(''); get h_fecha() { return this.hFechaSig(); } set h_fecha(v: string) { this.hFechaSig.set(v); }
+	private hTipoHistSig = signal<string>(''); get h_tipo_historial() { return this.hTipoHistSig(); } set h_tipo_historial(v: string) { this.hTipoHistSig.set(v); }
+	private hCodigoRegSig = signal<string>(''); get h_codigo_registro() { return this.hCodigoRegSig(); } set h_codigo_registro(v: string) { this.hCodigoRegSig.set(v); }
+	private hTolGSig = signal<string>(''); get h_tolerancia_g() { return this.hTolGSig(); } set h_tolerancia_g(v: string) { this.hTolGSig.set(v); }
+	private hTolErrGSig = signal<string>(''); get h_tolerancia_error_g() { return this.hTolErrGSig(); } set h_tolerancia_error_g(v: string) { this.hTolErrGSig.set(v); }
+	private hIncUSig = signal<string>(''); get h_incertidumbre_u() { return this.hIncUSig(); } set h_incertidumbre_u(v: string) { this.hIncUSig.set(v); }
+	private hRealizoSig = signal<string>(''); get h_realizo() { return this.hRealizoSig(); } set h_realizo(v: string) { this.hRealizoSig.set(v); }
+	private hSupervisoSig = signal<string>(''); get h_superviso() { return this.hSupervisoSig(); } set h_superviso(v: string) { this.hSupervisoSig.set(v); }
+	private hObservacionesSig = signal<string>(''); get h_observaciones() { return this.hObservacionesSig(); } set h_observaciones(v: string) { this.hObservacionesSig.set(v); }
+	private hGuardandoSig = signal<boolean>(false); get h_guardando() { return this.hGuardandoSig(); } set h_guardando(v: boolean) { this.hGuardandoSig.set(v); }
+
 	// Highlight last created equipo
 	private lastCreatedEquipoIdSig = signal<number | null>(null);
 	get lastCreatedEquipoId() { return this.lastCreatedEquipoIdSig(); }
@@ -95,6 +109,13 @@ export class EquiposComponent {
 	// control de expansión por id
 	expandido = new Set<string>();
 
+	// Sub-colapsable: estado de apertura para Mantenimiento por equipo
+	private mOpen = new Set<number>();
+	// Sub-colapsable: estado de apertura para VCC por equipo
+	private vOpen = new Set<number>();
+	// Sub-colapsable: estado de apertura para Historial por equipo
+	private hOpen = new Set<number>();
+
 	// Mantenimientos por equipo (cache y estados) usando Signals (zoneless-friendly)
 	private mMapSig = signal<Record<number, any[]>>({});
 	private mLoadingSig = signal<Record<number, boolean>>({});
@@ -105,6 +126,11 @@ export class EquiposComponent {
 	private vLoadingSig = signal<Record<number, boolean>>({});
 	private vErrorSig = signal<Record<number, string>>({});
 
+	// Historial por equipo (cache y estados) usando Signals
+	private hMapSig = signal<Record<number, any[]>>({});
+	private hLoadingSig = signal<Record<number, boolean>>({});
+	private hErrorSig = signal<Record<number, string>>({});
+
 	// Exponer getters para mantener el template intacto (mMap[e.id], mLoading[e.id], etc.)
 	get mMap() { return this.mMapSig(); }
 	get mLoading() { return this.mLoadingSig(); }
@@ -112,6 +138,9 @@ export class EquiposComponent {
 	get vMap() { return this.vMapSig(); }
 	get vLoading() { return this.vLoadingSig(); }
 	get vError() { return this.vErrorSig(); }
+	get hMap() { return this.hMapSig(); }
+	get hLoading() { return this.hLoadingSig(); }
+	get hError() { return this.hErrorSig(); }
 
 	constructor(public snack: SnackbarService) {}
 
@@ -161,12 +190,49 @@ export class EquiposComponent {
 				// Fire-and-forget the async loads to the next microtasks
 				Promise.resolve().then(() => this.cargarMantenimientosSiNecesario(idNum));
 				Promise.resolve().then(() => this.cargarVccSiNecesario(idNum));
+				Promise.resolve().then(() => this.cargarHistorialSiNecesario(idNum));
 			}
 		}
 	}
 	isFilaExpandida(e: any): boolean { const key = this.getKey(e); return key ? this.expandido.has(key) : false; }
 	private getKey(e: any): string { return String(e?.id ?? e?.codigo_identificacion ?? e?.numero_serie ?? ''); }
 	trackById(index: number, e: any) { return e?.id ?? e?.codigo_identificacion ?? index; }
+
+	// --- Nested collapsible: Mantenimiento ---
+	toggleMantenimiento(e: any, ev?: Event) {
+		if (ev) ev.stopPropagation();
+		const id = Number(e?.id);
+		if (isNaN(id)) return;
+		if (this.mOpen.has(id)) this.mOpen.delete(id); else this.mOpen.add(id);
+	}
+	isMOpen(e: any): boolean {
+		const id = Number(e?.id);
+		return !isNaN(id) && this.mOpen.has(id);
+	}
+
+	// --- Nested collapsible: VCC ---
+	toggleVcc(e: any, ev?: Event) {
+		if (ev) ev.stopPropagation();
+		const id = Number(e?.id);
+		if (isNaN(id)) return;
+		if (this.vOpen.has(id)) this.vOpen.delete(id); else this.vOpen.add(id);
+	}
+	isVOpen(e: any): boolean {
+		const id = Number(e?.id);
+		return !isNaN(id) && this.vOpen.has(id);
+	}
+
+	// --- Nested collapsible: Historial ---
+	toggleHistorial(e: any, ev?: Event) {
+		if (ev) ev.stopPropagation();
+		const id = Number(e?.id);
+		if (isNaN(id)) return;
+		if (this.hOpen.has(id)) this.hOpen.delete(id); else this.hOpen.add(id);
+	}
+	isHOpen(e: any): boolean {
+		const id = Number(e?.id);
+		return !isNaN(id) && this.hOpen.has(id);
+	}
 
 	private async cargarMantenimientosSiNecesario(equipoId: number) {
 		if (!equipoId) return;
@@ -194,6 +260,20 @@ export class EquiposComponent {
 			this.vErrorSig.update(s => ({ ...s, [equipoId]: e?.message || 'Error cargando verificaciones/calibraciones/calificaciones' }));
 			this.vMapSig.update(s => ({ ...s, [equipoId]: [] }));
 		} finally { this.vLoadingSig.update(s => ({ ...s, [equipoId]: false })); }
+	}
+
+	private async cargarHistorialSiNecesario(equipoId: number) {
+		if (!equipoId) return;
+		if (this.hMapSig()[equipoId]) return; // ya cargado
+		this.hLoadingSig.update(s => ({ ...s, [equipoId]: true }));
+		this.hErrorSig.update(s => ({ ...s, [equipoId]: '' }));
+		try {
+			const rows = await equiposService.listarHistorial(equipoId);
+			this.hMapSig.update(s => ({ ...s, [equipoId]: Array.isArray(rows) ? rows : [] }));
+		} catch (e: any) {
+			this.hErrorSig.update(s => ({ ...s, [equipoId]: e?.message || 'Error cargando historial' }));
+			this.hMapSig.update(s => ({ ...s, [equipoId]: [] }));
+		} finally { this.hLoadingSig.update(s => ({ ...s, [equipoId]: false })); }
 	}
 
 	async crearEquipo(ev: Event) {
@@ -240,9 +320,11 @@ export class EquiposComponent {
 				// preload empty arrays (reactive) so UI muestra bloques sin esperar fetch
 				this.mMapSig.update(s => ({ ...s, [nuevoId]: [] }));
 				this.vMapSig.update(s => ({ ...s, [nuevoId]: [] }));
+				this.hMapSig.update(s => ({ ...s, [nuevoId]: [] }));
 				// Lanzar carga real en segundo plano
 				Promise.resolve().then(() => this.cargarMantenimientosSiNecesario(nuevoId));
 				Promise.resolve().then(() => this.cargarVccSiNecesario(nuevoId));
+				Promise.resolve().then(() => this.cargarHistorialSiNecesario(nuevoId));
 				this.lastCreatedEquipoIdSig.set(nuevoId);
 			}
 			this.resetForm();
@@ -346,9 +428,167 @@ export class EquiposComponent {
 		}
 	}
 
+	async crearHistorial(ev: Event) {
+		ev.preventDefault();
+		if (!this.h_equipo_id) { this.snack.warn('Seleccione un equipo'); return; }
+		const payload = {
+			numero: String(this.h_numero || '').trim() || null,
+			fecha: this.h_fecha || null,
+			tipo_historial: String(this.h_tipo_historial || '').trim() || null,
+			codigo_registro: String(this.h_codigo_registro || '').trim() || null,
+			tolerancia_g: String(this.h_tolerancia_g || '').trim() || null,
+			tolerancia_error_g: String(this.h_tolerancia_error_g || '').trim() || null,
+			incertidumbre_u: String(this.h_incertidumbre_u || '').trim() || null,
+			realizo: String(this.h_realizo || '').trim() || null,
+			superviso: String(this.h_superviso || '').trim() || null,
+			observaciones: String(this.h_observaciones || '').trim() || null,
+		};
+		this.h_guardando = true;
+		try {
+			await equiposService.crearHistorial(this.h_equipo_id, payload);
+			this.snack.success('Historial registrado');
+			// reset
+			this.h_equipo_id = null;
+			this.h_numero = '';
+			this.h_fecha = '';
+			this.h_tipo_historial = '';
+			this.h_codigo_registro = '';
+			this.h_tolerancia_g = '';
+			this.h_tolerancia_error_g = '';
+			this.h_incertidumbre_u = '';
+			this.h_realizo = '';
+			this.h_superviso = '';
+			this.h_observaciones = '';
+		} catch (e: any) {
+			this.snack.error(e?.message || 'Error creando historial');
+		} finally {
+			this.h_guardando = false;
+		}
+	}
+
+	// Propiedades para el formulario de intervalo de calibración
+	ic_equipo_id: number | null = null;
+	ic_numero: number | null = null;
+	ic_unidad_nominal_g: number | null = null;
+	ic_calibracion_1: string | null = null;
+	ic_fecha_c1: string | null = null;
+	ic_error_c1_g: number | null = null;
+	ic_calibracion_2: string | null = null;
+	ic_fecha_c2: string | null = null;
+	ic_error_c2_g: number | null = null;
+	ic_diferencia_dias: number | null = null;
+	ic_desviacion: number | null = null;
+	ic_deriva: number | null = null;
+	ic_tolerancia_g: number | null = null;
+	ic_intervalo_calibraciones_dias: number | null = null;
+	ic_intervalo_calibraciones_anios: number | null = null;
+	ic_guardando: boolean = false;
+
+	// Lista para almacenar los intervalos de calibración
+	listaIntervalos: any[] = [];
+
+	// Método para manejar el envío del formulario
+	crearIntervaloCalibracion(event: Event): void {
+		event.preventDefault();
+		this.ic_guardando = true;
+
+		const nuevoIntervalo = {
+			equipo_id: this.ic_equipo_id,
+			numero: this.ic_numero,
+			unidad_nominal_g: this.ic_unidad_nominal_g,
+			calibracion_1: this.ic_calibracion_1,
+			fecha_c1: this.ic_fecha_c1,
+			error_c1_g: this.ic_error_c1_g,
+			calibracion_2: this.ic_calibracion_2,
+			fecha_c2: this.ic_fecha_c2,
+			error_c2_g: this.ic_error_c2_g,
+			diferencia_dias: this.ic_diferencia_dias,
+			desviacion: this.ic_desviacion,
+			deriva: this.ic_deriva,
+			tolerancia_g: this.ic_tolerancia_g,
+			intervalo_calibraciones_dias: this.ic_intervalo_calibraciones_dias,
+			intervalo_calibraciones_anios: this.ic_intervalo_calibraciones_anios,
+		};
+
+		this.ic_guardando = true;
+		const equipoId = this.ic_equipo_id;
+		equiposService.crearIntervalo(equipoId!, nuevoIntervalo)
+			.then(() => {
+				alert('Intervalo de calibración guardado con éxito');
+				this.cargarIntervalos(equipoId!);
+				this.limpiarFormulario();
+			})
+			.catch((err: any) => {
+				alert('Error al guardar intervalo');
+				console.error(err);
+			})
+			.finally(() => {
+				this.ic_guardando = false;
+			});
+	}
+
+	// Método para limpiar el formulario después de guardar
+	limpiarFormulario(): void {
+		this.ic_equipo_id = null;
+		this.ic_numero = null;
+		this.ic_unidad_nominal_g = null;
+		this.ic_calibracion_1 = null;
+		this.ic_fecha_c1 = null;
+		this.ic_error_c1_g = null;
+		this.ic_calibracion_2 = null;
+		this.ic_fecha_c2 = null;
+		this.ic_error_c2_g = null;
+		this.ic_diferencia_dias = null;
+		this.ic_desviacion = null;
+		this.ic_deriva = null;
+		this.ic_tolerancia_g = null;
+		this.ic_intervalo_calibraciones_dias = null;
+		this.ic_intervalo_calibraciones_anios = null;
+	}
+
 	// Getters para usar Signals en el template sin cambiar binding existentes
 	get lista() { return this.listaSig(); }
 	get listaFiltrada() { return this.listaFiltradaSig(); }
+
+	// Propiedades para manejar el estado de los intervalos de calibración
+	intervalosLoading: { [key: number]: boolean } = {};
+	intervalosError: { [key: number]: string } = {};
+	intervalosMap: { [key: number]: any[] } = {};
+	intervalosOpen: { [key: number]: boolean } = {};
+
+	// Método para alternar el estado del desplegable de intervalos de calibración
+	toggleIntervalos(equipo: any, event: Event): void {
+		event.stopPropagation();
+		const equipoId = equipo.id;
+		this.intervalosOpen[equipoId] = !this.intervalosOpen[equipoId];
+
+		if (this.intervalosOpen[equipoId] && !this.intervalosMap[equipoId]) {
+			this.cargarIntervalos(equipoId);
+		}
+	}
+
+	// Método para verificar si el desplegable está abierto
+	isIntervalosOpen(equipo: any): boolean {
+		return !!this.intervalosOpen[equipo.id];
+	}
+
+	// Método para cargar los intervalos de calibración de un equipo
+	cargarIntervalos(equipoId: number): void {
+		this.intervalosLoading[equipoId] = true;
+		this.intervalosError[equipoId] = '';
+
+		// Lógica real: consulta al backend
+		equiposService.listarIntervalos(equipoId)
+			.then((intervalos: any[]) => {
+				this.intervalosMap[equipoId] = Array.isArray(intervalos) ? intervalos : [];
+				this.intervalosLoading[equipoId] = false;
+			})
+			.catch((err: any) => {
+				this.intervalosError[equipoId] = err?.message || 'Error cargando intervalos';
+				this.intervalosMap[equipoId] = [];
+				this.intervalosLoading[equipoId] = false;
+			});
+	}
 
 	// --- Utilidades de fecha ---
 	private parseFlexibleDate(value: any): Date | null {
@@ -395,6 +635,24 @@ export class EquiposComponent {
 		const mm = String(dt.getMonth() + 1).padStart(2, '0');
 		const yyyy = dt.getFullYear();
 		return `${dd}/${mm}/${yyyy}`;
+	}
+
+	// Método para eliminar un equipo
+	eliminarEquipo(equipoId: number, event: Event): void {
+		event.stopPropagation();
+
+		if (confirm('¿Estás seguro de que deseas eliminar este equipo?')) {
+			equiposService.eliminarEquipo(equipoId)
+				.then(() => {
+					alert('Equipo eliminado con éxito');
+					// Refresca la lista usando signals
+					this.cargarLista();
+				})
+				.catch(err => {
+					alert('Error al eliminar el equipo');
+					console.error(err);
+				});
+		}
 	}
 }
 

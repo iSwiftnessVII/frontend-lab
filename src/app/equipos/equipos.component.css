@@ -381,10 +381,70 @@
 .mantenimiento-block {
   margin-top: 0.3rem;
 }
-.mantenimiento-block .m-header {
-  font-weight: 600;
+.mantenimiento-block .m-toggle {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.12s ease;
+}
+.mantenimiento-block .m-toggle:hover {
+  background: #f7fafc;
+}
+.mantenimiento-block .m-toggle:active {
+  transform: translateY(1px);
+}
+.mantenimiento-block .m-toggle .title {
+  font-weight: 700;
   color: var(--primary-blue);
-  margin-bottom: 0.35rem;
+}
+.mantenimiento-block .m-toggle .chev {
+  width: 18px;
+  height: 18px;
+  color: #667085;
+  transition: transform 0.18s ease;
+}
+.mantenimiento-block .m-toggle .chev.open {
+  transform: rotate(180deg);
+}
+.toggle-block {
+  margin-top: 0.3rem;
+}
+.toggle-block .m-toggle {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.12s ease;
+}
+.toggle-block .m-toggle:hover {
+  background: #f7fafc;
+}
+.toggle-block .m-toggle:active {
+  transform: translateY(1px);
+}
+.toggle-block .m-toggle .title {
+  font-weight: 700;
+  color: var(--primary-blue);
+}
+.toggle-block .m-toggle .chev {
+  width: 18px;
+  height: 18px;
+  color: #667085;
+  transition: transform 0.18s ease;
+}
+.toggle-block .m-toggle .chev.open {
+  transform: rotate(180deg);
 }
 .m-list {
   display: flex;
@@ -400,4 +460,45 @@
 }
 .error {
   color: #c53030;
+}
+
+/* Estilo específico para el botón de eliminar en el módulo de equipos */
+:host ::ng-deep .eliminar {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+:host ::ng-deep .eliminar:hover {
+  background-color: #ff7875;
+}
+
+:host ::ng-deep .eliminar:active {
+  background-color: #d9363e;
+  transform: scale(0.95);
+}
+
+:host ::ng-deep .eliminar:disabled {
+  background-color: #ffa39e;
+  cursor: not-allowed;
+}
+
+:host ::ng-deep .eliminar .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.gei {
+  all: unset;
+  background-color: red;
+  background: red;
 }

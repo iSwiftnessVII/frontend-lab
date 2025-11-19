@@ -197,6 +197,138 @@
 		</form>
 	</section>
 
+	<h2>Registrar historial de instrumento</h2>
+	<section>
+		<form class="form-grid" (submit)="crearHistorial($event)">
+			<div>
+				<label for="h_equipo_id">Equipo *</label>
+				<select id="h_equipo_id" name="h_equipo_id" [(ngModel)]="h_equipo_id" required>
+					<option [ngValue]="null">Seleccione equipo</option>
+					@for (e of lista; track e.id) {
+						<option [ngValue]="e.id">{{ e.nombre }} {{ e.modelo ? ('· ' + e.modelo) : '' }} {{ e.marca ? ('(' + e.marca + ')') : '' }}</option>
+					}
+				</select>
+			</div>
+			<div>
+				<label for="h_numero">Número</label>
+				<input id="h_numero" name="h_numero" [(ngModel)]="h_numero" type="number" placeholder="Secuencia" />
+			</div>
+			<div>
+				<label for="h_fecha">Fecha</label>
+				<input id="h_fecha" name="h_fecha" [(ngModel)]="h_fecha" type="date" />
+			</div>
+			<div>
+				<label for="h_tipo_historial">Tipo historial</label>
+				<input id="h_tipo_historial" name="h_tipo_historial" [(ngModel)]="h_tipo_historial" placeholder="Ej: Calibración" />
+			</div>
+			<div>
+				<label for="h_codigo_registro">Código registro</label>
+				<input id="h_codigo_registro" name="h_codigo_registro" [(ngModel)]="h_codigo_registro" placeholder="Identificador" />
+			</div>
+			<div>
+				<label for="h_tolerancia_g">Tolerancia (g)</label>
+				<input id="h_tolerancia_g" name="h_tolerancia_g" [(ngModel)]="h_tolerancia_g" type="number" step="0.0001" />
+			</div>
+			<div>
+				<label for="h_tolerancia_error_g">Tolerancia error (g)</label>
+				<input id="h_tolerancia_error_g" name="h_tolerancia_error_g" [(ngModel)]="h_tolerancia_error_g" type="number" step="0.0001" />
+			</div>
+			<div>
+				<label for="h_incertidumbre_u">Incertidumbre U</label>
+				<input id="h_incertidumbre_u" name="h_incertidumbre_u" [(ngModel)]="h_incertidumbre_u" type="number" step="0.0001" />
+			</div>
+			<div>
+				<label for="h_realizo">Realizó</label>
+				<input id="h_realizo" name="h_realizo" [(ngModel)]="h_realizo" placeholder="Nombre responsable" />
+			</div>
+			<div>
+				<label for="h_superviso">Supervisó</label>
+				<input id="h_superviso" name="h_superviso" [(ngModel)]="h_superviso" placeholder="Nombre supervisor" />
+			</div>
+			<div class="stack-field col-span-full">
+				<label for="h_observaciones">Observaciones</label>
+				<textarea id="h_observaciones" name="h_observaciones" [(ngModel)]="h_observaciones" placeholder="Notas adicionales"></textarea>
+			</div>
+			<div class="actions">
+				<button class="btn-compact" type="submit" [disabled]="h_guardando">{{ h_guardando ? 'Guardando…' : 'Guardar historial' }}</button>
+			</div>
+		</form>
+	</section>
+
+	<h2>Registrar Intervalo de Calibración</h2>
+	<section>
+	  <form class="form-grid" (submit)="crearIntervaloCalibracion($event)">
+	    <div>
+	      <label for="ic_equipo_id">Equipo *</label>
+	      <select id="ic_equipo_id" name="ic_equipo_id" [(ngModel)]="ic_equipo_id" required>
+	        <option [ngValue]="null">Seleccione equipo</option>
+	        @for (e of lista; track e.id) {
+	          <option [ngValue]="e.id">{{ e.nombre }} {{ e.modelo ? ('· ' + e.modelo) : '' }} {{ e.marca ? ('(' + e.marca + ')') : '' }}</option>
+	        }
+	      </select>
+	    </div>
+	    <div>
+	      <label for="ic_numero">Número</label>
+	      <input id="ic_numero" name="ic_numero" [(ngModel)]="ic_numero" type="number" placeholder="Número" />
+	    </div>
+	    <div>
+	      <label for="ic_unidad_nominal_g">Unidad Nominal (g)</label>
+	      <input id="ic_unidad_nominal_g" name="ic_unidad_nominal_g" [(ngModel)]="ic_unidad_nominal_g" type="number" step="0.0001" placeholder="Unidad Nominal" />
+	    </div>
+	    <div>
+	      <label for="ic_calibracion_1">Calibración 1</label>
+	      <input id="ic_calibracion_1" name="ic_calibracion_1" [(ngModel)]="ic_calibracion_1" placeholder="Calibración 1" />
+	    </div>
+	    <div>
+	      <label for="ic_fecha_c1">Fecha Calibración 1</label>
+	      <input id="ic_fecha_c1" name="ic_fecha_c1" [(ngModel)]="ic_fecha_c1" type="date" />
+	    </div>
+	    <div>
+	      <label for="ic_error_c1_g">Error Calibración 1 (g)</label>
+	      <input id="ic_error_c1_g" name="ic_error_c1_g" [(ngModel)]="ic_error_c1_g" type="number" step="0.0001" placeholder="Error Calibración 1" />
+	    </div>
+	    <div>
+	      <label for="ic_calibracion_2">Calibración 2</label>
+	      <input id="ic_calibracion_2" name="ic_calibracion_2" [(ngModel)]="ic_calibracion_2" placeholder="Calibración 2" />
+	    </div>
+	    <div>
+	      <label for="ic_fecha_c2">Fecha Calibración 2</label>
+	      <input id="ic_fecha_c2" name="ic_fecha_c2" [(ngModel)]="ic_fecha_c2" type="date" />
+	    </div>
+	    <div>
+	      <label for="ic_error_c2_g">Error Calibración 2 (g)</label>
+	      <input id="ic_error_c2_g" name="ic_error_c2_g" [(ngModel)]="ic_error_c2_g" type="number" step="0.0001" placeholder="Error Calibración 2" />
+	    </div>
+	    <div>
+	      <label for="ic_diferencia_dias">Diferencia de Días</label>
+	      <input id="ic_diferencia_dias" name="ic_diferencia_dias" [(ngModel)]="ic_diferencia_dias" type="number" placeholder="Diferencia de Días" />
+	    </div>
+	    <div>
+	      <label for="ic_desviacion">Desviación</label>
+	      <input id="ic_desviacion" name="ic_desviacion" [(ngModel)]="ic_desviacion" type="number" step="0.0001" placeholder="Desviación" />
+	    </div>
+	    <div>
+	      <label for="ic_deriva">Deriva</label>
+	      <input id="ic_deriva" name="ic_deriva" [(ngModel)]="ic_deriva" type="number" step="0.0001" placeholder="Deriva" />
+	    </div>
+	    <div>
+	      <label for="ic_tolerancia_g">Tolerancia (g)</label>
+	      <input id="ic_tolerancia_g" name="ic_tolerancia_g" [(ngModel)]="ic_tolerancia_g" type="number" step="0.0001" placeholder="Tolerancia" />
+	    </div>
+	    <div>
+	      <label for="ic_intervalo_calibraciones_dias">Intervalo Calibraciones (días)</label>
+	      <input id="ic_intervalo_calibraciones_dias" name="ic_intervalo_calibraciones_dias" [(ngModel)]="ic_intervalo_calibraciones_dias" type="number" placeholder="Intervalo en Días" />
+	    </div>
+	    <div>
+	      <label for="ic_intervalo_calibraciones_anios">Intervalo Calibraciones (años)</label>
+	      <input id="ic_intervalo_calibraciones_anios" name="ic_intervalo_calibraciones_anios" [(ngModel)]="ic_intervalo_calibraciones_anios" type="number" step="0.0001" placeholder="Intervalo en Años" />
+	    </div>
+	    <div class="actions">
+	      <button class="btn-compact" type="submit" [disabled]="ic_guardando">{{ ic_guardando ? 'Guardando…' : 'Guardar Intervalo' }}</button>
+	    </div>
+	  </form>
+	</section>
+
 	<h2>Listado de equipos</h2>
 	<section>
 		<div class="cards-container">
@@ -224,11 +356,12 @@
 									@if (e.tipo) { <span class="pill"><strong>Tipo:</strong> {{ e.tipo }}</span> }
 									@if (e.clasificacion) { <span class="pill"><strong>Clasificación:</strong> {{ e.clasificacion }}</span> }
 								</div>
-								<button type="button" class="icon-btn danger" title="Eliminar" aria-label="Eliminar" (click)="$event.stopPropagation()">
-									<svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-										<path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-									</svg>
+								<button type="button" class="eliminar" title="Eliminar" (click)="eliminarEquipo(e.id, $event)">
+								  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+								    <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+								  </svg>
 								</button>
+							
 							</div>
 							<div class="lane-title" [title]="e.nombre">{{ e.nombre }}</div>
 							@if (isFilaExpandida(e)) {
@@ -241,10 +374,15 @@
 									<div class="detail-card"><div class="detail-label">Puesta en servicio</div><div class="detail-value">{{ formatFechaPuesta(e.puesta_en_servicio) }}</div></div>
 									<div class="detail-card"><div class="detail-label">Adquisición</div><div class="detail-value">{{ e.fecha_adquisicion ? (e.fecha_adquisicion | date:'yyyy-MM-dd') : '—' }}</div></div>
 								</div>
-								<!-- Separador pedido: guion para separar de la info de mantenimiento -->
-								<div class="section-sep">-</div>
-									<div class="mantenimiento-block">
-										<div class="m-header">Mantenimiento</div>
+
+								<div class="toggle-block" (click)="$event.stopPropagation()">
+									<button type="button" class="m-toggle" (click)="toggleMantenimiento(e, $event)" [attr.aria-expanded]="isMOpen(e)">
+										<span class="title">Mantenimiento</span>
+										<svg viewBox="0 0 24 24" class="chev" [class.open]="isMOpen(e)" aria-hidden="true">
+											<path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+										</svg>
+									</button>
+									@if (isMOpen(e)) {
 										@if (mLoading[e.id]) { <p class="muted">Cargando mantenimiento…</p> }
 										@else if (mError[e.id]) { <p class="error">{{ mError[e.id] }}</p> }
 										@else {
@@ -260,28 +398,100 @@
 												</div>
 											} @else { <p class="muted">Sin registros de mantenimiento.</p> }
 										}
-								</div>
-								<!-- Separador entre mantenimiento y VCC -->
-								<div class="section-sep">-</div>
-								<div class="vcc-block">
-									<div class="m-header">Verificación / Calibración / Calificación</div>
-									@if (vLoading[e.id]) { <p class="muted">Cargando VCC…</p> }
-									@else if (vError[e.id]) { <p class="error">{{ vError[e.id] }}</p> }
-									@else {
-										@if (vMap[e.id]?.length) {
-											<div class="details-grid">
-												@for (v of vMap[e.id]; track v.id) {
-													<div class="detail-card"><div class="detail-label">Campo medición</div><div class="detail-value">{{ v.campo_medicion || '—' }}</div></div>
-													<div class="detail-card"><div class="detail-label">Exactitud</div><div class="detail-value">{{ v.exactitud || '—' }}</div></div>
-													<div class="detail-card"><div class="detail-label">Suj. verificar</div><div class="detail-value">{{ v.sujeto_verificar || '—' }}</div></div>
-													<div class="detail-card"><div class="detail-label">Suj. calibración</div><div class="detail-value">{{ v.sujeto_calibracion || '—' }}</div></div>
-													<div class="detail-card"><div class="detail-label">Resolución</div><div class="detail-value">{{ v.resolucion_division || '—' }}</div></div>
-													<div class="detail-card"><div class="detail-label">Suj. calificación</div><div class="detail-value">{{ v.sujeto_calificacion || '—' }}</div></div>
-													<div class="detail-card"><div class="detail-label">Accesorios</div><div class="detail-value">{{ v.accesorios || '—' }}</div></div>
-												}
-											</div>
-										} @else { <p class="muted">Sin registros VCC.</p> }
 									}
+								</div>
+
+								<div class="toggle-block" (click)="$event.stopPropagation()">
+									<button type="button" class="m-toggle" (click)="toggleVcc(e, $event)" [attr.aria-expanded]="isVOpen(e)">
+										<span class="title">Verificación / Calibración / Calificación</span>
+										<svg viewBox="0 0 24 24" class="chev" [class.open]="isVOpen(e)" aria-hidden="true">
+											<path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+										</svg>
+									</button>
+									@if (isVOpen(e)) {
+										@if (vLoading[e.id]) { <p class="muted">Cargando VCC…</p> }
+										@else if (vError[e.id]) { <p class="error">{{ vError[e.id] }}</p> }
+										@else {
+											@if (vMap[e.id]?.length) {
+												<div class="details-grid">
+													@for (v of vMap[e.id]; track v.id) {
+														<div class="detail-card"><div class="detail-label">Campo medición</div><div class="detail-value">{{ v.campo_medicion || '—' }}</div></div>
+														<div class="detail-card"><div class="detail-label">Exactitud</div><div class="detail-value">{{ v.exactitud || '—' }}</div></div>
+														<div class="detail-card"><div class="detail-label">Suj. verificar</div><div class="detail-value">{{ v.sujeto_verificar || '—' }}</div></div>
+														<div class="detail-card"><div class="detail-label">Suj. calibración</div><div class="detail-value">{{ v.sujeto_calibracion || '—' }}</div></div>
+														<div class="detail-card"><div class="detail-label">Resolución</div><div class="detail-value">{{ v.resolucion_division || '—' }}</div></div>
+														<div class="detail-card"><div class="detail-label">Suj. calificación</div><div class="detail-value">{{ v.sujeto_calificacion || '—' }}</div></div>
+														<div class="detail-card"><div class="detail-label">Accesorios</div><div class="detail-value">{{ v.accesorios || '—' }}</div></div>
+													}
+												</div>
+											} @else { <p class="muted">Sin registros VCC.</p> }
+										}
+									}
+								</div>
+
+								<div class="toggle-block" (click)="$event.stopPropagation()">
+                                    <button type="button" class="m-toggle" (click)="toggleHistorial(e, $event)" [attr.aria-expanded]="isHOpen(e)">
+                                        <span class="title">Historial de Instrumento</span>
+                                        <svg viewBox="0 0 24 24" class="chev" [class.open]="isHOpen(e)" aria-hidden="true">
+                                            <path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </button>
+                                    @if (isHOpen(e)) {
+                                        @if (hLoading[e.id]) { <p class="muted">Cargando historial…</p> }
+                                        @else if (hError[e.id]) { <p class="error">{{ hError[e.id] }}</p> }
+                                        @else {
+                                            @if (hMap[e.id]?.length) {
+                                                <div class="details-grid">
+                                                    @for (h of hMap[e.id]; track h.id) {
+                                                        <div class="detail-card"><div class="detail-label">Número</div><div class="detail-value">{{ h.numero || '—' }}</div></div>
+                                                        <div class="detail-card"><div class="detail-label">Fecha</div><div class="detail-value">{{ h.fecha ? (h.fecha | date:'dd/MM/yyyy') : '—' }}</div></div>
+                                                        <div class="detail-card"><div class="detail-label">Tipo</div><div class="detail-value">{{ h.tipo_historial || '—' }}</div></div>
+                                                        <div class="detail-card"><div class="detail-label">Código Registro</div><div class="detail-value">{{ h.codigo_registro || '—' }}</div></div>
+                                                        <div class="detail-card"><div class="detail-label">Tolerancia (g)</div><div class="detail-value">{{ h.tolerancia_g || '—' }}</div></div>
+                                                        <div class="detail-card"><div class="detail-label">Tolerancia Error (g)</div><div class="detail-value">{{ h.tolerancia_error_g || '—' }}</div></div>
+                                                        <div class="detail-card"><div class="detail-label">Incertidumbre U</div><div class="detail-value">{{ h.incertidumbre_u || '—' }}</div></div>
+                                                        <div class="detail-card"><div class="detail-label">Realizó</div><div class="detail-value">{{ h.realizo || '—' }}</div></div>
+                                                        <div class="detail-card"><div class="detail-label">Supervisó</div><div class="detail-value">{{ h.superviso || '—' }}</div></div>
+                                                        <div class="detail-card"><div class="detail-label">Observaciones</div><div class="detail-value">{{ h.observaciones || '—' }}</div></div>
+                                                    }
+                                                </div>
+                                            } @else { <p class="muted">Sin registros de historial.</p> }
+                                        }
+                                    }
+                                </div>
+
+								<div class="toggle-block" (click)="$event.stopPropagation()">
+								  <button type="button" class="m-toggle" (click)="toggleIntervalos(e, $event)" [attr.aria-expanded]="isIntervalosOpen(e)">
+								    <span class="title">Intervalos de Calibración</span>
+								    <svg viewBox="0 0 24 24" class="chev" [class.open]="isIntervalosOpen(e)" aria-hidden="true">
+								      <path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+								    </svg>
+								  </button>
+								  @if (isIntervalosOpen(e)) {
+								    @if (intervalosLoading[e.id]) { <p class="muted">Cargando intervalos…</p> }
+								    @else {
+								      @if (intervalosMap[e.id]?.length) {
+								        <div class="details-grid">
+								          @for (intervalo of intervalosMap[e.id]; track intervalo.id) {
+								            <div class="detail-card"><div class="detail-label">Número</div><div class="detail-value">{{ intervalo.numero || '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Unidad Nominal (g)</div><div class="detail-value">{{ intervalo.unidad_nominal_g || '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Calibración 1</div><div class="detail-value">{{ intervalo.calibracion_1 || '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Fecha Calibración 1</div><div class="detail-value">{{ intervalo.fecha_c1 ? (intervalo.fecha_c1 | date:'dd/MM/yyyy') : '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Error Calibración 1 (g)</div><div class="detail-value">{{ intervalo.error_c1_g || '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Calibración 2</div><div class="detail-value">{{ intervalo.calibracion_2 || '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Fecha Calibración 2</div><div class="detail-value">{{ intervalo.fecha_c2 ? (intervalo.fecha_c2 | date:'dd/MM/yyyy') : '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Error Calibración 2 (g)</div><div class="detail-value">{{ intervalo.error_c2_g || '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Diferencia Días</div><div class="detail-value">{{ intervalo.diferencia_dias || '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Desviación</div><div class="detail-value">{{ intervalo.desviacion || '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Deriva</div><div class="detail-value">{{ intervalo.deriva || '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Tolerancia (g)</div><div class="detail-value">{{ intervalo.tolerancia_g || '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Intervalo Calibraciones (días)</div><div class="detail-value">{{ intervalo.intervalo_calibraciones_dias || '—' }}</div></div>
+								            <div class="detail-card"><div class="detail-label">Intervalo Calibraciones (años)</div><div class="detail-value">{{ intervalo.intervalo_calibraciones_anios || '—' }}</div></div>
+								          }
+								        </div>
+								      } @else { <p class="muted">Sin registros de intervalos.</p> }
+								    }
+								  }
 								</div>
 							</div>
 							}
@@ -293,5 +503,4 @@
 			@if (!cargando && !lista.length) { <p>No hay equipos registrados.</p> }
 		</div>
 	</section>
-</div>
 
