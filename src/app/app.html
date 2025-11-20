@@ -55,76 +55,78 @@
 }
 
 <!-- ====== NAVIGATION MENU ====== -->
+<!-- ====== NAVIGATION MENU ====== -->
 @if (user()) {
 <nav class="nav-menu">
   <div class="nav-content">
-    <!-- Mostrar estas páginas solo si NO es Superadmin -->
-    @if (user()?.rol !== 'Superadmin') {
-      <a
-        routerLink="/dashboard"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="nav-item"
-      >
-        <i class="fas fa-tachometer-alt"></i> Dashboard
-      </a>
+    <!-- ✅ ELIMINÉ: @if (user()?.rol !== 'Superadmin') { -->
 
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="nav-item"
+    >
+      <i class="fas fa-tachometer-alt"></i> Dashboard
+    </a>
+
+    <a 
+      routerLink="/solicitudes" 
+      routerLinkActive="active" 
+      class="nav-item"
+    >
+      <i class="fas fa-clipboard-list"></i> Solicitudes
+    </a>
+
+    <!-- Inventario dropdown: hover OR click to open -->
+    <div class="nav-item dropdown">
+      <button
+        type="button"
+        class="dropdown-toggle"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        <i class="fas fa-warehouse" aria-hidden="true"></i>
+        <span>Inventario</span>
+        <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
+      </button>
+
+      <div class="dropdown-menu" role="menu">
+        <a routerLink="/reactivos" class="dropdown-item" role="menuitem">
+          <i class="fas fa-flask" aria-hidden="true"></i>
+          <span>Reactivos</span>
+        </a>
+        <a routerLink="/insumos" class="dropdown-item" role="menuitem">
+          <i class="fas fa-boxes" aria-hidden="true"></i>
+          <span>Insumos</span>
+        </a>
+        <a routerLink="/equipos" class="dropdown-item" role="menuitem">
+          <i class="fas fa-screwdriver-wrench" aria-hidden="true"></i>
+          <span>Equipos</span>
+        </a>
+        <a routerLink="/papeleria" class="dropdown-item" role="menuitem">
+          <i class="fas fa-paperclip" aria-hidden="true"></i>
+          <span>Papelería</span>
+        </a>
+        <a routerLink="/materiales-volumetricos" class="dropdown-item" role="menuitem">
+          <i class="fas fa-vials" aria-hidden="true"></i>
+          <span>Materiales volumétricos</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ✅ MODIFIQUÉ: Auditoría también para Superadmin -->
+    @if (user()?.rol === 'Administrador' || user()?.rol === 'Superadmin') {
       <a 
-        routerLink="/solicitudes" 
+        routerLink="/auditoria" 
         routerLinkActive="active" 
         class="nav-item"
       >
-        <i class="fas fa-clipboard-list"></i> Solicitudes
+        <i class="fas fa-clipboard-check"></i> Auditoría
       </a>
-
-      <!-- Inventario dropdown: hover OR click to open -->
-      <div class="nav-item dropdown">
-        <button
-          type="button"
-          class="dropdown-toggle"
-          aria-haspopup="true"
-          aria-expanded="false"
-        >
-          <i class="fas fa-warehouse" aria-hidden="true"></i>
-          <span>Inventario</span>
-          <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
-        </button>
-
-        <div class="dropdown-menu" role="menu">
-          <a routerLink="/reactivos" class="dropdown-item" role="menuitem">
-            <i class="fas fa-flask" aria-hidden="true"></i>
-            <span>Reactivos</span>
-          </a>
-          <a routerLink="/insumos" class="dropdown-item" role="menuitem">
-            <i class="fas fa-boxes" aria-hidden="true"></i>
-            <span>Insumos</span>
-          </a>
-          <a routerLink="/equipos" class="dropdown-item" role="menuitem">
-            <i class="fas fa-screwdriver-wrench" aria-hidden="true"></i>
-            <span>Equipos</span>
-          </a>
-          <a routerLink="/papeleria" class="dropdown-item" role="menuitem">
-            <i class="fas fa-paperclip" aria-hidden="true"></i>
-            <span>Papelería</span>
-          </a>
-          <a routerLink="/materiales-volumetricos" class="dropdown-item" role="menuitem">
-            <i class="fas fa-vials" aria-hidden="true"></i>
-            <span>Materiales volumétricos</span>
-          </a>
-        </div>
-      </div>
-
-      <!--  AUDITORÍA SOLO PARA ADMINISTRADOR -->
-      @if (user()?.rol === 'Administrador') {
-        <a 
-          routerLink="/auditoria" 
-          routerLinkActive="active" 
-          class="nav-item"
-        >
-          <i class="fas fa-clipboard-check"></i> Auditoría
-        </a>
-      }
     }
+
+    <!-- ✅ ELIMINÉ: } (que cerraba el if que ocultaba todo) -->
 
     <!-- Mostrar Usuarios solo si ES Superadmin -->
     @if (user()?.rol === 'Superadmin') {
@@ -135,8 +137,6 @@
       >
         <i class="fas fa-users"></i> Usuarios
       </a>
-      
-      <!-- El Superadmin NO ve esta auditoría, tendrá su propia auditoría después -->
     }
   </div>
 </nav>

@@ -49,12 +49,20 @@ export const roleGuard: CanActivateFn = async (route) => {
   }
 
   if (!authService.hasRole(allowedRoles)) {
-    if (user.rol === 'Superadmin') {
-      return router.createUrlTree(['/usuarios']);
-    } else {
-      return router.createUrlTree(['/dashboard']);
-    }
+  if (user.rol === 'Superadmin') {
+    return true; // ✅ Superadmin puede acceder a todo
+  } else {
+    return router.createUrlTree(['/dashboard']);
   }
+}
+
+  // if (!authService.hasRole(allowedRoles)) {
+  //   if (user.rol === 'Superadmin') {
+  //     return router.createUrlTree(['/usuarios']);
+  //   } else {
+  //     return router.createUrlTree(['/dashboard']);
+  //   }
+  // }
 
   return true;
 };

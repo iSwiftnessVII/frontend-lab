@@ -14,43 +14,43 @@ export const routes: Routes = [
     path: 'dashboard', 
     loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent), 
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Auxiliar'] }
+    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
   },
   { 
     path: 'solicitudes', 
     loadComponent: () => import('./solicitudes/solicitudes.component').then(m => m.SolicitudesComponent), 
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Auxiliar'] }
+    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
   },
   { 
     path: 'reactivos', 
     loadComponent: () => import('./reactivos/reactivos.component').then(m => m.ReactivosComponent), 
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Auxiliar'] }
+    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
   },
   { 
     path: 'insumos', 
     component: InsumosComponent,
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Auxiliar'] }
+    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
   },
   { 
     path: 'papeleria', 
     component: PapeleriaComponent,
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Auxiliar'] }
+    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
   },
   { 
     path: 'equipos', 
   loadComponent: () => import('./equipos/equipos.component').then(m => m.EquiposComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Auxiliar'] }
+    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
   },
   { 
     path: 'materiales-volumetricos', 
     loadComponent: () => import('./materiales-volumetricos/materiales-volumetricos.component').then(m => m.MaterialesVolumetricosComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Auxiliar'] }
+    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
   },
   { 
     path: 'usuarios', 
@@ -62,6 +62,6 @@ export const routes: Routes = [
   path: 'auditoria', 
   loadComponent: () => import('./logs/logs.component').then(m => m.LogsComponent), 
   canActivate: [authGuard, roleGuard],
-  data: { roles: ['Administrador'] } 
+  data: { roles: ['Administrador', 'Superadmin'] } 
 }
 ];
