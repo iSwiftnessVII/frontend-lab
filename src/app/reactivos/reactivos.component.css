@@ -744,9 +744,9 @@ button[type='button']:hover,
 
 /* Botón eliminar todos (inventario) */
 .btn-delete-all {
-  background: #b91c1c; /* rojo oscuro */
+  background: #b91c1c !important; /* rojo oscuro */
   color: #fff;
-  border: 1px solid #991b1b;
+  border: 1px solid #991b1b !important;
   padding: 0.6rem 0.9rem;
   border-radius: 6px;
   cursor: pointer;

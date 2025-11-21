@@ -234,9 +234,9 @@ section {
 .btn-reset-filtros {
     width: 100%;
     padding: 0.75rem 1rem;
-    background: linear-gradient(135deg, var(--alert-orange) 0%, #ffcf8f 100%);
-    color: #744210;
-    border: 2px solid rgba(116, 66, 16, 0.2);
+    background: linear-gradient(135deg, var(--alert-orange) 0%, #ffcf8f 100%) !important;
+    color: #744210 !important;
+    border: 2px solid rgba(116, 66, 16, 0.2) !important;
     border-radius: 10px;
     font-weight: 600;
     font-size: 0.9rem;

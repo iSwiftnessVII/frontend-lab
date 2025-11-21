@@ -1,6 +1,9 @@
 <!-- CONTAINER PRINCIPAL -->
 <div class="liba-theme container">
-
+<h1>
+    <i class="fas fa-clipboard-list"></i>
+    | Solicitudes
+  </h1>
   <h2>Agregar cliente</h2>
   <!-- SECCIÓN: Agregar cliente -->
   <section>
@@ -510,84 +513,97 @@
   <h2>Agregar encuesta de satisfacción</h2>
   <section>
 
-    <form (submit)="createEncuesta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
-      <div class="form-grid">
+    <!-- SECCIÓN: AGREGAR ENCUESTA -->
+<h2>Agregar encuesta de satisfacción</h2>
+<section>
 
-        <!-- Solicitud -->
-        <div class="form-field">
-          <label for="encuestaSolicitudId">Solicitud:</label>
-          <select id="encuestaSolicitudId" [(ngModel)]="encuestaSolicitudId" name="encuestaSolicitudId" required
-            [class.error]="encuestaErrors['solicitudId']">
-            <option value="">Seleccionar solicitud</option>
-            <option *ngFor="let s of solicitudes()" [value]="s.id_solicitud">
-              {{ s.nombre_solicitante }} - {{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
-            </option>
-          </select>
-          <small *ngIf="encuestaErrors['solicitudId']" class="error-message">
-            ⚠️ {{ encuestaErrors['solicitudId'] }}
-          </small>
-        </div>
+  <form (submit)="createEncuesta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
+    <div class="form-grid">
 
-        <!-- Fecha de encuesta -->
-        <div class="form-field">
-          <label for="encuestaFecha">Fecha de la encuesta:</label>
-          <input id="encuestaFecha" type="date" [(ngModel)]="encuestaFecha" name="encuestaFecha"
-            [class.error]="encuestaErrors['fecha']" />
-          <small *ngIf="encuestaErrors['fecha']" class="error-message">
-            ⚠️ {{ encuestaErrors['fecha'] }}
-          </small>
-        </div>
-
-        <!-- Puntuación -->
-        <div class="form-field">
-          <label for="encuestaPuntuacion">Puntuación de satisfacción:</label>
-          <input id="encuestaPuntuacion" type="number" min="1" max="10" [(ngModel)]="encuestaPuntuacion"
-            name="encuestaPuntuacion" [class.error]="encuestaErrors['puntuacion']" placeholder="Puntuación del 1 al 10" />
-          <small *ngIf="encuestaErrors['puntuacion']" class="error-message">
-            ⚠️ {{ encuestaErrors['puntuacion'] }}
-          </small>
-        </div>
-
-        <!-- Comentarios -->
-        <div class="form-field">
-          <label for="encuestaComentarios">Comentarios:</label>
-          <textarea id="encuestaComentarios" [(ngModel)]="encuestaComentarios" name="encuestaComentarios"
-            [class.error]="encuestaErrors['comentarios']" placeholder="Comentarios del cliente"></textarea>
-          <small *ngIf="encuestaErrors['comentarios']" class="error-message">
-            ⚠️ {{ encuestaErrors['comentarios'] }}
-          </small>
-        </div>
-
-        <!-- ¿Recomendaría el servicio? -->
-        <div class="form-field checkbox-field">
-          <label for="encuestaRecomendaria">
-            <input id="encuestaRecomendaria" type="checkbox" [(ngModel)]="encuestaRecomendaria"
-              name="encuestaRecomendaria" />
-            ¿Recomendaría el servicio?
-          </label>
-        </div>
-
-        <!-- ¿El cliente respondió? -->
-        <div class="form-field checkbox-field">
-          <label for="encuestaClienteRespondio">
-            <input id="encuestaClienteRespondio" type="checkbox" [(ngModel)]="encuestaClienteRespondio"
-              name="encuestaClienteRespondio" />
-            ¿El cliente respondió la encuesta?
-          </label>
-        </div>
-
-        <!-- ¿Se solicitó nueva encuesta? -->
-        <div class="form-field checkbox-field">
-          <label for="encuestaSolicitoNueva">
-            <input id="encuestaSolicitoNueva" type="checkbox" [(ngModel)]="encuestaSolicitoNueva"
-              name="encuestaSolicitoNueva" />
-            ¿Se solicitó nueva encuesta?
-          </label>
-        </div>
+      <!-- Solicitud -->
+      <div class="form-field">
+        <label for="encuestaSolicitudId">Solicitud:</label>
+        <select id="encuestaSolicitudId" [(ngModel)]="encuestaSolicitudId" name="encuestaSolicitudId" required
+          [class.error]="encuestaErrors['solicitudId']">
+          <option value="">Seleccionar solicitud</option>
+          <option *ngFor="let s of solicitudes()" [value]="s.id_solicitud">
+            {{ s.nombre_solicitante }} - {{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
+          </option>
+        </select>
+        <small *ngIf="encuestaErrors['solicitudId']" class="error-message">
+          ⚠️ {{ encuestaErrors['solicitudId'] }}
+        </small>
       </div>
-      <div class="form-actions"><button type="submit">Agregar encuesta</button></div>
-    </form>
-    <p *ngIf="encuestaMsg" class="success-message">{{ encuestaMsg }}</p>
+
+      <!-- Fecha de encuesta -->
+      <div class="form-field">
+        <label for="encuestaFecha">Fecha de la encuesta:</label>
+        <input id="encuestaFecha" type="date" [(ngModel)]="encuestaFecha" name="encuestaFecha"
+          [class.error]="encuestaErrors['fecha']" />
+        <small *ngIf="encuestaErrors['fecha']" class="error-message">
+          ⚠️ {{ encuestaErrors['fecha'] }}
+        </small>
+      </div>
+
+      <!-- Puntuación -->
+      <div class="form-field">
+        <label for="encuestaPuntuacion">Puntuación de satisfacción:</label>
+        <input id="encuestaPuntuacion" type="number" min="1" max="10" [(ngModel)]="encuestaPuntuacion"
+          name="encuestaPuntuacion" [class.error]="encuestaErrors['puntuacion']"
+          placeholder="Puntuación del 1 al 10" />
+        <small *ngIf="encuestaErrors['puntuacion']" class="error-message">
+          ⚠️ {{ encuestaErrors['puntuacion'] }}
+        </small>
+      </div>
+
+      <!-- Comentarios -->
+      <div class="form-field">
+        <label for="encuestaComentarios">Comentarios:</label>
+        <textarea id="encuestaComentarios" [(ngModel)]="encuestaComentarios" name="encuestaComentarios"
+          [class.error]="encuestaErrors['comentarios']" placeholder="Comentarios del cliente"></textarea>
+        <small *ngIf="encuestaErrors['comentarios']" class="error-message">
+          ⚠️ {{ encuestaErrors['comentarios'] }}
+        </small>
+      </div>
+
+      <!-- ¿Recomendaría el servicio? -->
+      <div class="form-field checkbox-field">
+        <label for="encuestaRecomendaria">
+          <input id="encuestaRecomendaria" type="checkbox" [(ngModel)]="encuestaRecomendaria"
+            name="encuestaRecomendaria" />
+          ¿Recomendaría el servicio?
+        </label>
+      </div>
+
+      <!-- ¿El cliente respondió? -->
+      <div class="form-field checkbox-field">
+        <label for="encuestaClienteRespondio">
+          <input id="encuestaClienteRespondio" type="checkbox" [(ngModel)]="encuestaClienteRespondio"
+            name="encuestaClienteRespondio" />
+          ¿El cliente respondió la encuesta?
+        </label>
+      </div>
+
+      <!-- ¿Se solicitó nueva encuesta? -->
+      <div class="form-field checkbox-field">
+        <label for="encuestaSolicitoNueva">
+          <input id="encuestaSolicitoNueva" type="checkbox" [(ngModel)]="encuestaSolicitoNueva"
+            name="encuestaSolicitoNueva" />
+          ¿Se solicitó nueva encuesta?
+        </label>
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+      <button type="submit">Agregar encuesta</button>
+    </div>
+
+  </form>
+
+  <p *ngIf="encuestaMsg" class="success-message">{{ encuestaMsg }}</p>
+</section>
+
   </section>
 
   <!-- SECCIÓN: Lista rápida de solicitudes -->
@@ -631,12 +647,11 @@
               <div class="check-border"><span><input type="checkbox" [checked]="!!s.numero_informe_resultados"
                     (change)="toggleCheck(s, 'numero_informe_resultados', $event.target.checked)" /> Resultados</span>
               </div>
-              <button type="button" class="icon-btn delete" *ngIf="canDelete()"
-                (click)="deleteSolicitud(s.id_solicitud)" aria-label="Eliminar solicitud" title="Eliminar solicitud">
-                <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                  <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-              </button>
+<button type="button" class="icon-btn delete" *ngIf="canDelete()"
+  (click)="deleteSolicitud(s.id_solicitud)" aria-label="Eliminar solicitud" title="Eliminar solicitud">
+  <i class="fa-solid fa-trash"></i>
+</button>
+
             </div>
           </div>
           <div class="card-name" [title]="s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud)">

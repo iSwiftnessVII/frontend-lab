@@ -1,22 +1,69 @@
+/* ===== IMPORTS — SOLO UNO, EL CORRECTO ===== */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css');
 
-/* ===== Variables CSS ===== */
-:root {
-    --primary-blue: #001f5b;
-    --primary-turquoise: #00b8b5;
-    --primary-white: #ffffff;
-    --alert-yellow: #fff3b0;
-    --alert-orange: #ffd6a5;
-    --alert-red: #ffadad;
-    --text-gray: #4a5568;
-    --light-gray: #f7fafc;
-    --border-gray: #e2e8f0;
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
-    --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+/* ===== BOTONES DE ACCIÓN ===== */
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 2px solid var(--border-gray);
+  background: var(--primary-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  box-shadow: var(--shadow-sm);
+  font-size: 18px;
 }
+
+/* icono dentro del botón */
+.icon-btn i {
+  font-size: 18px;
+}
+
+/* ===== EDITAR (AZUL) ===== */
+.icon-btn.edit {
+  border-color: #3182ce;
+  color: #3182ce;
+}
+.icon-btn.edit i {
+  color: #3182ce;
+}
+.icon-btn.edit:hover {
+  background: #3182ce;
+  color: white;
+}
+.icon-btn.edit:hover i {
+  color: white;
+}
+/* Botón eliminar */
+
+.icon-btn.delete {
+    border: 2px solid #c53030 !important; /* borde rojo */
+    background: #ff9999 !important;        /* fondo blanco */
+    color: #c53030 !important;           /* color del ícono */
+}
+
+.icon-btn.delete:hover {
+    background: #c53030 !important;      /* fondo rojo en hover */
+    color: #ff9999 !important;             /* icono blanco */
+    border-color: #c53030 !important;
+    box-shadow: 0 2px 8px #ff9999 !important;
+}
+
+.icon-btn.delete i {
+    color: inherit !important;
+}
+
+/* ===== CONTENEDOR DE ACCIONES ===== */
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
 
 /* ===== Animaciones ===== */
 @keyframes fadeInUp {
@@ -656,7 +703,7 @@
 
 .btn-danger {
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #c53030 0%, #e53e3e 100%);
+  background: linear-gradient(135deg, #c53030 0%, #e53e3e 100%) !important;
   color: white;
   border: none;
   border-radius: 10px;

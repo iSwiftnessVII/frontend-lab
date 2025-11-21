@@ -550,7 +550,7 @@ select:disabled { background-color: #f5f7fb; color: #9aa4b2; cursor: not-allowed
 
 .liba-theme button:not(.pdf-btn):not(.eliminar):active {
 	transform: translateY(0);
-	box-shadow: 0 2px 8px rgba(0, 184, 181, 0.3);
+	
 }
 
 /* =====================================================

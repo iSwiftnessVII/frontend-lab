@@ -201,12 +201,12 @@ button[type="button"]:hover,
 }
 
 .btn-reset-filtros {
-    background: var(--alert-orange);
-    color: #744210;
+    background: var(--alert-orange) !important;
+    color: #744210 !important;
 }
 
 .btn-reset-filtros:hover {
-    background: #ffb366;
+    background: #ffb366 !important;
 }
 
 /* ===== Filters ===== */

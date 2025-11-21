@@ -1,11 +1,15 @@
 <!-- src/app/reportes/reportes.component.html -->
 <div class="reportes-container">
+    <h1>
+    <i class="fas fa-chart-bar"></i>
+    | Sistema de Reportes
+    </h1>
     <h2>Reportes Manuales</h2>
 
     <!-- Selector de tipo de reporte -->
     <div class="filtros">
         <label>Tipo de Reporte:</label>
-        <select [value]="tipoReporte()" (change)="tipoReporte.set($any($event.target).value)">
+        <select [value]="tipoReporte()" (change)="tipoReporte.set($any($event.target).value); paginaActual.set(1)">
             <option value="inventario">Inventario General</option>
             <option value="entradas">Entradas</option>
             <option value="salidas">Salidas</option>
@@ -51,86 +55,131 @@
 
         <!-- Tabla de Inventario -->
         @if (tipoReporte() === 'inventario' && datosInventario().length > 0) {
-        <table>
-            <thead>
-                <tr>
-                    <th>Tipo</th>
-                    <th>Nombre</th>
-                    <th>Cantidad</th>
-                    <th>Presentación</th>
-                    <th>Marca</th>
-                    <th>Referencia</th>
-                    <th>Ubicación</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (item of datosInventario(); track item.id_producto) {
-                <tr>
-                    <td>{{ item.tipo_producto }}</td>
-                    <td>{{ item.nombre }}</td>
-                    <td>{{ item.cantidad }}</td>
-                    <td>{{ item.presentacion }}</td>
-                    <td>{{ item.marca }}</td>
-                    <td>{{ item.referencia }}</td>
-                    <td>{{ item.ubicacion }}</td>
-                </tr>
-                }
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Nombre</th>
+                        <th>Cantidad</th>
+                        <th>Presentación</th>
+                        <th>Marca</th>
+                        <th>Referencia</th>
+                        <th>Ubicación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (item of datosInventarioPaginados(); track item.id_producto) {
+                    <tr>
+                        <td>{{ item.tipo_producto }}</td>
+                        <td [title]="item.nombre">{{ item.nombre }}</td>
+                        <td>{{ item.cantidad }}</td>
+                        <td [title]="item.presentacion">{{ item.presentacion }}</td>
+                        <td [title]="item.marca">{{ item.marca }}</td>
+                        <td [title]="item.referencia">{{ item.referencia }}</td>
+                        <td [title]="item.ubicacion">{{ item.ubicacion }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginación para Inventario -->
+        @if (totalPaginasInventario() > 1) {
+        <div class="pagination">
+            <button (click)="paginaAnterior()" [disabled]="paginaActual() === 1">
+                Anterior
+            </button>
+            <span>Página {{ paginaActual() }} de {{ totalPaginasInventario() }}</span>
+            <button (click)="paginaSiguiente()" [disabled]="paginaActual() === totalPaginasInventario()">
+                Siguiente
+            </button>
+        </div>
+        }
         }
 
         <!-- Tabla de Movimientos -->
         @if ((tipoReporte() === 'entradas' || tipoReporte() === 'salidas') && datosMovimientos().length > 0) {
-        <table>
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Tipo Producto</th>
-                    <th>Referencia</th>
-                    <th>Usuario ID</th>
-                    <th>Tipo Movimiento</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (mov of datosMovimientos(); track mov.id_movimiento) {
-                <tr>
-                    <td>{{ mov.fecha | date:'short' }}</td>
-                    <td>{{ mov.producto_tipo }}</td>
-                    <td>{{ mov.producto_referencia }}</td>
-                    <td>{{ mov.usuario_id }}</td>
-                    <td>{{ mov.tipo_movimiento }}</td>
-                </tr>
-                }
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo Producto</th>
+                        <th>Referencia</th>
+                        <th>Usuario ID</th>
+                        <th>Tipo Movimiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (mov of datosMovimientosPaginados(); track mov.id_movimiento) {
+                    <tr>
+                        <td>{{ mov.fecha | date:'short' }}</td>
+                        <td [title]="mov.producto_tipo">{{ mov.producto_tipo }}</td>
+                        <td [title]="mov.producto_referencia">{{ mov.producto_referencia }}</td>
+                        <td>{{ mov.usuario_id }}</td>
+                        <td [title]="mov.tipo_movimiento">{{ mov.tipo_movimiento }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginación para Movimientos -->
+        @if (totalPaginasMovimientos() > 1) {
+        <div class="pagination">
+            <button (click)="paginaAnterior()" [disabled]="paginaActual() === 1">
+                Anterior
+            </button>
+            <span>Página {{ paginaActual() }} de {{ totalPaginasMovimientos() }}</span>
+            <button (click)="paginaSiguiente()" [disabled]="paginaActual() === totalPaginasMovimientos()">
+                Siguiente
+            </button>
+        </div>
+        }
         }
 
         <!-- Tabla de Vencimientos -->
         @if (tipoReporte() === 'vencimientos' && datosVencimientos().length > 0) {
-        <table>
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Lote</th>
-                    <th>Cantidad</th>
-                    <th>Fecha Vencimiento</th>
-                    <th>Días Restantes</th>
-                    <th>Marca</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (item of datosVencimientos(); track item.id_producto) {
-                <tr>
-                    <td>{{ item.nombre }}</td>
-                    <td>{{ item.id_producto }}</td>
-                    <td>{{ item.cantidad_total }}</td>
-                    <td>{{ item.fecha_vencimiento | date:'shortDate' }}</td>
-                    <td>{{ item.dias_restantes }}</td>
-                    <td>{{ item.marca }}</td>
-                </tr>
-                }
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Lote</th>
+                        <th>Cantidad</th>
+                        <th>Fecha Vencimiento</th>
+                        <th>Días Restantes</th>
+                        <th>Marca</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (item of datosVencimientosPaginados(); track item.id_producto) {
+                    <tr>
+                        <td [title]="item.nombre">{{ item.nombre }}</td>
+                        <td>{{ item.id_producto }}</td>
+                        <td>{{ item.cantidad_total }}</td>
+                        <td>{{ item.fecha_vencimiento | date:'shortDate' }}</td>
+                        <td>{{ item.dias_restantes }}</td>
+                        <td [title]="item.marca">{{ item.marca }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginación para Vencimientos -->
+        @if (totalPaginasVencimientos() > 1) {
+        <div class="pagination">
+            <button (click)="paginaAnterior()" [disabled]="paginaActual() === 1">
+                Anterior
+            </button>
+            <span>Página {{ paginaActual() }} de {{ totalPaginasVencimientos() }}</span>
+            <button (click)="paginaSiguiente()" [disabled]="paginaActual() === totalPaginasVencimientos()">
+                Siguiente
+            </button>
+        </div>
+        }
         }
 
         @if (!cargando() &&

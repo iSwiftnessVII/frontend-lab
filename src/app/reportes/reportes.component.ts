@@ -1,5 +1,5 @@
 // src/app/reportes/reportes.component.ts
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { reportesService, ReporteInventario, ReporteMovimiento, ReporteVencimiento } from '../services/reportes.service';
@@ -26,6 +26,57 @@ export class ReportesComponent implements OnInit {
   datosMovimientos = signal<ReporteMovimiento[]>([]);
   datosVencimientos = signal<ReporteVencimiento[]>([]);
 
+  // Paginación
+  paginaActual = signal<number>(1);
+  itemsPorPagina = 15;
+
+  // Datos paginados según el tipo de reporte
+  datosInventarioPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.itemsPorPagina;
+    const fin = inicio + this.itemsPorPagina;
+    return this.datosInventario().slice(inicio, fin);
+  });
+
+  datosMovimientosPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.itemsPorPagina;
+    const fin = inicio + this.itemsPorPagina;
+    return this.datosMovimientos().slice(inicio, fin);
+  });
+
+  datosVencimientosPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.itemsPorPagina;
+    const fin = inicio + this.itemsPorPagina;
+    return this.datosVencimientos().slice(inicio, fin);
+  });
+
+  // Total de páginas según el tipo de reporte
+  totalPaginasInventario = computed(() => 
+    Math.ceil(this.datosInventario().length / this.itemsPorPagina)
+  );
+
+  totalPaginasMovimientos = computed(() => 
+    Math.ceil(this.datosMovimientos().length / this.itemsPorPagina)
+  );
+
+  totalPaginasVencimientos = computed(() => 
+    Math.ceil(this.datosVencimientos().length / this.itemsPorPagina)
+  );
+
+  // Obtener total de páginas actual
+  get totalPaginasActual(): number {
+    switch (this.tipoReporte()) {
+      case 'inventario':
+        return this.totalPaginasInventario();
+      case 'entradas':
+      case 'salidas':
+        return this.totalPaginasMovimientos();
+      case 'vencimientos':
+        return this.totalPaginasVencimientos();
+      default:
+        return 0;
+    }
+  }
+
   constructor() {}
 
   // ✅ CARGAR AUTOMÁTICAMENTE AL INICIAR
@@ -39,6 +90,7 @@ export class ReportesComponent implements OnInit {
     try {
       const inventario = await reportesService.getInventario();
       this.datosInventario.set(inventario || []);
+      this.paginaActual.set(1);
     } catch (error) {
       console.error('Error cargando reporte inicial:', error);
     } finally {
@@ -49,6 +101,7 @@ export class ReportesComponent implements OnInit {
   // Generar reporte según el tipo seleccionado
   async generarReporte() {
     this.cargando.set(true);
+    this.paginaActual.set(1); // Resetear a la primera página
     
     try {
       switch (this.tipoReporte()) {
@@ -87,11 +140,31 @@ export class ReportesComponent implements OnInit {
     }
   }
 
+  // Métodos de paginación
+  paginaAnterior() {
+    if (this.paginaActual() > 1) {
+      this.paginaActual.set(this.paginaActual() - 1);
+    }
+  }
+
+  paginaSiguiente() {
+    if (this.paginaActual() < this.totalPaginasActual) {
+      this.paginaActual.set(this.paginaActual() + 1);
+    }
+  }
+
+  irAPagina(pagina: number) {
+    if (pagina >= 1 && pagina <= this.totalPaginasActual) {
+      this.paginaActual.set(pagina);
+    }
+  }
+
   // Limpiar filtros
   limpiarFiltros() {
     this.fechaDesde.set('');
     this.fechaHasta.set('');
     this.diasVencimiento.set(30);
+    this.paginaActual.set(1);
   }
 
   // Exportar a PDF
