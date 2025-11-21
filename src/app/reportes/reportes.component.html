@@ -1,0 +1,143 @@
+<!-- src/app/reportes/reportes.component.html -->
+<div class="reportes-container">
+    <h2>Reportes Manuales</h2>
+
+    <!-- Selector de tipo de reporte -->
+    <div class="filtros">
+        <label>Tipo de Reporte:</label>
+        <select [value]="tipoReporte()" (change)="tipoReporte.set($any($event.target).value)">
+            <option value="inventario">Inventario General</option>
+            <option value="entradas">Entradas</option>
+            <option value="salidas">Salidas</option>
+            <option value="vencimientos">Vencimientos</option>
+        </select>
+
+        <!-- Filtros para entradas/salidas -->
+        @if (tipoReporte() === 'entradas' || tipoReporte() === 'salidas') {
+        <div class="fechas">
+            <label>Desde:</label>
+            <input type="date" [value]="fechaDesde()" (change)="fechaDesde.set($any($event.target).value)">
+
+            <label>Hasta:</label>
+            <input type="date" [value]="fechaHasta()" (change)="fechaHasta.set($any($event.target).value)">
+        </div>
+        }
+
+        <!-- Filtro para vencimientos -->
+        @if (tipoReporte() === 'vencimientos') {
+        <div class="dias">
+            <label>Días a vencer:</label>
+            <input type="number" [value]="diasVencimiento()" (change)="diasVencimiento.set($any($event.target).value)"
+                min="1" max="365">
+        </div>
+        }
+
+        <button (click)="generarReporte()" [disabled]="cargando()">
+            {{ cargando() ? 'Generando...' : 'Generar Reporte' }}
+        </button>
+
+        <button (click)="limpiarFiltros()">Limpiar</button>
+        <button (click)="exportarPDF()" class="btn btn-export">
+            <i class="lucide-file-text"></i>
+            Exportar PDF
+        </button>
+    </div>
+
+    <!-- Resultados -->
+    <div class="resultados">
+        @if (cargando()) {
+        <p>Cargando reporte...</p>
+        }
+
+        <!-- Tabla de Inventario -->
+        @if (tipoReporte() === 'inventario' && datosInventario().length > 0) {
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Nombre</th>
+                    <th>Cantidad</th>
+                    <th>Presentación</th>
+                    <th>Marca</th>
+                    <th>Referencia</th>
+                    <th>Ubicación</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (item of datosInventario(); track item.id_producto) {
+                <tr>
+                    <td>{{ item.tipo_producto }}</td>
+                    <td>{{ item.nombre }}</td>
+                    <td>{{ item.cantidad }}</td>
+                    <td>{{ item.presentacion }}</td>
+                    <td>{{ item.marca }}</td>
+                    <td>{{ item.referencia }}</td>
+                    <td>{{ item.ubicacion }}</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+        }
+
+        <!-- Tabla de Movimientos -->
+        @if ((tipoReporte() === 'entradas' || tipoReporte() === 'salidas') && datosMovimientos().length > 0) {
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo Producto</th>
+                    <th>Referencia</th>
+                    <th>Usuario ID</th>
+                    <th>Tipo Movimiento</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (mov of datosMovimientos(); track mov.id_movimiento) {
+                <tr>
+                    <td>{{ mov.fecha | date:'short' }}</td>
+                    <td>{{ mov.producto_tipo }}</td>
+                    <td>{{ mov.producto_referencia }}</td>
+                    <td>{{ mov.usuario_id }}</td>
+                    <td>{{ mov.tipo_movimiento }}</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+        }
+
+        <!-- Tabla de Vencimientos -->
+        @if (tipoReporte() === 'vencimientos' && datosVencimientos().length > 0) {
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Lote</th>
+                    <th>Cantidad</th>
+                    <th>Fecha Vencimiento</th>
+                    <th>Días Restantes</th>
+                    <th>Marca</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (item of datosVencimientos(); track item.id_producto) {
+                <tr>
+                    <td>{{ item.nombre }}</td>
+                    <td>{{ item.id_producto }}</td>
+                    <td>{{ item.cantidad_total }}</td>
+                    <td>{{ item.fecha_vencimiento | date:'shortDate' }}</td>
+                    <td>{{ item.dias_restantes }}</td>
+                    <td>{{ item.marca }}</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+        }
+
+        @if (!cargando() &&
+        (tipoReporte() === 'inventario' && datosInventario().length === 0) ||
+        ((tipoReporte() === 'entradas' || tipoReporte() === 'salidas') && datosMovimientos().length === 0) ||
+        (tipoReporte() === 'vencimientos' && datosVencimientos().length === 0)) {
+        <p>No hay datos para el reporte seleccionado</p>
+        }
+    </div>
+</div>

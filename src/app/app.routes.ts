@@ -63,5 +63,11 @@ export const routes: Routes = [
   loadComponent: () => import('./logs/logs.component').then(m => m.LogsComponent), 
   canActivate: [authGuard, roleGuard],
   data: { roles: ['Administrador', 'Superadmin'] } 
+},
+{ 
+  path: 'reportes', 
+  loadComponent: () => import('./reportes/reportes.component').then(m => m.ReportesComponent), 
+  canActivate: [authGuard, roleGuard],
+  data: { roles: ['Administrador'] }  // Solo Administrador
 }
 ];

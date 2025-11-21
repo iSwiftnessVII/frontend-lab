@@ -42,7 +42,6 @@
             <span>Opciones</span>
           </button>
         </div>
-
         <hr class="dropdown-divider"/>
         <button type="button" class="user-dropdown-item logout" (click)="onLogout()" [disabled]="isLoggingOut()" role="menuitem">
           <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
@@ -55,12 +54,9 @@
 }
 
 <!-- ====== NAVIGATION MENU ====== -->
-<!-- ====== NAVIGATION MENU ====== -->
 @if (user()) {
 <nav class="nav-menu">
   <div class="nav-content">
-    <!-- ✅ ELIMINÉ: @if (user()?.rol !== 'Superadmin') { -->
-
     <a
       routerLink="/dashboard"
       routerLinkActive="active"
@@ -78,7 +74,7 @@
       <i class="fas fa-clipboard-list"></i> Solicitudes
     </a>
 
-    <!-- Inventario dropdown: hover OR click to open -->
+    <!-- Inventario dropdown -->
     <div class="nav-item dropdown">
       <button
         type="button"
@@ -115,18 +111,35 @@
       </div>
     </div>
 
-    <!-- ✅ MODIFIQUÉ: Auditoría también para Superadmin -->
+    <!-- NUEVO: Menú unificado para Auditoría, Logs y Reportes -->
     @if (user()?.rol === 'Administrador' || user()?.rol === 'Superadmin') {
-      <a 
-        routerLink="/auditoria" 
-        routerLinkActive="active" 
-        class="nav-item"
-      >
-        <i class="fas fa-clipboard-check"></i> Auditoría
-      </a>
-    }
+      <div class="nav-item dropdown">
+        <button
+          type="button"
+          class="dropdown-toggle"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          <i class="fas fa-chart-line" aria-hidden="true"></i>
+          <span>Análisis</span>
+          <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
+        </button>
 
-    <!-- ✅ ELIMINÉ: } (que cerraba el if que ocultaba todo) -->
+        <div class="dropdown-menu" role="menu">
+          <!-- Auditoría -->
+          <a routerLink="/auditoria" class="dropdown-item" role="menuitem">
+            <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+            <span>Auditoría</span>
+          </a>
+
+          <!-- Reportes -->
+          <a routerLink="/reportes" class="dropdown-item" role="menuitem">
+            <i class="fas fa-chart-bar" aria-hidden="true"></i>
+            <span>Reportes</span>
+          </a>
+        </div>
+      </div>
+    }
 
     <!-- Mostrar Usuarios solo si ES Superadmin -->
     @if (user()?.rol === 'Superadmin') {
