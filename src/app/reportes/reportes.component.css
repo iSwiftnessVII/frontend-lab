@@ -236,7 +236,8 @@
 /* Botón exportar PDF */
 .btn-export {
     background: linear-gradient(135deg, var(--primary-blue) 0%, #003080 100%) !important;
-    border-color: var(--primary-blue) !important;
+    color: var(--primary-white) !important;
+    border: 2px solid var(--primary-blue) !important;
     box-shadow: 0 4px 12px rgba(0, 31, 91, 0.3) !important;
     display: flex;
     align-items: center;
@@ -246,10 +247,6 @@
 .btn-export:hover:not(:disabled) {
     background: linear-gradient(135deg, #003080 0%, var(--primary-blue) 100%) !important;
     box-shadow: 0 8px 20px rgba(0, 31, 91, 0.4) !important;
-}
-
-.btn-export i {
-    font-size: 1rem;
 }
 
 /* ===== Sección de Resultados ===== */

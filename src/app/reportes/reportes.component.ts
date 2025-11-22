@@ -1,5 +1,5 @@
 // src/app/reportes/reportes.component.ts
-import { Component, signal, OnInit, computed } from '@angular/core';
+import { Component, signal, OnInit, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { reportesService, ReporteInventario, ReporteMovimiento, ReporteVencimiento } from '../services/reportes.service';
@@ -26,62 +26,35 @@ export class ReportesComponent implements OnInit {
   datosMovimientos = signal<ReporteMovimiento[]>([]);
   datosVencimientos = signal<ReporteVencimiento[]>([]);
 
+  // Control para evitar efecto duplicado
+  private cargaInicialCompletada = signal<boolean>(false);
+
   // Paginación
   paginaActual = signal<number>(1);
   itemsPorPagina = 15;
 
-  // Datos paginados según el tipo de reporte
-  datosInventarioPaginados = computed(() => {
-    const inicio = (this.paginaActual() - 1) * this.itemsPorPagina;
-    const fin = inicio + this.itemsPorPagina;
-    return this.datosInventario().slice(inicio, fin);
-  });
-
-  datosMovimientosPaginados = computed(() => {
-    const inicio = (this.paginaActual() - 1) * this.itemsPorPagina;
-    const fin = inicio + this.itemsPorPagina;
-    return this.datosMovimientos().slice(inicio, fin);
-  });
-
-  datosVencimientosPaginados = computed(() => {
-    const inicio = (this.paginaActual() - 1) * this.itemsPorPagina;
-    const fin = inicio + this.itemsPorPagina;
-    return this.datosVencimientos().slice(inicio, fin);
-  });
-
-  // Total de páginas según el tipo de reporte
-  totalPaginasInventario = computed(() => 
-    Math.ceil(this.datosInventario().length / this.itemsPorPagina)
-  );
-
-  totalPaginasMovimientos = computed(() => 
-    Math.ceil(this.datosMovimientos().length / this.itemsPorPagina)
-  );
-
-  totalPaginasVencimientos = computed(() => 
-    Math.ceil(this.datosVencimientos().length / this.itemsPorPagina)
-  );
-
-  // Obtener total de páginas actual
-  get totalPaginasActual(): number {
-    switch (this.tipoReporte()) {
-      case 'inventario':
-        return this.totalPaginasInventario();
-      case 'entradas':
-      case 'salidas':
-        return this.totalPaginasMovimientos();
-      case 'vencimientos':
-        return this.totalPaginasVencimientos();
-      default:
-        return 0;
-    }
+  constructor() {
+    // ✅ EFECTO CORREGIDO: Solo se ejecuta después de la carga inicial y con debounce
+    effect(() => {
+      const tipo = this.tipoReporte();
+      const fechaDesde = this.fechaDesde();
+      const fechaHasta = this.fechaHasta();
+      const dias = this.diasVencimiento();
+      
+      // Solo ejecutar si la carga inicial ya se completó
+      if (this.cargaInicialCompletada()) {
+        // Usar setTimeout para evitar múltiples llamadas rápidas
+        setTimeout(() => {
+          this.actualizarReporteAutomaticamente();
+        }, 100);
+      }
+    });
   }
 
-  constructor() {}
-
   // ✅ CARGAR AUTOMÁTICAMENTE AL INICIAR
-  ngOnInit() {
-    this.cargarReporteInicial();
+  async ngOnInit() {
+    await this.cargarReporteInicial();
+    this.cargaInicialCompletada.set(true);
   }
 
   // ✅ CARGAR REPORTE DE INVENTARIO GENERAL POR DEFECTO
@@ -98,10 +71,10 @@ export class ReportesComponent implements OnInit {
     }
   }
 
-  // Generar reporte según el tipo seleccionado
-  async generarReporte() {
+  // ✅ ACTUALIZAR AUTOMÁTICAMENTE CUANDO CAMBIEN LOS FILTROS
+  private async actualizarReporteAutomaticamente() {
     this.cargando.set(true);
-    this.paginaActual.set(1); // Resetear a la primera página
+    this.paginaActual.set(1);
     
     try {
       switch (this.tipoReporte()) {
@@ -134,29 +107,105 @@ export class ReportesComponent implements OnInit {
           break;
       }
     } catch (error) {
-      console.error('Error generando reporte:', error);
+      console.error('Error actualizando reporte:', error);
     } finally {
       this.cargando.set(false);
     }
   }
 
-  // Métodos de paginación
+  // ✅ DATOS PAGINADOS CON trackBy CORREGIDO
+  datosInventarioPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.itemsPorPagina;
+    const fin = inicio + this.itemsPorPagina;
+    return this.datosInventario().slice(inicio, fin);
+  });
+
+  datosMovimientosPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.itemsPorPagina;
+    const fin = inicio + this.itemsPorPagina;
+    return this.datosMovimientos().slice(inicio, fin);
+  });
+
+  datosVencimientosPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.itemsPorPagina;
+    const fin = inicio + this.itemsPorPagina;
+    return this.datosVencimientos().slice(inicio, fin);
+  });
+
+  // ✅ TOTAL DE PÁGINAS CORREGIDO
+  totalPaginasInventario = computed(() => 
+    Math.ceil(this.datosInventario().length / this.itemsPorPagina)
+  );
+
+  totalPaginasMovimientos = computed(() => 
+    Math.ceil(this.datosMovimientos().length / this.itemsPorPagina)
+  );
+
+  totalPaginasVencimientos = computed(() => 
+    Math.ceil(this.datosVencimientos().length / this.itemsPorPagina)
+  );
+
+  // ✅ MÉTODOS DE PAGINACIÓN CORREGIDOS
   paginaAnterior() {
     if (this.paginaActual() > 1) {
       this.paginaActual.set(this.paginaActual() - 1);
+      this.scrollToTop(); 
     }
   }
 
   paginaSiguiente() {
-    if (this.paginaActual() < this.totalPaginasActual) {
+    const totalPaginas = this.obtenerTotalPaginasActual();
+    if (this.paginaActual() < totalPaginas) {
       this.paginaActual.set(this.paginaActual() + 1);
+      this.scrollToTop(); 
     }
   }
 
-  irAPagina(pagina: number) {
-    if (pagina >= 1 && pagina <= this.totalPaginasActual) {
-      this.paginaActual.set(pagina);
+  private scrollToTop() {
+  // Buscar el contenedor de la tabla específico de reportes
+  const tableWrapper = document.querySelector('.table-wrapper');
+  if (tableWrapper) {
+    tableWrapper.scrollTop = 0;
+  } else {
+    // Fallback: scroll al inicio de la sección de resultados
+    const resultados = document.querySelector('.resultados');
+    if (resultados) {
+      resultados.scrollTop = 0;
     }
+  }
+}
+
+  // ✅ OBTENER TOTAL DE PÁGINAS ACTUAL CORREGIDO
+  private obtenerTotalPaginasActual(): number {
+    switch (this.tipoReporte()) {
+      case 'inventario':
+        return this.totalPaginasInventario();
+      case 'entradas':
+      case 'salidas':
+        return this.totalPaginasMovimientos();
+      case 'vencimientos':
+        return this.totalPaginasVencimientos();
+      default:
+        return 0;
+    }
+  }
+
+  // ✅ OBTENER TOTAL DE PÁGINAS PARA EL TEMPLATE
+  get totalPaginasActual(): number {
+    return this.obtenerTotalPaginasActual();
+  }
+
+  // ✅ trackBy FUNCTIONS PARA EVITAR PROBLEMAS DE RENDER
+  trackByInventario(index: number, item: ReporteInventario): string {
+    return `${item.tipo_producto}-${item.id_producto}-${item.nombre}`;
+  }
+
+  trackByMovimiento(index: number, item: ReporteMovimiento): string {
+    return `${item.id_movimiento}-${item.producto_tipo}-${item.producto_referencia}`;
+  }
+
+  trackByVencimiento(index: number, item: ReporteVencimiento): string {
+    return `${item.id_producto}-${item.nombre}-${item.fecha_vencimiento}`;
   }
 
   // Limpiar filtros

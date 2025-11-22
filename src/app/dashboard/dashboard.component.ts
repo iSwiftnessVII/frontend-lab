@@ -48,14 +48,14 @@ export class DashboardComponent implements OnInit {
 
   async cargarDashboard() {
     try {
-      // Cargar datos en paralelo
+      // Cargar datos en paralelo - OPTIMIZADO
       await Promise.all([
         this.cargarInsumos(),
         this.cargarReactivos(),
         this.cargarSolicitudes(),
-        this.cargarClientes()
+        this.cargarClientes(),
+        this.cargarMetricasBackend() // ← MOVIDO DENTRO DEL Promise.all
       ]);
-      await this.cargarMetricasBackend();
     } catch (error) {
       console.error('Error cargando dashboard:', error);
     }
@@ -90,57 +90,61 @@ export class DashboardComponent implements OnInit {
   }
 
   async cargarReactivos() {
-  try {
-    const resp = await reactivosService.listarReactivos('', 1000);
-    const reactivos = Array.isArray(resp) ? resp : (resp?.rows || []);
-    const total = Array.isArray(resp) ? resp.length : (resp?.total ?? reactivos.length);
-    this.reactivosData.set(reactivos);
-    this.metricas.update(m => ({ ...m, totalReactivos: total }));
-    
-    // Calcular reactivos próximos a vencer (30 días)
-    const hoy = new Date();
-    const limite = new Date();
-    limite.setDate(hoy.getDate() + 30);
-    
-    const proximos = reactivos.filter((reactivo: any) => {
-      if (!reactivo.fecha_vencimiento) return false;
-      const fechaVenc = new Date(reactivo.fecha_vencimiento);
-      return fechaVenc <= limite && fechaVenc >= hoy;
-    });
-    
-    this.reactivosProximosVencer.set(proximos);
+    try {
+      const resp = await reactivosService.listarReactivos('', 1000);
+      const reactivos = Array.isArray(resp) ? resp : (resp?.rows || []);
+      const total = Array.isArray(resp) ? resp.length : (resp?.total ?? reactivos.length);
+      this.reactivosData.set(reactivos);
+      this.metricas.update(m => ({ ...m, totalReactivos: total }));
+      
+      // Calcular reactivos próximos a vencer (30 días)
+      const hoy = new Date();
+      const limite = new Date();
+      limite.setDate(hoy.getDate() + 30);
+      
+      const proximos = reactivos.filter((reactivo: any) => {
+        if (!reactivo.fecha_vencimiento) return false;
+        const fechaVenc = new Date(reactivo.fecha_vencimiento);
+        return fechaVenc <= limite && fechaVenc >= hoy;
+      });
+      
+      this.reactivosProximosVencer.set(proximos);
 
-    // Vencidos: fecha_vencimiento estrictamente menor a hoy
-    const vencidos = reactivos.filter((reactivo: any) => {
-      if (!reactivo.fecha_vencimiento) return false;
-      const fechaVenc = new Date(reactivo.fecha_vencimiento);
-      return fechaVenc < hoy;
-    });
-    this.reactivosVencidos.set(vencidos);
-  } catch (error) {
-    console.error('Error cargando reactivos:', error);
+      // Vencidos: fecha_vencimiento estrictamente menor a hoy
+      const vencidos = reactivos.filter((reactivo: any) => {
+        if (!reactivo.fecha_vencimiento) return false;
+        const fechaVenc = new Date(reactivo.fecha_vencimiento);
+        return fechaVenc < hoy;
+      });
+      this.reactivosVencidos.set(vencidos);
+    } catch (error) {
+      console.error('Error cargando reactivos:', error);
+    }
   }
-}
 
   async cargarSolicitudes() {
     try {
       const res = await fetch(API_SOLICITUDES);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const solicitudes = await res.json();
       this.solicitudesData.set(solicitudes);
       this.metricas.update(m => ({ ...m, totalSolicitudes: solicitudes.length }));
     } catch (error) {
       console.error('Error cargando solicitudes:', error);
+      this.solicitudesData.set([]); // ← SETEAR ARRAY VACÍO EN CASO DE ERROR
     }
   }
 
   async cargarClientes() {
     try {
       const res = await fetch(API_SOLICITUDES + '/clientes');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const clientes = await res.json();
       this.clientesData.set(clientes);
       this.metricas.update(m => ({ ...m, totalClientes: clientes.length }));
     } catch (error) {
       console.error('Error cargando clientes:', error);
+      this.clientesData.set([]); // ← SETEAR ARRAY VACÍO EN CASO DE ERROR
     }
   }
 
@@ -154,8 +158,8 @@ export class DashboardComponent implements OnInit {
   }
 
   contarSolicitudesConResultados(): number {
-  return this.solicitudesData().filter((s: any) => s.numero_informe_resultados).length;
-}
+    return this.solicitudesData().filter((s: any) => s.numero_informe_resultados).length;
+  }
 
   contarClientesPorTipo(tipo: string): number {
     return this.clientesData().filter(c => c.tipo_usuario === tipo).length;

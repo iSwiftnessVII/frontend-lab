@@ -217,11 +217,23 @@ export class LogsComponent implements OnInit {
   }
 
   // Formatear fecha para display
-  formatearFecha(fecha: string): string {
-    if (!fecha) return '';
-    const date = new Date(fecha);
-    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-  }
+  // SOLUCIÓN FINAL - Sumar 7 horas (420 minutos)
+formatearFecha(fecha: string): string {
+  if (!fecha) return '';
+  
+  const date = new Date(fecha);
+  
+  // SUMAR 7 horas (420 minutos) - ajuste exacto para Colombia
+  date.setMinutes(date.getMinutes() + 420);
+  
+  const dia = date.getDate();
+  const mes = date.getMonth() + 1;
+  const año = date.getFullYear();
+  const horas = date.getHours();
+  const minutos = date.getMinutes();
+  
+  return `${dia}/${mes}/${año} ${horas}:${minutos.toString().padStart(2, '0')}`;
+}
 
   // Obtener clase CSS para tipo de acción
   getClaseAccion(accion: string): string {

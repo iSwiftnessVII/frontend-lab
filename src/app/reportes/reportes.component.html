@@ -1,8 +1,8 @@
 <!-- src/app/reportes/reportes.component.html -->
 <div class="reportes-container">
     <h1>
-    <i class="fas fa-chart-bar"></i>
-    | Sistema de Reportes
+        <i class="fas fa-chart-bar"></i>
+        | Sistema de Reportes
     </h1>
     <h2>Reportes Manuales</h2>
 
@@ -36,13 +36,9 @@
         </div>
         }
 
-        <button (click)="generarReporte()" [disabled]="cargando()">
-            {{ cargando() ? 'Generando...' : 'Generar Reporte' }}
-        </button>
-
         <button (click)="limpiarFiltros()">Limpiar</button>
         <button (click)="exportarPDF()" class="btn btn-export">
-            <i class="lucide-file-text"></i>
+            <i class="fas fa-file-pdf"></i>
             Exportar PDF
         </button>
     </div>
@@ -69,7 +65,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for (item of datosInventarioPaginados(); track item.id_producto) {
+                    <!-- ✅ AGREGAR trackBy AQUÍ -->
+                    @for (item of datosInventarioPaginados(); track trackByInventario($index, item)) {
                     <tr>
                         <td>{{ item.tipo_producto }}</td>
                         <td [title]="item.nombre">{{ item.nombre }}</td>
@@ -112,7 +109,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for (mov of datosMovimientosPaginados(); track mov.id_movimiento) {
+                    <!-- ✅ AGREGAR trackBy AQUÍ -->
+                    @for (mov of datosMovimientosPaginados(); track trackByMovimiento($index, mov)) {
                     <tr>
                         <td>{{ mov.fecha | date:'short' }}</td>
                         <td [title]="mov.producto_tipo">{{ mov.producto_tipo }}</td>
@@ -154,13 +152,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for (item of datosVencimientosPaginados(); track item.id_producto) {
+                    <!-- ✅ AGREGAR trackBy AQUÍ -->
+                    @for (item of datosVencimientosPaginados(); track trackByVencimiento($index, item)) {
                     <tr>
                         <td [title]="item.nombre">{{ item.nombre }}</td>
                         <td>{{ item.id_producto }}</td>
                         <td>{{ item.cantidad_total }}</td>
                         <td>{{ item.fecha_vencimiento | date:'shortDate' }}</td>
-                        <td>{{ item.dias_restantes }}</td>
+                        <td>
+                            <span [class]="item.dias_restantes <= 7 ? 'estado-vencido' : item.dias_restantes <= 30 ? 'estado-proximo' : 'estado-normal'">
+                                {{ item.dias_restantes }} días
+                            </span>
+                        </td>
                         <td [title]="item.marca">{{ item.marca }}</td>
                     </tr>
                     }

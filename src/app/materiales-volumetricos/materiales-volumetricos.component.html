@@ -8,23 +8,31 @@
     <form class="form-grid" (ngSubmit)="crear($event)">
       <div>
         <label for="item">Item</label>
-        <input id="item" type="number" [(ngModel)]="item" name="item" required placeholder="Ej: 3001" />
+        <input id="item" type="number" [(ngModel)]="item" name="item" required 
+               placeholder="Ej: 3001" 
+               (keydown)="bloquearNoNumeros($event)" />
       </div>
       <div>
         <label for="nombre_material">Nombre material</label>
-        <input id="nombre_material" [(ngModel)]="nombre_material" name="nombre_material" required placeholder="Ej: Pipeta volumétrica 25 mL" />
+        <input id="nombre_material" [(ngModel)]="nombre_material" name="nombre_material" required 
+               placeholder="Ej: Pipeta volumétrica 25 mL" 
+               (keydown)="bloquearNoLetrasNumeros($event)" />
       </div>
       <div>
         <label for="clase">Clase</label>
-        <input id="clase" [(ngModel)]="clase" name="clase" placeholder="Ej: Clase A" />
+        <input id="clase" [(ngModel)]="clase" name="clase" 
+               placeholder="Ej: Clase A" 
+               (keydown)="bloquearNoTexto($event)" />
       </div>
       <div>
         <label for="marca">Marca</label>
-        <input id="marca" [(ngModel)]="marca" name="marca" />
+        <input id="marca" [(ngModel)]="marca" name="marca" 
+               (keydown)="bloquearNoLetrasNumeros($event)" />
       </div>
       <div>
         <label for="referencia">Referencia</label>
-        <input id="referencia" [(ngModel)]="referencia" name="referencia" />
+        <input id="referencia" [(ngModel)]="referencia" name="referencia" 
+               (keydown)="bloquearNoNumeros($event)" />
       </div>
       <div>
         <label for="fecha_adquisicion">Fecha adquisición</label>
@@ -32,11 +40,13 @@
       </div>
       <div>
         <label for="cantidad">Cantidad</label>
-        <input id="cantidad" type="number" min="0" [(ngModel)]="cantidad" name="cantidad" />
+        <input id="cantidad" type="number" min="0" [(ngModel)]="cantidad" name="cantidad" 
+               (keydown)="bloquearNoNumeros($event)" />
       </div>
       <div>
         <label for="codigo_calibrado">Código calibrado</label>
-        <input id="codigo_calibrado" [(ngModel)]="codigo_calibrado" name="codigo_calibrado" />
+        <input id="codigo_calibrado" [(ngModel)]="codigo_calibrado" name="codigo_calibrado" 
+               (keydown)="bloquearNoNumeros($event)" />
       </div>
       <div>
         <label for="fecha_calibracion">Fecha calibración</label>
@@ -44,11 +54,13 @@
       </div>
       <div>
         <label for="codigo_en_uso">Código en uso</label>
-        <input id="codigo_en_uso" [(ngModel)]="codigo_en_uso" name="codigo_en_uso" />
+        <input id="codigo_en_uso" [(ngModel)]="codigo_en_uso" name="codigo_en_uso" 
+               (keydown)="bloquearNoNumeros($event)" />
       </div>
       <div>
         <label for="codigo_fuera_de_uso">Código fuera de uso</label>
-        <input id="codigo_fuera_de_uso" [(ngModel)]="codigo_fuera_de_uso" name="codigo_fuera_de_uso" />
+        <input id="codigo_fuera_de_uso" [(ngModel)]="codigo_fuera_de_uso" name="codigo_fuera_de_uso" 
+               (keydown)="bloquearNoNumeros($event)" />
       </div>
       <div class="full-row">
         <label for="observaciones">Observaciones</label>

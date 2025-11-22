@@ -811,6 +811,61 @@
     z-index: 1;
 }
 
+/* ===== Scroll para listas de reactivos en alertas ===== */
+.reactivos-list {
+    max-height: 320px; /* Un poco más de altura para mejor separación */
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-turquoise) var(--border-gray);
+    padding-right: 8px; /* Espacio para el scroll */
+}
+
+/* Más separación entre elementos */
+.reactivos-list .reactivo-item {
+    margin-bottom: 12px; /* Más espacio entre items */
+    padding: 1rem; /* Más padding interno */
+    border-radius: 12px; /* Bordes más redondeados */
+}
+
+.reactivos-list .reactivo-item:last-child {
+    margin-bottom: 0; /* Sin margen en el último */
+}
+
+/* Mejorar la legibilidad del contenido */
+.reactivos-list .reactivo-name {
+    font-size: 1rem; /* Texto ligeramente más grande */
+    margin-bottom: 4px; /* Separación del lote */
+}
+
+.reactivos-list .reactivo-lote,
+.reactivos-list .reactivo-fecha {
+    padding: 6px 10px; /* Más padding en badges */
+    font-size: 0.9rem; /* Texto más legible */
+    
+}
+
+/* Estilos personalizados para scrollbar en Webkit */
+.reactivos-list::-webkit-scrollbar {
+    width: 8px; /* Scroll un poco más ancho */
+}
+
+.reactivos-list::-webkit-scrollbar-track {
+    background: var(--border-gray);
+    border-radius: 10px;
+    margin: 4px 0; /* Margen en el track */
+}
+
+.reactivos-list::-webkit-scrollbar-thumb {
+    background: var(--primary-turquoise);
+    border-radius: 10px;
+    border: 2px solid var(--border-gray);
+}
+
+.reactivos-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-blue);
+    transform: scale(1.1);
+}
+
 /* ===== Responsive Design ===== */
 @media (max-width: 768px) {
     .dashboard-page {

@@ -41,6 +41,47 @@ export class MaterialesVolumetricosComponent {
 
   constructor(private svc: MaterialesVolService, private snack: SnackbarService) {}
 
+  // === VALIDACIONES DE ENTRADA === 
+  // Método para bloquear números negativos y solo permitir números enteros
+  bloquearNoNumeros(event: KeyboardEvent): void {
+    const permitidas = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+    if (permitidas.includes(event.key)) return;
+    
+    // Solo permitir dígitos (0-9) - bloquea negativo, decimal, letras, emojis
+    if (!/^\d$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  // Método para letras y números (nombre material, marca)
+  bloquearNoLetrasNumeros(event: KeyboardEvent): void {
+    const permitidas = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', ' '];
+    if (permitidas.includes(event.key)) return;
+    
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\-\.]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  // Método para solo texto (clase)
+  bloquearNoTexto(event: KeyboardEvent): void {
+    const permitidas = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', ' '];
+    if (permitidas.includes(event.key)) return;
+    
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\-\.]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  // Validar fecha pasada/hoy
+  validarFechaPasada(fecha: string): boolean {
+    if (!fecha) return true; // Campo vacío es válido
+    const fechaIngresada = new Date(fecha);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+    return fechaIngresada <= hoy;
+  }
+
   async ngOnInit(){ await this.cargarLista(); }
 
   async cargarLista(){
@@ -82,31 +123,54 @@ export class MaterialesVolumetricosComponent {
   }
 
   async crear(ev: Event){
-    ev.preventDefault();
-    this.msgSig.set('');
-    if(!this.item || !this.nombre_material){ this.snack.warn('Item y Nombre son obligatorios'); return; }
-    const payload = {
-      item: this.item,
-      nombre_material: this.nombre_material.trim(),
-      clase: this.clase.trim() || null,
-      marca: this.marca.trim() || null,
-      referencia: this.referencia.trim() || null,
-      fecha_adquisicion: this.fecha_adquisicion || null,
-      cantidad: this.cantidad,
-      codigo_calibrado: this.codigo_calibrado.trim() || null,
-      fecha_calibracion: this.fecha_calibracion || null,
-      codigo_en_uso: this.codigo_en_uso.trim() || null,
-      codigo_fuera_de_uso: this.codigo_fuera_de_uso.trim() || null,
-      observaciones: this.observaciones.trim() || null,
-    };
-    try {
-      this.creandoSig.set(true);
-      await this.svc.crear(payload);
-      this.snack.success('Material volumétrico creado');
-      this.resetForm();
-      await this.cargarLista();
-    } catch(e:any){
-      this.snack.error(e?.message || 'Error creando material');
-    } finally { this.creandoSig.set(false); }
+  ev.preventDefault();
+  this.msgSig.set('');
+  
+  // Validar TODOS los campos obligatorios
+  if(!this.item || 
+     !this.nombre_material || 
+     !this.clase || 
+     !this.marca || 
+     !this.referencia || 
+     !this.fecha_adquisicion || 
+     !this.cantidad || 
+     !this.codigo_calibrado || 
+     !this.fecha_calibracion || 
+     !this.codigo_en_uso || 
+     !this.codigo_fuera_de_uso) { 
+    this.snack.warn('Faltan campos por rellenar'); 
+    return; 
   }
+  
+  // Validación de fecha adquisición (no futura)
+  if (this.fecha_adquisicion && !this.validarFechaPasada(this.fecha_adquisicion)) {
+    this.snack.warn('La fecha de adquisición no puede ser futura');
+    return;
+  }
+
+  const payload = {
+    item: this.item,
+    nombre_material: this.nombre_material.trim(),
+    clase: this.clase.trim(),
+    marca: this.marca.trim(),
+    referencia: this.referencia.trim(),
+    fecha_adquisicion: this.fecha_adquisicion,
+    cantidad: this.cantidad,
+    codigo_calibrado: this.codigo_calibrado.trim(),
+    fecha_calibracion: this.fecha_calibracion,
+    codigo_en_uso: this.codigo_en_uso.trim(),
+    codigo_fuera_de_uso: this.codigo_fuera_de_uso.trim(),
+    observaciones: this.observaciones.trim() || null, // Único opcional
+  };
+  
+  try {
+    this.creandoSig.set(true);
+    await this.svc.crear(payload);
+    this.snack.success('Material volumétrico creado');
+    this.resetForm();
+    await this.cargarLista();
+  } catch(e:any){
+    this.snack.error(e?.message || 'Error creando material');
+  } finally { this.creandoSig.set(false); }
+}
 }
