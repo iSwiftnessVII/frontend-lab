@@ -2,6 +2,7 @@
    HEADER GLOBAL LIBA (nuevo)
    ===================================================== */
    
+   
 .app-header, #app-header, header#app-header {
 	background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%);
 	color: var(--primary-white);
@@ -562,4 +563,379 @@ body.auth-page .app-header {
 .snackbar.info .snackbar-text { color: #1e3a8a; }
 /* Remove any timer bar remnants */
 .snackbar .snackbar-timer, .snackbar .snackbar-icon { display: none !important; }
+
+/* ===== FULL WIDTH BODY DROPDOWN STYLES - 6 APARTADOS ===== */
+.full-width-dropdown {
+  position: static !important;
+}
+
+.dropdown-menu.inventory-menu.full-width-menu {
+  position: absolute !important;
+  width: 85vw !important; /* Un poco más ancho para 6 items */
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  top: 100% !important;
+  margin-top: 0.5rem !important;
+  padding: 1.2rem !important;
+  border-radius: 16px !important;
+  box-shadow: var(--shadow-xl) !important;
+  border: 2px solid var(--border-gray) !important;
+  background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%) !important;
+  z-index: 3500 !important;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+/* ===== ESTILOS PARA EL BOTÓN DE INVENTARIO ACTIVO ===== */
+.full-width-dropdown .dropdown-toggle.has-selection {
+  background: linear-gradient(135deg, var(--primary-turquoise) 0%, var(--primary-blue) 100%) !important;
+  color: var(--primary-white) !important;
+  border-color: var(--primary-turquoise) !important;
+  box-shadow: 0 4px 15px rgba(0, 184, 181, 0.3) !important;
+}
+
+/* Icono en estado activo */
+.full-width-dropdown .dropdown-toggle.has-selection i:not(.caret) {
+  color: var(--primary-white) !important;
+  filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3)) !important;
+}
+
+/* Efecto de transición suave para el cambio de estado */
+.full-width-dropdown .dropdown-toggle {
+  transition: all 0.3s ease !important;
+}
+
+/* Animación sutil cuando cambia el estado */
+@keyframes inventorySwitch {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.full-width-dropdown .dropdown-toggle.has-selection {
+  animation: inventorySwitch 0.3s ease-out;
+}
+
+/* Asegurar que el estado activo se mantenga en el nav-item */
+.nav-item.active .dropdown-toggle.has-selection {
+  background: var(--primary-turquoise) !important;
+  color: var(--primary-white) !important;
+}
+
+/* Estilos para el texto del inventario seleccionado */
+.dropdown-toggle .inventory-active-text {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Grid para 6 tarjetas - 2 filas de 3 columnas */
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columnas */
+  grid-template-rows: repeat(2, auto); /* 2 filas */
+  gap: 0.8rem;
+}
+
+/* Tarjetas compactas horizontales */
+.inventory-card {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem;
+  background: linear-gradient(135deg, var(--primary-white) 0%, #f8fafc 100%);
+  border: 2px solid var(--border-gray);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--text-gray);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  height: 70px;
+  min-height: 70px;
+}
+
+.inventory-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top right, rgba(0, 184, 181, 0.05) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.inventory-card:hover::before {
+  opacity: 1;
+}
+
+.inventory-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-turquoise);
+  text-decoration: none;
+  color: var(--primary-blue);
+}
+
+/* Iconos pequeños a la izquierda */
+.inventory-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.inventory-card:hover .inventory-icon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+/* Colores para los iconos */
+.inventory-icon.reactivos {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: var(--primary-white);
+}
+
+.inventory-icon.insumos {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: var(--primary-white);
+}
+
+.inventory-icon.papeleria {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: var(--primary-white);
+}
+
+.inventory-icon.equipos {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+  color: var(--primary-white);
+}
+
+.inventory-icon.volumetricos {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  color: var(--primary-white);
+}
+
+.inventory-icon.referencia {
+  background: linear-gradient(135deg, #a166ab 0%, #5073b8 100%);
+  color: var(--primary-white);
+}
+
+/* Contenido a la derecha del icono */
+.inventory-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.inventory-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-blue);
+  margin-bottom: 0.1rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inventory-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+  font-weight: 500;
+  opacity: 0.8;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Flecha pequeña a la derecha */
+.inventory-arrow {
+  color: var(--primary-turquoise);
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.inventory-card:hover .inventory-arrow {
+  transform: translateX(2px);
+  opacity: 1;
+  color: var(--primary-blue);
+}
+
+/* Transiciones del dropdown */
+.full-width-dropdown .dropdown-menu.inventory-menu.full-width-menu {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transform: translateX(-50%) translateY(-8px);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.full-width-dropdown:hover .dropdown-menu.inventory-menu.full-width-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Ajustes responsivos para 6 items */
+@media (max-width: 1200px) {
+  .dropdown-menu.inventory-menu.full-width-menu {
+    width: 90vw !important;
+    padding: 1rem !important;
+  }
+  
+  .inventory-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.7rem;
+  }
+  
+  .inventory-card {
+    padding: 0.7rem;
+    height: 65px;
+    min-height: 65px;
+  }
+  
+  .inventory-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  
+  .inventory-title {
+    font-size: 0.9rem;
+  }
+  
+  .inventory-subtitle {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .inventory-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columnas en tablets medianas */
+    grid-template-rows: repeat(3, auto); /* 3 filas */
+  }
+}
+
+@media (max-width: 768px) {
+  .dropdown-menu.inventory-menu.full-width-menu {
+    width: 95vw !important;
+    padding: 0.8rem !important;
+  }
+  
+  .inventory-grid {
+    grid-template-columns: 1fr; /* 1 columna en móviles */
+    grid-template-rows: repeat(6, auto); /* 6 filas */
+    gap: 0.6rem;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  .inventory-card {
+    padding: 0.7rem;
+    height: 60px;
+    min-height: 60px;
+    gap: 0.7rem;
+  }
+  
+  .inventory-icon {
+    width: 35px;
+    height: 35px;
+    font-size: 0.95rem;
+  }
+  
+  .inventory-title {
+    font-size: 0.88rem;
+  }
+  
+  .inventory-subtitle {
+    font-size: 0.68rem;
+  }
+  
+  .inventory-arrow {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dropdown-menu.inventory-menu.full-width-menu {
+    width: 98vw !important;
+    padding: 0.6rem !important;
+  }
+  
+  .inventory-card {
+    padding: 0.6rem;
+    height: 55px;
+    min-height: 55px;
+    gap: 0.6rem;
+  }
+  
+  .inventory-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  
+  .inventory-title {
+    font-size: 0.85rem;
+  }
+  
+  .inventory-subtitle {
+    font-size: 0.65rem;
+  }
+  
+  .inventory-arrow {
+    font-size: 0.8rem;
+  }
+}
+
+/* Para pantallas muy pequeñas */
+@media (max-width: 320px) {
+  .dropdown-menu.inventory-menu.full-width-menu {
+    width: 99vw !important;
+    padding: 0.5rem !important;
+  }
+  
+  .inventory-card {
+    padding: 0.5rem;
+    height: 50px;
+    min-height: 50px;
+    gap: 0.5rem;
+  }
+  
+  .inventory-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  
+  .inventory-title {
+    font-size: 0.8rem;
+  }
+  
+  .inventory-subtitle {
+    font-size: 0.6rem;
+  }
+}
+
 

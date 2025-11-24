@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectorRef, computed } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -7,8 +7,6 @@ import { authService, authUser } from '../services/auth.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { reactivosService } from '../services/reactivos.service';
 
-
-
 @Component({
   standalone: true,
   selector: 'app-reactivos',
@@ -16,32 +14,55 @@ import { reactivosService } from '../services/reactivos.service';
   styleUrls: ['./reactivos.component.css'],
   imports: [CommonModule, FormsModule, RouterModule]
 })
-
 export class ReactivosComponent implements OnInit {
-        public get esAuxiliar(): boolean {
-          const user = authUser();
-          return user?.rol === 'Auxiliar';
-        }
-      async calcularCodigosConsecutivos() {
-        // Buscar todos los códigos en catálogo y reactivos
-        const catalogo = this.catalogoBaseSig();
-        const inventario = this.reactivosSig();
-        const codigos = [...catalogo, ...inventario].map(r => r.codigo).filter(Boolean);
-        const maxCodigo = (tipo: string) => {
-          const prefix = tipo + '-';
-          const nums = codigos
-            .filter(c => c.startsWith(prefix))
-            .map(c => parseInt(c.replace(prefix, ''), 10))
-            .filter(n => !isNaN(n));
-          return nums.length ? Math.max(...nums) : 0;
-        };
-        this.nextCodigoS = 'S-' + String(maxCodigo('S') + 1).padStart(3, '0');
-        this.nextCodigoR = 'R-' + String(maxCodigo('R') + 1).padStart(3, '0');
-        this.nextCodigoM = 'M-' + String(maxCodigo('M') + 1).padStart(3, '0');
-      }
-    nextCodigoS = 'S-001';
-    nextCodigoR = 'R-001';
-    nextCodigoM = 'M-001';
+  public get esAuxiliar(): boolean {
+    const user = authUser();
+    return user?.rol === 'Auxiliar';
+  }
+
+  // Signals separadas para catálogo
+  catalogoCompletoSig = signal<Array<any>>([]); // Para códigos consecutivos (siempre todos los reactivos)
+  catalogoBaseSig = signal<Array<any>>([]); // Para filtrado y visualización
+  reactivosSig = signal<Array<any>>([]);
+
+  // Computed para códigos consecutivos que se actualizan automáticamente
+  nextCodigosSig = computed(() => {
+    const catalogo = this.catalogoCompletoSig(); // Usar catalogoCompletoSig en lugar de catalogoBaseSig
+    const inventario = this.reactivosSig();
+    const codigos = [...catalogo, ...inventario].map(r => r.codigo).filter(Boolean);
+    
+    const maxCodigo = (tipo: string) => {
+      const prefix = tipo + '-';
+      const nums = codigos
+        .filter(c => c && c.startsWith(prefix))
+        .map(c => {
+          const numStr = c.replace(prefix, '');
+          return parseInt(numStr, 10);
+        })
+        .filter(n => !isNaN(n) && n > 0);
+      return nums.length ? Math.max(...nums) : 0;
+    };
+    
+    return {
+      S: 'S-' + String(maxCodigo('S') + 1).padStart(3, '0'),
+      R: 'R-' + String(maxCodigo('R') + 1).padStart(3, '0'),
+      M: 'M-' + String(maxCodigo('M') + 1).padStart(3, '0')
+    };
+  });
+
+  // Getters para usar en el template
+  get nextCodigoS(): string {
+    return this.nextCodigosSig().S;
+  }
+
+  get nextCodigoR(): string {
+    return this.nextCodigosSig().R;
+  }
+
+  get nextCodigoM(): string {
+    return this.nextCodigosSig().M;
+  }
+
   // Aux lists
   tipos: Array<any> = [];
   clasif: Array<any> = [];
@@ -74,8 +95,7 @@ export class ReactivosComponent implements OnInit {
   catalogoSugerenciasSig = signal<Array<any>>([]);
   catalogoSeleccionado: any = null;
   catalogoCargando: boolean = false;
-  // Base y listas filtradas para selects (signal)
-  catalogoBaseSig = signal<Array<any>>([]);
+  // Listas filtradas para selects
   catalogoCodigoResultados: Array<any> = [];
   catalogoNombreResultados: Array<any> = [];
   codigoFiltro: string = '';
@@ -138,7 +158,6 @@ export class ReactivosComponent implements OnInit {
   };
 
   // Lista de reactivos (signals para refresco inmediato)
-  reactivosSig = signal<Array<any>>([]);
   reactivosTotal: number = 0; // total real de reactivos en BD
   allReactivosLoaded: boolean = false; // indica si ya tenemos todo el universo cargado para filtros locales
   reactivosPageSize: number = 10; // tamaño de página inicial para inventario
@@ -216,7 +235,6 @@ export class ReactivosComponent implements OnInit {
       await this.loadAux();
       await this.loadReactivos(10, 0);
       await this.loadCatalogoInicial();
-      await this.calcularCodigosConsecutivos();
       // Asegurar re-render de tarjetas una vez que auxiliares y reactivos estén listos
       // Esto fuerza a recalcular nombres (tipo/unidad/estado/SGA) y evita depender de un clic
       this.aplicarFiltroReactivos();
@@ -377,7 +395,11 @@ export class ReactivosComponent implements OnInit {
       // Traer todo (sin límite) para que los filtros y sugerencias funcionen sobre el universo completo
       const resp = await reactivosService.buscarCatalogo('', 0, 0);
       const base = Array.isArray(resp) ? resp : (resp.rows || []);
-      this.catalogoBaseSig.set(base);
+      
+      // Actualizar ambas signals
+      this.catalogoCompletoSig.set(base); // Para códigos consecutivos
+      this.catalogoBaseSig.set(base);     // Para filtrado
+      
       this.catalogoTotal = Array.isArray(resp) ? resp.length : (resp.total || base.length);
       // Mostrar solo los primeros N en el catálogo (independiente del dropdown)
       this.catalogoResultadosSig.set(base.slice(0, this.catalogoVisibleCount));
@@ -388,6 +410,7 @@ export class ReactivosComponent implements OnInit {
     } catch (e) {
       console.error('Error cargando catálogo inicial', e);
       this.catalogoMsg = 'Error cargando catálogo';
+      this.catalogoCompletoSig.set([]);
       this.catalogoBaseSig.set([]);
       this.catalogoResultadosSig.set([]);
       this.catalogoTotal = 0;
@@ -395,7 +418,6 @@ export class ReactivosComponent implements OnInit {
   }
 
   async loadCatalogoInicial() {
-    await this.calcularCodigosConsecutivos();
     this.catalogoOffset = 0;
     this.catalogoVisibleCount = 10;
     this.codigoFiltro = '';
@@ -482,6 +504,7 @@ export class ReactivosComponent implements OnInit {
       filtered = filtered.filter(c => this.normalizarTexto(c.nombre || '').includes(nameQ));
     }
 
+    // Solo actualizar catalogoBaseSig para filtrado, NO catalogoCompletoSig
     this.catalogoBaseSig.set(base);
     // La lista principal siempre limitada a catalogoVisibleCount
     this.catalogoResultadosSig.set((singleCharQuery ? filtered : filtered).slice(0, this.catalogoVisibleCount));
@@ -1042,6 +1065,7 @@ export class ReactivosComponent implements OnInit {
         descripcion: (() => { const d = safeTrim(this.catDescripcion); return d ? d : null; })()
       });
   this.snack.success('Catálogo creado correctamente');
+      
       // limpiar
       this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = this.catDescripcion = '';
       // Resetear estado del formulario para limpiar touched/dirty y evitar resaltar en rojo

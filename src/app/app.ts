@@ -19,6 +19,11 @@ export class App implements OnDestroy {
   readonly inventoryMenuOpen = signal(false);
   readonly currentYear = new Date().getFullYear();
   readonly isNavigating = signal(false);
+  
+  // NUEVO: Signals para los menús seleccionados
+  readonly selectedInventory = signal<string | null>(null);
+  readonly selectedAnalysis = signal<string | null>(null);
+  
   private routerSub?: any;
   private handleSelectClickRef = (ev: Event) => this.handleSelectClick(ev);
   private handleSelectFocusOutRef = (ev: FocusEvent) => this.handleSelectFocusOut(ev);
@@ -48,6 +53,116 @@ export class App implements OnDestroy {
         setTimeout(() => this.isNavigating.set(false), 80);
       }
     });
+
+    // NUEVO: Detectar automáticamente la ruta actual para establecer las selecciones
+    this.setSelectionsFromRoute(this.router.url);
+    
+    // NUEVO: Suscribirse a cambios de ruta para actualizar automáticamente
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.setSelectionsFromRoute(event.url);
+      }
+    });
+  }
+
+  // NUEVO: Método para detectar automáticamente las selecciones desde la ruta
+  private setSelectionsFromRoute(url: string): void {
+    const inventoryRoutes: { [key: string]: string } = {
+      '/reactivos': 'reactivos',
+      '/insumos': 'insumos',
+      '/papeleria': 'papeleria',
+      '/equipos': 'equipos',
+      '/materiales-volumetricos': 'volumetricos',
+      '/material-referencia': 'referencia'
+    };
+
+    const analysisRoutes: { [key: string]: string } = {
+      '/auditoria': 'auditoria',
+      '/reportes': 'reportes'
+    };
+
+    // Detectar inventario
+    for (const [route, inventory] of Object.entries(inventoryRoutes)) {
+      if (url.startsWith(route)) {
+        this.selectedInventory.set(inventory);
+        break;
+      }
+    }
+
+    // Detectar análisis
+    for (const [route, analysis] of Object.entries(analysisRoutes)) {
+      if (url.startsWith(route)) {
+        this.selectedAnalysis.set(analysis);
+        break;
+      }
+    }
+
+    // Resetear inventario si no está en ninguna ruta de inventario
+    if (!Object.keys(inventoryRoutes).some(route => url.includes(route))) {
+      this.selectedInventory.set(null);
+    }
+
+    // Resetear análisis si no está en ninguna ruta de análisis
+    if (!Object.keys(analysisRoutes).some(route => url.includes(route))) {
+      this.selectedAnalysis.set(null);
+    }
+  }
+
+  // NUEVO: Métodos para Inventario
+  setSelectedInventory(inventory: string): void {
+    this.selectedInventory.set(inventory);
+    this.inventoryMenuOpen.set(false); // Cerrar el dropdown después de seleccionar
+  }
+
+  getInventoryIcon(inventory: string): string {
+    const icons: { [key: string]: string } = {
+      'reactivos': 'fa-flask',
+      'insumos': 'fa-boxes',
+      'papeleria': 'fa-paperclip',
+      'equipos': 'fa-microscope',
+      'volumetricos': 'fa-vial',
+      'referencia': 'fa-vials'
+    };
+    return icons[inventory] || 'fa-warehouse';
+  }
+
+  getInventoryName(inventory: string): string {
+    const names: { [key: string]: string } = {
+      'reactivos': 'Reactivos',
+      'insumos': 'Insumos',
+      'papeleria': 'Papelería',
+      'equipos': 'Equipos',
+      'volumetricos': 'Volumétricos',
+      'referencia': 'Referencia'
+    };
+    return names[inventory] || 'Inventario';
+  }
+
+  // NUEVO: Métodos para Análisis
+  setSelectedAnalysis(analysis: string): void {
+    this.selectedAnalysis.set(analysis);
+  }
+
+  getAnalysisIcon(analysis: string): string {
+    const icons: { [key: string]: string } = {
+      'auditoria': 'fa-clipboard-check',
+      'reportes': 'fa-chart-bar'
+    };
+    return icons[analysis] || 'fa-chart-line';
+  }
+
+  getAnalysisName(analysis: string): string {
+    const names: { [key: string]: string } = {
+      'auditoria': 'Auditoría',
+      'reportes': 'Reportes'
+    };
+    return names[analysis] || 'Análisis';
+  }
+
+  // NUEVO: Método para resetear las selecciones (opcional)
+  resetSelections(): void {
+    this.selectedInventory.set(null);
+    this.selectedAnalysis.set(null);
   }
 
   // TU sistema de autenticación con checkAuth()

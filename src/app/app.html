@@ -74,66 +74,179 @@
       <i class="fas fa-clipboard-list"></i> Solicitudes
     </a>
 
-    <!-- Inventario dropdown -->
-    <div class="nav-item dropdown">
+    <!-- Inventario dropdown - CON ESTADO ACTIVO -->
+    <div class="nav-item dropdown full-width-dropdown">
       <button
         type="button"
         class="dropdown-toggle"
         aria-haspopup="true"
         aria-expanded="false"
       >
-        <i class="fas fa-warehouse" aria-hidden="true"></i>
-        <span>Inventario</span>
+        @if (selectedInventory()) {
+          <!-- Estado activo: muestra el apartado seleccionado -->
+          <i class="fas" [class]="getInventoryIcon(selectedInventory()!)"></i>
+          <span>{{ getInventoryName(selectedInventory()!) }}</span>
+        } @else {
+          <!-- Estado por defecto: muestra Inventario -->
+          <i class="fas fa-warehouse" aria-hidden="true"></i>
+          <span>Inventario</span>
+        }
         <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
       </button>
 
-      <div class="dropdown-menu" role="menu">
-        <a routerLink="/reactivos" class="dropdown-item" role="menuitem">
-          <i class="fas fa-flask" aria-hidden="true"></i>
-          <span>Reactivos</span>
-        </a>
-        <a routerLink="/insumos" class="dropdown-item" role="menuitem">
-          <i class="fas fa-boxes" aria-hidden="true"></i>
-          <span>Insumos</span>
-        </a>
-        <a routerLink="/papeleria" class="dropdown-item" role="menuitem">
-          <i class="fas fa-paperclip" aria-hidden="true"></i>
-          <span>Papelería</span>
-        </a>
+      <div class="dropdown-menu inventory-menu full-width-menu" role="menu">
+        <div class="inventory-container">
+          <div class="inventory-grid">
+            <!-- Apartados originales -->
+            <a 
+              routerLink="/reactivos" 
+              class="inventory-card" 
+              role="menuitem"
+              (click)="setSelectedInventory('reactivos')"
+            >
+              <div class="inventory-icon reactivos">
+                <i class="fas fa-flask" aria-hidden="true"></i>
+              </div>
+              <div class="inventory-content">
+                <div class="inventory-title">Reactivos</div>
+                <div class="inventory-subtitle">Químicos y sustancias</div>
+              </div>
+              <i class="fas fa-arrow-right inventory-arrow"></i>
+            </a>
+
+            <a 
+              routerLink="/insumos" 
+              class="inventory-card" 
+              role="menuitem"
+              (click)="setSelectedInventory('insumos')"
+            >
+              <div class="inventory-icon insumos">
+                <i class="fas fa-boxes" aria-hidden="true"></i>
+              </div>
+              <div class="inventory-content">
+                <div class="inventory-title">Insumos</div>
+                <div class="inventory-subtitle">Materiales generales</div>
+              </div>
+              <i class="fas fa-arrow-right inventory-arrow"></i>
+            </a>
+
+            <a 
+              routerLink="/papeleria" 
+              class="inventory-card" 
+              role="menuitem"
+              (click)="setSelectedInventory('papeleria')"
+            >
+              <div class="inventory-icon papeleria">
+                <i class="fas fa-paperclip" aria-hidden="true"></i>
+              </div>
+              <div class="inventory-content">
+                <div class="inventory-title">Papelería</div>
+                <div class="inventory-subtitle">Oficina y suministros</div>
+              </div>
+              <i class="fas fa-arrow-right inventory-arrow"></i>
+            </a>
+
+            <!-- NUEVOS APARTADOS -->
+            <a 
+              routerLink="/equipos" 
+              class="inventory-card" 
+              role="menuitem"
+              (click)="setSelectedInventory('equipos')"
+            >
+              <div class="inventory-icon equipos">
+                <i class="fas fa-microscope" aria-hidden="true"></i>
+              </div>
+              <div class="inventory-content">
+                <div class="inventory-title">Equipos</div>
+                <div class="inventory-subtitle">Instrumentación científica</div>
+              </div>
+              <i class="fas fa-arrow-right inventory-arrow"></i>
+            </a>
+
+            <a 
+              routerLink="/materiales-volumetricos" 
+              class="inventory-card" 
+              role="menuitem"
+              (click)="setSelectedInventory('volumetricos')"
+            >
+              <div class="inventory-icon volumetricos">
+                <i class="fas fa-vial" aria-hidden="true"></i>
+              </div>
+              <div class="inventory-content">
+                <div class="inventory-title">Materiales Volumétricos</div>
+                <div class="inventory-subtitle">Medición de precisión</div>
+              </div>
+              <i class="fas fa-arrow-right inventory-arrow"></i>
+            </a>
+
+            <a 
+              routerLink="/material-referencia" 
+              class="inventory-card" 
+              role="menuitem"
+              (click)="setSelectedInventory('referencia')"
+            >
+              <div class="inventory-icon referencia">
+                <i class="fas fa-vials" aria-hidden="true"></i>
+              </div>
+              <div class="inventory-content">
+                <div class="inventory-title">Material Referencia</div>
+                <div class="inventory-subtitle">Estándares y controles</div>
+              </div>
+              <i class="fas fa-arrow-right inventory-arrow"></i>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- NUEVO: Menú unificado para Auditoría, Logs y Reportes -->
-    @if (user()?.rol === 'Administrador' || user()?.rol === 'Superadmin') {
-      <div class="nav-item dropdown">
-        <button
-          type="button"
-          class="dropdown-toggle"
-          aria-haspopup="true"
-          aria-expanded="false"
-        >
-          <i class="fas fa-chart-line" aria-hidden="true"></i>
-          <span>Análisis</span>
-          <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
-        </button>
+<!-- Menú Análisis actualizado con clase específica -->
+@if (user()?.rol === 'Administrador' || user()?.rol === 'Superadmin') {
+  <div class="nav-item dropdown analysis-dropdown">
+    <button
+      type="button"
+      class="dropdown-toggle"
+      [class.has-selection]="selectedAnalysis()"
+      aria-haspopup="true"
+      aria-expanded="false"
+    >
+      @if (selectedAnalysis()) {
+        <!-- Estado activo: muestra el análisis seleccionado -->
+        <i class="fas" [class]="getAnalysisIcon(selectedAnalysis()!)"></i>
+        <span class="inventory-active-text">{{ getAnalysisName(selectedAnalysis()!) }}</span>
+      } @else {
+        <!-- Estado por defecto: muestra Análisis -->
+        <i class="fas fa-chart-line" aria-hidden="true"></i>
+        <span>Análisis</span>
+      }
+      <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
+    </button>
 
-        <div class="dropdown-menu" role="menu">
-          <!-- Auditoría -->
-          <a routerLink="/auditoria" class="dropdown-item" role="menuitem">
-            <i class="fas fa-clipboard-check" aria-hidden="true"></i>
-            <span>Auditoría</span>
-          </a>
+    <div class="dropdown-menu" role="menu">
+      <!-- Auditoría -->
+      <a 
+        routerLink="/auditoria" 
+        class="dropdown-item" 
+        role="menuitem"
+        (click)="setSelectedAnalysis('auditoria')"
+      >
+        <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+        <span>Auditoría</span>
+      </a>
 
-          <!-- Reportes -->
-          <a routerLink="/reportes" class="dropdown-item" role="menuitem">
-            <i class="fas fa-chart-bar" aria-hidden="true"></i>
-            <span>Reportes</span>
-          </a>
-        </div>
-      </div>
-    }
+      <!-- Reportes -->
+      <a 
+        routerLink="/reportes" 
+        class="dropdown-item" 
+        role="menuitem"
+        (click)="setSelectedAnalysis('reportes')"
+      >
+        <i class="fas fa-chart-bar" aria-hidden="true"></i>
+        <span>Reportes</span>
+      </a>
+    </div>
+  </div>
+}
 
-    <!-- Mostrar Usuarios solo si ES Superadmin -->
     @if (user()?.rol === 'Superadmin') {
       <a 
         routerLink="/usuarios" 
