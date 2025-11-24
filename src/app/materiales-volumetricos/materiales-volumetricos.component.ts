@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MaterialesVolService } from '../services/materiales-vol.service';
+import { authUser } from '../services/auth.service';
 import { SnackbarService } from '../shared/snackbar.service';
 
 @Component({
@@ -13,6 +14,10 @@ import { SnackbarService } from '../shared/snackbar.service';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class MaterialesVolumetricosComponent {
+    public get esAuxiliar(): boolean {
+      const user = authUser();
+      return user?.rol === 'Auxiliar';
+    }
   // Signals for form fields (reflect SQL schema)
   private itemSig = signal<number | null>(null);          get item() { return this.itemSig(); }          set item(v: number | null) { const n:any=v; if(n===''||n==null) {this.itemSig.set(null);} else { const num=Number(n); this.itemSig.set(Number.isFinite(num)?num:null);} }
   private nombreMatSig = signal<string>('');              get nombre_material() { return this.nombreMatSig(); } set nombre_material(v: string) { this.nombreMatSig.set((v||'').toString()); }

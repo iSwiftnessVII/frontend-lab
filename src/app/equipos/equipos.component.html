@@ -6,7 +6,7 @@
 	<h2>Registrar equipo</h2>
 	<section>
 		<form class="form-grid" (submit)="crearEquipo($event)">
-			<div>
+			<div *ngIf="!esAuxiliar">
 				<label for="nombre">Nombre *</label>
 				<input id="nombre" name="nombre" [(ngModel)]="nombre" required placeholder="Ej: Balanza analítica" />
 			</div>
@@ -73,10 +73,12 @@
 				<label for="fecha_adquisicion">Fecha de adquisición</label>
 				<input id="fecha_adquisicion" type="date" name="fecha_adquisicion" [(ngModel)]="fecha_adquisicion" />
 				<div class="actions">
-					<button class="btn-compact" type="submit" [disabled]="creando">{{ creando ? 'Guardando…' : 'Crear equipo' }}</button>
 				</div>
 			</div>
-		</form>
+		<div class="actions" *ngIf="!esAuxiliar">
+			<button class="btn-compact" type="submit">Registrar equipo</button>
+		</div>
+	 </form>
 	</section>
 
 	<h2>Registrar mantenimiento de equipo</h2>

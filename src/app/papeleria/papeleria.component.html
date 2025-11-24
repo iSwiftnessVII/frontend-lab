@@ -6,7 +6,7 @@
   <h2>Crear nuevo item en catálogo (Papelería)</h2>
   <section>
     <form class="form-grid" (ngSubmit)="crearCatalogo($event)">
-      <div>
+      <div *ngIf="!esAuxiliar">
         <label for="catNombre">Nombre</label>
         <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required placeholder="Ej: Resmas de papel" />
       </div>
@@ -24,8 +24,10 @@
         <label for="catDescripcion">Descripción</label>
         <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"></textarea>
       </div>
-      <div class="actions"><button class="btn-compact" type="submit">Agregar al catálogo</button></div>
-    </form>
+    <div class="actions" *ngIf="!esAuxiliar">
+      <button class="btn-compact" type="submit">Agregar al catálogo</button>
+    </div>
+  </form>
   </section>
 
   <h2>Catálogo de papelería</h2>

@@ -39,6 +39,11 @@ export class DashboardComponent implements OnInit {
   // Reactivos vencidos
   reactivosVencidos = signal<any[]>([]);
 
+  // Detectar si el usuario es auxiliar
+  get esAuxiliar() {
+    const user = (window as any).authUser?.() || null;
+    return user && user.rol === 'Auxiliar';
+  }
   constructor() {}
 
   async ngOnInit() {

@@ -16,6 +16,10 @@ import { insumosService } from '../services/insumos.service';
 })
 
 export class InsumosComponent implements OnInit {
+    public get esAuxiliar(): boolean {
+      const user = authUser();
+      return user?.rol === 'Auxiliar';
+    }
   @ViewChild('insumoFormSection') insumoFormSection?: ElementRef<HTMLElement>;
   @ViewChild('itemCatalogoInput') itemCatalogoInput?: ElementRef<HTMLInputElement>;
   // Aux lists

@@ -15,7 +15,7 @@
         <div class="form-field">
           <label for="clienteNombre">Nombre:</label>
           <input id="clienteNombre" [(ngModel)]="clienteNombre" name="clienteNombre" required
-            [class.error]="clienteErrors['nombre']" />
+            [class.error]="clienteErrors['nombre']" placeholder="Ej: Juan Pérez" />
           <small *ngIf="clienteErrors['nombre']" class="error-message">
             ⚠️ {{ clienteErrors['nombre'] }}
           </small>
@@ -23,9 +23,9 @@
 
         <!-- Número -->
         <div class="form-field">
-          <label for="clienteNumero">Número:</label>
+          <label for="clienteNumero">Consecutivo:</label>
           <input id="clienteNumero" type="number" [(ngModel)]="clienteNumero" name="clienteNumero"
-            [class.error]="clienteErrors['numero']" />
+            [class.error]="clienteErrors['numero']" placeholder="Ej: 101" />
           <small *ngIf="clienteErrors['numero']" class="error-message">
             ⚠️ {{ clienteErrors['numero'] }}
           </small>
@@ -35,7 +35,7 @@
         <div class="form-field">
           <label for="clienteFechaVinc">Fecha vinculación:</label>
           <input id="clienteFechaVinc" type="date" [(ngModel)]="clienteFechaVinc" name="clienteFechaVinc"
-            [class.error]="clienteErrors['fechaVinc']" />
+            [class.error]="clienteErrors['fechaVinc']" placeholder="Ej: 2025-11-24" />
           <small *ngIf="clienteErrors['fechaVinc']" class="error-message">
             ⚠️ {{ clienteErrors['fechaVinc'] }}
           </small>
@@ -63,7 +63,7 @@
         <div class="form-field">
           <label for="clienteRazonSocial">Razón social:</label>
           <input id="clienteRazonSocial" [(ngModel)]="clienteRazonSocial" name="clienteRazonSocial"
-            [class.error]="clienteErrors['razonSocial']" />
+            [class.error]="clienteErrors['razonSocial']" placeholder="Ej: Industrias SENA S.A.S." />
           <small *ngIf="clienteErrors['razonSocial']" class="error-message">
             ⚠️ {{ clienteErrors['razonSocial'] }}
           </small>
@@ -73,7 +73,7 @@
         <div class="form-field">
           <label for="clienteNit">NIT:</label>
           <input id="clienteNit" [(ngModel)]="clienteNit" name="clienteNit"
-            [class.error]="clienteErrors['nit']" />
+            [class.error]="clienteErrors['nit']" placeholder="Ej: 900123456-7" />
           <small *ngIf="clienteErrors['nit']" class="error-message">
             ⚠️ {{ clienteErrors['nit'] }}
           </small>
@@ -101,7 +101,7 @@
         <div class="form-field">
           <label for="clienteIdNum">Número identificación:</label>
           <input id="clienteIdNum" [(ngModel)]="clienteIdNum" name="clienteIdNum" required
-            [class.error]="clienteErrors['idNum']" />
+            [class.error]="clienteErrors['idNum']" placeholder="Ej: 12345678" />
           <small *ngIf="clienteErrors['idNum']" class="error-message">
             ⚠️ {{ clienteErrors['idNum'] }}
           </small>
@@ -112,7 +112,7 @@
           <label for="clienteSexo">Sexo:</label>
           <select id="clienteSexo" [(ngModel)]="clienteSexo" name="clienteSexo"
             [class.error]="clienteErrors['sexo']">
-            <option value="">Seleccionar sexo</option>
+            <option value="">Seleccione el sexo</option>
             <option value="M">Masculino</option>
             <option value="F">Femenino</option>
             <option value="Otro">Otro</option>
@@ -126,7 +126,7 @@
         <div class="form-field">
           <label for="clienteTipoPobl">Tipo población:</label>
           <input id="clienteTipoPobl" [(ngModel)]="clienteTipoPobl" name="clienteTipoPobl"
-            [class.error]="clienteErrors['tipoPobl']" />
+            [class.error]="clienteErrors['tipoPobl']" placeholder="Ej: Rural, Urbana" />
           <small *ngIf="clienteErrors['tipoPobl']" class="error-message">
             ⚠️ {{ clienteErrors['tipoPobl'] }}
           </small>
@@ -136,29 +136,36 @@
         <div class="form-field">
           <label for="clienteDireccion">Dirección:</label>
           <input id="clienteDireccion" [(ngModel)]="clienteDireccion" name="clienteDireccion"
-            [class.error]="clienteErrors['direccion']" />
+            [class.error]="clienteErrors['direccion']" placeholder="Ej: Calle 123 #45-67" />
           <small *ngIf="clienteErrors['direccion']" class="error-message">
             ⚠️ {{ clienteErrors['direccion'] }}
+          </small>
+        </div>
+
+
+        <!-- Departamento -->
+        <div class="form-field">
+          <label for="clienteDepartamento">Departamento:</label>
+          <select id="clienteDepartamento" [(ngModel)]="clienteIdDepartamento" name="clienteIdDepartamento"
+            (change)="onDepartamentoChange()" [class.error]="clienteErrors['departamento']">
+            <option value="">Seleccionar departamento</option>
+            <option *ngFor="let dep of departamentos()" [value]="dep.codigo">{{ dep.nombre }}</option>
+          </select>
+          <small *ngIf="clienteErrors['departamento']" class="error-message">
+            ⚠️ {{ clienteErrors['departamento'] }}
           </small>
         </div>
 
         <!-- Ciudad -->
         <div class="form-field">
           <label for="clienteCiudad">Ciudad:</label>
-          <input id="clienteCiudad" [(ngModel)]="clienteCiudad" name="clienteCiudad"
-            [class.error]="clienteErrors['ciudad']" />
+          <select id="clienteCiudad" [(ngModel)]="clienteIdCiudad" name="clienteIdCiudad"
+            [class.error]="clienteErrors['ciudad']">
+            <option value="">Seleccionar ciudad</option>
+            <option *ngFor="let ciudad of ciudades()" [value]="ciudad.codigo">{{ ciudad.nombre }}</option>
+          </select>
           <small *ngIf="clienteErrors['ciudad']" class="error-message">
             ⚠️ {{ clienteErrors['ciudad'] }}
-          </small>
-        </div>
-
-        <!-- Departamento -->
-        <div class="form-field">
-          <label for="clienteDepartamento">Departamento:</label>
-          <input id="clienteDepartamento" [(ngModel)]="clienteDepartamento" name="clienteDepartamento"
-            [class.error]="clienteErrors['departamento']" />
-          <small *ngIf="clienteErrors['departamento']" class="error-message">
-            ⚠️ {{ clienteErrors['departamento'] }}
           </small>
         </div>
 
@@ -166,7 +173,7 @@
         <div class="form-field">
           <label for="clienteCelular">Celular:</label>
           <input id="clienteCelular" [(ngModel)]="clienteCelular" name="clienteCelular"
-            [class.error]="clienteErrors['celular']" />
+            [class.error]="clienteErrors['celular']" placeholder="Ej: 3001234567" />
           <small *ngIf="clienteErrors['celular']" class="error-message">
             ⚠️ {{ clienteErrors['celular'] }}
           </small>
@@ -176,7 +183,7 @@
         <div class="form-field">
           <label for="clienteTelefono">Teléfono:</label>
           <input id="clienteTelefono" [(ngModel)]="clienteTelefono" name="clienteTelefono"
-            [class.error]="clienteErrors['telefono']" />
+            [class.error]="clienteErrors['telefono']" placeholder="Ej: 6011234567" />
           <small *ngIf="clienteErrors['telefono']" class="error-message">
             ⚠️ {{ clienteErrors['telefono'] }}
           </small>
@@ -186,7 +193,7 @@
         <div class="form-field">
           <label for="clienteEmail">Correo:</label>
           <input id="clienteEmail" [(ngModel)]="clienteEmail" name="clienteEmail"
-            [class.error]="clienteErrors['email']" />
+            [class.error]="clienteErrors['email']" placeholder="Ej: correo@ejemplo.com" />
           <small *ngIf="clienteErrors['email']" class="error-message">
             ⚠️ {{ clienteErrors['email'] }}
           </small>
@@ -196,7 +203,7 @@
         <div class="form-field">
           <label for="clienteTipoVinc">Tipo vinculación:</label>
           <input id="clienteTipoVinc" [(ngModel)]="clienteTipoVinc" name="clienteTipoVinc"
-            [class.error]="clienteErrors['tipoVinc']" />
+            [class.error]="clienteErrors['tipoVinc']" placeholder="Ej: Contrato, Convenio" />
           <small *ngIf="clienteErrors['tipoVinc']" class="error-message">
             ⚠️ {{ clienteErrors['tipoVinc'] }}
           </small>
@@ -206,7 +213,7 @@
         <div class="form-field">
           <label for="clienteRegistroPor">Registro realizado por:</label>
           <input id="clienteRegistroPor" [(ngModel)]="clienteRegistroPor" name="clienteRegistroPor"
-            [class.error]="clienteErrors['registroPor']" />
+            [class.error]="clienteErrors['registroPor']" placeholder="Ej: Administrador" />
           <small *ngIf="clienteErrors['registroPor']" class="error-message">
             ⚠️ {{ clienteErrors['registroPor'] }}
           </small>
@@ -216,7 +223,7 @@
         <div class="form-field">
           <label for="clienteObservaciones">Observaciones:</label>
           <input id="clienteObservaciones" [(ngModel)]="clienteObservaciones" name="clienteObservaciones"
-            [class.error]="clienteErrors['observaciones']" />
+            [class.error]="clienteErrors['observaciones']" placeholder="Observaciones adicionales" />
           <small *ngIf="clienteErrors['observaciones']" class="error-message">
             ⚠️ {{ clienteErrors['observaciones'] }}
           </small>
@@ -346,30 +353,33 @@
         </div>
 
         <!-- Requiere varios análisis -->
-        <div class="form-field checkbox-field">
-          <label for="solicitudRequiereVarios">
-            <input id="solicitudRequiereVarios" type="checkbox" [(ngModel)]="solicitudRequiereVarios"
-              name="solicitudRequiereVarios" />
-            ¿Requiere varios análisis?
-          </label>
+        <div class="form-field">
+          <label for="solicitudRequiereVarios">¿Requiere varios análisis?</label>
+          <select id="solicitudRequiereVarios" [(ngModel)]="solicitudRequiereVarios" name="solicitudRequiereVarios">
+            <option value="">Seleccionar opción</option>
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
         </div>
 
         <!-- Puede suministrar información adicional -->
-        <div class="form-field checkbox-field">
-          <label for="solicitudPuedeSuministrar">
-            <input id="solicitudPuedeSuministrar" type="checkbox" [(ngModel)]="solicitudPuedeSuministrar"
-              name="solicitudPuedeSuministrar" />
-            ¿Suministra info adicional?
-          </label>
+        <div class="form-field">
+          <label for="solicitudPuedeSuministrar">¿Suministra info adicional?</label>
+          <select id="solicitudPuedeSuministrar" [(ngModel)]="solicitudPuedeSuministrar" name="solicitudPuedeSuministrar">
+            <option value="">Seleccionar opción</option>
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
         </div>
 
         <!-- El servicio es viable -->
-        <div class="form-field checkbox-field">
-          <label for="solicitudServicioViable">
-            <input id="solicitudServicioViable" type="checkbox" [(ngModel)]="solicitudServicioViable"
-              name="solicitudServicioViable" />
-            ¿El servicio es viable?
-          </label>
+        <div class="form-field">
+          <label for="solicitudServicioViable">¿El servicio es viable?</label>
+          <select id="solicitudServicioViable" [(ngModel)]="solicitudServicioViable" name="solicitudServicioViable">
+            <option value="">Seleccionar opción</option>
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
         </div>
       </div>
       <div class="form-actions"><button type="submit">Agregar solicitud</button></div>
@@ -390,8 +400,8 @@
           <select id="ofertaSolicitudId" [(ngModel)]="ofertaSolicitudId" name="ofertaSolicitudId" required
             [class.error]="ofertaErrors['solicitudId']">
             <option value="">Seleccionar solicitud</option>
-            <option *ngFor="let s of solicitudes()" [value]="s.id_solicitud">
-              {{ s.nombre_solicitante }} - {{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
+              <option *ngFor="let s of solicitudesFiltradas()" [value]="s.id_solicitud">
+                {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front }}
             </option>
           </select>
           <small *ngIf="ofertaErrors['solicitudId']" class="error-message">
@@ -430,21 +440,23 @@
         </div>
 
         <!-- ¿Se generó cotización? -->
-        <div class="form-field checkbox-field">
-          <label for="ofertaGeneroCotizacion">
-            <input id="ofertaGeneroCotizacion" type="checkbox" [(ngModel)]="ofertaGeneroCotizacion"
-              name="ofertaGeneroCotizacion" />
-            ¿Se generó cotización?
-          </label>
+        <div class="form-field">
+          <label for="ofertaGeneroCotizacion">¿Se generó cotización?</label>
+          <select id="ofertaGeneroCotizacion" [(ngModel)]="ofertaGeneroCotizacion" name="ofertaGeneroCotizacion">
+            <option value="">Seleccionar opción</option>
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
         </div>
 
         <!-- ¿Se realizó seguimiento? -->
-        <div class="form-field checkbox-field">
-          <label for="ofertaRealizoSeguimiento">
-            <input id="ofertaRealizoSeguimiento" type="checkbox" [(ngModel)]="ofertaRealizoSeguimiento"
-              name="ofertaRealizoSeguimiento" />
-            ¿Se realizó seguimiento a la oferta?
-          </label>
+        <div class="form-field">
+          <label for="ofertaRealizoSeguimiento">¿Se realizó seguimiento a la oferta?</label>
+          <select id="ofertaRealizoSeguimiento" [(ngModel)]="ofertaRealizoSeguimiento" name="ofertaRealizoSeguimiento">
+            <option value="">Seleccionar opción</option>
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
         </div>
       </div>
       <div class="form-actions"><button type="submit">Agregar oferta</button></div>
@@ -453,7 +465,7 @@
   </section>
 
   <!-- SECCIÓN: AGREGAR RESULTADOS -->
-  <h2>Agregar resultados</h2>
+  <h2>Solicitud de revisión</h2>
   <section>
 
     <form (submit)="createResultado($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
@@ -465,8 +477,8 @@
           <select id="resultadoSolicitudId" [(ngModel)]="resultadoSolicitudId" name="resultadoSolicitudId" required
             [class.error]="resultadoErrors['solicitudId']">
             <option value="">Seleccionar solicitud</option>
-            <option *ngFor="let s of solicitudes()" [value]="s.id_solicitud">
-              {{ s.nombre_solicitante }} - {{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
+            <option *ngFor="let s of solicitudesFiltradas()" [value]="s.id_solicitud">
+              {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front }}
             </option>
           </select>
           <small *ngIf="resultadoErrors['solicitudId']" class="error-message">
@@ -504,17 +516,14 @@
           </small>
         </div>
       </div>
-      <div class="form-actions"><button type="submit">Agregar resultados</button></div>
+      <div class="form-actions"><button type="submit">Agregar seguimiento de resultados</button></div>
     </form>
     <p *ngIf="resultadoMsg" class="success-message">{{ resultadoMsg }}</p>
   </section>
 
-  <!-- SECCIÓN: AGREGAR ENCUESTA -->
-  <h2>Agregar encuesta de satisfacción</h2>
-  <section>
 
     <!-- SECCIÓN: AGREGAR ENCUESTA -->
-<h2>Agregar encuesta de satisfacción</h2>
+<h2>Seguimiento Encuesta</h2>
 <section>
 
   <form (submit)="createEncuesta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
@@ -526,8 +535,8 @@
         <select id="encuestaSolicitudId" [(ngModel)]="encuestaSolicitudId" name="encuestaSolicitudId" required
           [class.error]="encuestaErrors['solicitudId']">
           <option value="">Seleccionar solicitud</option>
-          <option *ngFor="let s of solicitudes()" [value]="s.id_solicitud">
-            {{ s.nombre_solicitante }} - {{ s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud) }}
+          <option *ngFor="let s of solicitudesFiltradas()" [value]="s.id_solicitud">
+            {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front }}
           </option>
         </select>
         <small *ngIf="encuestaErrors['solicitudId']" class="error-message">
@@ -537,7 +546,7 @@
 
       <!-- Fecha de encuesta -->
       <div class="form-field">
-        <label for="encuestaFecha">Fecha de la encuesta:</label>
+        <label for="encuestaFecha">Fecha de envio de la encuesta:</label>
         <input id="encuestaFecha" type="date" [(ngModel)]="encuestaFecha" name="encuestaFecha"
           [class.error]="encuestaErrors['fecha']" />
         <small *ngIf="encuestaErrors['fecha']" class="error-message">
@@ -545,16 +554,6 @@
         </small>
       </div>
 
-      <!-- Puntuación -->
-      <div class="form-field">
-        <label for="encuestaPuntuacion">Puntuación de satisfacción:</label>
-        <input id="encuestaPuntuacion" type="number" min="1" max="10" [(ngModel)]="encuestaPuntuacion"
-          name="encuestaPuntuacion" [class.error]="encuestaErrors['puntuacion']"
-          placeholder="Puntuación del 1 al 10" />
-        <small *ngIf="encuestaErrors['puntuacion']" class="error-message">
-          ⚠️ {{ encuestaErrors['puntuacion'] }}
-        </small>
-      </div>
 
       <!-- Comentarios -->
       <div class="form-field">
@@ -567,30 +566,33 @@
       </div>
 
       <!-- ¿Recomendaría el servicio? -->
-      <div class="form-field checkbox-field">
-        <label for="encuestaRecomendaria">
-          <input id="encuestaRecomendaria" type="checkbox" [(ngModel)]="encuestaRecomendaria"
-            name="encuestaRecomendaria" />
-          ¿Recomendaría el servicio?
-        </label>
+      <div class="form-field">
+           <label for="encuestaRecomendaria">Recomendaría el servicio</label>
+        <select id="encuestaRecomendaria" [(ngModel)]="encuestaRecomendaria" name="encuestaRecomendaria">
+          <option value="">Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
       </div>
 
       <!-- ¿El cliente respondió? -->
-      <div class="form-field checkbox-field">
-        <label for="encuestaClienteRespondio">
-          <input id="encuestaClienteRespondio" type="checkbox" [(ngModel)]="encuestaClienteRespondio"
-            name="encuestaClienteRespondio" />
-          ¿El cliente respondió la encuesta?
-        </label>
+      <div class="form-field">
+           <label for="encuestaClienteRespondio">El cliente respondió la encuesta</label>
+        <select id="encuestaClienteRespondio" [(ngModel)]="encuestaClienteRespondio" name="encuestaClienteRespondio">
+          <option value="">Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
       </div>
 
       <!-- ¿Se solicitó nueva encuesta? -->
-      <div class="form-field checkbox-field">
-        <label for="encuestaSolicitoNueva">
-          <input id="encuestaSolicitoNueva" type="checkbox" [(ngModel)]="encuestaSolicitoNueva"
-            name="encuestaSolicitoNueva" />
-          ¿Se solicitó nueva encuesta?
-        </label>
+      <div class="form-field">
+           <label for="encuestaSolicitoNueva">Se solicitó nueva encuesta</label>
+        <select id="encuestaSolicitoNueva" [(ngModel)]="encuestaSolicitoNueva" name="encuestaSolicitoNueva">
+          <option value="">Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
       </div>
 
     </div>
@@ -604,7 +606,6 @@
   <p *ngIf="encuestaMsg" class="success-message">{{ encuestaMsg }}</p>
 </section>
 
-  </section>
 
   <!-- SECCIÓN: Lista rápida de solicitudes -->
   <h2>Catalogo de Solicitudes</h2>

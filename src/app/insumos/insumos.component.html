@@ -7,7 +7,7 @@
     <h2>Crear nuevo insumo en catálogo</h2>
     <section>
         <form class="form-grid" (submit)="crearCatalogo($event)">
-            <div>
+            <div *ngIf="!esAuxiliar">
 
 
                 <label for="catNombre">Nombre</label>
@@ -28,8 +28,10 @@
                 <label for="catDescripcion">Descripción</label>
                 <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"></textarea>
             </div>
-            <div class="actions"><button class="btn-compact" type="submit">Agregar al catálogo</button></div>
-        </form>
+                <div class="actions" *ngIf="!esAuxiliar">
+                    <button class="btn-compact" type="submit">Agregar al catálogo</button>
+                </div>
+            </form>
     
     </section>
 

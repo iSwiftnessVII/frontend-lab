@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SnackbarService } from '../shared/snackbar.service';
 import { equiposService } from '../services/equipos.service';
+import { authUser } from '../services/auth.service';
 
 @Component({
 	standalone: true,
@@ -13,6 +14,10 @@ import { equiposService } from '../services/equipos.service';
 	imports: [CommonModule, FormsModule, RouterModule]
 })
 export class EquiposComponent {
+		public get esAuxiliar(): boolean {
+			const user = authUser();
+			return user?.rol === 'Auxiliar';
+		}
 	// ===== Form model signals (wrappers preserve existing template bindings) =====
 	private nombreSig = signal<string>('');
 	get nombre() { return this.nombreSig(); } set nombre(v: string) { this.nombreSig.set(v); }

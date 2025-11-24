@@ -2,6 +2,7 @@
   <h1>
     <i class="fas fa-chart-line"></i>
     Dashboard del Laboratorio
+    <span *ngIf="esAuxiliar" class="auxiliar-label">(Solo visualización)</span>
   </h1>
 
   <!-- Estado de carga -->
@@ -13,7 +14,7 @@
   <!-- Métricas Principales -->
   <div *ngIf="!cargando()" class="metrics-grid">
     <!-- Tarjeta Insumos -->
-    <div class="metric-card" routerLink="/insumos">
+    <div class="metric-card" routerLink="/insumos" [class.disabled]="esAuxiliar">
       <div class="metric-icon insumos">
         <i class="fas fa-boxes"></i>
       </div>
@@ -25,7 +26,7 @@
     </div>
 
     <!-- Tarjeta Reactivos -->
-    <div class="metric-card" routerLink="/reactivos">
+    <div class="metric-card" routerLink="/reactivos" [class.disabled]="esAuxiliar">
       <div class="metric-icon reactivos">
         <i class="fas fa-flask"></i>
       </div>
@@ -46,7 +47,7 @@
     </div>
 
     <!-- Tarjeta Solicitudes -->
-    <div class="metric-card" routerLink="/solicitudes">
+    <div class="metric-card" routerLink="/solicitudes" [class.disabled]="esAuxiliar">
       <div class="metric-icon solicitudes">
         <i class="fas fa-clipboard-list"></i>
       </div>
@@ -60,7 +61,7 @@
     </div>
 
     <!-- Tarjeta Clientes -->
-    <div class="metric-card">
+    <div class="metric-card" [class.disabled]="esAuxiliar">
       <div class="metric-icon clientes">
         <i class="fas fa-users"></i>
       </div>
@@ -74,7 +75,7 @@
     </div>
 
     <!-- Tarjeta Equipos -->
-    <div class="metric-card" routerLink="/equipos">
+    <div class="metric-card" routerLink="/equipos" [class.disabled]="esAuxiliar">
       <div class="metric-icon equipos">
         <i class="fas fa-cogs"></i>
       </div>
@@ -86,7 +87,7 @@
     </div>
 
     <!-- Tarjeta Papelería -->
-    <div class="metric-card" routerLink="/papeleria">
+    <div class="metric-card" routerLink="/papeleria" [class.disabled]="esAuxiliar">
       <div class="metric-icon papeleria">
         <i class="fas fa-file-alt"></i>
       </div>
@@ -98,7 +99,7 @@
     </div>
 
     <!-- Tarjeta Materiales Volumétricos -->
-    <div class="metric-card" routerLink="/materiales-volumetricos">
+    <div class="metric-card" routerLink="/materiales-volumetricos" [class.disabled]="esAuxiliar">
       <div class="metric-icon volumetricos">
         <i class="fas fa-vial"></i>
       </div>

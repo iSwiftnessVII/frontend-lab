@@ -15,6 +15,10 @@ import { authService, authUser } from '../services/auth.service';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class PapeleriaComponent implements OnInit {
+    public get esAuxiliar(): boolean {
+      const user = authUser();
+      return user?.rol === 'Auxiliar';
+    }
   @ViewChild('papFormSection') papFormSection?: ElementRef<HTMLElement>;
   @ViewChild('itemCatalogoInput') itemCatalogoInput?: ElementRef<HTMLInputElement>;
   // Formulario Catálogo

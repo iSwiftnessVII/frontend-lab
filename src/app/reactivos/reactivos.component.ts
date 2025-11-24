@@ -18,6 +18,30 @@ import { reactivosService } from '../services/reactivos.service';
 })
 
 export class ReactivosComponent implements OnInit {
+        public get esAuxiliar(): boolean {
+          const user = authUser();
+          return user?.rol === 'Auxiliar';
+        }
+      async calcularCodigosConsecutivos() {
+        // Buscar todos los códigos en catálogo y reactivos
+        const catalogo = this.catalogoBaseSig();
+        const inventario = this.reactivosSig();
+        const codigos = [...catalogo, ...inventario].map(r => r.codigo).filter(Boolean);
+        const maxCodigo = (tipo: string) => {
+          const prefix = tipo + '-';
+          const nums = codigos
+            .filter(c => c.startsWith(prefix))
+            .map(c => parseInt(c.replace(prefix, ''), 10))
+            .filter(n => !isNaN(n));
+          return nums.length ? Math.max(...nums) : 0;
+        };
+        this.nextCodigoS = 'S-' + String(maxCodigo('S') + 1).padStart(3, '0');
+        this.nextCodigoR = 'R-' + String(maxCodigo('R') + 1).padStart(3, '0');
+        this.nextCodigoM = 'M-' + String(maxCodigo('M') + 1).padStart(3, '0');
+      }
+    nextCodigoS = 'S-001';
+    nextCodigoR = 'R-001';
+    nextCodigoM = 'M-001';
   // Aux lists
   tipos: Array<any> = [];
   clasif: Array<any> = [];
@@ -189,17 +213,16 @@ export class ReactivosComponent implements OnInit {
       } catch {}
       // Cargar auxiliares y catálogo en paralelo para reducir tiempo de espera perceptual
       this.catalogoCargando = true;
-      await Promise.all([
-        this.loadAux(),
-        this.loadReactivos(10, 0),
-        this.loadCatalogoInicial()
-      ]);
+      await this.loadAux();
+      await this.loadReactivos(10, 0);
+      await this.loadCatalogoInicial();
+      await this.calcularCodigosConsecutivos();
       // Asegurar re-render de tarjetas una vez que auxiliares y reactivos estén listos
       // Esto fuerza a recalcular nombres (tipo/unidad/estado/SGA) y evita depender de un clic
       this.aplicarFiltroReactivos();
       // Guardar cache inicial tras carga
       this.persistPdfStatus();
-  this.persistReactivoPdfStatus();
+      this.persistReactivoPdfStatus();
     } catch (err) {
       console.error('Error inicializando Reactivos:', err);
     }
@@ -372,6 +395,7 @@ export class ReactivosComponent implements OnInit {
   }
 
   async loadCatalogoInicial() {
+    await this.calcularCodigosConsecutivos();
     this.catalogoOffset = 0;
     this.catalogoVisibleCount = 10;
     this.codigoFiltro = '';

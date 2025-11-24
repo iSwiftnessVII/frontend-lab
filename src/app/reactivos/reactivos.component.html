@@ -6,10 +6,15 @@
   <h2>Crear nuevo reactivo en Catalogo</h2>
   <section>
     <form class="form-grid" #catalogoForm="ngForm" (ngSubmit)="crearCatalogo($event, catalogoForm)">
-      <div>
+      <div *ngIf="!esAuxiliar">
         <label for="catCodigo">Código</label>
-        <input id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" #catCodigoCtrl="ngModel" required
-          [class.invalid]="catCodigoCtrl.invalid && (catCodigoCtrl.touched || submittedCatalogo)" placeholder="Ej: H2SO4" />
+        <select id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" #catCodigoCtrl="ngModel" required
+          [class.invalid]="catCodigoCtrl.invalid && (catCodigoCtrl.touched || submittedCatalogo)">
+          <option value="">Seleccionar código</option>
+          <option [value]="nextCodigoS">{{ nextCodigoS }}</option>
+          <option [value]="nextCodigoR">{{ nextCodigoR }}</option>
+          <option [value]="nextCodigoM">{{ nextCodigoM }}</option>
+        </select>
         @if (catCodigoCtrl.invalid && (catCodigoCtrl.touched || submittedCatalogo)) {
         <span class="field-error">Requerido</span>
         }
@@ -53,12 +58,10 @@
         <span class="field-error">Seleccione una opción</span>
         }
       </div>
-      <div class="full-row">
-        <label for="catDescripcion">Descripción</label>
-        <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"></textarea>
-      </div>
-      <div><button type="submit">Agregar al catálogo</button></div>
-    </form>
+    <div class="actions" *ngIf="!esAuxiliar">
+      <button class="btn-compact" type="submit">Agregar al catálogo</button>
+    </div>
+  </form>
 
     <!-- Transient toast (used for upload/delete feedback) -->
     @if (toastMsg) {

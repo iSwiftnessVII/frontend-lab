@@ -27,6 +27,9 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   clientesFiltrados = signal<Array<any>>([]);
   solicitudesFiltradas = signal<Array<any>>([]);
 
+    departamentos = signal<Array<any>>([]);
+    ciudades = signal<Array<any>>([]);
+
   clienteErrors: { [key: string]: string } = {};
   solicitudErrors: { [key: string]: string } = {};
   ofertaErrors: { [key: string]: string } = {};
@@ -42,11 +45,11 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   clienteRazonSocial = '';
   clienteNit = '';
   clienteTipoId = '';
-  clienteSexo = 'Otro';
+  clienteSexo = '';
   clienteTipoPobl = '';
   clienteDireccion = '';
-  clienteCiudad = '';
-  clienteDepartamento = '';
+  clienteIdCiudad = '';
+  clienteIdDepartamento = '';
   clienteCelular = '';
   clienteTelefono = '';
   clienteTipoVinc = '';
@@ -56,7 +59,38 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   clientesQ = '';
   solicitudesQ = '';
 
-  solicitudClienteId: any = null;
+    async loadDepartamentos() {
+      try {
+        const res = await fetch(API + '/departamentos');
+        const data = await res.json();
+        const arr = Array.isArray(data) ? data : (data.rows || data.data || []);
+        this.departamentos.set(arr);
+      } catch (err) {
+        console.error('Error cargando departamentos', err);
+      }
+    }
+
+    async loadCiudades(departamentoCodigo?: string) {
+      try {
+        let url = API + '/ciudades';
+        if (departamentoCodigo) {
+          url += `?departamento=${encodeURIComponent(departamentoCodigo)}`;
+        }
+        const res = await fetch(url);
+        const data = await res.json();
+        const arr = Array.isArray(data) ? data : (data.rows || data.data || []);
+        this.ciudades.set(arr);
+      } catch (err) {
+        console.error('Error cargando ciudades', err);
+      }
+      }
+
+      onDepartamentoChange() {
+        this.loadCiudades(this.clienteIdDepartamento);
+        this.clienteIdCiudad = '';
+      }
+
+  solicitudClienteId: any = '';
   solicitudNombre = '';
   solicitudMsg = '';
   solicitudTipo = '';
@@ -65,36 +99,36 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   solicitudTipoMuestra = '';
   solicitudCondEmpaque = '';
   solicitudTipoAnalisis = '';
-  solicitudRequiereVarios = false;
+  solicitudRequiereVarios: any = '';
   solicitudCantidad: number | null = null;
   solicitudFechaEstimada = '';
-  solicitudPuedeSuministrar = false;
-  solicitudServicioViable = false;
+  solicitudPuedeSuministrar: any = '';
+  solicitudServicioViable: any = '';
 
   // Variables para el formulario de oferta
-  ofertaSolicitudId: any = null;
-  ofertaGeneroCotizacion = false;
+  ofertaSolicitudId: any = '';
+  ofertaGeneroCotizacion: any = '';
   ofertaValor: number | null = null;
   ofertaFechaEnvio = '';
-  ofertaRealizoSeguimiento = false;
+  ofertaRealizoSeguimiento: any = '';
   ofertaObservacion = '';
   ofertaMsg = '';
 
   // Variables para el formulario de resultados
-  resultadoSolicitudId: any = null;
+  resultadoSolicitudId: any = '';
   resultadoFechaLimite = '';
   resultadoNumeroInforme = '';
   resultadoFechaEnvio = '';
   resultadoMsg = '';
 
   // Variables para el formulario de encuesta
-  encuestaSolicitudId: any = null;
+  encuestaSolicitudId: any = '';
   encuestaFecha = '';
   encuestaPuntuacion: number | null = null;
   encuestaComentarios = '';
-  encuestaRecomendaria = false;
-  encuestaClienteRespondio = false;
-  encuestaSolicitoNueva = false;
+  encuestaRecomendaria: any = '';
+  encuestaClienteRespondio: any = '';
+  encuestaSolicitoNueva: any = '';
   encuestaMsg = '';
 
   // Auto-refresh properties
@@ -109,6 +143,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Cargar datos inicialmente
+    this.loadDepartamentos();
     this.loadClientes();
     this.loadSolicitudes();
 
@@ -235,35 +270,44 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   }
 
   filtrarSolicitudes() {
-    const solicitudes = this.solicitudes();
-    
+    // Generar número de solicitud en frontend
+    // Ordenar por id_solicitud ascendente para consecutivo correcto
+    const arr = [...this.solicitudes()].sort((a, b) => a.id_solicitud - b.id_solicitud);
+    const solicitudes = arr.map((s) => {
+      const tipo = s.codigo || '';
+      const fecha = s.fecha_solicitud ? new Date(s.fecha_solicitud) : new Date();
+      const year = fecha.getFullYear();
+      const consecutivo = s.numero_solicitud ? String(s.numero_solicitud).padStart(2, '0') : '00';
+      return {
+        ...s,
+        numero_solicitud_front: `${tipo}-${year}-${consecutivo}`
+      };
+    });
     // Si no hay texto de búsqueda, mostrar todas
     if (!this.solicitudesQ.trim()) {
       this.solicitudesFiltradas.set(solicitudes);
       return;
     }
-    
     const filtro = this.solicitudesQ.toLowerCase().trim();
-    
     // Filtrar por múltiples campos
     const solicitudesFiltradas = solicitudes.filter(solicitud => {
       const id = (solicitud.id_solicitud || '').toString();
       const codigo = (solicitud.codigo || '').toLowerCase();
+      const numeroFront = (solicitud.numero_solicitud_front || '').toLowerCase();
       const nombreSolicitante = (solicitud.nombre_solicitante || '').toLowerCase();
       const nombreMuestra = (solicitud.nombre_muestra_producto || '').toLowerCase();
       const tipoMuestra = (solicitud.tipo_muestra || '').toLowerCase();
       const tipoAnalisis = (solicitud.tipo_analisis_requerido || '').toLowerCase();
       const lote = (solicitud.lote_producto || '').toLowerCase();
-      
       return id.includes(filtro) ||
              codigo.includes(filtro) ||
+             numeroFront.includes(filtro) ||
              nombreSolicitante.includes(filtro) ||
              nombreMuestra.includes(filtro) ||
              tipoMuestra.includes(filtro) ||
              tipoAnalisis.includes(filtro) ||
              lote.includes(filtro);
     });
-    
     this.solicitudesFiltradas.set(solicitudesFiltradas);
   }
 
@@ -362,20 +406,14 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     }
 
     // Validar Ciudad
-    if (!this.clienteCiudad.trim()) {
+    if (!this.clienteIdCiudad.trim()) {
       this.clienteErrors['ciudad'] = 'La ciudad es obligatoria';
-      isValid = false;
-    } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,30}$/.test(this.clienteCiudad)) {
-      this.clienteErrors['ciudad'] = 'Solo letras (máx 30 caracteres)';
       isValid = false;
     }
 
     // Validar Departamento
-    if (!this.clienteDepartamento.trim()) {
+    if (!this.clienteIdDepartamento.trim()) {
       this.clienteErrors['departamento'] = 'El departamento es obligatorio';
-      isValid = false;
-    } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,30}$/.test(this.clienteDepartamento)) {
-      this.clienteErrors['departamento'] = 'Solo letras (máx 30 caracteres)';
       isValid = false;
     }
 
@@ -713,8 +751,8 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
         sexo: this.clienteSexo,
         tipo_poblacion: this.clienteTipoPobl,
         direccion: this.clienteDireccion,
-        ciudad: this.clienteCiudad,
-        departamento: this.clienteDepartamento,
+        id_ciudad: this.clienteIdCiudad,
+        id_departamento: this.clienteIdDepartamento,
         celular: this.clienteCelular,
         telefono: this.clienteTelefono,
         correo_electronico: this.clienteEmail,
@@ -739,8 +777,8 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.clienteSexo = 'Otro';
       this.clienteTipoPobl = '';
       this.clienteDireccion = '';
-      this.clienteCiudad = '';
-      this.clienteDepartamento = '';
+      this.clienteIdCiudad = '';
+      this.clienteIdDepartamento = '';
       this.clienteCelular = '';
       this.clienteTelefono = '';
       this.clienteTipoVinc = '';

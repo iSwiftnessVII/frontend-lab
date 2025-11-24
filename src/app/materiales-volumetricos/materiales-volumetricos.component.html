@@ -6,7 +6,7 @@
   <h2>Materiales volumétricos</h2>
   <section>
     <form class="form-grid" (ngSubmit)="crear($event)">
-      <div>
+      <div *ngIf="!esAuxiliar">
         <label for="item">Item</label>
         <input id="item" type="number" [(ngModel)]="item" name="item" required 
                placeholder="Ej: 3001" 
@@ -66,11 +66,10 @@
         <label for="observaciones">Observaciones</label>
         <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" rows="2"></textarea>
       </div>
-      <div class="actions">
-        <button class="btn-compact" type="submit" [disabled]="creando">{{ creando ? 'Creando...' : 'Crear material' }}</button>
-        <button class="btn-compact btn-secondary" type="button" (click)="resetForm()" [disabled]="creando">Limpiar</button>
-      </div>
-    </form>
+    <div class="actions" *ngIf="!esAuxiliar">
+      <button class="btn-compact" type="submit">Registrar material</button>
+    </div>
+  </form>
   </section>
 
   <h2>Inventario de Materiales Volumétricos</h2>
