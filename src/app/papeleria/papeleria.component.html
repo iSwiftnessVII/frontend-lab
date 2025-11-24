@@ -3,33 +3,38 @@
     <i class="fas fa-paperclip"></i>
     | Papeleria
   </h1>
-  <h2>Crear nuevo item en catálogo (Papelería)</h2>
-  <section>
-    <form class="form-grid" (ngSubmit)="crearCatalogo($event)">
-      <div *ngIf="!esAuxiliar">
-        <label for="catNombre">Nombre</label>
-        <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required placeholder="Ej: Resmas de papel" />
-      </div>
-      <div>
-        <label for="catItem">Item</label>
-        <input id="catItem" type="number" min="1" step="1" [(ngModel)]="catItem" name="catItem" required placeholder="Ej: 2001" />
-      </div>
-      <div>
-        <label for="catImagen">Imagen
-          <span class="hint-icon" tabindex="0" data-tooltip="Peso máximo: 5 MB.">?</span>
-        </label>
-        <input id="catImagen" type="file" accept="image/*" (change)="onCatImagenChange($event)" />
-      </div>
-      <div class="full-row">
-        <label for="catDescripcion">Descripción</label>
-        <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"></textarea>
-      </div>
-    <div class="actions" *ngIf="!esAuxiliar">
-      <button class="btn-compact" type="submit">Agregar al catálogo</button>
-    </div>
-  </form>
-  </section>
+  
+  <!-- SECCIÓN: Crear nuevo item en catálogo -->
+  @if (!esAuxiliar()) {
+    <h2>Crear nuevo item en catálogo (Papelería)</h2>
+    <section>
+      <form class="form-grid" (ngSubmit)="crearCatalogo($event)">
+        <div>
+          <label for="catNombre">Nombre</label>
+          <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required placeholder="Ej: Resmas de papel" />
+        </div>
+        <div>
+          <label for="catItem">Item</label>
+          <input id="catItem" type="number" min="1" step="1" [(ngModel)]="catItem" name="catItem" required placeholder="Ej: 2001" />
+        </div>
+        <div>
+          <label for="catImagen">Imagen
+            <span class="hint-icon" tabindex="0" data-tooltip="Peso máximo: 5 MB.">?</span>
+          </label>
+          <input id="catImagen" type="file" accept="image/*" (change)="onCatImagenChange($event)" />
+        </div>
+        <div class="full-row">
+          <label for="catDescripcion">Descripción</label>
+          <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn-compact" type="submit">Agregar al catálogo</button>
+        </div>
+      </form>
+    </section>
+  }
 
+  <!-- SECCIÓN: Catálogo de papelería -->
   <h2>Catálogo de papelería</h2>
   <section>
     <div>
@@ -48,7 +53,8 @@
       </div>
 
       <div class="cards-container">
-        @if (catalogoCargando) {
+        <!-- Estado de carga -->
+        @if (catalogoCargando()) {
           <div class="catalogo-cards">
             <article class="catalog-card skeleton-card">
               <div class="catalog-card-media"><div class="skeleton-box"></div></div>
@@ -67,13 +73,17 @@
             </article>
           </div>
         }
-        @if (!catalogoCargando && catalogoResultadosSig().length) {
+
+        <!-- Estadísticas -->
+        @if (!catalogoCargando() && catalogoResultados().length) {
           <div class="catalogo-stats">
-            <span>Mostrando {{ catalogoResultadosSig().length }} de {{ catalogoTotal || catalogoBaseSig().length }} elementos</span>
+            <span>Mostrando {{ catalogoResultados().length }} de {{ catalogoTotal() }} elementos</span>
           </div>
         }
+
+        <!-- Grid de items del catálogo -->
         <div class="catalogo-cards">
-          @for (c of catalogoResultadosSig(); track c.item) {
+          @for (c of catalogoResultados(); track c.item) {
             <article class="catalog-card"
                      (contextmenu)="onCatalogContextMenu($event, c)"
                      (click)="onCatalogCardClick(c)" role="button" tabindex="0"
@@ -91,26 +101,40 @@
             </article>
           }
         </div>
-        @if (catalogoResultadosSig().length < (catalogoTotal || 0)) {
+
+        <!-- Botón Cargar más -->
+        @if (catalogoResultados().length < catalogoTotal()) {
           <div class="reset-cell">
-            <button type="button" class="btn-load-more" (click)="cargarMasCatalogo()">Cargar más</button>
+            <button type="button" class="btn-load-more" 
+                    (click)="cargarMasCatalogo()"
+                    [disabled]="catalogoCargando()">
+              @if (catalogoCargando()) {
+                <i class="fas fa-spinner fa-spin"></i> Cargando...
+              } @else {
+                Cargar más
+              }
+            </button>
           </div>
         }
-        @if (!catalogoCargando && !catalogoResultadosSig().length) {
+
+        <!-- Estado vacío -->
+        @if (!catalogoCargando() && !catalogoResultados().length) {
           <p>No hay elementos en el catálogo.</p>
         }
       </div>
     </div>
   </section>
 
-  <!-- Menú contextual (catálogo de papelería) -->
-  @if (contextMenuVisible) {
-    <div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" (click)="$event.stopPropagation()" (contextmenu)="$event.preventDefault()">
+  <!-- Menú contextual -->
+  @if (contextMenuVisible()) {
+    <div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" 
+         (click)="$event.stopPropagation()" (contextmenu)="$event.preventDefault()">
       <button type="button" class="ctx-item delete" (click)="onContextMenuEliminar()">Eliminar</button>
     </div>
   }
 
-  @if (item_catalogo != null) {
+  <!-- SECCIÓN: Crear registro de Papelería -->
+  @if (item_catalogo() != null && !esAuxiliar()) {
     <h2>Crear registro de Papelería</h2>
     <section #papFormSection>
       <form class="form-grid" (ngSubmit)="crearPapeleria($event)">
@@ -167,7 +191,7 @@
     </section>
   }
 
-  <!-- ===== Listado de papelería (tarjetas) al final de la página ===== -->
+  <!-- SECCIÓN: Listado de papelería -->
   <div (click)="onGlobalClick($event)">
     <h2>Listado de papelería</h2>
     <section>
@@ -182,7 +206,9 @@
             <input id="papInvNombreQ" [(ngModel)]="invNombreFiltro" (input)="filtrarPapeleriaPorCampos()" placeholder="Ej: Papel" />
           </div>
         </div>
-        @if (papeleriaCargando) {
+
+        <!-- Estado de carga del inventario -->
+        @if (papeleriaCargando()) {
           <div class="catalogo-cards">
             @for (s of skeletonPapeleria; track $index) {
               <article class="catalog-card skeleton-card">
@@ -193,55 +219,83 @@
             }
           </div>
         }
-        @if (!papeleriaCargando && papeleriaList.length) {
+
+        <!-- Grid del inventario -->
+        @if (!papeleriaCargando() && papeleriaList().length) {
           <div class="catalogo-cards">
-            @for (p of papeleriaList; track $index) {
+            @for (p of papeleriaList(); track p.id) {
               <article class="catalog-card" role="button" tabindex="0" [class.open]="isOpen(p)"
                        (click)="toggleOpen(p)" (keyup.enter)="toggleOpen(p)" (keyup.space)="toggleOpen(p)"
                        (contextmenu)="onCatalogContextMenu($event, p)">
+                
                 @if (p.item_catalogo) {
                   <div class="catalog-card-media">
                     <img [src]="getCatalogoImagenUrl(p.item_catalogo)" alt="Imagen catálogo" (error)="onImgError($event)" />
                   </div>
                 }
+                
                 <div class="card-name" [title]="p.nombre">
                   <span>{{ p.nombre }}</span>
                   <span class="meta">Item: <strong>{{ p.item_catalogo }}</strong></span>
                 </div>
+                
                 <div class="card-meta">
                   <span class="meta">Cantidad disponible: <strong>{{ p.cantidad_existente }}</strong></span>
                 </div>
-                <div class="insumo-actions-row" (click)="$event.stopPropagation()">
-                  <input type="number" min="1" step="1"
-                         [ngModel]="getRemoveQty(p.id)"
-                         (ngModelChange)="setRemoveQty(p.id, $event)"
-                         placeholder="Cantidad" />
-                  <button type="button" class="btn-compact btn-remove"
-                          [disabled]="isBusy(p.id) || !isValidQty(getRemoveQty(p.id))"
-                          (click)="$event.stopPropagation(); quitar(p)">Quitar</button>
-                </div>
+                
+                <!-- Control de stock -->
+                @if (!esAuxiliar()) {
+                  <div class="insumo-actions-row" (click)="$event.stopPropagation()">
+                    <input type="number" min="1" step="1"
+                           [ngModel]="getRemoveQty(p.id)"
+                           (ngModelChange)="setRemoveQty(p.id, $event)"
+                           placeholder="Cantidad" />
+                    <button type="button" class="btn-compact btn-remove"
+                            [disabled]="isBusy(p.id) || !isValidQty(getRemoveQty(p.id))"
+                            (click)="$event.stopPropagation(); quitar(p)">Quitar</button>
+                  </div>
+                }
+
+                <!-- Detalles expandibles -->
                 @if (isOpen(p)) {
                   <div class="insumo-details-panel">
                     <div class="detail-row"><strong>Adquirida:</strong> {{ p.cantidad_adquirida }}</div>
-                    @if (p.presentacion) { <div class="detail-row"><strong>Presentación:</strong> {{ p.presentacion }}</div> }
-                    @if (p.marca) { <div class="detail-row"><strong>Marca:</strong> {{ p.marca }}</div> }
-                    @if (p.referencia) { <div class="detail-row"><strong>Referencia:</strong> {{ p.referencia }}</div> }
-                    @if (p.ubicacion) { <div class="detail-row"><strong>Ubicación:</strong> {{ p.ubicacion }}</div> }
-                    @if (p.fecha_adquisicion) { <div class="detail-row"><strong>Fecha adquisición:</strong> {{ p.fecha_adquisicion | date:'yyyy-MM-dd' }}</div> }
-                    @if (p.descripcion) { <div class="detail-row"><strong>Descripción:</strong> {{ p.descripcion }}</div> }
-                    @if (p.observaciones) { <div class="detail-row"><strong>Observaciones:</strong> {{ p.observaciones }}</div> }
-                    <div class="panel-actions">
-                      <button type="button" class="btn-delete"
-                              [disabled]="isBusy(p.id)"
-                              (click)="$event.stopPropagation(); eliminar(p)">Eliminar</button>
-                    </div>
+                    @if (p.presentacion) { 
+                      <div class="detail-row"><strong>Presentación:</strong> {{ p.presentacion }}</div> 
+                    }
+                    @if (p.marca) { 
+                      <div class="detail-row"><strong>Marca:</strong> {{ p.marca }}</div> 
+                    }
+                    @if (p.ubicacion) { 
+                      <div class="detail-row"><strong>Ubicación:</strong> {{ p.ubicacion }}</div> 
+                    }
+                    @if (p.fecha_adquisicion) { 
+                      <div class="detail-row"><strong>Fecha adquisición:</strong> {{ p.fecha_adquisicion | date:'yyyy-MM-dd' }}</div> 
+                    }
+                    @if (p.descripcion) { 
+                      <div class="detail-row"><strong>Descripción:</strong> {{ p.descripcion }}</div> 
+                    }
+                    @if (p.observaciones) { 
+                      <div class="detail-row"><strong>Observaciones:</strong> {{ p.observaciones }}</div> 
+                    }
+                    
+                    <!-- Acciones de gestión -->
+                    @if (!esAuxiliar()) {
+                      <div class="panel-actions">
+                        <button type="button" class="btn-delete"
+                                [disabled]="isBusy(p.id)"
+                                (click)="$event.stopPropagation(); eliminar(p)">Eliminar</button>
+                      </div>
+                    }
                   </div>
                 }
               </article>
             }
           </div>
         }
-        @if (!papeleriaCargando && !papeleriaList.length) {
+
+        <!-- Estado vacío del inventario -->
+        @if (!papeleriaCargando() && !papeleriaList().length) {
           <p>No hay registros de papelería.</p>
         }
       </div>

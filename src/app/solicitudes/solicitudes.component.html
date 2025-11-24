@@ -1,13 +1,14 @@
 <!-- CONTAINER PRINCIPAL -->
 <div class="liba-theme container">
-<h1>
+  <h1>
     <i class="fas fa-clipboard-list"></i>
     | Solicitudes
   </h1>
+  
   <h2>Agregar cliente</h2>
+  
   <!-- SECCIÓN: Agregar cliente -->
   <section>
-
     <form (submit)="createCliente($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
       <div class="form-grid">
 
@@ -16,9 +17,11 @@
           <label for="clienteNombre">Nombre:</label>
           <input id="clienteNombre" [(ngModel)]="clienteNombre" name="clienteNombre" required
             [class.error]="clienteErrors['nombre']" placeholder="Ej: Juan Pérez" />
-          <small *ngIf="clienteErrors['nombre']" class="error-message">
-            ⚠️ {{ clienteErrors['nombre'] }}
-          </small>
+          @if (clienteErrors['nombre']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['nombre'] }}
+            </small>
+          }
         </div>
 
         <!-- Número -->
@@ -26,9 +29,11 @@
           <label for="clienteNumero">Consecutivo:</label>
           <input id="clienteNumero" type="number" [(ngModel)]="clienteNumero" name="clienteNumero"
             [class.error]="clienteErrors['numero']" placeholder="Ej: 101" />
-          <small *ngIf="clienteErrors['numero']" class="error-message">
-            ⚠️ {{ clienteErrors['numero'] }}
-          </small>
+          @if (clienteErrors['numero']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['numero'] }}
+            </small>
+          }
         </div>
 
         <!-- Fecha vinculación -->
@@ -36,9 +41,11 @@
           <label for="clienteFechaVinc">Fecha vinculación:</label>
           <input id="clienteFechaVinc" type="date" [(ngModel)]="clienteFechaVinc" name="clienteFechaVinc"
             [class.error]="clienteErrors['fechaVinc']" placeholder="Ej: 2025-11-24" />
-          <small *ngIf="clienteErrors['fechaVinc']" class="error-message">
-            ⚠️ {{ clienteErrors['fechaVinc'] }}
-          </small>
+          @if (clienteErrors['fechaVinc']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['fechaVinc'] }}
+            </small>
+          }
         </div>
 
         <!-- Tipo usuario -->
@@ -54,9 +61,11 @@
             <option value="Instructor SENA">Instructor SENA</option>
             <option value="Centros SENA">Centros SENA</option>
           </select>
-          <small *ngIf="clienteErrors['tipoUsuario']" class="error-message">
-            ⚠️ {{ clienteErrors['tipoUsuario'] }}
-          </small>
+          @if (clienteErrors['tipoUsuario']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['tipoUsuario'] }}
+            </small>
+          }
         </div>
 
         <!-- Razón social -->
@@ -64,9 +73,11 @@
           <label for="clienteRazonSocial">Razón social:</label>
           <input id="clienteRazonSocial" [(ngModel)]="clienteRazonSocial" name="clienteRazonSocial"
             [class.error]="clienteErrors['razonSocial']" placeholder="Ej: Industrias SENA S.A.S." />
-          <small *ngIf="clienteErrors['razonSocial']" class="error-message">
-            ⚠️ {{ clienteErrors['razonSocial'] }}
-          </small>
+          @if (clienteErrors['razonSocial']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['razonSocial'] }}
+            </small>
+          }
         </div>
 
         <!-- NIT -->
@@ -74,9 +85,11 @@
           <label for="clienteNit">NIT:</label>
           <input id="clienteNit" [(ngModel)]="clienteNit" name="clienteNit"
             [class.error]="clienteErrors['nit']" placeholder="Ej: 900123456-7" />
-          <small *ngIf="clienteErrors['nit']" class="error-message">
-            ⚠️ {{ clienteErrors['nit'] }}
-          </small>
+          @if (clienteErrors['nit']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['nit'] }}
+            </small>
+          }
         </div>
 
         <!-- Tipo identificación -->
@@ -92,9 +105,11 @@
             <option value="PASAPORTE">Pasaporte</option>
             <option value="OTRO">Otro</option>
           </select>
-          <small *ngIf="clienteErrors['tipoId']" class="error-message">
-            ⚠️ {{ clienteErrors['tipoId'] }}
-          </small>
+          @if (clienteErrors['tipoId']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['tipoId'] }}
+            </small>
+          }
         </div>
 
         <!-- Número identificación -->
@@ -102,9 +117,11 @@
           <label for="clienteIdNum">Número identificación:</label>
           <input id="clienteIdNum" [(ngModel)]="clienteIdNum" name="clienteIdNum" required
             [class.error]="clienteErrors['idNum']" placeholder="Ej: 12345678" />
-          <small *ngIf="clienteErrors['idNum']" class="error-message">
-            ⚠️ {{ clienteErrors['idNum'] }}
-          </small>
+          @if (clienteErrors['idNum']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['idNum'] }}
+            </small>
+          }
         </div>
 
         <!-- Sexo -->
@@ -117,9 +134,11 @@
             <option value="F">Femenino</option>
             <option value="Otro">Otro</option>
           </select>
-          <small *ngIf="clienteErrors['sexo']" class="error-message">
-            ⚠️ {{ clienteErrors['sexo'] }}
-          </small>
+          @if (clienteErrors['sexo']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['sexo'] }}
+            </small>
+          }
         </div>
 
         <!-- Tipo población -->
@@ -127,9 +146,11 @@
           <label for="clienteTipoPobl">Tipo población:</label>
           <input id="clienteTipoPobl" [(ngModel)]="clienteTipoPobl" name="clienteTipoPobl"
             [class.error]="clienteErrors['tipoPobl']" placeholder="Ej: Rural, Urbana" />
-          <small *ngIf="clienteErrors['tipoPobl']" class="error-message">
-            ⚠️ {{ clienteErrors['tipoPobl'] }}
-          </small>
+          @if (clienteErrors['tipoPobl']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['tipoPobl'] }}
+            </small>
+          }
         </div>
 
         <!-- Dirección -->
@@ -137,11 +158,12 @@
           <label for="clienteDireccion">Dirección:</label>
           <input id="clienteDireccion" [(ngModel)]="clienteDireccion" name="clienteDireccion"
             [class.error]="clienteErrors['direccion']" placeholder="Ej: Calle 123 #45-67" />
-          <small *ngIf="clienteErrors['direccion']" class="error-message">
-            ⚠️ {{ clienteErrors['direccion'] }}
-          </small>
+          @if (clienteErrors['direccion']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['direccion'] }}
+            </small>
+          }
         </div>
-
 
         <!-- Departamento -->
         <div class="form-field">
@@ -149,11 +171,15 @@
           <select id="clienteDepartamento" [(ngModel)]="clienteIdDepartamento" name="clienteIdDepartamento"
             (change)="onDepartamentoChange()" [class.error]="clienteErrors['departamento']">
             <option value="">Seleccionar departamento</option>
-            <option *ngFor="let dep of departamentos()" [value]="dep.codigo">{{ dep.nombre }}</option>
+            @for (dep of departamentos(); track dep.codigo) {
+              <option [value]="dep.codigo">{{ dep.nombre }}</option>
+            }
           </select>
-          <small *ngIf="clienteErrors['departamento']" class="error-message">
-            ⚠️ {{ clienteErrors['departamento'] }}
-          </small>
+          @if (clienteErrors['departamento']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['departamento'] }}
+            </small>
+          }
         </div>
 
         <!-- Ciudad -->
@@ -162,11 +188,15 @@
           <select id="clienteCiudad" [(ngModel)]="clienteIdCiudad" name="clienteIdCiudad"
             [class.error]="clienteErrors['ciudad']">
             <option value="">Seleccionar ciudad</option>
-            <option *ngFor="let ciudad of ciudades()" [value]="ciudad.codigo">{{ ciudad.nombre }}</option>
+            @for (ciudad of ciudades(); track ciudad.codigo) {
+              <option [value]="ciudad.codigo">{{ ciudad.nombre }}</option>
+            }
           </select>
-          <small *ngIf="clienteErrors['ciudad']" class="error-message">
-            ⚠️ {{ clienteErrors['ciudad'] }}
-          </small>
+          @if (clienteErrors['ciudad']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['ciudad'] }}
+            </small>
+          }
         </div>
 
         <!-- Celular -->
@@ -174,9 +204,11 @@
           <label for="clienteCelular">Celular:</label>
           <input id="clienteCelular" [(ngModel)]="clienteCelular" name="clienteCelular"
             [class.error]="clienteErrors['celular']" placeholder="Ej: 3001234567" />
-          <small *ngIf="clienteErrors['celular']" class="error-message">
-            ⚠️ {{ clienteErrors['celular'] }}
-          </small>
+          @if (clienteErrors['celular']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['celular'] }}
+            </small>
+          }
         </div>
 
         <!-- Teléfono -->
@@ -184,9 +216,11 @@
           <label for="clienteTelefono">Teléfono:</label>
           <input id="clienteTelefono" [(ngModel)]="clienteTelefono" name="clienteTelefono"
             [class.error]="clienteErrors['telefono']" placeholder="Ej: 6011234567" />
-          <small *ngIf="clienteErrors['telefono']" class="error-message">
-            ⚠️ {{ clienteErrors['telefono'] }}
-          </small>
+          @if (clienteErrors['telefono']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['telefono'] }}
+            </small>
+          }
         </div>
 
         <!-- Correo -->
@@ -194,9 +228,11 @@
           <label for="clienteEmail">Correo:</label>
           <input id="clienteEmail" [(ngModel)]="clienteEmail" name="clienteEmail"
             [class.error]="clienteErrors['email']" placeholder="Ej: correo@ejemplo.com" />
-          <small *ngIf="clienteErrors['email']" class="error-message">
-            ⚠️ {{ clienteErrors['email'] }}
-          </small>
+          @if (clienteErrors['email']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['email'] }}
+            </small>
+          }
         </div>
 
         <!-- Tipo vinculación -->
@@ -204,9 +240,11 @@
           <label for="clienteTipoVinc">Tipo vinculación:</label>
           <input id="clienteTipoVinc" [(ngModel)]="clienteTipoVinc" name="clienteTipoVinc"
             [class.error]="clienteErrors['tipoVinc']" placeholder="Ej: Contrato, Convenio" />
-          <small *ngIf="clienteErrors['tipoVinc']" class="error-message">
-            ⚠️ {{ clienteErrors['tipoVinc'] }}
-          </small>
+          @if (clienteErrors['tipoVinc']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['tipoVinc'] }}
+            </small>
+          }
         </div>
 
         <!-- Registro realizado por -->
@@ -214,9 +252,11 @@
           <label for="clienteRegistroPor">Registro realizado por:</label>
           <input id="clienteRegistroPor" [(ngModel)]="clienteRegistroPor" name="clienteRegistroPor"
             [class.error]="clienteErrors['registroPor']" placeholder="Ej: Administrador" />
-          <small *ngIf="clienteErrors['registroPor']" class="error-message">
-            ⚠️ {{ clienteErrors['registroPor'] }}
-          </small>
+          @if (clienteErrors['registroPor']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['registroPor'] }}
+            </small>
+          }
         </div>
 
         <!-- Observaciones -->
@@ -224,20 +264,20 @@
           <label for="clienteObservaciones">Observaciones:</label>
           <input id="clienteObservaciones" [(ngModel)]="clienteObservaciones" name="clienteObservaciones"
             [class.error]="clienteErrors['observaciones']" placeholder="Observaciones adicionales" />
-          <small *ngIf="clienteErrors['observaciones']" class="error-message">
-            ⚠️ {{ clienteErrors['observaciones'] }}
-          </small>
+          @if (clienteErrors['observaciones']) {
+            <small class="error-message">
+              ⚠️ {{ clienteErrors['observaciones'] }}
+            </small>
+          }
         </div>
       </div>
       <div class="form-actions"><button type="submit">Agregar cliente</button></div>
     </form>
-    <p *ngIf="clienteMsg" class="success-message">{{ clienteMsg }}</p>
   </section>
 
   <!-- SECCIÓN: AGREGAR SOLICITUD-->
   <h2>Agregar solicitud</h2>
   <section>
-
     <form (submit)="createSolicitud($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
       <div class="form-grid">
 
@@ -247,13 +287,17 @@
           <select id="solicitudClienteId" [(ngModel)]="solicitudClienteId" name="solicitudClienteId" required
             [class.error]="solicitudErrors['clienteId']">
             <option value="">Seleccionar cliente</option>
-            <option *ngFor="let u of clientes()" [value]="u.id_cliente">
-              {{ u.nombre_solicitante }} ({{ u.numero_identificacion }})
-            </option>
+            @for (u of clientes(); track u.id_cliente) {
+              <option [value]="u.id_cliente">
+                {{ u.nombre_solicitante }} ({{ u.numero_identificacion }})
+              </option>
+            }
           </select>
-          <small *ngIf="solicitudErrors['clienteId']" class="error-message">
-            ⚠️ {{ solicitudErrors['clienteId'] }}
-          </small>
+          @if (solicitudErrors['clienteId']) {
+            <small class="error-message">
+              ⚠️ {{ solicitudErrors['clienteId'] }}
+            </small>
+          }
         </div>
 
         <!-- Tipo de solicitud -->
@@ -267,9 +311,11 @@
             <option value="UI">UI - Uso Infraestructura</option>
             <option value="IA">IA - Investigación Aplicada</option>
           </select>
-          <small *ngIf="solicitudErrors['tipo']" class="error-message">
-            ⚠️ {{ solicitudErrors['tipo'] }}
-          </small>
+          @if (solicitudErrors['tipo']) {
+            <small class="error-message">
+              ⚠️ {{ solicitudErrors['tipo'] }}
+            </small>
+          }
         </div>
 
         <!-- Nombre de muestra/producto -->
@@ -277,9 +323,11 @@
           <label for="solicitudNombre">Nombre de la muestra:</label>
           <input id="solicitudNombre" [(ngModel)]="solicitudNombre" name="solicitudNombre"
             [class.error]="solicitudErrors['nombre']" placeholder="Ej: Suero lácteo" />
-          <small *ngIf="solicitudErrors['nombre']" class="error-message">
-            ⚠️ {{ solicitudErrors['nombre'] }}
-          </small>
+          @if (solicitudErrors['nombre']) {
+            <small class="error-message">
+              ⚠️ {{ solicitudErrors['nombre'] }}
+            </small>
+          }
         </div>
 
         <!-- Lote -->
@@ -287,9 +335,11 @@
           <label for="solicitudLote">Lote del producto:</label>
           <input id="solicitudLote" [(ngModel)]="solicitudLote" name="solicitudLote"
             [class.error]="solicitudErrors['lote']" placeholder="Ej: L202501" />
-          <small *ngIf="solicitudErrors['lote']" class="error-message">
-            ⚠️ {{ solicitudErrors['lote'] }}
-          </small>
+          @if (solicitudErrors['lote']) {
+            <small class="error-message">
+              ⚠️ {{ solicitudErrors['lote'] }}
+            </small>
+          }
         </div>
 
         <!-- Fecha de vencimiento -->
@@ -297,9 +347,11 @@
           <label for="solicitudFechaVenc">Fecha de vencimiento:</label>
           <input id="solicitudFechaVenc" type="date" [(ngModel)]="solicitudFechaVenc" name="solicitudFechaVenc"
             [class.error]="solicitudErrors['fechaVenc']" />
-          <small *ngIf="solicitudErrors['fechaVenc']" class="error-message">
-            ⚠️ {{ solicitudErrors['fechaVenc'] }}
-          </small>
+          @if (solicitudErrors['fechaVenc']) {
+            <small class="error-message">
+              ⚠️ {{ solicitudErrors['fechaVenc'] }}
+            </small>
+          }
         </div>
 
         <!-- Tipo de muestra -->
@@ -307,9 +359,11 @@
           <label for="solicitudTipoMuestra">Tipo de muestra:</label>
           <input id="solicitudTipoMuestra" [(ngModel)]="solicitudTipoMuestra" name="solicitudTipoMuestra"
             [class.error]="solicitudErrors['tipoMuestra']" placeholder="Ej: Líquido, Sólido, Gas" />
-          <small *ngIf="solicitudErrors['tipoMuestra']" class="error-message">
-            ⚠️ {{ solicitudErrors['tipoMuestra'] }}
-          </small>
+          @if (solicitudErrors['tipoMuestra']) {
+            <small class="error-message">
+              ⚠️ {{ solicitudErrors['tipoMuestra'] }}
+            </small>
+          }
         </div>
 
         <!-- Condiciones de empaque -->
@@ -317,9 +371,11 @@
           <label for="solicitudCondEmpaque">Condiciones de empaque:</label>
           <input id="solicitudCondEmpaque" [(ngModel)]="solicitudCondEmpaque" name="solicitudCondEmpaque"
             [class.error]="solicitudErrors['condEmpaque']" placeholder="Ej: Refrigerado, sellado al vacío" />
-          <small *ngIf="solicitudErrors['condEmpaque']" class="error-message">
-            ⚠️ {{ solicitudErrors['condEmpaque'] }}
-          </small>
+          @if (solicitudErrors['condEmpaque']) {
+            <small class="error-message">
+              ⚠️ {{ solicitudErrors['condEmpaque'] }}
+            </small>
+          }
         </div>
 
         <!-- Tipo de análisis -->
@@ -327,9 +383,11 @@
           <label for="solicitudTipoAnalisis">Tipo de análisis requerido:</label>
           <input id="solicitudTipoAnalisis" [(ngModel)]="solicitudTipoAnalisis" name="solicitudTipoAnalisis"
             [class.error]="solicitudErrors['tipoAnalisis']" placeholder="Ej: Microbiológico, Fisicoquímico" />
-          <small *ngIf="solicitudErrors['tipoAnalisis']" class="error-message">
-            ⚠️ {{ solicitudErrors['tipoAnalisis'] }}
-          </small>
+          @if (solicitudErrors['tipoAnalisis']) {
+            <small class="error-message">
+              ⚠️ {{ solicitudErrors['tipoAnalisis'] }}
+            </small>
+          }
         </div>
 
         <!-- Cantidad de muestras -->
@@ -337,9 +395,11 @@
           <label for="solicitudCantidad">Cantidad de muestras:</label>
           <input id="solicitudCantidad" type="number" [(ngModel)]="solicitudCantidad" name="solicitudCantidad" min="1"
             max="1000" [class.error]="solicitudErrors['cantidad']" placeholder="Ej: 3" />
-          <small *ngIf="solicitudErrors['cantidad']" class="error-message">
-            ⚠️ {{ solicitudErrors['cantidad'] }}
-          </small>
+          @if (solicitudErrors['cantidad']) {
+            <small class="error-message">
+              ⚠️ {{ solicitudErrors['cantidad'] }}
+            </small>
+          }
         </div>
 
         <!-- Fecha estimada de entrega -->
@@ -347,9 +407,11 @@
           <label for="solicitudFechaEstimada">Fecha estimada entrega:</label>
           <input id="solicitudFechaEstimada" type="date" [(ngModel)]="solicitudFechaEstimada"
             name="solicitudFechaEstimada" [class.error]="solicitudErrors['fechaEstimada']" />
-          <small *ngIf="solicitudErrors['fechaEstimada']" class="error-message">
-            ⚠️ {{ solicitudErrors['fechaEstimada'] }}
-          </small>
+          @if (solicitudErrors['fechaEstimada']) {
+            <small class="error-message">
+              ⚠️ {{ solicitudErrors['fechaEstimada'] }}
+            </small>
+          }
         </div>
 
         <!-- Requiere varios análisis -->
@@ -384,13 +446,11 @@
       </div>
       <div class="form-actions"><button type="submit">Agregar solicitud</button></div>
     </form>
-    <p *ngIf="solicitudMsg" class="success-message">{{ solicitudMsg }}</p>
   </section>
 
   <!-- SECCIÓN: AGREGAR OFERTA -->
   <h2>Agregar oferta</h2>
   <section>
-
     <form (submit)="createOferta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
       <div class="form-grid">
 
@@ -400,13 +460,17 @@
           <select id="ofertaSolicitudId" [(ngModel)]="ofertaSolicitudId" name="ofertaSolicitudId" required
             [class.error]="ofertaErrors['solicitudId']">
             <option value="">Seleccionar solicitud</option>
-              <option *ngFor="let s of solicitudesFiltradas()" [value]="s.id_solicitud">
+            @for (s of solicitudesFiltradas(); track s.id_solicitud) {
+              <option [value]="s.id_solicitud">
                 {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front }}
-            </option>
+              </option>
+            }
           </select>
-          <small *ngIf="ofertaErrors['solicitudId']" class="error-message">
-            ⚠️ {{ ofertaErrors['solicitudId'] }}
-          </small>
+          @if (ofertaErrors['solicitudId']) {
+            <small class="error-message">
+              ⚠️ {{ ofertaErrors['solicitudId'] }}
+            </small>
+          }
         </div>
 
         <!-- Valor -->
@@ -414,9 +478,11 @@
           <label for="ofertaValor">Valor:</label>
           <input id="ofertaValor" type="number" [(ngModel)]="ofertaValor" name="ofertaValor" min="0" step="0.01"
             [class.error]="ofertaErrors['valor']" placeholder="Ej: 150000" />
-          <small *ngIf="ofertaErrors['valor']" class="error-message">
-            ⚠️ {{ ofertaErrors['valor'] }}
-          </small>
+          @if (ofertaErrors['valor']) {
+            <small class="error-message">
+              ⚠️ {{ ofertaErrors['valor'] }}
+            </small>
+          }
         </div>
 
         <!-- Fecha de envío -->
@@ -424,9 +490,11 @@
           <label for="ofertaFechaEnvio">Fecha de envío de la oferta:</label>
           <input id="ofertaFechaEnvio" type="date" [(ngModel)]="ofertaFechaEnvio" name="ofertaFechaEnvio"
             [class.error]="ofertaErrors['fechaEnvio']" />
-          <small *ngIf="ofertaErrors['fechaEnvio']" class="error-message">
-            ⚠️ {{ ofertaErrors['fechaEnvio'] }}
-          </small>
+          @if (ofertaErrors['fechaEnvio']) {
+            <small class="error-message">
+              ⚠️ {{ ofertaErrors['fechaEnvio'] }}
+            </small>
+          }
         </div>
 
         <!-- Observación -->
@@ -434,9 +502,11 @@
           <label for="ofertaObservacion">Observación:</label>
           <input id="ofertaObservacion" [(ngModel)]="ofertaObservacion" name="ofertaObservacion"
             [class.error]="ofertaErrors['observacion']" placeholder="Observaciones sobre la oferta" />
-          <small *ngIf="ofertaErrors['observacion']" class="error-message">
-            ⚠️ {{ ofertaErrors['observacion'] }}
-          </small>
+          @if (ofertaErrors['observacion']) {
+            <small class="error-message">
+              ⚠️ {{ ofertaErrors['observacion'] }}
+            </small>
+          }
         </div>
 
         <!-- ¿Se generó cotización? -->
@@ -461,13 +531,11 @@
       </div>
       <div class="form-actions"><button type="submit">Agregar oferta</button></div>
     </form>
-    <p *ngIf="ofertaMsg" class="success-message">{{ ofertaMsg }}</p>
   </section>
 
   <!-- SECCIÓN: AGREGAR RESULTADOS -->
   <h2>Solicitud de revisión</h2>
   <section>
-
     <form (submit)="createResultado($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
       <div class="form-grid">
 
@@ -477,13 +545,17 @@
           <select id="resultadoSolicitudId" [(ngModel)]="resultadoSolicitudId" name="resultadoSolicitudId" required
             [class.error]="resultadoErrors['solicitudId']">
             <option value="">Seleccionar solicitud</option>
-            <option *ngFor="let s of solicitudesFiltradas()" [value]="s.id_solicitud">
-              {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front }}
-            </option>
+            @for (s of solicitudesFiltradas(); track s.id_solicitud) {
+              <option [value]="s.id_solicitud">
+                {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front }}
+              </option>
+            }
           </select>
-          <small *ngIf="resultadoErrors['solicitudId']" class="error-message">
-            ⚠️ {{ resultadoErrors['solicitudId'] }}
-          </small>
+          @if (resultadoErrors['solicitudId']) {
+            <small class="error-message">
+              ⚠️ {{ resultadoErrors['solicitudId'] }}
+            </small>
+          }
         </div>
 
         <!-- Fecha límite -->
@@ -491,9 +563,11 @@
           <label for="resultadoFechaLimite">Fecha límite para la entrega:</label>
           <input id="resultadoFechaLimite" type="date" [(ngModel)]="resultadoFechaLimite" name="resultadoFechaLimite"
             [class.error]="resultadoErrors['fechaLimite']" />
-          <small *ngIf="resultadoErrors['fechaLimite']" class="error-message">
-            ⚠️ {{ resultadoErrors['fechaLimite'] }}
-          </small>
+          @if (resultadoErrors['fechaLimite']) {
+            <small class="error-message">
+              ⚠️ {{ resultadoErrors['fechaLimite'] }}
+            </small>
+          }
         </div>
 
         <!-- Número de informe -->
@@ -501,9 +575,11 @@
           <label for="resultadoNumeroInforme">Número del informe de resultados:</label>
           <input id="resultadoNumeroInforme" [(ngModel)]="resultadoNumeroInforme" name="resultadoNumeroInforme"
             [class.error]="resultadoErrors['numeroInforme']" placeholder="Ej: INF-2025-001" />
-          <small *ngIf="resultadoErrors['numeroInforme']" class="error-message">
-            ⚠️ {{ resultadoErrors['numeroInforme'] }}
-          </small>
+          @if (resultadoErrors['numeroInforme']) {
+            <small class="error-message">
+              ⚠️ {{ resultadoErrors['numeroInforme'] }}
+            </small>
+          }
         </div>
 
         <!-- Fecha de envío -->
@@ -511,106 +587,106 @@
           <label for="resultadoFechaEnvio">Fecha de envío de resultados:</label>
           <input id="resultadoFechaEnvio" type="date" [(ngModel)]="resultadoFechaEnvio" name="resultadoFechaEnvio"
             [class.error]="resultadoErrors['fechaEnvio']" />
-          <small *ngIf="resultadoErrors['fechaEnvio']" class="error-message">
-            ⚠️ {{ resultadoErrors['fechaEnvio'] }}
-          </small>
+          @if (resultadoErrors['fechaEnvio']) {
+            <small class="error-message">
+              ⚠️ {{ resultadoErrors['fechaEnvio'] }}
+            </small>
+          }
         </div>
       </div>
       <div class="form-actions"><button type="submit">Agregar seguimiento de resultados</button></div>
     </form>
-    <p *ngIf="resultadoMsg" class="success-message">{{ resultadoMsg }}</p>
   </section>
 
+  <!-- SECCIÓN: AGREGAR ENCUESTA -->
+  <h2>Seguimiento Encuesta</h2>
+  <section>
+    <form (submit)="createEncuesta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
+      <div class="form-grid">
 
-    <!-- SECCIÓN: AGREGAR ENCUESTA -->
-<h2>Seguimiento Encuesta</h2>
-<section>
+        <!-- Solicitud -->
+        <div class="form-field">
+          <label for="encuestaSolicitudId">Solicitud:</label>
+          <select id="encuestaSolicitudId" [(ngModel)]="encuestaSolicitudId" name="encuestaSolicitudId" required
+            [class.error]="encuestaErrors['solicitudId']">
+            <option value="">Seleccionar solicitud</option>
+            @for (s of solicitudesFiltradas(); track s.id_solicitud) {
+              <option [value]="s.id_solicitud">
+                {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front }}
+              </option>
+            }
+          </select>
+          @if (encuestaErrors['solicitudId']) {
+            <small class="error-message">
+              ⚠️ {{ encuestaErrors['solicitudId'] }}
+            </small>
+          }
+        </div>
 
-  <form (submit)="createEncuesta($event)" (focusin)="onFormFocus()" (focusout)="onFormBlur()">
-    <div class="form-grid">
+        <!-- Fecha de encuesta -->
+        <div class="form-field">
+          <label for="encuestaFecha">Fecha de envio de la encuesta:</label>
+          <input id="encuestaFecha" type="date" [(ngModel)]="encuestaFecha" name="encuestaFecha"
+            [class.error]="encuestaErrors['fecha']" />
+          @if (encuestaErrors['fecha']) {
+            <small class="error-message">
+              ⚠️ {{ encuestaErrors['fecha'] }}
+            </small>
+          }
+        </div>
 
-      <!-- Solicitud -->
-      <div class="form-field">
-        <label for="encuestaSolicitudId">Solicitud:</label>
-        <select id="encuestaSolicitudId" [(ngModel)]="encuestaSolicitudId" name="encuestaSolicitudId" required
-          [class.error]="encuestaErrors['solicitudId']">
-          <option value="">Seleccionar solicitud</option>
-          <option *ngFor="let s of solicitudesFiltradas()" [value]="s.id_solicitud">
-            {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front }}
-          </option>
-        </select>
-        <small *ngIf="encuestaErrors['solicitudId']" class="error-message">
-          ⚠️ {{ encuestaErrors['solicitudId'] }}
-        </small>
+        <!-- Comentarios -->
+        <div class="form-field">
+          <label for="encuestaComentarios">Comentarios:</label>
+          <textarea id="encuestaComentarios" [(ngModel)]="encuestaComentarios" name="encuestaComentarios"
+            [class.error]="encuestaErrors['comentarios']" placeholder="Comentarios del cliente"></textarea>
+          @if (encuestaErrors['comentarios']) {
+            <small class="error-message">
+              ⚠️ {{ encuestaErrors['comentarios'] }}
+            </small>
+          }
+        </div>
+
+        <!-- ¿Recomendaría el servicio? -->
+        <div class="form-field">
+          <label for="encuestaRecomendaria">Recomendaría el servicio</label>
+          <select id="encuestaRecomendaria" [(ngModel)]="encuestaRecomendaria" name="encuestaRecomendaria">
+            <option value="">Seleccionar opción</option>
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
+
+        <!-- ¿El cliente respondió? -->
+        <div class="form-field">
+          <label for="encuestaClienteRespondio">El cliente respondió la encuesta</label>
+          <select id="encuestaClienteRespondio" [(ngModel)]="encuestaClienteRespondio" name="encuestaClienteRespondio">
+            <option value="">Seleccionar opción</option>
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
+
+        <!-- ¿Se solicitó nueva encuesta? -->
+        <div class="form-field">
+          <label for="encuestaSolicitoNueva">Se solicitó nueva encuesta</label>
+          <select id="encuestaSolicitoNueva" [(ngModel)]="encuestaSolicitoNueva" name="encuestaSolicitoNueva">
+            <option value="">Seleccionar opción</option>
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Fecha de encuesta -->
-      <div class="form-field">
-        <label for="encuestaFecha">Fecha de envio de la encuesta:</label>
-        <input id="encuestaFecha" type="date" [(ngModel)]="encuestaFecha" name="encuestaFecha"
-          [class.error]="encuestaErrors['fecha']" />
-        <small *ngIf="encuestaErrors['fecha']" class="error-message">
-          ⚠️ {{ encuestaErrors['fecha'] }}
-        </small>
+      <div class="form-actions">
+        <button type="submit">Agregar encuesta</button>
       </div>
-
-
-      <!-- Comentarios -->
-      <div class="form-field">
-        <label for="encuestaComentarios">Comentarios:</label>
-        <textarea id="encuestaComentarios" [(ngModel)]="encuestaComentarios" name="encuestaComentarios"
-          [class.error]="encuestaErrors['comentarios']" placeholder="Comentarios del cliente"></textarea>
-        <small *ngIf="encuestaErrors['comentarios']" class="error-message">
-          ⚠️ {{ encuestaErrors['comentarios'] }}
-        </small>
-      </div>
-
-      <!-- ¿Recomendaría el servicio? -->
-      <div class="form-field">
-           <label for="encuestaRecomendaria">Recomendaría el servicio</label>
-        <select id="encuestaRecomendaria" [(ngModel)]="encuestaRecomendaria" name="encuestaRecomendaria">
-          <option value="">Seleccionar opción</option>
-          <option [ngValue]="true">Sí</option>
-          <option [ngValue]="false">No</option>
-        </select>
-      </div>
-
-      <!-- ¿El cliente respondió? -->
-      <div class="form-field">
-           <label for="encuestaClienteRespondio">El cliente respondió la encuesta</label>
-        <select id="encuestaClienteRespondio" [(ngModel)]="encuestaClienteRespondio" name="encuestaClienteRespondio">
-          <option value="">Seleccionar opción</option>
-          <option [ngValue]="true">Sí</option>
-          <option [ngValue]="false">No</option>
-        </select>
-      </div>
-
-      <!-- ¿Se solicitó nueva encuesta? -->
-      <div class="form-field">
-           <label for="encuestaSolicitoNueva">Se solicitó nueva encuesta</label>
-        <select id="encuestaSolicitoNueva" [(ngModel)]="encuestaSolicitoNueva" name="encuestaSolicitoNueva">
-          <option value="">Seleccionar opción</option>
-          <option [ngValue]="true">Sí</option>
-          <option [ngValue]="false">No</option>
-        </select>
-      </div>
-
-    </div>
-
-    <div class="form-actions">
-      <button type="submit">Agregar encuesta</button>
-    </div>
-
-  </form>
-
-  <p *ngIf="encuestaMsg" class="success-message">{{ encuestaMsg }}</p>
-</section>
-
+    </form>
+  </section>
 
   <!-- SECCIÓN: Lista rápida de solicitudes -->
   <h2>Catalogo de Solicitudes</h2>
   <section>
-
     <div class="search-container">
       <label for="solicitudesQ">
         Buscar solicitud (ID, código, nombre, tipo, muestra, análisis o cliente):
@@ -624,72 +700,103 @@
       </small>
 
       <!-- Mensaje cuando no hay resultados -->
-      <small *ngIf="solicitudesQ.trim() && solicitudesFiltradas().length === 0" class="no-results">
-        ⚠️ No se encontraron solicitudes con el término "{{ solicitudesQ }}"
-      </small>
+      @if (solicitudesQ.trim() && solicitudesFiltradas().length === 0) {
+        <small class="no-results">
+          ⚠️ No se encontraron solicitudes con el término "{{ solicitudesQ }}"
+        </small>
+      }
     </div>
 
     <div class="cards-container">
       <div class="catalogo-cards">
-        <article class="catalog-card solicitud-card" *ngFor="let s of solicitudesFiltradas()"
-          (click)="toggleExpandSolicitud(s)" [attr.aria-expanded]="isSolicitudExpanded(s)" tabindex="0">
-          <div class="card-top">
-            <div class="cliente-wrap">
-              <span class="cliente-pill">{{ 'Cliente: ' + s.nombre_solicitante || '—' }}</span>
-            </div>
-            <div class="sol-actions" (click)="$event.stopPropagation()" aria-label="Acciones de la solicitud">
-              <div class="check-border"><span><input type="checkbox" [checked]="!!s.servicio_viable"
-                    (change)="toggleCheck(s, 'servicio_viable', $event.target.checked)" /> Viable</span></div>
-              <div class="check-border"><span><input type="checkbox" [checked]="!!s.genero_cotizacion"
-                    (change)="toggleCheck(s, 'genero_cotizacion', $event.target.checked)" /> Oferta</span></div>
-              <div class="check-border"><span><input type="checkbox" [checked]="!!s.cliente_respondio_encuesta"
-                    (change)="toggleCheck(s, 'cliente_respondio_encuesta', $event.target.checked)" /> Encuesta</span>
+        @for (s of solicitudesFiltradas(); track s.id_solicitud) {
+          <article class="catalog-card solicitud-card" 
+            (click)="toggleExpandSolicitud(s)" 
+            [attr.aria-expanded]="isSolicitudExpanded(s)" 
+            tabindex="0">
+            
+            <div class="card-top">
+              <div class="cliente-wrap">
+                <span class="cliente-pill">{{ 'Cliente: ' + s.nombre_solicitante || '—' }}</span>
               </div>
-              <div class="check-border"><span><input type="checkbox" [checked]="!!s.numero_informe_resultados"
-                    (change)="toggleCheck(s, 'numero_informe_resultados', $event.target.checked)" /> Resultados</span>
+              <div class="sol-actions" (click)="$event.stopPropagation()" aria-label="Acciones de la solicitud">
+                <div class="check-border">
+                  <span>
+                    <input type="checkbox" [checked]="!!s.servicio_viable"
+                      (change)="toggleCheck(s, 'servicio_viable', $event.target.checked)" /> Viable
+                  </span>
+                </div>
+                <div class="check-border">
+                  <span>
+                    <input type="checkbox" [checked]="!!s.genero_cotizacion"
+                      (change)="toggleCheck(s, 'genero_cotizacion', $event.target.checked)" /> Oferta
+                  </span>
+                </div>
+                <div class="check-border">
+                  <span>
+                    <input type="checkbox" [checked]="!!s.cliente_respondio_encuesta"
+                      (change)="toggleCheck(s, 'cliente_respondio_encuesta', $event.target.checked)" /> Encuesta
+                  </span>
+                </div>
+                <div class="check-border">
+                  <span>
+                    <input type="checkbox" [checked]="!!s.numero_informe_resultados"
+                      (change)="toggleCheck(s, 'numero_informe_resultados', $event.target.checked)" /> Resultados
+                  </span>
+                </div>
+                
+                @if (canDelete()) {
+                  <button type="button" class="icon-btn delete" 
+                    (click)="deleteSolicitud(s.id_solicitud)" 
+                    aria-label="Eliminar solicitud" 
+                    title="Eliminar solicitud">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                }
               </div>
-<button type="button" class="icon-btn delete" *ngIf="canDelete()"
-  (click)="deleteSolicitud(s.id_solicitud)" aria-label="Eliminar solicitud" title="Eliminar solicitud">
-  <i class="fa-solid fa-trash"></i>
-</button>
-
             </div>
-          </div>
-          <div class="card-name" [title]="s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud)">
-            <div class="name-line">{{ 'SOLICITUD: ' + (s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud)) }}
+            
+            <div class="card-name" [title]="s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud)">
+              <div class="name-line">
+                {{ 'SOLICITUD: ' + (s.nombre_muestra_producto || s.codigo || ('#' + s.id_solicitud)) }}
+              </div>
+              <span class="toggle-icon" [class.open]="isSolicitudExpanded(s)" aria-hidden="true">▾</span>
             </div>
-            <span class="toggle-icon" [class.open]="isSolicitudExpanded(s)" aria-hidden="true">▾</span>
-          </div>
-          <div class="card-expand" *ngIf="isSolicitudExpanded(s)" (click)="$event.stopPropagation()">
-            <div class="expand-grid">
-              <div class="section-label">Detalle</div>
-              <div><strong>Cliente:</strong> {{ s.nombre_solicitante || '—' }}</div>
-              <div><strong>Código:</strong> {{ s.codigo || '—' }}</div>
-              <div><strong>Lote producto:</strong> {{ s.lote_producto || '—' }}</div>
+            
+            @if (isSolicitudExpanded(s)) {
+              <div class="card-expand" (click)="$event.stopPropagation()">
+                <div class="expand-grid">
+                  <div class="section-label">Detalle</div>
+                  <div><strong>Cliente:</strong> {{ s.nombre_solicitante || '—' }}</div>
+                  <div><strong>Código:</strong> {{ s.codigo || '—' }}</div>
+                  <div><strong>Lote producto:</strong> {{ s.lote_producto || '—' }}</div>
 
-              <div class="section-label">Muestra y análisis</div>
-              <div><strong>Nombre muestra:</strong> {{ s.nombre_muestra_producto || '—' }}</div>
-              <div><strong>Tipo muestra:</strong> {{ s.tipo_muestra || '—' }}</div>
-              <div><strong>Tipo análisis:</strong> {{ s.tipo_analisis_requerido || '—' }}</div>
-              <div><strong>Cond. empaque:</strong> {{ s.condiciones_empaque || '—' }}</div>
+                  <div class="section-label">Muestra y análisis</div>
+                  <div><strong>Nombre muestra:</strong> {{ s.nombre_muestra_producto || '—' }}</div>
+                  <div><strong>Tipo muestra:</strong> {{ s.tipo_muestra || '—' }}</div>
+                  <div><strong>Tipo análisis:</strong> {{ s.tipo_analisis_requerido || '—' }}</div>
+                  <div><strong>Cond. empaque:</strong> {{ s.condiciones_empaque || '—' }}</div>
 
-              <div class="section-label">Fechas</div>
-              <div><strong>Vencimiento:</strong> {{ formatValue(s.fecha_vencimiento) }}</div>
-              <div><strong>Entrega estimada:</strong> {{ formatValue(s.fecha_estimada_entrega) }}</div>
+                  <div class="section-label">Fechas</div>
+                  <div><strong>Vencimiento:</strong> {{ formatValue(s.fecha_vencimiento) }}</div>
+                  <div><strong>Entrega estimada:</strong> {{ formatValue(s.fecha_estimada_entrega) }}</div>
 
-              <div class="full"><strong>Observaciones:</strong> {{ s.observaciones || '—' }}</div>
-            </div>
-          </div>
-        </article>
+                  <div class="full"><strong>Observaciones:</strong> {{ s.observaciones || '—' }}</div>
+                </div>
+              </div>
+            }
+          </article>
+        }
+        @empty {
+          <p class="empty-message">No hay solicitudes para mostrar</p>
+        }
       </div>
-      <p *ngIf="solicitudesFiltradas().length === 0" class="empty-message">No hay solicitudes para mostrar</p>
     </div>
   </section>
 
   <!-- SECCIÓN: Lista de clientes -->
   <h2>Catalogo de Clientes</h2>
   <section>
-
     <div class="search-container">
       <label for="clientesQ">
         Buscar cliente (nombre, correo, identificación, ciudad, departamento, celular):
@@ -702,9 +809,11 @@
       </small>
 
       <!-- Mensaje cuando no hay resultados -->
-      <small *ngIf="clientesQ.trim() && clientesFiltrados().length === 0" class="no-results">
-        ⚠️ No se encontraron clientes con el término "{{ clientesQ }}"
-      </small>
+      @if (clientesQ.trim() && clientesFiltrados().length === 0) {
+        <small class="no-results">
+          ⚠️ No se encontraron clientes con el término "{{ clientesQ }}"
+        </small>
+      }
     </div>
 
     <div class="list-wrapper clientes-list">
@@ -717,133 +826,182 @@
         <div class="col actions-col">Acciones</div>
       </div>
 
-      <div *ngFor="let u of clientesFiltrados()" class="cliente-item" tabindex="0"
-        (click)="toggleClienteDetails(u.id_cliente)" (keydown.enter)="toggleClienteDetails(u.id_cliente)"
-        [class.expanded]="detallesVisibles[u.id_cliente]">
-        <div class="col cliente-name">{{ u.nombre_solicitante }}</div>
-        <div class="col id-col">{{ u.numero_identificacion }}</div>
-        <div class="col email-col">{{ u.correo_electronico }}</div>
-        <div class="col city-col">{{ u.ciudad }}</div>
-        <div class="col phone-col">{{ u.celular || 'Sin celular' }}</div>
-        <div class="col actions-col">
-          <button class="btn-danger" *ngIf="canDelete()"
-            (click)="$event.stopPropagation(); deleteCliente(u.id_cliente)">
-            Borrar
-          </button>
-        </div>
-
-        <div *ngIf="detallesVisibles[u.id_cliente]" class="cliente-details">
-          <div class="cliente-card-polished compact-card">
-            <div class="cliente-card-head">
-              <div class="cliente-title">{{ u.nombre_solicitante || u.razon_social || ('Cliente ' + u.id_cliente) }}
-              </div>
-            </div>
-
-            <div class="cliente-meta compact">
-              <span class="pill small">NIT: <strong>{{ u.nit || '—' }}</strong></span>
-              <span class="pill small">ID: <strong>{{ u.numero_identificacion || '—' }}</strong></span>
-              <span class="pill small">Tipo: <strong>{{ u.tipo_usuario || '—' }}</strong></span>
-              <span class="pill small">Activo: <strong>{{ u.activo ? 'Sí' : 'No' }}</strong></span>
-            </div>
-
-            <div class="cliente-grid">
-              <div class="field">
-                <div class="label">Nombre solicitante</div>
-                <div class="value">{{ formatValue(u.nombre_solicitante) }}<button class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('nombre-'+u.id_cliente, u.nombre_solicitante)"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field">
-                <div class="label">Razón social</div>
-                <div class="value">{{ formatValue(u.razon_social) }}<button class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('razon-'+u.id_cliente, u.razon_social)"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field">
-                <div class="label">Fecha vinculación</div>
-                <div class="value">{{ formatValue(u.fecha_vinculacion) }}<button class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('fecha-'+u.id_cliente, formatValue(u.fecha_vinculacion))"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field">
-                <div class="label">Tipo identificación</div>
-                <div class="value">{{ formatValue(u.tipo_identificacion) }}<button class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('tipoid-'+u.id_cliente, u.tipo_identificacion)"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field">
-                <div class="label">Sexo</div>
-                <div class="value">{{ u.sexo || '-' }}</div>
-              </div>
-              <div class="field">
-                <div class="label">Población</div>
-                <div class="value">{{ u.tipo_poblacion || '-' }}</div>
-              </div>
-              <div class="field">
-                <div class="label">Dirección</div>
-                <div class="value">{{ formatValue(u.direccion) }}<button class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('direccion-'+u.id_cliente, u.direccion)"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field">
-                <div class="label">Ciudad / Departamento</div>
-                <div class="value">{{ formatValue(u.ciudad) }} / {{ formatValue(u.departamento) }}<button
-                    class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('ciudad-'+u.id_cliente, (u.ciudad || '') + ' / ' + (u.departamento || ''))"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field">
-                <div class="label">Teléfono / Celular</div>
-                <div class="value">{{ formatValue(u.telefono) }} / {{ formatValue(u.celular) }}<button
-                    class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('tel-'+u.id_cliente, (u.telefono || '') + ' / ' + (u.celular || ''))"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field">
-                <div class="label">Correo</div>
-                <div class="value">{{ formatValue(u.correo_electronico) }}<button class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('email-'+u.id_cliente, u.correo_electronico)"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field">
-                <div class="label">Tipo vinculación</div>
-                <div class="value">{{ formatValue(u.tipo_vinculacion) }}<button class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('vinc-'+u.id_cliente, u.tipo_vinculacion)"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field span-full">
-                <div class="label">Observaciones</div>
-                <div class="value">{{ formatValue(u.observaciones) }}<button class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('obs-'+u.id_cliente, u.observaciones)"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field small-muted">
-                <div class="label">Registro por</div>
-                <div class="value">{{ formatValue(u.registro_realizado_por) }}<button class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('reg-'+u.id_cliente, u.registro_realizado_por)"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field small-muted">
-                <div class="label">Creado</div>
-                <div class="value">{{ formatValue(u.created_at) }}<button class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('created-'+u.id_cliente, formatValue(u.created_at))"
-                    title="Copiar">📋</button></div>
-              </div>
-              <div class="field small-muted">
-                <div class="label">Actualizado</div>
-                <div class="value">{{ formatValue(u.updated_at) }}<button class="copy-field"
-                    (click)="$event.stopPropagation(); copyField('updated-'+u.id_cliente, formatValue(u.updated_at))"
-                    title="Copiar">📋</button></div>
-              </div>
-            </div>
+      @for (u of clientesFiltrados(); track u.id_cliente) {
+        <div class="cliente-item" tabindex="0"
+          (click)="toggleClienteDetails(u.id_cliente)" 
+          (keydown.enter)="toggleClienteDetails(u.id_cliente)"
+          [class.expanded]="detallesVisibles[u.id_cliente]">
+          
+          <div class="col cliente-name">{{ u.nombre_solicitante }}</div>
+          <div class="col id-col">{{ u.numero_identificacion }}</div>
+          <div class="col email-col">{{ u.correo_electronico }}</div>
+          <div class="col city-col">{{ u.ciudad }}</div>
+          <div class="col phone-col">{{ u.celular || 'Sin celular' }}</div>
+          <div class="col actions-col">
+            @if (canDelete()) {
+              <button class="btn-danger" 
+                (click)="$event.stopPropagation(); deleteCliente(u.id_cliente)">
+                Borrar
+              </button>
+            }
           </div>
-        </div>
-      </div>
 
-      <div *ngIf="clientesFiltrados().length === 0" class="empty-row">No hay clientes para mostrar</div>
+          @if (detallesVisibles[u.id_cliente]) {
+            <div class="cliente-details">
+              <div class="cliente-card-polished compact-card">
+                <div class="cliente-card-head">
+                  <div class="cliente-title">
+                    {{ u.nombre_solicitante || u.razon_social || ('Cliente ' + u.id_cliente) }}
+                  </div>
+                </div>
+
+                <div class="cliente-meta compact">
+                  <span class="pill small">NIT: <strong>{{ u.nit || '—' }}</strong></span>
+                  <span class="pill small">ID: <strong>{{ u.numero_identificacion || '—' }}</strong></span>
+                  <span class="pill small">Tipo: <strong>{{ u.tipo_usuario || '—' }}</strong></span>
+                  <span class="pill small">Activo: <strong>{{ u.activo ? 'Sí' : 'No' }}</strong></span>
+                </div>
+
+                <div class="cliente-grid">
+                  <div class="field">
+                    <div class="label">Nombre solicitante</div>
+                    <div class="value">
+                      {{ formatValue(u.nombre_solicitante) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('nombre-'+u.id_cliente, u.nombre_solicitante)"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Razón social</div>
+                    <div class="value">
+                      {{ formatValue(u.razon_social) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('razon-'+u.id_cliente, u.razon_social)"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Fecha vinculación</div>
+                    <div class="value">
+                      {{ formatValue(u.fecha_vinculacion) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('fecha-'+u.id_cliente, formatValue(u.fecha_vinculacion))"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Tipo identificación</div>
+                    <div class="value">
+                      {{ formatValue(u.tipo_identificacion) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('tipoid-'+u.id_cliente, u.tipo_identificacion)"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Sexo</div>
+                    <div class="value">{{ u.sexo || '-' }}</div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Población</div>
+                    <div class="value">{{ u.tipo_poblacion || '-' }}</div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Dirección</div>
+                    <div class="value">
+                      {{ formatValue(u.direccion) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('direccion-'+u.id_cliente, u.direccion)"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Ciudad / Departamento</div>
+                    <div class="value">
+                      {{ formatValue(u.ciudad) }} / {{ formatValue(u.departamento) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('ciudad-'+u.id_cliente, (u.ciudad || '') + ' / ' + (u.departamento || ''))"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Teléfono / Celular</div>
+                    <div class="value">
+                      {{ formatValue(u.telefono) }} / {{ formatValue(u.celular) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('tel-'+u.id_cliente, (u.telefono || '') + ' / ' + (u.celular || ''))"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Correo</div>
+                    <div class="value">
+                      {{ formatValue(u.correo_electronico) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('email-'+u.id_cliente, u.correo_electronico)"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Tipo vinculación</div>
+                    <div class="value">
+                      {{ formatValue(u.tipo_vinculacion) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('vinc-'+u.id_cliente, u.tipo_vinculacion)"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field span-full">
+                    <div class="label">Observaciones</div>
+                    <div class="value">
+                      {{ formatValue(u.observaciones) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('obs-'+u.id_cliente, u.observaciones)"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field small-muted">
+                    <div class="label">Registro por</div>
+                    <div class="value">
+                      {{ formatValue(u.registro_realizado_por) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('reg-'+u.id_cliente, u.registro_realizado_por)"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field small-muted">
+                    <div class="label">Creado</div>
+                    <div class="value">
+                      {{ formatValue(u.created_at) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('created-'+u.id_cliente, formatValue(u.created_at))"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                  <div class="field small-muted">
+                    <div class="label">Actualizado</div>
+                    <div class="value">
+                      {{ formatValue(u.updated_at) }}
+                      <button class="copy-field"
+                        (click)="$event.stopPropagation(); copyField('updated-'+u.id_cliente, formatValue(u.updated_at))"
+                        title="Copiar">📋</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+      @empty {
+        <div class="empty-row">No hay clientes para mostrar</div>
+      }
     </div>
   </section>
 </div>
 
 <!-- Global toast -->
-<div class="global-toast" *ngIf="lastCopiedMessage">{{ lastCopiedMessage }}</div>
+@if (lastCopiedMessage) {
+  <div class="global-toast">{{ lastCopiedMessage }}</div>
+}

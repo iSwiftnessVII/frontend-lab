@@ -17,15 +17,13 @@ export class DashboardComponent implements OnInit {
   // Estado de carga
   cargando = signal(true);
   
-  // Métricas principales
+  // Métricas principales - SIN equipos ni materiales volumétricos
   metricas = signal({
     totalInsumos: 0,
     totalReactivos: 0,
     totalSolicitudes: 0,
     totalClientes: 0,
-    totalEquipos: 0,
-    totalPapeleria: 0,
-    totalMaterialesVolumetricos: 0
+    totalPapeleria: 0
   });
 
   // Datos para gráficos
@@ -44,6 +42,7 @@ export class DashboardComponent implements OnInit {
     const user = (window as any).authUser?.() || null;
     return user && user.rol === 'Auxiliar';
   }
+
   constructor() {}
 
   async ngOnInit() {
@@ -59,28 +58,24 @@ export class DashboardComponent implements OnInit {
         this.cargarReactivos(),
         this.cargarSolicitudes(),
         this.cargarClientes(),
-        this.cargarMetricasBackend() // ← MOVIDO DENTRO DEL Promise.all
+        this.cargarPapeleria() // Nueva función específica para papelería
       ]);
     } catch (error) {
       console.error('Error cargando dashboard:', error);
     }
   }
 
-  async cargarMetricasBackend() {
+  async cargarPapeleria() {
     try {
-      const base = (window as any).__env?.API_BASE || 'http://localhost:4000/api';
-      const res = await fetch(base + '/dashboard/metricas-principales');
-      if (!res.ok) throw new Error('Error obteniendo métricas backend');
-      const data = await res.json();
-      // Actualizar sólo si vienen los campos esperados
-      this.metricas.update(m => ({
-        ...m,
-        totalEquipos: data.totalEquipos ?? m.totalEquipos,
-        totalPapeleria: data.totalPapeleria ?? m.totalPapeleria,
-        totalMaterialesVolumetricos: data.totalMaterialesVolumetricos ?? m.totalMaterialesVolumetricos
+      // Aquí puedes implementar la carga de datos de papelería
+      // Por ahora, establecemos un valor por defecto o podrías hacer una llamada API
+      this.metricas.update(m => ({ 
+        ...m, 
+        totalPapeleria: 0 // Valor temporal, puedes cambiarlo por una llamada real
       }));
-    } catch (e) {
-      console.error('No se pudieron cargar métricas adicionales (equipos/papelería/materiales):', e);
+    } catch (error) {
+      console.error('Error cargando papelería:', error);
+      this.metricas.update(m => ({ ...m, totalPapeleria: 0 }));
     }
   }
 

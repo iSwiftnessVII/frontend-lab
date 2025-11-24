@@ -7,7 +7,6 @@ import { PapeleriaComponent } from './papeleria/papeleria.component';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', loadComponent: () => import('./login/login.component').then(m => m.LoginComponent) },
-  { path: 'forgot', loadComponent: () => import('./forgot/forgot.component').then(m => m.ForgotComponent) },
   
   // Rutas protegidas
   { 
@@ -37,18 +36,6 @@ export const routes: Routes = [
   { 
     path: 'papeleria', 
     component: PapeleriaComponent,
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
-  },
-  { 
-    path: 'equipos', 
-  loadComponent: () => import('./equipos/equipos.component').then(m => m.EquiposComponent),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
-  },
-  { 
-    path: 'materiales-volumetricos', 
-    loadComponent: () => import('./materiales-volumetricos/materiales-volumetricos.component').then(m => m.MaterialesVolumetricosComponent),
     canActivate: [authGuard, roleGuard],
     data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
   },

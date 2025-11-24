@@ -1,11 +1,24 @@
-import { Component, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ElementRef, ViewChild, computed, inject } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { papeleriaService } from '../services/papeleria.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { authService, authUser } from '../services/auth.service';
+import { PapeleriaService, CatalogoItem, PapeleriaItem } from '../services/papeleria.service';
+
+interface CreatePapeleriaPayload {
+  item_catalogo: number;
+  nombre: string;
+  cantidad_adquirida: number;
+  cantidad_existente: number;
+  presentacion?: string | null;
+  marca?: string | null;
+  descripcion?: string | null;
+  fecha_adquisicion?: string | null;
+  ubicacion?: string | null;
+  observaciones?: string | null;
+}
 
 @Component({
   standalone: true,
@@ -15,487 +28,566 @@ import { authService, authUser } from '../services/auth.service';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class PapeleriaComponent implements OnInit {
-    public get esAuxiliar(): boolean {
-      const user = authUser();
-      return user?.rol === 'Auxiliar';
-    }
+  // Inyección de dependencias
+  private sanitizer = inject(DomSanitizer);
+  private snack = inject(SnackbarService);
+  private papeleriaService = inject(PapeleriaService);
+
+  // Referencias de elementos del DOM
   @ViewChild('papFormSection') papFormSection?: ElementRef<HTMLElement>;
   @ViewChild('itemCatalogoInput') itemCatalogoInput?: ElementRef<HTMLInputElement>;
-  // Formulario Catálogo
-  private catItemSig = signal<string>('');
-  get catItem() { return this.catItemSig(); }
-  set catItem(v: string) { this.catItemSig.set(v ?? ''); }
 
-  private catNombreSig = signal<string>('');
-  get catNombre() { return this.catNombreSig(); }
-  set catNombre(v: string) { this.catNombreSig.set(v ?? ''); }
+  // Estado del usuario
+  readonly esAuxiliar = computed(() => {
+    const user = authUser();
+    return user?.rol === 'Auxiliar';
+  });
 
-  private catDescripcionSig = signal<string>('');
-  get catDescripcion() { return this.catDescripcionSig(); }
-  set catDescripcion(v: string) { this.catDescripcionSig.set(v ?? ''); }
+  // ===== FORMULARIO CATÁLOGO =====
+  readonly catItem = signal<string>('');
+  readonly catNombre = signal<string>('');
+  readonly catDescripcion = signal<string>('');
+  readonly catImagen = signal<File | null>(null);
+  readonly catalogoMsg = signal<string>('');
 
-  private catImagenSig = signal<File | null>(null);
-  get catImagen() { return this.catImagenSig(); }
-  set catImagen(f: File | null) { this.catImagenSig.set(f ?? null); }
+  // ===== LISTADO CATÁLOGO =====
+  readonly catalogoResultados = signal<CatalogoItem[]>([]);
+  readonly catalogoBase = signal<CatalogoItem[]>([]);
+  readonly catalogoCargando = signal<boolean>(false);
+  readonly itemFiltro = signal<string>('');
+  readonly nombreFiltro = signal<string>('');
+  readonly catalogoTotal = signal<number>(0);
 
-  private catalogoMsgSig = signal<string>('');
-  get catalogoMsg() { return this.catalogoMsgSig(); }
-  set catalogoMsg(v: string) { this.catalogoMsgSig.set(v ?? ''); }
+  // Paginación del catálogo
+  private catalogoOffset = 0;
+  private catalogoVisibleCount = 10;
 
-  // Lista catálogo
-  catalogoResultadosSig = signal<Array<any>>([]);
-  catalogoBaseSig = signal<Array<any>>([]);
-  private catalogoCargandoSig = signal<boolean>(false);
-  get catalogoCargando() { return this.catalogoCargandoSig(); }
-  set catalogoCargando(v: boolean) { this.catalogoCargandoSig.set(!!v); }
+  // ===== FORMULARIO INVENTARIO PAPELERÍA =====
+  readonly item_catalogo = signal<number | null>(null);
+  readonly nombre = signal<string>('');
+  readonly cantidad_adquirida = signal<number | null>(null);
+  readonly cantidad_existente = signal<number | null>(null);
+  readonly presentacion = signal<string>('');
+  readonly marca = signal<string>('');
+  readonly descripcion = signal<string>('');
+  readonly fecha_adquisicion = signal<string>('');
+  readonly ubicacion = signal<string>('');
+  readonly observaciones = signal<string>('');
+  readonly papMsg = signal<string>('');
 
-  private itemFiltroSig = signal<string>('');
-  get itemFiltro() { return this.itemFiltroSig(); }
-  set itemFiltro(v: string) { this.itemFiltroSig.set(v ?? ''); }
+  // ===== INVENTARIO PAPELERÍA =====
+  readonly papeleriaList = signal<PapeleriaItem[]>([]);
+  readonly papeleriaCargando = signal<boolean>(false);
+  readonly papeleriaError = signal<string>('');
+  readonly papeleriaLastCreated = signal<PapeleriaItem | null>(null);
+  
+  // Estado para skeletons
+  readonly skeletonPapeleria = Array.from({ length: 6 });
 
-  private nombreFiltroSig = signal<string>('');
-  get nombreFiltro() { return this.nombreFiltroSig(); }
-  set nombreFiltro(v: string) { this.nombreFiltroSig.set(v ?? ''); }
+  // ===== FILTROS INVENTARIO =====
+  readonly invItemFiltro = signal<string>('');
+  readonly invNombreFiltro = signal<string>('');
 
-  catalogoVisibleCount = 10;
-  catalogoOffset = 0;
-  private catalogoTotalSig = signal<number>(0);
-  get catalogoTotal() { return this.catalogoTotalSig(); }
-  set catalogoTotal(v: number) { this.catalogoTotalSig.set(Number(v) || 0); }
-
-  // Formulario Inventario Papelería
-  private itemCatalogoSig = signal<number | null>(null);
-  get item_catalogo() { return this.itemCatalogoSig(); }
-  set item_catalogo(v: number | null) {
-    const n = v as any;
-    if (n === null || typeof n === 'undefined' || n === '') { this.itemCatalogoSig.set(null); return; }
-    const num = Number(n); this.itemCatalogoSig.set(Number.isFinite(num) ? num : null);
-  }
-
-  private nombreSig = signal<string>('');
-  get nombre() { return this.nombreSig(); }
-  set nombre(v: string) { this.nombreSig.set((v ?? '').toString()); }
-
-  private cantidadAdqSig = signal<number | null>(null);
-  get cantidad_adquirida() { return this.cantidadAdqSig(); }
-  set cantidad_adquirida(v: number | null) {
-    const n = (v as any); if (n === null || typeof n === 'undefined' || n === '') { this.cantidadAdqSig.set(null); return; }
-    const num = Number(n); this.cantidadAdqSig.set(Number.isFinite(num) ? num : null);
-  }
-
-  private cantidadExSig = signal<number | null>(null);
-  get cantidad_existente() { return this.cantidadExSig(); }
-  set cantidad_existente(v: number | null) {
-    const n = (v as any); if (n === null || typeof n === 'undefined' || n === '') { this.cantidadExSig.set(null); return; }
-    const num = Number(n); this.cantidadExSig.set(Number.isFinite(num) ? num : null);
-  }
-
-  private presentacionSig = signal<string>('');
-  get presentacion() { return this.presentacionSig(); }
-  set presentacion(v: string) { this.presentacionSig.set((v ?? '').toString()); }
-
-  private marcaSig = signal<string>('');
-  get marca() { return this.marcaSig(); }
-  set marca(v: string) { this.marcaSig.set((v ?? '').toString()); }
-
-  private descripcionSig = signal<string>('');
-  get descripcion() { return this.descripcionSig(); }
-  set descripcion(v: string) { this.descripcionSig.set((v ?? '').toString()); }
-
-  private fechaAdqSig = signal<string>('');
-  get fecha_adquisicion() { return this.fechaAdqSig(); }
-  set fecha_adquisicion(v: string) { this.fechaAdqSig.set((v ?? '').toString()); }
-
-  private ubicacionSig = signal<string>('');
-  get ubicacion() { return this.ubicacionSig(); }
-  set ubicacion(v: string) { this.ubicacionSig.set((v ?? '').toString()); }
-
-  private observacionesSig = signal<string>('');
-  get observaciones() { return this.observacionesSig(); }
-  set observaciones(v: string) { this.observacionesSig.set((v ?? '').toString()); }
-
-  private papMsgSig = signal<string>('');
-  get papMsg() { return this.papMsgSig(); }
-  set papMsg(v: string) { this.papMsgSig.set(v || ''); }
-
-  // Inventario listado eliminado: señales y edición inline removidas
-  // ===== Inventario de Papelería (tarjetas) =====
-  private papeleriaListSig = signal<Array<any>>([]);
-  private papeleriaCargandoSig = signal<boolean>(false);
-  private papeleriaErrorSig = signal<string>('');
-  // Señal para último registro creado (sirve para efectos o destacar recién creado)
-  private papeleriaLastCreatedSig = signal<any | null>(null);
-  get papeleriaList() { return this.papeleriaListSig(); }
-  get papeleriaCargando() { return this.papeleriaCargandoSig(); }
-  get papeleriaError() { return this.papeleriaErrorSig(); }
-  get papeleriaLastCreated() { return this.papeleriaLastCreatedSig(); }
-  skeletonPapeleria = Array.from({ length: 6 });
-
-  // Filtros inventario Papelería
-  private invItemFiltroSig = signal<string>('');
-  get invItemFiltro() { return this.invItemFiltroSig(); }
-  set invItemFiltro(v: string) { this.invItemFiltroSig.set(v ?? ''); }
-  private invNombreFiltroSig = signal<string>('');
-  get invNombreFiltro() { return this.invNombreFiltroSig(); }
-  set invNombreFiltro(v: string) { this.invNombreFiltroSig.set(v ?? ''); }
-
-  // Control de quitar cantidad por tarjeta (Inventario Papelería)
-  private removeQtyMap: Record<number, number | null> = {};
+  // ===== ESTADO INTERNO =====
+  private removeQtyMap = new Map<number, number | null>();
   private busyIds = new Set<number>();
-  private openItem: any | null = null;
-  // Context menu state (catálogo + inventario)
-  private contextMenuVisibleSig = signal<boolean>(false);
-  get contextMenuVisible() { return this.contextMenuVisibleSig(); }
+  private openItem: PapeleriaItem | null = null;
+  private papeleriaAll: PapeleriaItem[] = [];
+
+  // ===== MENÚ CONTEXTUAL =====
+  readonly contextMenuVisible = signal<boolean>(false);
+  private contextTarget: CatalogoItem | PapeleriaItem | null = null;
   contextMenuX = 0;
   contextMenuY = 0;
-  private contextTarget: any | null = null;
 
-  onGlobalClick(ev: Event) {
-    // Cerrar menú contextual si el click está fuera del propio menú
-    const target = ev.target as HTMLElement | null;
-    if (this.contextMenuVisible && target && !target.closest('.context-menu')) {
-      this.contextMenuVisibleSig.set(false);
-      this.contextTarget = null;
+  // ===== MÉTODOS PÚBLICOS PARA TEMPLATE =====
+  
+  getRemoveQty(id: number): number | null {
+    return this.removeQtyMap.get(id) ?? null;
+  }
+
+  setRemoveQty(id: number, value: any): void {
+    const num = Number(value);
+    this.removeQtyMap.set(id, Number.isFinite(num) ? num : null);
+  }
+
+  isBusy(id: number): boolean {
+    return this.busyIds.has(id);
+  }
+
+  isValidQty(value: any): boolean {
+    const num = Number(value);
+    return Number.isFinite(num) && num > 0;
+  }
+
+  isOpen(item: PapeleriaItem): boolean {
+    return this.openItem === item;
+  }
+
+  toggleOpen(item: PapeleriaItem): void {
+    this.openItem = this.openItem === item ? null : item;
+  }
+
+  // ===== LIFECYCLE =====
+  ngOnInit(): void {
+    this.loadCatalogoInicial();
+  }
+
+  ngAfterViewInit(): void {
+    this.loadPapeleriaList();
+  }
+
+  // ===== MANEJO DE EVENTOS GLOBALES =====
+  onGlobalClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (this.contextMenuVisible() && !target.closest('.context-menu')) {
+      this.closeContextMenu();
     }
   }
 
-  onCatalogContextMenu(ev: MouseEvent, item: any) {
-    ev.preventDefault(); ev.stopPropagation();
-    this.contextTarget = item;
-    // Posicionar el menú cerca del cursor
-    this.contextMenuX = ev.pageX;
-    this.contextMenuY = ev.pageY;
-    this.contextMenuVisibleSig.set(true);
-  }
+  // ===== CATÁLOGO - MÉTODOS PRINCIPALES =====
+  async loadCatalogoInicial(): Promise<void> {
+    this.catalogoOffset = 0;
+    this.catalogoVisibleCount = 10;
+    this.itemFiltro.set('');
+    this.nombreFiltro.set('');
 
-  async onContextMenuEliminar() {
-    if (!this.contextTarget) { this.contextMenuVisibleSig.set(false); return; }
-    // Si es item de catálogo (tiene 'item' numérico) eliminar del catálogo, si tiene 'id' eliminar del inventario
     try {
-      if (typeof this.contextTarget.item !== 'undefined') {
-        const code = this.contextTarget.item;
-        const ok = window.confirm(`¿Eliminar del catálogo el item ${code}?`);
-        if (!ok) return;
-        await papeleriaService.eliminarCatalogoPapeleria(code);
-        this.snack.success('Item de catálogo eliminado');
-        await this.loadCatalogoInicial();
-      } else if (typeof this.contextTarget.id !== 'undefined') {
-        const inv = this.contextTarget;
-        const ok = window.confirm(`¿Eliminar registro de papelería "${inv?.nombre || ''}"?`);
-        if (!ok) return;
-        await papeleriaService.eliminar(Number(inv.id));
-        this._papeleriaAll = this._papeleriaAll.filter(x => x.id !== inv.id);
-        this.filtrarPapeleriaPorCampos();
-        this.snack.success('Registro de papelería eliminado');
-      }
-    } catch (e: any) {
-      this.snack.error(e?.message || 'Error eliminando');
+      this.catalogoCargando.set(true);
+      const response = await this.papeleriaService.buscarCatalogo('', this.catalogoVisibleCount, this.catalogoOffset);
+      
+      // CORREGIDO: Usar || consistentemente
+      const base = Array.isArray(response) ? response : (response.rows || []);
+      this.catalogoBase.set(base);
+      this.catalogoResultados.set([...base]);
+      this.catalogoTotal.set(Array.isArray(response) ? base.length : (response.total || base.length));
+    } catch (error) {
+      console.error('Error cargando catálogo inicial:', error);
+      this.snack.error('Error al cargar el catálogo');
     } finally {
-      this.contextMenuVisibleSig.set(false);
-      this.contextTarget = null;
-    }
-  }
-  getRemoveQty(id: number): number | null { return this.removeQtyMap[id] ?? null; }
-  setRemoveQty(id: number, v: any) {
-    const num = Number(v);
-    this.removeQtyMap[id] = Number.isFinite(num) ? num : null;
-  }
-  isBusy(id: number) { return this.busyIds.has(id); }
-  isValidQty(v: any) { const n = Number(v); return Number.isFinite(n) && n > 0; }
-  isOpen(item: any) { return this.openItem === item; }
-  toggleOpen(item: any) { this.openItem = (this.openItem === item) ? null : item; }
-
-  ngOnInit() { this.loadCatalogoInicial(); }
-
-  // Cargar listado inicial de inventario de Papelería al montar
-  ngAfterViewInit() { this.loadPapeleriaList(); }
-
-  async loadCatalogoInicial() {
-    this.catalogoOffset = 0; this.catalogoVisibleCount = 10; this.itemFiltro = ''; this.nombreFiltro = '';
-    try {
-      this.catalogoCargando = true;
-      const resp = await papeleriaService.buscarCatalogo('', this.catalogoVisibleCount, this.catalogoOffset);
-      let base: any[] = Array.isArray(resp) ? resp : (resp.rows || []);
-      this.catalogoBaseSig.set(base);
-      this.catalogoResultadosSig.set(base.slice());
-      this.catalogoTotal = Array.isArray(resp) ? base.length : (resp.total || base.length);
-    } finally {
-      this.catalogoCargando = false;
+      this.catalogoCargando.set(false);
     }
   }
 
-  filtrarCatalogoPorCampos() {
-    const codeQ = (this.itemFiltro || '').trim().toLowerCase();
-    const nameQ = (this.nombreFiltro || '').trim().toLowerCase();
-    const base = this.catalogoBaseSig();
+  filtrarCatalogoPorCampos(): void {
+    const codeQuery = this.itemFiltro().trim().toLowerCase();
+    const nameQuery = this.nombreFiltro().trim().toLowerCase();
+    const base = this.catalogoBase();
+
     let filtered = base;
-    if (codeQ) filtered = filtered.filter(c => String(c.item || '').toLowerCase().includes(codeQ));
-    if (nameQ) filtered = filtered.filter(c => String(c.nombre || '').toLowerCase().includes(nameQ));
-    this.catalogoResultadosSig.set(filtered);
+
+    if (codeQuery) {
+      filtered = filtered.filter(item => 
+        String(item.item || '').toLowerCase().includes(codeQuery)
+      );
+    }
+
+    if (nameQuery) {
+      filtered = filtered.filter(item =>
+        String(item.nombre || '').toLowerCase().includes(nameQuery)
+      );
+    }
+
+    this.catalogoResultados.set(filtered);
   }
 
-  // Mostrar más y reiniciar catálogo (paridad con Insumos)
-  resetCatalogoPaginado() {
+  async cargarMasCatalogo(): Promise<void> {
+    if (this.catalogoResultados().length >= this.catalogoTotal()) return;
+
+    this.catalogoOffset += this.catalogoVisibleCount;
+
+    try {
+      const query = this.itemFiltro() || this.nombreFiltro() || '';
+      const response = await this.papeleriaService.buscarCatalogo(query, this.catalogoVisibleCount, this.catalogoOffset);
+      
+      // CORREGIDO: Usar || consistentemente
+      const nuevos = Array.isArray(response) ? response : (response.rows || []);
+      this.catalogoResultados.update(current => [...current, ...nuevos]);
+      
+      if (!Array.isArray(response)) {
+        this.catalogoTotal.set(response.total || this.catalogoTotal());
+      }
+    } catch (error) {
+      console.error('Error cargando más elementos del catálogo:', error);
+      this.snack.error('Error al cargar más elementos');
+    }
+  }
+
+  resetCatalogoPaginado(): void {
     this.catalogoVisibleCount = 10;
     this.catalogoOffset = 0;
     this.loadCatalogoInicial();
   }
 
-  async cargarMasCatalogo() {
-    if (this.catalogoResultadosSig().length >= this.catalogoTotal) return;
-    this.catalogoOffset += this.catalogoVisibleCount;
-    const resp = await papeleriaService.buscarCatalogo(this.itemFiltro || this.nombreFiltro || '', this.catalogoVisibleCount, this.catalogoOffset);
-    let nuevos: any[] = [];
-    if (Array.isArray(resp)) {
-      nuevos = resp;
-    } else {
-      nuevos = resp.rows || [];
-      this.catalogoTotal = resp.total || this.catalogoTotal;
+  onCatImagenChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] || null;
+    this.catImagen.set(file);
+  }
+
+  async crearCatalogo(event: Event): Promise<void> {
+    event.preventDefault();
+
+    const itemStr = this.catItem().trim();
+    const nombreStr = this.catNombre().trim();
+
+    if (!itemStr || !nombreStr) {
+      this.snack.warn('Faltan campos requeridos: Item y Nombre');
+      return;
     }
-    this.catalogoResultadosSig.set(this.catalogoResultadosSig().concat(nuevos));
-  }
 
-  onCatImagenChange(ev: Event) {
-    const input = ev.target as HTMLInputElement | null;
-    const f = input?.files && input.files[0] ? input.files[0] : null;
-    this.catImagen = f;
-  }
+    if (isNaN(Number(itemStr))) {
+      this.snack.warn('El item debe ser numérico');
+      return;
+    }
 
-  async crearCatalogo(ev: Event) {
-    ev.preventDefault();
-    // Validación mínima
-    const itemStr = (this.catItem ?? '').toString().trim();
-    const nombreStr = (this.catNombre ?? '').toString().trim();
-    if (!itemStr || !nombreStr) { this.snack.warn('Faltan campos requeridos: Item y Nombre'); return; }
-    if (isNaN(Number(itemStr))) { this.snack.warn('El item debe ser numérico'); return; }
-    const fd = new FormData();
-    fd.set('item', String(this.catItem || ''));
-    fd.set('nombre', String(this.catNombre || ''));
-    if (this.catDescripcion) fd.set('descripcion', this.catDescripcion);
-    if (this.catImagen) fd.set('imagen', this.catImagen);
+    const formData = new FormData();
+    formData.set('item', itemStr);
+    formData.set('nombre', nombreStr);
+    
+    if (this.catDescripcion()) {
+      formData.set('descripcion', this.catDescripcion());
+    }
+    
+    if (this.catImagen()) {
+      formData.set('imagen', this.catImagen()!);
+    }
+
     try {
-      await papeleriaService.crearCatalogo(fd);
-      this.snack.success('Se creó el item de catálogo');
-      // reset simple
-      this.catItem = '';
-      this.catNombre = '';
-      this.catDescripcion = '';
-      this.catImagen = null;
+      await this.papeleriaService.crearCatalogo(formData);
+      this.snack.success('Item de catálogo creado exitosamente');
+
+      this.catItem.set('');
+      this.catNombre.set('');
+      this.catDescripcion.set('');
+      this.catImagen.set(null);
+
       await this.loadCatalogoInicial();
-    } catch (e) {
-      this.snack.error((e as any)?.message || 'Error al crear el item de catálogo');
+    } catch (error: any) {
+      console.error('Error creando catálogo:', error);
+      this.snack.error(error?.message || 'Error al crear el item de catálogo');
     }
   }
 
-  getCatalogoImagenUrl(item: number|string) { return papeleriaService.getCatalogoImagenUrl(item); }
-  onImgError(ev: any) { try { const img = ev?.target as HTMLImageElement; if (img) img.style.display = 'none'; } catch {} }
+  // ===== INVENTARIO PAPELERÍA - MÉTODOS PRINCIPALES =====
+  async loadPapeleriaList(limit?: number): Promise<void> {
+    this.papeleriaError.set('');
+    this.papeleriaCargando.set(true);
 
-  // Resaltar coincidencias en nombre del catálogo
-  constructor(private sanitizer: DomSanitizer, private snack: SnackbarService) {}
-
-  private normalizarTexto(s: string): string {
-    return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-  }
-
-  highlightField(value: string, field: 'nombre' | 'item'): SafeHtml {
-    if (!value) return '' as any;
-    const hasCode = !!(this.itemFiltro || '').trim();
-    const hasName = !!(this.nombreFiltro || '').trim();
-    const exclusiveCode = hasCode && !hasName;
-    const exclusiveName = hasName && !hasCode;
-
-    let term: string | null = null;
-    if (exclusiveCode && field === 'item') {
-      term = this.normalizarTexto(this.itemFiltro);
-    } else if (exclusiveName && field === 'nombre') {
-      term = this.normalizarTexto(this.nombreFiltro);
-    } else {
-      return value as any;
-    }
-    if (!term) return value as any;
-    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const re = new RegExp(`(${escaped})`, 'ig');
-    const html = value.replace(re, '<mark>$1</mark>');
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
-
-  // Click en tarjeta de catálogo: precargar datos de formulario
-  onCatalogCardClick(c: any) {
     try {
-      const itemNum = parseInt(String(c?.item), 10);
-      this.item_catalogo = Number.isNaN(itemNum) ? null : itemNum;
-      this.nombre = c?.nombre || '';
-      this.descripcion = c?.descripcion || '';
-      this.scrollToPapForm();
-    } catch {}
-  }
-
-  private scrollToPapForm() {
-    try {
-      setTimeout(() => {
-        this.papFormSection?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setTimeout(() => {
-          this.itemCatalogoInput?.nativeElement?.focus();
-        }, 200);
-      }, 50);
-    } catch {}
-  }
-
-  // Inventario visual eliminado: ya no se carga listado
-  // ===== Métodos Inventario Papelería =====
-  async loadPapeleriaList(limit?: number) {
-    this.papeleriaErrorSig.set('');
-    this.papeleriaCargandoSig.set(true);
-    try {
-      const resp = await papeleriaService.listar('', limit || 0);
-      const rows = Array.isArray(resp) ? resp : (resp.rows || resp.data || []);
-      this._papeleriaAll = rows;
-      this.papeleriaListSig.set(rows);
-    } catch (e) {
-      console.error('Error cargando listado de papelería', e);
-      this.papeleriaErrorSig.set('Error cargando papelería');
-      this._papeleriaAll = [];
-      this.papeleriaListSig.set([]);
+      const response = await this.papeleriaService.listar('', limit || 0);
+      
+      // CORREGIDO: Usar || consistentemente
+      const rows = Array.isArray(response) ? response : (response.rows || []);
+      this.papeleriaAll = rows;
+      this.papeleriaList.set(rows);
+    } catch (error) {
+      console.error('Error cargando listado de papelería:', error);
+      this.papeleriaError.set('Error al cargar el inventario de papelería');
+      this.papeleriaAll = [];
+      this.papeleriaList.set([]);
     } finally {
-      this.papeleriaCargandoSig.set(false);
+      this.papeleriaCargando.set(false);
     }
   }
 
-  private _papeleriaAll: any[] = [];
-  filtrarPapeleriaPorCampos() {
-    const codeQ = (this.invItemFiltro || '').trim().toLowerCase();
-    const nameQ = (this.invNombreFiltro || '').trim().toLowerCase();
-    let filtered = this._papeleriaAll;
-    if (codeQ) filtered = filtered.filter(x => String(x.item_catalogo || '').toLowerCase().includes(codeQ));
-    if (nameQ) filtered = filtered.filter(x => String(x.nombre || '').toLowerCase().includes(nameQ));
-    this.papeleriaListSig.set(filtered);
+  filtrarPapeleriaPorCampos(): void {
+    const codeQuery = this.invItemFiltro().trim().toLowerCase();
+    const nameQuery = this.invNombreFiltro().trim().toLowerCase();
+
+    let filtered = this.papeleriaAll;
+
+    if (codeQuery) {
+      filtered = filtered.filter(item =>
+        String(item.item_catalogo || '').toLowerCase().includes(codeQuery)
+      );
+    }
+
+    if (nameQuery) {
+      filtered = filtered.filter(item =>
+        String(item.nombre || '').toLowerCase().includes(nameQuery)
+      );
+    }
+
+    this.papeleriaList.set(filtered);
   }
 
-  async quitar(item: any) {
+  async quitar(item: PapeleriaItem): Promise<void> {
+    const id = item.id;
+    const quantity = this.getRemoveQty(id);
+
+    if (!this.isValidQty(quantity)) {
+      this.snack.warn('Ingresa una cantidad válida mayor a 0');
+      return;
+    }
+
     try {
-      const id = Number(item?.id);
-      const qty = this.getRemoveQty(id);
-      if (!this.isValidQty(qty)) { this.snack.warn('Ingresa una cantidad válida (> 0)'); return; }
       this.busyIds.add(id);
-      const delta = -Math.abs(Number(qty));
-      const resp = await papeleriaService.ajustarExistencias(id, { delta });
-      const nuevo = (resp as any)?.cantidad_existente;
-      if (typeof nuevo !== 'undefined') {
-        const updater = (arr: any[]) => arr.map(x => x.id === id ? { ...x, cantidad_existente: nuevo } : x);
-        this._papeleriaAll = updater(this._papeleriaAll);
-        this.papeleriaListSig.set(updater(this.papeleriaListSig()));
+      const delta = -Math.abs(Number(quantity));
+      
+      const response = await this.papeleriaService.ajustarExistencias(id, { delta });
+      const nuevaCantidad = (response as any)?.cantidad_existente;
+
+      if (typeof nuevaCantidad !== 'undefined') {
+        this.actualizarCantidadExistente(id, nuevaCantidad);
       }
-      this.setRemoveQty(id, null);
-      this.snack.success('Existencias actualizadas');
-    } catch (e: any) {
-      this.snack.error(e?.message || 'Error al ajustar existencias');
-    } finally {
-      try { const id = Number(item?.id); this.busyIds.delete(id); } catch {}
-    }
-  }
 
-  async eliminar(item: any) {
-    const id = Number(item?.id);
-    if (!Number.isFinite(id)) { this.snack.warn('No se pudo determinar el ID'); return; }
-    const ok = window.confirm(`¿Eliminar el registro de papelería "${item?.nombre || ''}"? Esta acción no se puede deshacer.`);
-    if (!ok) return;
-    try {
-      this.busyIds.add(id);
-      await papeleriaService.eliminar(id);
-  this._papeleriaAll = this._papeleriaAll.filter(x => x.id !== id);
-  const filtered = this.papeleriaListSig().filter(x => x.id !== id);
-  this.papeleriaListSig.set(filtered);
-      delete this.removeQtyMap[id];
-      if (this.openItem === item) this.openItem = null;
-      this.snack.success('Registro eliminado');
-    } catch (e: any) {
-      this.snack.error(e?.message || 'Error al eliminar');
+      this.setRemoveQty(id, null);
+      this.snack.success('Existencias actualizadas correctamente');
+    } catch (error: any) {
+      console.error('Error ajustando existencias:', error);
+      this.snack.error(error?.message || 'Error al ajustar las existencias');
     } finally {
       this.busyIds.delete(id);
     }
   }
 
-  async crearPapeleria(ev: Event) {
-    ev.preventDefault();
-    this.papMsg = '';
-    // Validación mínima
-    if (!this.item_catalogo || !this.nombre || this.cantidad_adquirida == null || this.cantidad_existente == null) {
-      this.snack.warn('Faltan campos requeridos del formulario');
-      return;
-    }
-    if ((this.cantidad_adquirida as any) < 0 || (this.cantidad_existente as any) < 0) {
-      this.snack.warn('Las cantidades deben ser números >= 0');
-      return;
-    }
+  async eliminar(item: PapeleriaItem): Promise<void> {
+    const confirmacion = window.confirm(
+      `¿Eliminar el registro de papelería "${item.nombre}"? Esta acción no se puede deshacer.`
+    );
+
+    if (!confirmacion) return;
+
     try {
-      const payload = {
-        item_catalogo: this.item_catalogo,
-        nombre: (this.nombre || '').trim(),
-        cantidad_adquirida: this.cantidad_adquirida,
-        cantidad_existente: this.cantidad_existente,
-        presentacion: (this.presentacion || '').trim() || null,
-        marca: (this.marca || '').trim() || null,
-        descripcion: (this.descripcion || '').trim() || null,
-        fecha_adquisicion: this.fecha_adquisicion || null,
-        ubicacion: (this.ubicacion || '').trim() || null,
-        observaciones: (this.observaciones || '').trim() || null,
-      };
-      const created = await papeleriaService.crear(payload);
-      // Intentar obtener el registro completo (algunos endpoints sólo devuelven id o mensaje)
-      let full = created;
-      try {
-        const idLike = (created as any)?.id || (created as any)?.insertId || (created as any)?.lastId;
-        if (idLike) {
-          const fetched = await papeleriaService.obtener(Number(idLike));
-          if (fetched && typeof fetched === 'object') full = fetched;
-        }
-      } catch {
-        // Ignorar errores de fetch individual y usar objeto creado + payload como fallback
+      this.busyIds.add(item.id);
+      await this.papeleriaService.eliminar(item.id);
+      
+      this.papeleriaAll = this.papeleriaAll.filter(x => x.id !== item.id);
+      this.papeleriaList.update(current => current.filter(x => x.id !== item.id));
+      
+      this.removeQtyMap.delete(item.id);
+      
+      if (this.openItem === item) {
+        this.openItem = null;
       }
-      // Determinar id real devuelto
-      const idReal = (full as any)?.id || (created as any)?.id || (created as any)?.insertId || (created as any)?.lastId;
-      if (!idReal || !Number.isFinite(Number(idReal))) {
-        // Si no hay id confiable, recargar listado completo para obtenerlo correctamente
-        await this.loadPapeleriaList();
-        this.snack.success('Se creó el registro de papelería');
-      } else {
-        // Construir registro fusionado con id válido
-        const record = {
-          id: Number(idReal),
-          ...payload,
-          ...full,
-          item_catalogo: payload.item_catalogo,
-          nombre: (full as any)?.nombre ?? payload.nombre,
-          cantidad_adquirida: (full as any)?.cantidad_adquirida ?? payload.cantidad_adquirida,
-          cantidad_existente: (full as any)?.cantidad_existente ?? payload.cantidad_existente,
-          presentacion: (full as any)?.presentacion ?? payload.presentacion,
-          marca: (full as any)?.marca ?? payload.marca,
-          descripcion: (full as any)?.descripcion ?? payload.descripcion,
-          fecha_adquisicion: (full as any)?.fecha_adquisicion ?? payload.fecha_adquisicion,
-          ubicacion: (full as any)?.ubicacion ?? payload.ubicacion,
-          observaciones: (full as any)?.observaciones ?? payload.observaciones,
-        };
-        this.snack.success('Se creó el registro de papelería');
-        this.papeleriaLastCreatedSig.set(record);
-        this._papeleriaAll = [record, ...this._papeleriaAll];
-        this.filtrarPapeleriaPorCampos();
-      }
-      // Limpiar campos del formulario después de crear
-      this.item_catalogo = null;
-      this.nombre = '';
-      this.cantidad_adquirida = null;
-      this.cantidad_existente = null;
-      this.presentacion = '';
-      this.marca = '';
-      this.descripcion = '';
-      this.fecha_adquisicion = '';
-      this.ubicacion = '';
-      this.observaciones = '';
-      // Reset de input de imagen del catálogo si existiera reutilizada
-      try { const input = document.getElementById('catImagen') as HTMLInputElement | null; if (input) input.value = ''; } catch {}
-    } catch (err: any) {
-      this.snack.error(err?.message || 'Error al crear el registro de papelería');
+
+      this.snack.success('Registro eliminado exitosamente');
+    } catch (error: any) {
+      console.error('Error eliminando registro:', error);
+      this.snack.error(error?.message || 'Error al eliminar el registro');
+    } finally {
+      this.busyIds.delete(item.id);
     }
   }
 
+  async crearPapeleria(event: Event): Promise<void> {
+    event.preventDefault();
+    this.papMsg.set('');
+
+    if (!this.validarFormularioPapeleria()) {
+      return;
+    }
+
+    try {
+      const payload: CreatePapeleriaPayload = {
+        item_catalogo: this.item_catalogo()!,
+        nombre: this.nombre().trim(),
+        cantidad_adquirida: this.cantidad_adquirida()!,
+        cantidad_existente: this.cantidad_existente()!,
+        presentacion: this.presentacion().trim() || null,
+        marca: this.marca().trim() || null,
+        descripcion: this.descripcion().trim() || null,
+        fecha_adquisicion: this.fecha_adquisicion() || null,
+        ubicacion: this.ubicacion().trim() || null,
+        observaciones: this.observaciones().trim() || null,
+      };
+
+      const created = await this.papeleriaService.crear(payload);
+      await this.procesarRegistroCreado(created, payload);
+      
+      this.limpiarFormularioPapeleria();
+      this.snack.success('Registro de papelería creado exitosamente');
+    } catch (error: any) {
+      console.error('Error creando registro de papelería:', error);
+      this.snack.error(error?.message || 'Error al crear el registro de papelería');
+    }
+  }
+
+  // ===== MÉTODOS DE INTERACCIÓN CON LA UI =====
+  onCatalogCardClick(item: CatalogoItem): void {
+    try {
+      const itemNum = parseInt(String(item.item), 10);
+      this.item_catalogo.set(Number.isNaN(itemNum) ? null : itemNum);
+      this.nombre.set(item.nombre || '');
+      this.descripcion.set(item.descripcion || '');
+      this.scrollToPapForm();
+    } catch (error) {
+      console.error('Error procesando click en tarjeta:', error);
+    }
+  }
+
+  onCatalogContextMenu(event: MouseEvent, item: CatalogoItem | PapeleriaItem): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.contextTarget = item;
+    this.contextMenuX = event.pageX;
+    this.contextMenuY = event.pageY;
+    this.contextMenuVisible.set(true);
+  }
+
+  async onContextMenuEliminar(): Promise<void> {
+    if (!this.contextTarget) {
+      this.closeContextMenu();
+      return;
+    }
+
+    try {
+      if ('item' in this.contextTarget) {
+        await this.eliminarItemCatalogo(this.contextTarget);
+      } else if ('id' in this.contextTarget) {
+        await this.eliminar(this.contextTarget);
+      }
+    } catch (error: any) {
+      this.snack.error(error?.message || 'Error al eliminar');
+    } finally {
+      this.closeContextMenu();
+    }
+  }
+
+  // ===== MÉTODOS AUXILIARES =====
+  private async eliminarItemCatalogo(item: CatalogoItem): Promise<void> {
+    const confirmacion = window.confirm(`¿Eliminar del catálogo el item ${item.item}?`);
+    if (!confirmacion) return;
+
+    await this.papeleriaService.eliminarCatalogoPapeleria(item.item);
+    this.snack.success('Item de catálogo eliminado exitosamente');
+    await this.loadCatalogoInicial();
+  }
+
+  private closeContextMenu(): void {
+    this.contextMenuVisible.set(false);
+    this.contextTarget = null;
+  }
+
+  private scrollToPapForm(): void {
+    setTimeout(() => {
+      this.papFormSection?.nativeElement?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+      
+      setTimeout(() => {
+        this.itemCatalogoInput?.nativeElement?.focus();
+      }, 200);
+    }, 50);
+  }
+
+  private actualizarCantidadExistente(id: number, nuevaCantidad: number): void {
+    const actualizarLista = (items: PapeleriaItem[]) =>
+      items.map(item => 
+        item.id === id ? { ...item, cantidad_existente: nuevaCantidad } : item
+      );
+
+    this.papeleriaAll = actualizarLista(this.papeleriaAll);
+    this.papeleriaList.update(actualizarLista);
+  }
+
+  private validarFormularioPapeleria(): boolean {
+    if (!this.item_catalogo() || !this.nombre().trim() || 
+        this.cantidad_adquirida() == null || this.cantidad_existente() == null) {
+      this.snack.warn('Faltan campos requeridos del formulario');
+      return false;
+    }
+
+    if (this.cantidad_adquirida()! < 0 || this.cantidad_existente()! < 0) {
+      this.snack.warn('Las cantidades deben ser números mayores o iguales a 0');
+      return false;
+    }
+
+    return true;
+  }
+
+  private async procesarRegistroCreado(created: any, payload: CreatePapeleriaPayload): Promise<void> {
+    const idReal = created?.id || created?.insertId || created?.lastId;
+
+    if (!idReal || !Number.isFinite(Number(idReal))) {
+      await this.loadPapeleriaList();
+      return;
+    }
+
+    const registro: PapeleriaItem = {
+      id: Number(idReal),
+      item_catalogo: payload.item_catalogo,
+      nombre: created?.nombre ?? payload.nombre,
+      cantidad_adquirida: created?.cantidad_adquirida ?? payload.cantidad_adquirida,
+      cantidad_existente: created?.cantidad_existente ?? payload.cantidad_existente,
+      presentacion: (created?.presentacion ?? payload.presentacion) || undefined,
+      marca: (created?.marca ?? payload.marca) || undefined,
+      descripcion: (created?.descripcion ?? payload.descripcion) || undefined,
+      fecha_adquisicion: (created?.fecha_adquisicion ?? payload.fecha_adquisicion) || undefined,
+      ubicacion: (created?.ubicacion ?? payload.ubicacion) || undefined,
+      observaciones: (created?.observaciones ?? payload.observaciones) || undefined,
+    };
+
+    this.papeleriaLastCreated.set(registro);
+    this.papeleriaAll = [registro, ...this.papeleriaAll];
+    this.filtrarPapeleriaPorCampos();
+  }
+
+  private limpiarFormularioPapeleria(): void {
+    this.item_catalogo.set(null);
+    this.nombre.set('');
+    this.cantidad_adquirida.set(null);
+    this.cantidad_existente.set(null);
+    this.presentacion.set('');
+    this.marca.set('');
+    this.descripcion.set('');
+    this.fecha_adquisicion.set('');
+    this.ubicacion.set('');
+    this.observaciones.set('');
+
+    try {
+      const input = document.getElementById('catImagen') as HTMLInputElement;
+      if (input) input.value = '';
+    } catch (error) {}
+  }
+
+  // ===== MÉTODOS PARA TEMPLATE =====
+  getCatalogoImagenUrl(item: number | string): string {
+    return this.papeleriaService.getCatalogoImagenUrl(item);
+  }
+
+  onImgError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.style.display = 'none';
+    }
+  }
+
+  private normalizarTexto(texto: string): string {
+    return (texto || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  highlightField(value: string, field: 'nombre' | 'item'): SafeHtml {
+    if (!value) return '';
+
+    const hasCode = !!this.itemFiltro().trim();
+    const hasName = !!this.nombreFiltro().trim();
+    const exclusiveCode = hasCode && !hasName;
+    const exclusiveName = hasName && !hasCode;
+
+    let term: string | null = null;
+
+    if (exclusiveCode && field === 'item') {
+      term = this.normalizarTexto(this.itemFiltro());
+    } else if (exclusiveName && field === 'nombre') {
+      term = this.normalizarTexto(this.nombreFiltro());
+    } else {
+      return value;
+    }
+
+    if (!term) return value;
+
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escaped})`, 'ig');
+    const html = value.replace(regex, '<mark>$1</mark>');
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
 }
