@@ -91,55 +91,73 @@ export class LogsComponent implements OnInit {
 
   // Cargar datos
   async cargarAcciones() {
-    this.cargandoAccionesSig.set(true);
-    try {
-      // Preparar filtros para el servicio
-      const filtrosParaServicio: any = { ...this.filtrosAcciones };
-      
-      // Convertir usuario_id a number si no está vacío
-      if (filtrosParaServicio.usuario_id && filtrosParaServicio.usuario_id !== '') {
-        filtrosParaServicio.usuario_id = Number(filtrosParaServicio.usuario_id);
-      } else {
-        delete filtrosParaServicio.usuario_id;
+  this.cargandoAccionesSig.set(true);
+  try {
+    // Preparar filtros para el servicio
+    const filtrosParaServicio: any = { ...this.filtrosAcciones };
+    
+    // Convertir usuario_id a number si no está vacío
+    if (filtrosParaServicio.usuario_id && filtrosParaServicio.usuario_id !== '') {
+      filtrosParaServicio.usuario_id = Number(filtrosParaServicio.usuario_id);
+    } else {
+      delete filtrosParaServicio.usuario_id;
+    }
+    
+    // Eliminar campos vacíos
+    Object.keys(filtrosParaServicio).forEach(key => {
+      if (filtrosParaServicio[key] === '' || filtrosParaServicio[key] === null) {
+        delete filtrosParaServicio[key];
       }
-      
-      // Eliminar campos vacíos
-      Object.keys(filtrosParaServicio).forEach(key => {
-        if (filtrosParaServicio[key] === '' || filtrosParaServicio[key] === null) {
-          delete filtrosParaServicio[key];
-        }
-      });
+    });
 
-      const response = await logsService.getLogsAcciones(filtrosParaServicio);
-      this.logsAccionesSig.set(response.data || []);
-      this.paginacionAccionesSig.set(response.pagination || { page: 1, limit: 50, total: 0, pages: 0 });
-    } catch (error) {
-      console.error('Error cargando logs de acciones:', error);
-    } finally {
-      this.cargandoAccionesSig.set(false);
+    const response = await logsService.getLogsAcciones(filtrosParaServicio);
+    this.logsAccionesSig.set(response.data || []);
+    
+    // ✅ CORREGIR: ACTUALIZAR LOS FILTROS CON LA PAGINACIÓN REAL DEL BACKEND
+    if (response.pagination) {
+      this.filtrosAccionesSig.update(filtros => ({
+        ...filtros,
+        page: response.pagination.page // ← USAR LA PÁGINA REAL DEL BACKEND
+      }));
     }
+    
+    this.paginacionAccionesSig.set(response.pagination || { page: 1, limit: 50, total: 0, pages: 0 });
+  } catch (error) {
+    console.error('Error cargando logs de acciones:', error);
+  } finally {
+    this.cargandoAccionesSig.set(false);
   }
+}
 
-  async cargarMovimientos() {
-    this.cargandoMovimientosSig.set(true);
-    try {
-      // Preparar filtros para el servicio (eliminar campos vacíos)
-      const filtrosParaServicio: any = { ...this.filtrosMovimientos };
-      Object.keys(filtrosParaServicio).forEach(key => {
-        if (filtrosParaServicio[key] === '' || filtrosParaServicio[key] === null) {
-          delete filtrosParaServicio[key];
-        }
-      });
+ async cargarMovimientos() {
+  this.cargandoMovimientosSig.set(true);
+  try {
+    // Preparar filtros para el servicio (eliminar campos vacíos)
+    const filtrosParaServicio: any = { ...this.filtrosMovimientos };
+    Object.keys(filtrosParaServicio).forEach(key => {
+      if (filtrosParaServicio[key] === '' || filtrosParaServicio[key] === null) {
+        delete filtrosParaServicio[key];
+      }
+    });
 
-      const response = await logsService.getMovimientosInventario(filtrosParaServicio);
-      this.movimientosInventarioSig.set(response.data || []);
-      this.paginacionMovimientosSig.set(response.pagination || { page: 1, limit: 50, total: 0, pages: 0 });
-    } catch (error) {
-      console.error('Error cargando movimientos:', error);
-    } finally {
-      this.cargandoMovimientosSig.set(false);
+    const response = await logsService.getMovimientosInventario(filtrosParaServicio);
+    this.movimientosInventarioSig.set(response.data || []);
+    
+    // ✅ CORREGIR: ACTUALIZAR LOS FILTROS CON LA PAGINACIÓN REAL DEL BACKEND
+    if (response.pagination) {
+      this.filtrosMovimientosSig.update(filtros => ({
+        ...filtros,
+        page: response.pagination.page // ← USAR LA PÁGINA REAL DEL BACKEND
+      }));
     }
+    
+    this.paginacionMovimientosSig.set(response.pagination || { page: 1, limit: 50, total: 0, pages: 0 });
+  } catch (error) {
+    console.error('Error cargando movimientos:', error);
+  } finally {
+    this.cargandoMovimientosSig.set(false);
   }
+}
 
   async cargarEstadisticas() {
     this.cargandoEstadisticasSig.set(true);
@@ -160,6 +178,7 @@ export class LogsComponent implements OnInit {
       [campo]: valor,
       page: 1 // Resetear a primera página al filtrar
     }));
+    this.cargarAcciones();
   }
 
   actualizarFiltroMovimientos(campo: string, valor: any) {
@@ -168,6 +187,7 @@ export class LogsComponent implements OnInit {
       [campo]: valor,
       page: 1
     }));
+    this.cargarMovimientos();
   }
 
   // Aplicar filtros
@@ -206,18 +226,32 @@ export class LogsComponent implements OnInit {
   }
 
   // Navegación de páginas
-  cambiarPaginaAcciones(pagina: number) {
-    this.actualizarFiltroAcciones('page', pagina);
-    this.cargarAcciones();
-  }
+cambiarPaginaAcciones(pagina: number) {
+  this.filtrosAccionesSig.update(filtros => ({
+    ...filtros,
+    page: pagina
+  }));
+  this.cargarAcciones();
+  this.scrollToTopAuditoria();
+}
 
-  cambiarPaginaMovimientos(pagina: number) {
-    this.actualizarFiltroMovimientos('page', pagina);
-    this.cargarMovimientos();
+cambiarPaginaMovimientos(pagina: number) {
+  this.filtrosMovimientosSig.update(filtros => ({
+    ...filtros,
+    page: pagina
+  }));
+  this.cargarMovimientos();
+  this.scrollToTopAuditoria();
+}
+
+  private scrollToTopAuditoria() {
+    const tableContainer = document.querySelector('.table-container');
+    if (tableContainer) {
+      tableContainer.scrollTop = 0;
+    }
   }
 
   // Formatear fecha para display
-  // SOLUCIÓN FINAL - Sumar 7 horas (420 minutos)
 formatearFecha(fecha: string): string {
   if (!fecha) return '';
   

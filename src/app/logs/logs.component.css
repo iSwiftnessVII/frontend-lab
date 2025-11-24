@@ -570,6 +570,38 @@ section {
     background-clip: text;
 }
 
+/* === SCROLL PARA TABLAS DE AUDITORÍA === */
+.table-container {
+    max-height: 500px; /* Altura máxima para ~15 filas */
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-turquoise) var(--border-gray);
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+/* Estilos para scrollbar en Webkit */
+.table-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: var(--border-gray);
+    border-radius: 10px;
+    margin: 4px 0;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: var(--primary-turquoise);
+    border-radius: 10px;
+    border: 2px solid var(--border-gray);
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-blue);
+}
+
 /* ===== Responsive Design ===== */
 @media (max-width: 768px) {
     .logs-page {
@@ -623,6 +655,7 @@ section {
         width: 100%;
     }
 }
+
 
 @media (max-width: 480px) {
     .logs-table th,
