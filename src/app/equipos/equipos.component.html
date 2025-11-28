@@ -1,118 +1,337 @@
 <div class="liba-theme container equipos-page">
   <h1>
     <i class="fas fa-screwdriver-wrench"></i>
-    | Equipos
+    | Gestión de Equipos
   </h1>
 
-  <!-- Botones principales -->
-  <div class="actions" style="margin-bottom: 2rem; display: flex; gap: 1rem;">
-    <button class="btn-compact" (click)="toggleFormularios()">
-      <i class="fas" [class.fa-plus]="!mostrarFormularios" [class.fa-minus]="mostrarFormularios"></i>
-      {{ mostrarFormularios ? 'Ocultar hoja de vida' : 'Registrar hoja de vida' }}
-    </button>
-    
-    <button class="btn-compact" (click)="toggleFichaTecnica()">
-      <i class="fas" [class.fa-plus]="!mostrarFichaTecnica" [class.fa-minus]="mostrarFichaTecnica"></i>
-      {{ mostrarFichaTecnica ? 'Ocultar ficha técnica' : 'Registrar ficha técnica' }}
-    </button>
-  </div>
+  <!-- Tarjetas de Dashboard -->
+  <div class="dashboard-cards">
+    <div class="action-card" (click)="toggleFormulario('hojaVida')">
+      <i class="fas fa-file-medical"></i>
+      <span>Registrar Equipo (Hoja de Vida)</span>
+    </div>
 
-<!-- Formulario de Ficha Técnica -->
-<div *ngIf="mostrarFichaTecnica">
-  <h2>Registrar Ficha Técnica de Equipo</h2>
-  <section>
-    <form class="form-grid" (submit)="crearFichaTecnica($event)">
-      
-<!-- Búsqueda de equipo -->
-<div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">
-  Buscar Equipo Registrado
-</div>
-<div class="full-row" style="position: relative;">
-  <label for="busquedaEquipo">Buscar equipo por código o nombre *</label>
-  <input 
-    id="busquedaEquipo" 
-    name="busquedaEquipo" 
-    [(ngModel)]="busquedaEquipo" 
-    (input)="buscarEquipos()"
-    placeholder="Escribe código, nombre, marca o modelo..."
-    autocomplete="off"
-    required
-  />
-  
-  <!-- Lista de resultados -->
-  <div *ngIf="equiposFiltrados.length > 0" class="lista-resultados">
-    <div 
-      *ngFor="let equipo of equiposFiltrados" 
-      class="resultado-item"
-      (click)="seleccionarEquipo(equipo)"
-    >
-      <strong>{{ equipo.codigo_identificacion }}</strong> - {{ equipo.nombre }}
-      <div class="info-adicional">
-        <span *ngIf="equipo.marca"><strong>Marca:</strong> {{ equipo.marca }}</span>
-        <span *ngIf="equipo.modelo"><strong>Modelo:</strong> {{ equipo.modelo }}</span>
-        <span *ngIf="equipo.ubicacion"><strong>Ubicación:</strong> {{ equipo.ubicacion }}</span>
-      </div>
+    <div class="action-card" (click)="toggleFormulario('fichaTecnica')">
+      <i class="fas fa-clipboard-list"></i>
+      <span>Registrar Equipo (Ficha Técnica)</span>
+    </div>
+
+    <div class="action-card" (click)="toggleFormulario('historial')">
+      <i class="fas fa-history"></i>
+      <span>Registrar Historial de Equipo</span>
+    </div>
+
+    <div class="action-card" (click)="toggleFormulario('intervalo')">
+      <i class="fas fa-calendar-alt"></i>
+      <span>Registrar Intervalo de Equipo</span>
     </div>
   </div>
-  
-  <!-- Equipo seleccionado -->
-  <div *ngIf="equipoSeleccionado" class="equipo-seleccionado">
-    <div class="seleccionado-info">
-      <div>
-        <strong>Equipo seleccionado:</strong> {{ equipoSeleccionado.codigo_identificacion }} - {{ equipoSeleccionado.nombre }}
-        <div class="detalles-seleccionado">
-          <span *ngIf="equipoSeleccionado.marca"><strong>Marca:</strong> {{ equipoSeleccionado.marca }}</span>
-          <span *ngIf="equipoSeleccionado.modelo"><strong>Modelo:</strong> {{ equipoSeleccionado.modelo }}</span>
-          <span *ngIf="equipoSeleccionado.voltaje"><strong>Voltaje:</strong> {{ equipoSeleccionado.voltaje }}</span>
+
+  <!-- Formulario de Hoja de Vida -->
+  <div *ngIf="formularioActivo === 'hojaVida'" class="form-section">
+    <h2>
+      <i class="fas fa-file-medical"></i>
+      | Registrar Equipo (Hoja de Vida)
+    </h2>
+    <section>
+      <form class="form-grid" (submit)="crearEquipo($event)">
+        <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">Datos generales</div>
+        <div>
+          <label for="codigo_identificacion">Código de identificación *</label>
+          <input id="codigo_identificacion" name="codigo_identificacion" [(ngModel)]="codigo_identificacion" required placeholder="Ej: EQ-001" />
         </div>
-      </div>
-      <button type="button" class="btn-limpiar" (click)="limpiarBusqueda()" title="Limpiar selección">×</button>
-    </div>
-  </div>
-</div>
+        <div>
+          <label for="nombre">Nombre *</label>
+          <input id="nombre" name="nombre" [(ngModel)]="nombre" required placeholder="Ej: Balanza analítica" />
+        </div>
+        <div>
+          <label for="modelo">Modelo</label>
+          <input id="modelo" name="modelo" [(ngModel)]="modelo" placeholder="Ej: M123" />
+        </div>
+        <div>
+          <label for="marca">Marca</label>
+          <input id="marca" name="marca" [(ngModel)]="marca" placeholder="Ej: Sartorius" />
+        </div>
+        <div>
+          <label for="inventario_sena">Inventario SENA</label>
+          <input id="inventario_sena" name="inventario_sena" [(ngModel)]="inventario_sena" placeholder="Ej: INV-456" />
+        </div>
+        <div>
+          <label for="ubicacion">Ubicación</label>
+          <input id="ubicacion" name="ubicacion" [(ngModel)]="ubicacion" placeholder="Ej: Laboratorio 1" />
+        </div>
+        <div>
+          <label for="acreditacion">Acreditación</label>
+          <select id="acreditacion" name="acreditacion" [(ngModel)]="acreditacion">
+            <option value="">Seleccione</option>
+            <option value="Si">Si</option>
+            <option value="No aplica">No aplica</option>
+          </select>
+        </div>
+        <div>
+          <label for="tipo_manual">Tipo de manual</label>
+          <select id="tipo_manual" name="tipo_manual" [(ngModel)]="tipo_manual">
+            <option value="">Seleccione</option>
+            <option value="Fisico">Fisico</option>
+            <option value="Digital">Digital</option>
+          </select>
+        </div>
+        <div>
+          <label for="numero_serie">Número de serie</label>
+          <input id="numero_serie" name="numero_serie" [(ngModel)]="numero_serie" placeholder="Ej: SN-789" />
+        </div>
+        <div>
+          <label for="tipo">Tipo</label>
+          <select id="tipo" name="tipo" [(ngModel)]="tipo">
+            <option value="">Seleccione</option>
+            <option value="Gravimetría">Gravimetría</option>
+            <option value="Espectrofotometría">Espectrofotometría</option>
+            <option value="Potenciometría">Potenciometría</option>
+            <option value="Densidad">Densidad</option>
+            <option value="Óptico">Óptico</option>
+            <option value="Isotérmico">Isotérmico</option>
+          </select>
+        </div>
+        <div>
+          <label for="clasificacion">Clasificación</label>
+          <select id="clasificacion" name="clasificacion" [(ngModel)]="clasificacion">
+            <option value="">Seleccione</option>
+            <option value="Crítica">Crítica</option>
+            <option value="Soporte">Soporte</option>
+          </select>
+        </div>
+        <div>
+          <label for="manual_usuario">Manual de usuario</label>
+          <select id="manual_usuario" name="manual_usuario" [(ngModel)]="manual_usuario">
+            <option value="">Seleccione</option>
+            <option value="Si">Si</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div>
+          <label for="puesta_en_servicio">Puesta en servicio</label>
+          <input id="puesta_en_servicio" type="date" name="puesta_en_servicio" [(ngModel)]="puesta_en_servicio" />
+        </div>
+        <div>
+          <label for="fecha_adquisicion">Fecha de adquisición</label>
+          <input id="fecha_adquisicion" type="date" name="fecha_adquisicion" [(ngModel)]="fecha_adquisicion" />
+        </div>
+        <!-- Mantenimiento del equipo -->
+        <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">Mantenimiento</div>
+        <div class="full-row">
+          <label for="requerimientos_equipo">Requerimientos del equipo</label>
+          <textarea id="requerimientos_equipo" name="requerimientos_equipo" [(ngModel)]="requerimientos_equipo" rows="2"></textarea>
+        </div>
 
-      <!-- Información básica del equipo -->
-      <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">
-        Información Básica del Equipo
-      </div>
-      <div>
-        <label for="codigo_identificador">Código Identificador *</label>
-        <input id="codigo_identificador" name="codigo_identificador" [(ngModel)]="codigo_identificador" required placeholder="Ej: FT-001" [readonly]="equipoSeleccionado" />
-      </div>
-      <div>
-        <label for="nombre_ficha">Nombre *</label>
-        <input id="nombre_ficha" name="nombre_ficha" [(ngModel)]="nombre_ficha" required placeholder="Ej: Balanza Analítica" [readonly]="equipoSeleccionado" />
-      </div>
-      <div>
-        <label for="marca_ficha">Marca</label>
-        <input id="marca_ficha" name="marca_ficha" [(ngModel)]="marca_ficha" placeholder="Ej: Sartorius" />
-      </div>
-      <div>
-        <label for="modelo_ficha">Modelo</label>
-        <input id="modelo_ficha" name="modelo_ficha" [(ngModel)]="modelo_ficha" placeholder="Ej: BSA224S" />
-      </div>
-      <div>
-        <label for="serie_ficha">Serie</label>
-        <input id="serie_ficha" name="serie_ficha" [(ngModel)]="serie_ficha" placeholder="Ej: SN123456" />
-      </div>
-      <div>
-        <label for="fabricante">Fabricante</label>
-        <input id="fabricante" name="fabricante" [(ngModel)]="fabricante" placeholder="Ej: Sartorius AG" />
-      </div>
-      
-      <!-- El resto del formulario permanece igual -->
-      <div>
-        <label for="fecha_adq">Fecha de Adquisición</label>
-        <input id="fecha_adq" name="fecha_adq" type="date" [(ngModel)]="fecha_adq" />
-      </div>
-      <div>
-        <label for="uso">Uso</label>
-        <input id="uso" name="uso" [(ngModel)]="uso" placeholder="Ej: Laboratorio de Química" />
-      </div>
-      <div>
-        <label for="fecha_func">Fecha de Puesta en Funcionamiento</label>
-        <input id="fecha_func" name="fecha_func" type="date" [(ngModel)]="fecha_func" />
-      </div>
+        <div>
+          <label for="elementos_electricos">Elementos eléctricos</label>
+          <select id="elementos_electricos" name="elementos_electricos" [(ngModel)]="elementos_electricos">
+            <option value="">Seleccione</option>
+            <option value="Si">Si</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div>
+          <label for="voltaje">Voltaje</label>
+          <input id="voltaje" name="voltaje" [(ngModel)]="voltaje" placeholder="Ej: 220V" />
+        </div>
+        <div>
+          <label for="elementos_mecanicos">Elementos mecánicos</label>
+          <select id="elementos_mecanicos" name="elementos_mecanicos" [(ngModel)]="elementos_mecanicos">
+            <option value="">Seleccione</option>
+            <option value="Si">Si</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div>
+          <label for="frecuencia">Frecuencia</label>
+          <input id="frecuencia" name="frecuencia" [(ngModel)]="frecuencia" placeholder="Ej: 60Hz" />
+        </div>
+        <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">Verificación</div>
+        <div>
+          <label for="campo_medicion">Campo de medición</label>
+          <input id="campo_medicion" name="campo_medicion" [(ngModel)]="campo_medicion" placeholder="Ej: Masa" />
+        </div>
+        <div>
+          <label for="exactitud">Exactitud</label>
+          <input id="exactitud" name="exactitud" [(ngModel)]="exactitud" placeholder="Ej: ±0.01g" />
+        </div>
+        <div>
+          <label for="sujeto_verificar">Sujeto a verificar</label>
+          <select id="sujeto_verificar" name="sujeto_verificar" [(ngModel)]="sujeto_verificar">
+            <option value="">Seleccione</option>
+            <option value="Si">Si</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div>
+          <label for="sujeto_calibracion">Sujeto a calibración</label>
+          <select id="sujeto_calibracion" name="sujeto_calibracion" [(ngModel)]="sujeto_calibracion">
+            <option value="">Seleccione</option>
+            <option value="Si">Si</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div>
+          <label for="resolucion_division">Resolución/división</label>
+          <input id="resolucion_division" name="resolucion_division" [(ngModel)]="resolucion_division" placeholder="Ej: 0.1g" />
+        </div>
+        <div>
+          <label for="sujeto_calificacion">Sujeto a calificación</label>
+          <select id="sujeto_calificacion" name="sujeto_calificacion" [(ngModel)]="sujeto_calificacion">
+            <option value="">Seleccione</option>
+            <option value="Si">Si</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">Accesorios</div>
+        <div class="full-row">
+          <label for="accesorios">Accesorios</label>
+          <textarea id="accesorios" name="accesorios" [(ngModel)]="accesorios" rows="2"></textarea>
+        </div>
+        <div class="actions" style="width:100%; display:flex; justify-content:flex-end;">
+          <button class="btn-compact" type="submit" style="width:fit-content;">Registrar equipo</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <!-- Formulario de Ficha Técnica -->
+  <div *ngIf="formularioActivo === 'fichaTecnica'" class="form-section">
+    <h2>Registrar Ficha Técnica de Equipo</h2>
+    <section>
+      <form class="form-grid" (submit)="crearFichaTecnica($event)">
+        
+        <!-- Búsqueda de equipo con campo combinado -->
+        <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">
+          Buscar Equipo Registrado
+        </div>
+        <div class="full-row" style="position: relative;">
+          <label for="busquedaEquipo">Buscar equipo *</label>
+          <div class="campo-combinado">
+            <select 
+              class="select-filtro" 
+              [(ngModel)]="tipoFiltro" 
+              name="tipoFiltro"
+              (change)="cambiarTipoFiltro(tipoFiltro)"
+            >
+              <option *ngFor="let opcion of opcionesFiltro" [value]="opcion.valor">
+                {{ opcion.texto }}
+              </option>
+            </select>
+            <input 
+              id="busquedaEquipo" 
+              name="busquedaEquipo" 
+              [(ngModel)]="busquedaEquipo" 
+              (input)="buscarEquipos()"
+              (focus)="mostrarResultados = true"
+              (blur)="onFocusOut()"
+              [placeholder]="getPlaceholder()"
+              autocomplete="off"
+              required
+              class="input-combinado"
+            />
+          </div>
+          
+          <!-- Lista de resultados -->
+          <div *ngIf="mostrarResultados && busquedaEquipo.trim()" class="lista-resultados">
+            <div *ngIf="equiposFiltrados.length === 0" class="sin-resultados">
+              <i class="fas fa-search"></i>
+              <span>No se encontraron equipos</span>
+              <small>Intenta con otros términos de búsqueda</small>
+            </div>
+            
+            <div 
+              *ngFor="let equipo of equiposFiltrados" 
+              class="resultado-item"
+              (mousedown)="seleccionarEquipo(equipo)"
+            >
+              <div class="resultado-header">
+                <strong class="codigo">{{ equipo.codigo_identificacion }}</strong>
+                <span class="nombre">{{ equipo.nombre }}</span>
+              </div>
+              <div class="info-adicional">
+                <span *ngIf="equipo.marca"><i class="fas fa-tag"></i> {{ equipo.marca }}</span>
+                <span *ngIf="equipo.modelo"><i class="fas fa-cube"></i> {{ equipo.modelo }}</span>
+                <span *ngIf="equipo.ubicacion"><i class="fas fa-map-marker-alt"></i> {{ equipo.ubicacion }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Equipo seleccionado -->
+          <div *ngIf="equipoSeleccionado" class="equipo-seleccionado">
+            <div class="seleccionado-info">
+              <div class="seleccionado-content">
+                <div class="seleccionado-header">
+                  <i class="fas fa-check-circle"></i>
+                  <strong>Equipo seleccionado:</strong>
+                </div>
+                <div class="seleccionado-details">
+                  <span class="codigo-nombre">{{ equipoSeleccionado.codigo_identificacion }} - {{ equipoSeleccionado.nombre }}</span>
+                  <div class="detalles-seleccionado">
+                    <span *ngIf="equipoSeleccionado.marca"><strong>Marca:</strong> {{ equipoSeleccionado.marca }}</span>
+                    <span *ngIf="equipoSeleccionado.modelo"><strong>Modelo:</strong> {{ equipoSeleccionado.modelo }}</span>
+                    <span *ngIf="equipoSeleccionado.voltaje"><strong>Voltaje:</strong> {{ equipoSeleccionado.voltaje }}</span>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn-limpiar" (click)="limpiarBusqueda()" title="Limpiar selección">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Información de ayuda -->
+          <div *ngIf="!equipoSeleccionado" class="info-ayuda">
+            <small>
+              <i class="fas fa-info-circle"></i>
+              Selecciona un equipo existente para autocompletar los campos similares automáticamente
+            </small>
+          </div>
+        </div>
+
+        <!-- Información básica del equipo -->
+        <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">
+          Información Básica del Equipo
+        </div>
+        <div>
+          <label for="codigo_identificador">Código Identificador *</label>
+          <input id="codigo_identificador" name="codigo_identificador" [(ngModel)]="codigo_identificador" required placeholder="Ej: FT-001" [readonly]="equipoSeleccionado" />
+        </div>
+        <div>
+          <label for="nombre_ficha">Nombre *</label>
+          <input id="nombre_ficha" name="nombre_ficha" [(ngModel)]="nombre_ficha" required placeholder="Ej: Balanza Analítica" [readonly]="equipoSeleccionado" />
+        </div>
+        <div>
+          <label for="marca_ficha">Marca</label>
+          <input id="marca_ficha" name="marca_ficha" [(ngModel)]="marca_ficha" placeholder="Ej: Sartorius" [readonly]="equipoSeleccionado" />
+        </div>
+        <div>
+          <label for="modelo_ficha">Modelo</label>
+          <input id="modelo_ficha" name="modelo_ficha" [(ngModel)]="modelo_ficha" placeholder="Ej: BSA224S" [readonly]="equipoSeleccionado" />
+        </div>
+        <div>
+          <label for="serie_ficha">Serie</label>
+          <input id="serie_ficha" name="serie_ficha" [(ngModel)]="serie_ficha" placeholder="Ej: SN123456" [readonly]="equipoSeleccionado" />
+        </div>
+        <div>
+          <label for="fabricante">Fabricante</label>
+          <input id="fabricante" name="fabricante" [(ngModel)]="fabricante" placeholder="Ej: Sartorius AG" />
+        </div>
+        
+        <!-- El resto del formulario permanece igual -->
+        <div>
+          <label for="fecha_adq">Fecha de Adquisición</label>
+          <input id="fecha_adq" name="fecha_adq" type="date" [(ngModel)]="fecha_adq" [readonly]="equipoSeleccionado" />
+        </div>
+        <div>
+          <label for="uso">Uso</label>
+          <input id="uso" name="uso" [(ngModel)]="uso" placeholder="Ej: Laboratorio de Química" />
+        </div>
+        <div>
+          <label for="fecha_func">Fecha de Puesta en Funcionamiento</label>
+          <input id="fecha_func" name="fecha_func" type="date" [(ngModel)]="fecha_func" [readonly]="equipoSeleccionado" />
+        </div>
         <div>
           <label for="precio">Precio ($)</label>
           <input id="precio" name="precio" type="number" step="0.01" [(ngModel)]="precio" placeholder="0.00" />
@@ -166,7 +385,7 @@
         </div>
         <div>
           <label for="voltaje_ficha">Voltaje</label>
-          <input id="voltaje_ficha" name="voltaje_ficha" [(ngModel)]="voltaje_ficha" placeholder="Ej: 220V" />
+          <input id="voltaje_ficha" name="voltaje_ficha" [(ngModel)]="voltaje_ficha" placeholder="Ej: 220V" [readonly]="equipoSeleccionado" />
         </div>
         <div>
           <label for="potencia">Potencia</label>
@@ -178,7 +397,7 @@
         </div>
         <div>
           <label for="frecuencia_ficha">Frecuencia</label>
-          <input id="frecuencia_ficha" name="frecuencia_ficha" [(ngModel)]="frecuencia_ficha" placeholder="Ej: 60Hz" />
+          <input id="frecuencia_ficha" name="frecuencia_ficha" [(ngModel)]="frecuencia_ficha" placeholder="Ej: 60Hz" [readonly]="equipoSeleccionado" />
         </div>
 
         <!-- Dimensiones físicas -->
@@ -288,177 +507,28 @@
     </section>
   </div>
 
-  <!-- Formularios de Hoja de Vida -->
-  <div *ngIf="mostrarFormularios">
-    <h2>Registrar equipo</h2>
-    <section>
-      <form class="form-grid" (submit)="crearEquipo($event)">
-        <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">Datos generales</div>
-        <div>
-          <label for="codigo_identificacion">Código de identificación *</label>
-          <input id="codigo_identificacion" name="codigo_identificacion" [(ngModel)]="codigo_identificacion" required placeholder="Ej: EQ-001" />
-        </div>
-        <div>
-          <label for="nombre">Nombre *</label>
-          <input id="nombre" name="nombre" [(ngModel)]="nombre" required placeholder="Ej: Balanza analítica" />
-        </div>
-        <div>
-          <label for="modelo">Modelo</label>
-          <input id="modelo" name="modelo" [(ngModel)]="modelo" placeholder="Ej: M123" />
-        </div>
-        <div>
-          <label for="marca">Marca</label>
-          <input id="marca" name="marca" [(ngModel)]="marca" placeholder="Ej: Sartorius" />
-        </div>
-        <div>
-          <label for="inventario_sena">Inventario SENA</label>
-          <input id="inventario_sena" name="inventario_sena" [(ngModel)]="inventario_sena" placeholder="Ej: INV-456" />
-        </div>
-        <div>
-          <label for="ubicacion">Ubicación</label>
-          <input id="ubicacion" name="ubicacion" [(ngModel)]="ubicacion" placeholder="Ej: Laboratorio 1" />
-        </div>
-        <div>
-          <label for="acreditacion">Acreditación</label>
-          <select id="acreditacion" name="acreditacion" [(ngModel)]="acreditacion">
-            <option value="">Seleccione</option>
-            <option value="Si">Si</option>
-            <option value="No aplica">No aplica</option>
-          </select>
-        </div>
-        <div>
-          <label for="tipo_manual">Tipo de manual</label>
-          <select id="tipo_manual" name="tipo_manual" [(ngModel)]="tipo_manual">
-            <option value="">Seleccione</option>
-            <option value="Fisico">Fisico</option>
-            <option value="Digital">Digital</option>
-          </select>
-        </div>
-        <div>
-          <label for="numero_serie">Número de serie</label>
-          <input id="numero_serie" name="numero_serie" [(ngModel)]="numero_serie" placeholder="Ej: SN-789" />
-        </div>
-        <div>
-          <label for="tipo">Tipo</label>
-          <input id="tipo" name="tipo" [(ngModel)]="tipo" placeholder="Ej: Electrónico" />
-        </div>
-        <div>
-          <label for="clasificacion">Clasificación</label>
-          <input id="clasificacion" name="clasificacion" [(ngModel)]="clasificacion" placeholder="Ej: Precisión" />
-        </div>
-        <div>
-          <label for="manual_usuario">Manual de usuario</label>
-          <select id="manual_usuario" name="manual_usuario" [(ngModel)]="manual_usuario">
-            <option value="">Seleccione</option>
-            <option value="Si">Si</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div>
-          <label for="puesta_en_servicio">Puesta en servicio</label>
-          <input id="puesta_en_servicio" type="date" name="puesta_en_servicio" [(ngModel)]="puesta_en_servicio" />
-        </div>
-        <div>
-          <label for="fecha_adquisicion">Fecha de adquisición</label>
-          <input id="fecha_adquisicion" type="date" name="fecha_adquisicion" [(ngModel)]="fecha_adquisicion" />
-        </div>
-        <!-- Mantenimiento del equipo -->
-        <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">Mantenimiento</div>
-        <div>
-          <label for="requerimientos_equipo">Requerimientos del equipo</label>
-          <textarea id="requerimientos_equipo" name="requerimientos_equipo" [(ngModel)]="requerimientos_equipo" rows="2"></textarea>
-        </div>
-        <div>
-          <label for="elementos_electricos">Elementos eléctricos</label>
-          <select id="elementos_electricos" name="elementos_electricos" [(ngModel)]="elementos_electricos">
-            <option value="">Seleccione</option>
-            <option value="Si">Si</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div>
-          <label for="voltaje">Voltaje</label>
-          <input id="voltaje" name="voltaje" [(ngModel)]="voltaje" placeholder="Ej: 220V" />
-        </div>
-        <div>
-          <label for="elementos_mecanicos">Elementos mecánicos</label>
-          <select id="elementos_mecanicos" name="elementos_mecanicos" [(ngModel)]="elementos_mecanicos">
-            <option value="">Seleccione</option>
-            <option value="Si">Si</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div>
-          <label for="frecuencia">Frecuencia</label>
-          <input id="frecuencia" name="frecuencia" [(ngModel)]="frecuencia" placeholder="Ej: 60Hz" />
-        </div>
-        <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">Verificación</div>
-        <div>
-          <label for="campo_medicion">Campo de medición</label>
-          <input id="campo_medicion" name="campo_medicion" [(ngModel)]="campo_medicion" placeholder="Ej: Masa" />
-        </div>
-        <div>
-          <label for="exactitud">Exactitud</label>
-          <input id="exactitud" name="exactitud" [(ngModel)]="exactitud" placeholder="Ej: ±0.01g" />
-        </div>
-        <div>
-          <label for="sujeto_verificar">Sujeto a verificar</label>
-          <select id="sujeto_verificar" name="sujeto_verificar" [(ngModel)]="sujeto_verificar">
-            <option value="">Seleccione</option>
-            <option value="Si">Si</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div>
-          <label for="sujeto_calibracion">Sujeto a calibración</label>
-          <select id="sujeto_calibracion" name="sujeto_calibracion" [(ngModel)]="sujeto_calibracion">
-            <option value="">Seleccione</option>
-            <option value="Si">Si</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div>
-          <label for="resolucion_division">Resolución/división</label>
-          <input id="resolucion_division" name="resolucion_division" [(ngModel)]="resolucion_division" placeholder="Ej: 0.1g" />
-        </div>
-        <div>
-          <label for="sujeto_calificacion">Sujeto a calificación</label>
-          <select id="sujeto_calificacion" name="sujeto_calificacion" [(ngModel)]="sujeto_calificacion">
-            <option value="">Seleccione</option>
-            <option value="Si">Si</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">Accesorios</div>
-        <div>
-          <label for="accesorios">Accesorios</label>
-          <textarea id="accesorios" name="accesorios" [(ngModel)]="accesorios" rows="2"></textarea>
-        </div>
-        <div class="actions" style="width:100%; display:flex; justify-content:flex-end;">
-          <button class="btn-compact" type="submit" style="width:fit-content;">Registrar equipo</button>
-        </div>
-      </form>
-    </section>
-
-    <h2 style="margin-top:2.5rem;">Registrar historial de equipo</h2>
+  <!-- Formulario de Historial -->
+  <div *ngIf="formularioActivo === 'historial'" class="form-section">
+    <h2>Registrar historial de equipo</h2>
     <section>
       <form class="form-grid" (submit)="crearHistorial($event)">
+        <!-- Equipo primero -->
         <div>
-          <label for="consecutivo">Consecutivo *</label>
-          <input id="consecutivo" name="consecutivo" [(ngModel)]="consecutivo" required type="number" placeholder="Número único" />
-        </div>
-        <div>
-          <label for="equipo_id">Equipo *</label>
-          <select id="equipo_id" name="equipo_id" [(ngModel)]="equipo_id" required [disabled]="equiposRegistrados.length === 0">
+          <label for="codigo_identificacion">Equipo *</label>
+          <select id="codigo_identificacion" name="codigo_identificacion" [(ngModel)]="codigo_identificacion">
             <option value="" disabled selected>Seleccione un equipo</option>
-            <option *ngFor="let eq of equiposRegistrados" [value]="eq.codigo_identificacion">
-              {{ eq.codigo_identificacion }} - {{ eq.nombre }}
+            <option *ngFor="let equipo of equiposRegistrados" [value]="equipo.codigo_identificacion">
+              {{ equipo.codigo_identificacion }} - {{ equipo.nombre }}
             </option>
           </select>
-          <div *ngIf="equiposRegistrados.length === 0" style="color: red; margin-top: 4px;">
-            No hay equipos registrados. Registre un equipo primero.
-          </div>
         </div>
+        
+        <!-- Consecutivo readonly -->
+        <div>
+          <label for="consecutivo">Consecutivo *</label>
+          <input id="consecutivo" name="consecutivo" [(ngModel)]="consecutivo" required placeholder="Digite el consecutivo" />
+        </div>
+        
         <div>
           <label for="fecha">Fecha</label>
           <input id="fecha" name="fecha" type="date" [(ngModel)]="fecha" />
@@ -500,26 +570,30 @@
         </div>
       </form>
     </section>
+  </div>
 
-    <h2 style="margin-top:2.5rem;">Registrar intervalo de equipo</h2>
+  <!-- Formulario de Intervalo -->
+  <div *ngIf="formularioActivo === 'intervalo'" class="form-section">
+    <h2>Registrar intervalo de equipo</h2>
     <section>
       <form class="form-grid" (submit)="crearIntervalo($event)">
+        <!-- Equipo primero -->
         <div>
-          <label for="consecutivo_intervalo">Consecutivo *</label>
-          <input id="consecutivo_intervalo" name="consecutivo_intervalo" [(ngModel)]="consecutivo_intervalo" required type="number" placeholder="Número único" />
-        </div>
-        <div>
-          <label for="equipo_id_intervalo">Equipo *</label>
-          <select id="equipo_id_intervalo" name="equipo_id_intervalo" [(ngModel)]="equipo_id_intervalo" required [disabled]="equiposRegistrados.length === 0">
+          <label for="codigo_identificacion_intervalo">Equipo *</label>
+          <select id="codigo_identificacion_intervalo" name="codigo_identificacion_intervalo" [(ngModel)]="codigo_identificacion_intervalo">
             <option value="" disabled selected>Seleccione un equipo</option>
-            <option *ngFor="let eq of equiposRegistrados" [value]="eq.codigo_identificacion">
-              {{ eq.codigo_identificacion }} - {{ eq.nombre }}
+            <option *ngFor="let equipo of equiposRegistrados" [value]="equipo.codigo_identificacion">
+              {{ equipo.codigo_identificacion }} - {{ equipo.nombre }}
             </option>
           </select>
-          <div *ngIf="equiposRegistrados.length === 0" style="color: red; margin-top: 4px;">
-            No hay equipos registrados. Registre un equipo primero.
-          </div>
         </div>
+        
+        <!-- Consecutivo readonly -->
+        <div>
+          <label for="consecutivo_intervalo">Consecutivo *</label>
+          <input id="consecutivo_intervalo" name="consecutivo_intervalo" [(ngModel)]="consecutivo_intervalo" required placeholder="Digite el consecutivo" />
+        </div>
+        
         <div>
           <label for="unidad_nominal_g">Unidad nominal (g)</label>
           <input id="unidad_nominal_g" name="unidad_nominal_g" type="number" step="0.0001" [(ngModel)]="unidad_nominal_g" />

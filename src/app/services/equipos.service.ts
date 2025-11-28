@@ -1,3 +1,4 @@
+
 import { signal } from '@angular/core';
 
 const API = (window as any).__env?.API_EQUIPOS || 'http://localhost:4000/api/equipos';
@@ -104,6 +105,57 @@ export const equiposService = {
       throw new Error(error.message || 'Error al obtener equipo');
     }
     return await res.json();
-  }
+  },
 
+  // ✅ NUEVO: Obtener fichas técnicas
+  async listarFichasTecnicas() {
+    const res = await fetch(`${API}/fichas-tecnicas`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      }
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || 'Error al obtener fichas técnicas');
+    }
+    return await res.json();
+  },
+
+// Obtener el siguiente consecutivo para historial_hv por equipo específico
+async obtenerSiguienteConsecutivoHistorialPorEquipo(equipoId: string) {
+  const API_MAX_CONSECUTIVO = `http://localhost:4000/api/equipos/historial/max-consecutivo/${equipoId}`;
+  const res = await fetch(API_MAX_CONSECUTIVO, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+    }
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || 'Error al obtener consecutivo historial por equipo');
+  }
+  const data = await res.json();
+  return (data.maxConsecutivo || 0) + 1;
+},
+
+// Obtener el siguiente consecutivo para intervalo_hv por equipo específico
+async obtenerSiguienteConsecutivoIntervaloPorEquipo(equipoId: string) {
+  const API_MAX_CONSECUTIVO = `http://localhost:4000/api/equipos/intervalo/max-consecutivo/${equipoId}`;
+  const res = await fetch(API_MAX_CONSECUTIVO, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+    }
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || 'Error al obtener consecutivo intervalo por equipo');
+  }
+  const data = await res.json();
+  return (data.maxConsecutivo || 0) + 1;
+}
 };

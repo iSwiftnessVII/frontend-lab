@@ -13,14 +13,32 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class EquiposComponent {
-  // Variables para controlar la visibilidad de los formularios
-  mostrarFormularios = false;
-  mostrarFichaTecnica = false;
+    // Formatea una fecha ISO a yyyy-MM-dd para el input type="date"
+    formatearFecha(fecha: string): string {
+      if (!fecha) return '';
+      const d = new Date(fecha);
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const day = d.getDate().toString().padStart(2, '0');
+      return `${d.getFullYear()}-${month}-${day}`;
+    }
+  // Variable para controlar el formulario activo
+  formularioActivo: string | null = null;
 
   // Variables para búsqueda y autocompletado
   busquedaEquipo = '';
+  tipoFiltro: string = 'todos'; // 'todos', 'codigo', 'nombre', 'marca', 'modelo'
   equiposFiltrados: any[] = [];
   equipoSeleccionado: any = null;
+  mostrarResultados: boolean = false;
+
+  // Opciones para el select de filtro
+  opcionesFiltro = [
+    { valor: 'todos', texto: 'Todos los campos' },
+    { valor: 'codigo', texto: 'Código' },
+    { valor: 'nombre', texto: 'Nombre' },
+    { valor: 'marca', texto: 'Marca' },
+    { valor: 'modelo', texto: 'Modelo' }
+  ];
 
   // Campos para ficha_tecnica_de_equipos
   codigo_identificador = '';
@@ -110,6 +128,7 @@ export class EquiposComponent {
 
   // Campos del formulario principal
   codigo_identificacion = '';
+  codigo_identificacion_intervalo = '';
   nombre = '';
   modelo = '';
   marca = '';
@@ -142,20 +161,51 @@ export class EquiposComponent {
     this.obtenerEquiposRegistrados();
   }
 
-  // Función para buscar equipos
+
+
+  // Función para buscar equipos con filtro específico
   buscarEquipos() {
-    if (this.busquedaEquipo.length < 2) {
+    if (!this.busquedaEquipo.trim()) {
       this.equiposFiltrados = [];
+      this.mostrarResultados = false;
       return;
     }
     
-    const busqueda = this.busquedaEquipo.toLowerCase();
-    this.equiposFiltrados = this.equiposRegistrados.filter(equipo => 
-      equipo.codigo_identificacion.toLowerCase().includes(busqueda) ||
-      equipo.nombre.toLowerCase().includes(busqueda) ||
-      (equipo.marca && equipo.marca.toLowerCase().includes(busqueda)) ||
-      (equipo.modelo && equipo.modelo.toLowerCase().includes(busqueda))
-    );
+    const busqueda = this.busquedaEquipo.toLowerCase().trim();
+    this.mostrarResultados = true;
+    
+    this.equiposFiltrados = this.equiposRegistrados.filter(equipo => {
+      switch (this.tipoFiltro) {
+        case 'codigo':
+          return equipo.codigo_identificacion?.toLowerCase().includes(busqueda);
+        
+        case 'nombre':
+          return equipo.nombre?.toLowerCase().includes(busqueda);
+        
+        case 'marca':
+          return equipo.marca?.toLowerCase().includes(busqueda);
+        
+        case 'modelo':
+          return equipo.modelo?.toLowerCase().includes(busqueda);
+        
+        case 'todos':
+        default:
+          return (
+            equipo.codigo_identificacion?.toLowerCase().includes(busqueda) ||
+            equipo.nombre?.toLowerCase().includes(busqueda) ||
+            equipo.marca?.toLowerCase().includes(busqueda) ||
+            equipo.modelo?.toLowerCase().includes(busqueda)
+          );
+      }
+    });
+  }
+
+  // Función para cambiar el tipo de filtro
+  cambiarTipoFiltro(tipo: string) {
+    this.tipoFiltro = tipo;
+    if (this.busquedaEquipo.trim()) {
+      this.buscarEquipos();
+    }
   }
 
   // Función para seleccionar equipo y autocompletar SOLO campos similares
@@ -163,79 +213,82 @@ export class EquiposComponent {
     this.equipoSeleccionado = equipo;
     this.busquedaEquipo = `${equipo.codigo_identificacion} - ${equipo.nombre}`;
     this.equiposFiltrados = [];
-    
-    console.log('Datos del equipo seleccionado desde hv_equipos:', equipo);
+    this.mostrarResultados = false;
 
-    // 🔄 CAMPOS SIMILARES ENTRE hv_equipos Y ficha_tecnica_de_equipos
-    
-    // 1. INFORMACIÓN BÁSICA (Coinciden directamente)
+    // Solo autocompletar los campos solicitados
     this.codigo_identificador = equipo.codigo_identificacion || '';
     this.nombre_ficha = equipo.nombre || '';
     this.marca_ficha = equipo.marca || '';
     this.modelo_ficha = equipo.modelo || '';
     this.serie_ficha = equipo.numero_serie || '';
-    
-    // 2. FECHAS (Coinciden en concepto)
-    this.fecha_adq = equipo.fecha_adquisicion || '';
-    this.fecha_func = equipo.puesta_en_servicio || '';
-    
-    // 3. UBICACIÓN/USO (Concepto similar)
-    this.uso = equipo.ubicacion || '';
-    
-    // 4. ESPECIFICACIONES ELÉCTRICAS (Coinciden)
+    this.fecha_adq = equipo.fecha_adquisicion ? this.formatearFecha(equipo.fecha_adquisicion) : '';
+    this.fecha_func = equipo.puesta_en_servicio ? this.formatearFecha(equipo.puesta_en_servicio) : '';
     this.voltaje_ficha = equipo.voltaje || '';
     this.frecuencia_ficha = equipo.frecuencia || '';
-    
-    // 5. ESPECIFICACIONES TÉCNICAS (Conceptos similares)
-    this.magnitud = equipo.campo_medicion || '';
-    this.exactitud_ficha = equipo.exactitud || '';
-    this.resolucion = equipo.resolucion_division || '';
-    
-    // 6. ACCESORIOS (Coincide)
     this.accesorios_ficha = equipo.accesorios || '';
-    
-    // 7. INFORMACIÓN ADICIONAL (Mapeo inteligente)
-    this.fabricante = equipo.marca || ''; // Fabricante = Marca
-    this.limitaciones_e_interferencias = equipo.requerimientos_equipo || '';
-    
-    if (equipo.clasificacion) {
-      this.otros = `Clasificación: ${equipo.clasificacion}`;
-    }
 
-    console.log('Campos similares autocompletados correctamente');
-    this.snack.success(`Datos de "${equipo.nombre}" cargados en campos similares`);
+    // Limpiar los demás campos autocompletados previamente (excepto los que se deben autocompletar)
+    this.fabricante = '';
+    this.uso = '';
+    this.magnitud = '';
+    this.exactitud_ficha = '';
+    this.resolucion = '';
+    this.limitaciones_e_interferencias = '';
+    this.otros = '';
+
+    this.snack.success(`Datos de "${equipo.nombre}" cargados en ficha técnica (solo campos permitidos)`);
   }
 
   // Limpiar búsqueda
   limpiarBusqueda() {
     this.busquedaEquipo = '';
+    this.tipoFiltro = 'todos';
     this.equiposFiltrados = [];
     this.equipoSeleccionado = null;
+    this.mostrarResultados = false;
   }
 
-  // Función para mostrar/ocultar formularios de hoja de vida
-  toggleFormularios() {
-    this.mostrarFormularios = !this.mostrarFormularios;
-    // Cerrar ficha técnica si está abierta
-    if (this.mostrarFormularios) {
-      this.mostrarFichaTecnica = false;
+  // Método para obtener el placeholder dinámico
+  getPlaceholder(): string {
+    switch (this.tipoFiltro) {
+      case 'codigo':
+        return 'Buscar por código...';
+      case 'nombre':
+        return 'Buscar por nombre...';
+      case 'marca':
+        return 'Buscar por marca...';
+      case 'modelo':
+        return 'Buscar por modelo...';
+      case 'todos':
+      default:
+        return 'Buscar en todos los campos...';
     }
   }
 
-  // Función para mostrar/ocultar formulario de ficha técnica
-  toggleFichaTecnica() {
-    this.mostrarFichaTecnica = !this.mostrarFichaTecnica;
-    // Cerrar hoja de vida si está abierta
-    if (this.mostrarFichaTecnica) {
-      this.mostrarFormularios = false;
-      this.limpiarBusqueda();
-    }
+  // Ocultar resultados cuando se hace clic fuera
+  onFocusOut() {
+    setTimeout(() => {
+      this.mostrarResultados = false;
+    }, 200);
   }
 
   async obtenerEquiposRegistrados() {
     try {
-      this.equiposRegistrados = await equiposService.listarEquipos();
-      console.log('Equipos cargados:', this.equiposRegistrados.length);
+      const equipos = await equiposService.listarEquipos();
+      // Aseguramos que cada equipo tenga el campo codigo_identificacion
+      this.equiposRegistrados = equipos.map((equipo: any) => ({
+        codigo_identificacion: equipo.codigo_identificacion,
+        nombre: equipo.nombre,
+        modelo: equipo.modelo,
+        marca: equipo.marca,
+        fecha_adquisicion: equipo.fecha_adquisicion,
+        puesta_en_servicio: equipo.puesta_en_servicio,
+        accesorios: equipo.accesorios,
+        numero_serie: equipo.numero_serie,
+        voltaje: equipo.voltaje,
+        frecuencia: equipo.frecuencia
+      }));
+      console.log('Equipos cargados:', this.equiposRegistrados.length, this.equiposRegistrados);
     } catch (error: any) {
       this.snack.error('Error al obtener equipos registrados');
     }
@@ -350,7 +403,6 @@ export class EquiposComponent {
     this.limpiarBusqueda();
   }
 
-  // Los demás métodos permanecen igual...
   async crearIntervalo(event: Event) {
     event.preventDefault();
     
@@ -518,4 +570,50 @@ export class EquiposComponent {
     this.superviso = '';
     this.observaciones = '';
   }
+
+// Función para cuando se selecciona un equipo en historial
+
+// Función para cuando se selecciona un equipo en intervalo
+
+// Modificar las funciones de apertura para limpiar los campos
+async abrirFormularioHistorial() {
+  this.formularioActivo = 'historial';
+  this.codigo_identificacion = '';
+  this.consecutivo = null;
+}
+
+async abrirFormularioIntervalo() {
+  this.formularioActivo = 'intervalo';
+  this.codigo_identificacion_intervalo = '';
+  this.consecutivo_intervalo = null;
+}
+
+// Función para mostrar/ocultar formularios
+toggleFormulario(tipo: string) {
+  if (this.formularioActivo === tipo) {
+    this.formularioActivo = null;
+  } else {
+    // Limpiar todos los formularios antes de abrir uno nuevo
+    this.resetForm();
+    this.resetFormFichaTecnica();
+    this.resetFormHistorial();
+    this.resetFormIntervalo();
+    this.limpiarBusqueda();
+
+    if (tipo === 'historial') {
+      this.formularioActivo = tipo;
+      // No cargar consecutivo hasta que se seleccione un equipo
+      this.consecutivo = null;
+      this.equipo_id = '';
+    } else if (tipo === 'intervalo') {
+      this.formularioActivo = tipo;
+      // No cargar consecutivo hasta que se seleccione un equipo
+      this.consecutivo_intervalo = null;
+      this.equipo_id_intervalo = '';
+    } else {
+      this.formularioActivo = tipo;
+    }
+  }
+}
+
 }
