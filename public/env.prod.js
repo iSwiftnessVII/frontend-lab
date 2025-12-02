@@ -1,11 +1,10 @@
 // Production environment configuration
-// Replace with your actual ngrok URL
+// ngrok URL for backend
 (function(window) {
   window.__env = window.__env || {};
   
   // API URL for production (ngrok)
-  // IMPORTANT: Update this URL with your ngrok URL
-  const NGROK_URL = 'https://TU-URL-DE-NGROK.ngrok-free.app';
+  const NGROK_URL = 'https://al-wigless-unhurryingly.ngrok-free.dev';
   
   window.__env.API_BASE = NGROK_URL + '/api';
   window.__env.API_EQUIPOS = NGROK_URL + '/api/equipos';
