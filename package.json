@@ -4,7 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build && npm run copy-env",
+    "build:prod": "ng build --configuration=production && npm run copy-env:prod",
+    "copy-env": "node -e \"require('fs').copyFileSync('public/env.js', 'dist/frontend-lab/browser/env.js')\"",
+    "copy-env:prod": "node -e \"require('fs').copyFileSync('public/env.prod.js', 'dist/frontend-lab/browser/env.js')\"",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
