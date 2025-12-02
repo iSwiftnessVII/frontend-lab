@@ -826,7 +826,7 @@
                       <span class="firma-actions firma-center">
                         <a 
                           *ngIf="(equipo.codigo_identificador || equipo.codigo_identificacion)"
-                          [href]="'http://localhost:4000/api/equipos/firma/' + (equipo.codigo_identificador || equipo.codigo_identificacion)"
+                          [href]="API_EQUIPOS + '/firma/' + (equipo.codigo_identificador || equipo.codigo_identificacion)"
                           target="_blank" 
                           rel="noopener noreferrer"
                           class="icon-eye-link"

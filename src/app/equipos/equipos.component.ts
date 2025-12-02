@@ -13,6 +13,9 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class EquiposComponent {
+      // API base URL from environment
+      API_EQUIPOS = (window as any).__env?.API_EQUIPOS || 'http://localhost:4000/api/equipos';
+
       // Tabs para la información del equipo
       equipoTabs = [
         { key: 'hojaVida', label: 'Hoja de Vida' },
