@@ -1,5 +1,8 @@
 import { signal } from '@angular/core';
-const API_BASE = (window as any).__env?.API_BASE || 'http://localhost:4000/api/auth';
+// API root (e.g., http://localhost:4000/api or Vercel/ngrok value)
+const API_ROOT = (window as any).__env?.API_BASE || 'http://localhost:4000/api';
+// Auth base ensures correct /api/auth path
+const API_AUTH = `${API_ROOT}/auth`;
 
 export const authUser = signal<{ 
   id: number; 
@@ -13,7 +16,7 @@ export const authInitializing = signal(false);
 
 export const authService = {
   async login(email: string, contrasena: string) {
-    const res = await fetch(`${API_BASE}/login`, {
+    const res = await fetch(`${API_AUTH}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, contrasena })
@@ -63,7 +66,7 @@ export const authService = {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/me`, {
+      const res = await fetch(`${API_AUTH}/me`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -95,7 +98,7 @@ export const authService = {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/me`, {
+      const res = await fetch(`${API_AUTH}/me`, {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
       });

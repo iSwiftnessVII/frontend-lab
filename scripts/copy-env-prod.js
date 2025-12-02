@@ -1,22 +1,21 @@
 const fs = require('fs');
 const path = require('path');
 
-// Rutas
+// Pre-build copy: overwrite public/env.js with public/env.prod.js
 const srcProd = path.join(__dirname, '..', 'public', 'env.prod.js');
-const destEnv = path.join(__dirname, '..', 'dist', 'frontend-lab', 'browser', 'env.js');
+const destEnv = path.join(__dirname, '..', 'public', 'env.js');
 
-console.log('Copiando configuración de producción...');
+console.log('Preparando configuración de producción (pre-build)...');
 console.log('Origen:', srcProd);
 console.log('Destino:', destEnv);
 
 try {
-  if (fs.existsSync(srcProd)) {
-    fs.copyFileSync(srcProd, destEnv);
-    console.log('✓ Configuración de producción copiada exitosamente');
-  } else {
-    console.warn('⚠ Archivo env.prod.js no encontrado, usando env.js por defecto');
+  if (!fs.existsSync(srcProd)) {
+    throw new Error('No se encontró public/env.prod.js');
   }
+  fs.copyFileSync(srcProd, destEnv);
+  console.log('✓ public/env.js sobrescrito con valores de producción');
 } catch (error) {
-  console.error('✗ Error al copiar configuración:', error.message);
+  console.error('✗ Error preparando configuración de producción:', error.message);
   process.exit(1);
 }

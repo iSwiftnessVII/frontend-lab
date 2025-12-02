@@ -1,7 +1,7 @@
 // src/app/services/reportes.service.ts
 import { authService } from './auth.service';
 
-const API_BASE = 'http://localhost:4000/api/reportes';
+const API_BASE = (window as any).__env?.API_REPORTES || 'http://localhost:4000/api/reportes';
 
 function authHeaders(): HeadersInit {
     const token = authService.getToken?.();

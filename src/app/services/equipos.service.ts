@@ -206,7 +206,7 @@ export const equiposService = {
 
 // Obtener el siguiente consecutivo para historial_hv por equipo específico
 async obtenerSiguienteConsecutivoHistorialPorEquipo(equipoId: string) {
-  const API_MAX_CONSECUTIVO = `http://localhost:4000/api/equipos/historial/max-consecutivo/${equipoId}`;
+  const API_MAX_CONSECUTIVO = `${API}/historial/max-consecutivo/${equipoId}`;
   const res = await fetch(API_MAX_CONSECUTIVO, {
     method: 'GET',
     headers: {
@@ -224,7 +224,7 @@ async obtenerSiguienteConsecutivoHistorialPorEquipo(equipoId: string) {
 
 // Obtener el siguiente consecutivo para intervalo_hv por equipo específico
 async obtenerSiguienteConsecutivoIntervaloPorEquipo(equipoId: string) {
-  const API_MAX_CONSECUTIVO = `http://localhost:4000/api/equipos/intervalo/max-consecutivo/${equipoId}`;
+  const API_MAX_CONSECUTIVO = `${API}/intervalo/max-consecutivo/${equipoId}`;
   const res = await fetch(API_MAX_CONSECUTIVO, {
     method: 'GET',
     headers: {
