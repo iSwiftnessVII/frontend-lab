@@ -12,11 +12,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Font Awesome (global) - use version compatible with existing markup -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Environment configuration -->
+  <script src="/env.js"></script>
   <script>
-    // Point Papelería API to backend default port (adjust if you run backend on a different port)
+    // Additional API endpoints
     window.__env = window.__env || {};
-    window.__env.API_PAPELERIA = 'http://localhost:4000/api/papeleria';
-    window.__env.API_LOGS = 'http://localhost:4000/api/logs';
+    window.__env.API_PAPELERIA = (window.__env.API_BASE || 'http://localhost:4000/api') + '/papeleria';
+    window.__env.API_LOGS = (window.__env.API_BASE || 'http://localhost:4000/api') + '/logs';
   </script>
 </head>
 <body>

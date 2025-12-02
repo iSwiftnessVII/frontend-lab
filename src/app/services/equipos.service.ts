@@ -60,13 +60,14 @@ export const equiposService = {
   // Registrar ficha técnica
   async crearFichaTecnica(payload: any) {
     const API_FICHA_TECNICA = (window as any).__env?.API_FICHA_TECNICA || 'http://localhost:4000/api/equipos/ficha-tecnica';
+    const isFormData = typeof FormData !== 'undefined' && payload instanceof FormData;
+    const headers: any = {
+      ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+    };
     const res = await fetch(API_FICHA_TECNICA, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
-      },
-      body: JSON.stringify(payload)
+      headers: isFormData ? headers : { 'Content-Type': 'application/json', ...headers },
+      body: isFormData ? payload : JSON.stringify(payload)
     });
     if (!res.ok) {
       const error = await res.json().catch(() => ({}));
@@ -119,6 +120,86 @@ export const equiposService = {
     if (!res.ok) {
       const error = await res.json().catch(() => ({}));
       throw new Error(error.message || 'Error al obtener fichas técnicas');
+    }
+    return await res.json();
+  },
+
+  // Obtener siguiente consecutivo historial por equipo
+  async obtenerNextHistorial(codigo: string) {
+    const res = await fetch(`${API}/historial/next/${codigo}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      }
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || 'Error obteniendo consecutivo historial');
+    }
+    return await res.json();
+  },
+
+  // Obtener siguiente consecutivo intervalo por equipo
+  async obtenerNextIntervalo(codigo: string) {
+    const res = await fetch(`${API}/intervalo/next/${codigo}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      }
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || 'Error obteniendo consecutivo intervalo');
+    }
+    return await res.json();
+  },
+
+  // Listar historial por equipo
+  async listarHistorialPorEquipo(codigo: string) {
+    const res = await fetch(`${API}/historial/list/${codigo}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      }
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || 'Error listando historial');
+    }
+    return await res.json();
+  },
+
+  // Listar intervalo por equipo
+  async listarIntervaloPorEquipo(codigo: string) {
+    const res = await fetch(`${API}/intervalo/list/${codigo}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      }
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || 'Error listando intervalo');
+    }
+    return await res.json();
+  },
+
+  // Eliminar equipo por código
+  async eliminarEquipo(codigo: string) {
+    const res = await fetch(`${API}/${encodeURIComponent(codigo)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      }
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || 'Error al eliminar equipo');
     }
     return await res.json();
   },
