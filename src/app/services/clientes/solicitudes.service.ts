@@ -57,6 +57,9 @@ export class SolicitudesService {
     if (!res.ok) {
       throw new Error(await res.text());
     }
+    
+    // Recargar la lista de solicitudes automáticamente
+    await this.loadSolicitudes();
   }
 
   async updateSolicitud(id: any, body: any): Promise<void> {
@@ -73,6 +76,9 @@ export class SolicitudesService {
     if (!res.ok) {
       throw new Error(await res.text());
     }
+    
+    // Recargar la lista de solicitudes automáticamente
+    await this.loadSolicitudes();
   }
 
   async deleteSolicitud(id: number): Promise<void> {
@@ -88,6 +94,9 @@ export class SolicitudesService {
     if (!res.ok) {
       throw new Error(await res.text());
     }
+    
+    // Recargar la lista de solicitudes automáticamente
+    await this.loadSolicitudes();
   }
 
   async createEncuesta(body: any): Promise<void> {
@@ -104,5 +113,8 @@ export class SolicitudesService {
     if (!res.ok) {
       throw new Error(await res.text());
     }
+    
+    // Recargar la lista de solicitudes automáticamente
+    await this.loadSolicitudes();
   }
 }

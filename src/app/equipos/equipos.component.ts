@@ -1,4 +1,4 @@
-import { Component, signal, effect, OnInit } from '@angular/core';
+import { Component, signal, effect, OnInit, ChangeDetectorRef } from '@angular/core';
 import { equiposService } from '../services/equipos.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { CommonModule } from '@angular/common';
@@ -65,26 +65,28 @@ export class EquiposComponent implements OnInit {
       // Seleccionar pestaña
       async selectTab(codigo: string, tabKey: string) {
         this.activeTab[codigo] = tabKey;
-        
         // Cargar historial si se selecciona la pestaña y no se ha cargado antes
         if (tabKey === 'historial' && !this.historialPorEquipo[codigo]) {
           try {
             const data = await equiposService.listarHistorialPorEquipo(codigo);
             this.historialPorEquipo[codigo] = data;
+            this.cdr.detectChanges(); // Forzar actualización
           } catch (error) {
             this.snack.warn('Error al cargar historial del equipo');
             this.historialPorEquipo[codigo] = [];
+            this.cdr.detectChanges();
           }
         }
-        
         // Cargar intervalo si se selecciona la pestaña y no se ha cargado antes
         if (tabKey === 'intervalo' && !this.intervaloPorEquipo[codigo]) {
           try {
             const data = await equiposService.listarIntervaloPorEquipo(codigo);
             this.intervaloPorEquipo[codigo] = data;
+            this.cdr.detectChanges(); // Forzar actualización
           } catch (error) {
             this.snack.warn('Error al cargar intervalo del equipo');
             this.intervaloPorEquipo[codigo] = [];
+            this.cdr.detectChanges();
           }
         }
       }
@@ -246,7 +248,7 @@ export class EquiposComponent implements OnInit {
   codigoIntervaloSig = signal<string>('');
   consecutivoIntervaloSig = signal<number | null>(null);
 
-  constructor(public snack: SnackbarService) {
+  constructor(public snack: SnackbarService, private cdr: ChangeDetectorRef) {
     // Efecto: cuando cambia el código de historial, obtener siguiente consecutivo
     effect(() => {
       const codigo = this.codigoHistorialSig();
@@ -459,19 +461,17 @@ export class EquiposComponent implements OnInit {
         recibido_por: equipo.recibido_por,
         fecha: equipo.fecha
       }));
-      console.log('Equipos cargados:', this.equiposRegistrados.length, this.equiposRegistrados);
-      
-      // Forzar detección de cambios si el array está vacío pero debería tener datos
-      if (this.equiposRegistrados.length === 0 && equipos.length > 0) {
-        console.warn('⚠️ Discrepancia: se recibieron equipos pero el array está vacío. Reasignando...');
-        this.equiposRegistrados = [...equipos];
-      }
+      console.log('✅ Equipos procesados. Total:', this.equiposRegistrados.length);
+      console.log('✅ Estado cargandoEquipos antes de finally:', this.cargandoEquipos);
     } catch (error: any) {
       console.error('❌ Error al obtener equipos:', error);
       this.snack.error(error.message || 'Error al obtener equipos registrados');
       this.equiposRegistrados = []; // Asegurar que el array esté inicializado
     } finally {
+      console.log('🏁 Finally block ejecutado, estableciendo cargandoEquipos = false');
       this.cargandoEquipos = false;
+      this.cdr.detectChanges(); // Forzar detección de cambios
+      console.log('✅ Estado cargandoEquipos después de finally:', this.cargandoEquipos);
     }
   }
 
@@ -743,6 +743,18 @@ export class EquiposComponent implements OnInit {
       this.snack.warn('Código y nombre son obligatorios');
       return;
     }
+
+    // Validación: la fecha de puesta en servicio no puede ser menor que la de adquisición
+    if (this.fecha_adquisicion && this.puesta_en_servicio) {
+      const fa = new Date(this.fecha_adquisicion);
+      const fs = new Date(this.puesta_en_servicio);
+      fa.setHours(0,0,0,0);
+      fs.setHours(0,0,0,0);
+      if (fs < fa) {
+        this.snack.warn('La fecha de puesta en servicio no puede ser menor que la fecha de adquisición');
+        return;
+      }
+    }
     
     try {
       await equiposService.crearEquipo({
@@ -778,6 +790,20 @@ export class EquiposComponent implements OnInit {
       this.obtenerEquiposRegistrados(); // Actualizar lista
     } catch (error: any) {
       this.snack.error(error.message || 'Error al registrar equipo');
+    }
+  }
+
+  // Ajustar fecha mínima de puesta en servicio cuando cambia la de adquisición
+  onFechaAdquisicionChange() {
+    // Si la puesta en servicio ya fue puesta y quedó menor, limpiar o ajustar
+    if (this.fecha_adquisicion && this.puesta_en_servicio) {
+      const fa = new Date(this.fecha_adquisicion);
+      const fs = new Date(this.puesta_en_servicio);
+      fa.setHours(0,0,0,0);
+      fs.setHours(0,0,0,0);
+      if (fs < fa) {
+        this.puesta_en_servicio = this.fecha_adquisicion;
+      }
     }
   }
 

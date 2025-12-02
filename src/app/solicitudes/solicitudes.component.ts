@@ -99,31 +99,35 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   encuestaClienteRespondio: any = '';
   encuestaSolicitoNueva: any = '';
 
-  // Auto-refresh properties
-  private refreshInterval: any;
-  private readonly REFRESH_INTERVAL_MS = 30000;
-  private isFormActive = false;
-
   // Estado UI
   detallesVisibles: { [key: number]: boolean } = {};
   private expandedSolicitudes = new Set<number>();
   lastCopiedMessage: string | null = null;
 
   ngOnInit() {
+    console.log('🎯 Solicitudes component: Iniciando...');
     this.loadInitialData();
     this.filtrarClientes();
     this.filtrarSolicitudes();
-    this.startAutoRefresh();
   }
 
   ngOnDestroy() {
-    this.stopAutoRefresh();
+    console.log('🔴 Solicitudes component: Destruyendo...');
   }
 
   private async loadInitialData(): Promise<void> {
-    await this.locationsService.loadDepartamentos();
-    await this.loadClientes();
-    await this.loadSolicitudes();
+    console.log('🔄 Cargando datos iniciales...');
+    try {
+      await this.locationsService.loadDepartamentos();
+      console.log('✅ Departamentos cargados:', this.departamentos().length);
+      await this.loadClientes();
+      console.log('✅ Clientes cargados:', this.clientes().length);
+      await this.loadSolicitudes();
+      console.log('✅ Solicitudes cargadas:', this.solicitudes().length);
+    } catch (err) {
+      console.error('❌ Error cargando datos iniciales:', err);
+      this.manejarError(err, 'cargar datos iniciales');
+    }
   }
 
   // ========== MÉTODOS DE CARGA ==========
@@ -386,7 +390,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
       // Limpiar formulario
       this.limpiarFormularioCliente();
-      await this.loadClientes();
+      // Los servicios ya actualizan sus signals automáticamente
 
     } catch (err: any) {
       console.error('Error creating cliente:', err);
@@ -433,7 +437,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
       // Limpiar formulario
       this.limpiarFormularioSolicitud();
-      await this.loadSolicitudes();
 
     } catch (err: any) {
       console.error('Error creating solicitud:', err);
@@ -472,7 +475,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
       // Limpiar formulario
       this.limpiarFormularioOferta();
-      await this.loadSolicitudes();
 
     } catch (err: any) {
       console.error('Error creating oferta:', err);
@@ -509,7 +511,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
       // Limpiar formulario
       this.limpiarFormularioResultado();
-      await this.loadSolicitudes();
 
     } catch (err: any) {
       console.error('Error creating resultado:', err);
@@ -550,7 +551,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
       // Limpiar formulario
       this.limpiarFormularioEncuesta();
-      await this.loadSolicitudes();
 
     } catch (err: any) {
       console.error('Error creating encuesta:', err);
@@ -571,7 +571,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     try {
       await this.clientesService.deleteCliente(id);
       this.snackbarService.success('✅ Cliente eliminado exitosamente');
-      await this.loadClientes();
     } catch (err: any) {
       console.error('deleteCliente', err);
       this.manejarError(err, 'eliminar cliente');
@@ -591,7 +590,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     try {
       await this.solicitudesService.deleteSolicitud(id);
       this.snackbarService.success('✅ Solicitud eliminada exitosamente');
-      await this.loadSolicitudes();
     } catch (err: any) {
       console.error('deleteSolicitud', err);
       this.manejarError(err, 'eliminar solicitud');
@@ -790,32 +788,5 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   formatValue(val: any): string {
     return this.utilsService.formatValue(val);
-  }
-
-  // ========== AUTO-REFRESH ==========
-  private startAutoRefresh(): void {
-    this.refreshInterval = setInterval(async () => {
-      if (!this.isFormActive) {
-        await this.loadClientes();
-        await this.loadSolicitudes();
-      }
-    }, this.REFRESH_INTERVAL_MS);
-  }
-
-  private stopAutoRefresh(): void {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-      this.refreshInterval = null;
-    }
-  }
-
-  onFormFocus(): void {
-    this.isFormActive = true;
-  }
-
-  onFormBlur(): void {
-    setTimeout(() => {
-      this.isFormActive = false;
-    }, 1000);
   }
 }

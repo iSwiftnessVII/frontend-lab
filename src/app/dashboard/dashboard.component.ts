@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { insumosService } from '../services/insumos.service';
 import { reactivosService } from '../services/reactivos.service';
+import { authService } from '../services/auth.service';
 
-const API_SOLICITUDES = (window as any).__env?.API_BASE || 'http://localhost:4000/api/solicitudes';
+const API_SOLICITUDES = (window as any).__env?.API_SOLICITUDES || 'http://localhost:42420/api/solicitudes';
 
 @Component({
   standalone: true,
@@ -124,7 +125,13 @@ export class DashboardComponent implements OnInit {
 
   async cargarSolicitudes() {
     try {
-      const res = await fetch(API_SOLICITUDES);
+      const token = authService.getToken();
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const res = await fetch(API_SOLICITUDES, { headers });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const solicitudes = await res.json();
       this.solicitudesData.set(solicitudes);
@@ -137,7 +144,13 @@ export class DashboardComponent implements OnInit {
 
   async cargarClientes() {
     try {
-      const res = await fetch(API_SOLICITUDES + '/clientes');
+      const token = authService.getToken();
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const res = await fetch(API_SOLICITUDES + '/clientes', { headers });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const clientes = await res.json();
       this.clientesData.set(clientes);

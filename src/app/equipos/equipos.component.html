@@ -109,12 +109,12 @@
           </select>
         </div>
         <div>
-          <label for="puesta_en_servicio">Puesta en servicio</label>
-          <input id="puesta_en_servicio" type="date" name="puesta_en_servicio" [(ngModel)]="puesta_en_servicio" />
+          <label for="fecha_adquisicion">Fecha de adquisición</label>
+          <input id="fecha_adquisicion" type="date" name="fecha_adquisicion" [(ngModel)]="fecha_adquisicion" (ngModelChange)="onFechaAdquisicionChange()" />
         </div>
         <div>
-          <label for="fecha_adquisicion">Fecha de adquisición</label>
-          <input id="fecha_adquisicion" type="date" name="fecha_adquisicion" [(ngModel)]="fecha_adquisicion" />
+          <label for="puesta_en_servicio">Puesta en servicio</label>
+          <input id="puesta_en_servicio" type="date" name="puesta_en_servicio" [(ngModel)]="puesta_en_servicio" [min]="fecha_adquisicion || null" />
         </div>
         <!-- Mantenimiento del equipo -->
         <div class="form-section-title" style="grid-column: 1 / -1; font-weight: bold; margin-top: 1.5rem;">Mantenimiento</div>

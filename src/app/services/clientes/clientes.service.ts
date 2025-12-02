@@ -76,6 +76,9 @@ export class ClientesService {
     if (!res.ok) {
       throw new Error(await res.text());
     }
+    
+    // Recargar la lista de clientes automáticamente
+    await this.loadClientes();
   }
 
   async deleteCliente(id: number): Promise<void> {
@@ -91,5 +94,8 @@ export class ClientesService {
     if (!res.ok) {
       throw new Error(await res.text());
     }
+    
+    // Recargar la lista de clientes automáticamente
+    await this.loadClientes();
   }
 }

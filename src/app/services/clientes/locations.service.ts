@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { authService } from '../auth.service'; // Importar tu authService existente
 
-const API = (window as any).__env?.API_BASE || 'http://localhost:4000/api/solicitudes';
+const API = (window as any).__env?.API_SOLICITUDES || 'http://localhost:42420/api/solicitudes';
 
 @Injectable({ providedIn: 'root' })
 export class LocationsService {
@@ -21,20 +21,27 @@ export class LocationsService {
   }
 
   async loadDepartamentos(): Promise<void> {
+    console.log('🔄 LocationsService: Cargando departamentos...');
     try {
       const res = await fetch(API + '/departamentos', {
         headers: this.getAuthHeaders()
       });
+      
+      console.log('📡 Response status:', res.status);
       
       if (res.status === 401) {
         throw new Error('No autorizado - Token inválido o expirado');
       }
       
       const data = await res.json();
+      console.log('📦 Data recibida:', data);
+      
       const arr = Array.isArray(data) ? data : (data.rows || data.data || []);
+      console.log('✅ Departamentos parseados:', arr.length, arr);
+      
       this._departamentos.set(arr);
     } catch (err) {
-      console.error('Error cargando departamentos', err);
+      console.error('❌ Error cargando departamentos', err);
       throw err;
     }
   }
