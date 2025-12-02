@@ -1,9 +1,12 @@
-// Environment configuration
+// Production environment configuration
+// ngrok URL for backend
 (function(window) {
   window.__env = window.__env || {};
   
-  // API URL - will be replaced in production
-  window.__env.API_BASE = 'http://localhost:4000/api';
+  // API URL for production (Cloudflare Tunnel)
+  const RENDER_URL = 'https://humidity-answering-diamond-sunset.trycloudflare.com';
+  
+  window.__env.API_BASE = RENDER_URL + '/api';
   // Core modules
   window.__env.API_AUTH = window.__env.API_BASE + '/auth';
   window.__env.API_EQUIPOS = window.__env.API_BASE + '/equipos';

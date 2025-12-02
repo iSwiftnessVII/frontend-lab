@@ -674,7 +674,12 @@
       | Lista de Equipos Registrados
     </h2>
     
-    <div *ngIf="equiposRegistrados.length === 0" class="sin-equipos">
+    <div *ngIf="cargandoEquipos" class="sin-equipos">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Cargando equipos...</p>
+    </div>
+    
+    <div *ngIf="!cargandoEquipos && equiposRegistrados.length === 0" class="sin-equipos">
       <i class="fas fa-inbox"></i>
       <p>No hay equipos registrados</p>
       <button class="btn-compact" (click)="toggleFormulario('hojaVida'); $event.stopPropagation()">
@@ -682,7 +687,7 @@
       </button>
     </div>
 
-    <div *ngIf="equiposRegistrados.length > 0" class="equipos-grid">
+    <div *ngIf="!cargandoEquipos && equiposRegistrados.length > 0" class="equipos-grid">
       <article *ngFor="let equipo of equiposRegistrados" class="equipo-card" (click)="toggleDetalleEquipo(equipo.codigo_identificacion)">
         <div class="card-top">
           <div class="tags">

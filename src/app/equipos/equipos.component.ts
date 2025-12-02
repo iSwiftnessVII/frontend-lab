@@ -238,6 +238,7 @@ export class EquiposComponent implements OnInit {
   accesorios = '';
 
   equiposRegistrados: any[] = [];
+  cargandoEquipos = false;
 
   // Señales para selección y consecutivos
   codigoHistorialSig = signal<string>('');
@@ -272,6 +273,7 @@ export class EquiposComponent implements OnInit {
   }
 
   ngOnInit() {
+    console.log('🎯 EquiposComponent inicializado - cargando equipos...');
     // Cargar equipos al inicializar el componente
     this.obtenerEquiposRegistrados();
   }
@@ -390,8 +392,11 @@ export class EquiposComponent implements OnInit {
   }
 
   async obtenerEquiposRegistrados() {
+    console.log('🔄 Iniciando carga de equipos...');
+    this.cargandoEquipos = true;
     try {
       const equipos = await equiposService.listarEquipos();
+      console.log('✅ Equipos recibidos del servicio:', equipos);
       // Aseguramos que cada equipo tenga todos los campos necesarios para la visualización
       this.equiposRegistrados = equipos.map((equipo: any) => ({
         codigo_identificacion: equipo.codigo_identificacion,
@@ -455,9 +460,18 @@ export class EquiposComponent implements OnInit {
         fecha: equipo.fecha
       }));
       console.log('Equipos cargados:', this.equiposRegistrados.length, this.equiposRegistrados);
+      
+      // Forzar detección de cambios si el array está vacío pero debería tener datos
+      if (this.equiposRegistrados.length === 0 && equipos.length > 0) {
+        console.warn('⚠️ Discrepancia: se recibieron equipos pero el array está vacío. Reasignando...');
+        this.equiposRegistrados = [...equipos];
+      }
     } catch (error: any) {
-      console.error('Error al obtener equipos:', error);
+      console.error('❌ Error al obtener equipos:', error);
       this.snack.error(error.message || 'Error al obtener equipos registrados');
+      this.equiposRegistrados = []; // Asegurar que el array esté inicializado
+    } finally {
+      this.cargandoEquipos = false;
     }
   }
 
