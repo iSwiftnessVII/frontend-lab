@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { authService } from '../auth.service'; // Importar tu authService existente
 
-const API = (window as any).__env?.API_BASE || 'http://localhost:4000/api/solicitudes';
+const API = (window as any).__env?.API_SOLICITUDES || 'http://localhost:4000/api/solicitudes';
 
 @Injectable({ providedIn: 'root' })
 export class SolicitudesService {
