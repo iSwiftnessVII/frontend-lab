@@ -1,7 +1,7 @@
 {
   "version": 2,
   "buildCommand": "npm run build:prod",
-  "outputDirectory": "dist/frontend-lab/browser",
+  "outputDirectory": "dist/app-lab/browser",
   "framework": "angular",
   "rewrites": [
     {
