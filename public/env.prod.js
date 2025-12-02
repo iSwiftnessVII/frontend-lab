@@ -3,8 +3,8 @@
 (function(window) {
   window.__env = window.__env || {};
   
-  // API URL for production (Public IP)
-  const RENDER_URL = 'http://181.234.10.70:42420';
+  // API URL for production (Cloudflare Tunnel)
+  const RENDER_URL = 'https://humidity-answering-diamond-sunset.trycloudflare.com';
   
   window.__env.API_BASE = RENDER_URL + '/api';
   // Core modules
