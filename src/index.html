@@ -13,12 +13,13 @@
   <!-- Font Awesome (global) - use version compatible with existing markup -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <!-- Environment configuration -->
-  <script src="/env.js"></script>
   <script>
-    // Additional API endpoints
+    // Use environment variable or fallback to localhost
     window.__env = window.__env || {};
-    window.__env.API_PAPELERIA = (window.__env.API_BASE || 'http://localhost:4000/api') + '/papeleria';
-    window.__env.API_LOGS = (window.__env.API_BASE || 'http://localhost:4000/api') + '/logs';
+    const API_BASE = '%VITE_API_BASE%' !== '%VITE' + '_API_BASE%' ? '%VITE_API_BASE%' : 'http://localhost:4000/api';
+    window.__env.API_BASE = API_BASE;
+    window.__env.API_PAPELERIA = API_BASE + '/papeleria';
+    window.__env.API_LOGS = API_BASE + '/logs';
   </script>
 </head>
 <body>
