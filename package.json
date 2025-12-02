@@ -4,10 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build && npm run copy-env",
-    "build:prod": "ng build --configuration=production && npm run copy-env:prod",
-    "copy-env": "node -e \"const fs = require('fs'); const path = require('path'); const src = path.join(__dirname, 'public', 'env.js'); const dest = path.join(__dirname, 'dist', 'frontend-lab', 'browser', 'env.js'); if (fs.existsSync(src)) { fs.copyFileSync(src, dest); }\"",
-    "copy-env:prod": "node -e \"const fs = require('fs'); const path = require('path'); const src = path.join(__dirname, 'public', 'env.prod.js'); const dest = path.join(__dirname, 'dist', 'frontend-lab', 'browser', 'env.js'); if (fs.existsSync(src)) { fs.copyFileSync(src, dest); } else { console.log('env.prod.js not found, skipping...'); }\"",
+    "build": "ng build",
+    "build:prod": "ng build --configuration=production && node scripts/copy-env-prod.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
