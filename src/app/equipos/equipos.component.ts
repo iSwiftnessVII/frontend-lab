@@ -1,4 +1,4 @@
-import { Component, signal, effect } from '@angular/core';
+import { Component, signal, effect, OnInit } from '@angular/core';
 import { equiposService } from '../services/equipos.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { CommonModule } from '@angular/common';
@@ -12,7 +12,7 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./equipos.component.css'],
   imports: [CommonModule, FormsModule, RouterModule]
 })
-export class EquiposComponent {
+export class EquiposComponent implements OnInit {
       // API base URL from environment
       API_EQUIPOS = (window as any).__env?.API_EQUIPOS || 'http://localhost:4000/api/equipos';
 
@@ -246,8 +246,6 @@ export class EquiposComponent {
   consecutivoIntervaloSig = signal<number | null>(null);
 
   constructor(public snack: SnackbarService) {
-    this.obtenerEquiposRegistrados();
-
     // Efecto: cuando cambia el código de historial, obtener siguiente consecutivo
     effect(() => {
       const codigo = this.codigoHistorialSig();
@@ -271,6 +269,11 @@ export class EquiposComponent {
         this.consecutivoIntervaloSig.set(null);
       }
     });
+  }
+
+  ngOnInit() {
+    // Cargar equipos al inicializar el componente
+    this.obtenerEquiposRegistrados();
   }
 
   // (Implementaciones reales al final del archivo)
@@ -453,7 +456,8 @@ export class EquiposComponent {
       }));
       console.log('Equipos cargados:', this.equiposRegistrados.length, this.equiposRegistrados);
     } catch (error: any) {
-      this.snack.error('Error al obtener equipos registrados');
+      console.error('Error al obtener equipos:', error);
+      this.snack.error(error.message || 'Error al obtener equipos registrados');
     }
   }
 

@@ -3,8 +3,8 @@
 (function(window) {
   window.__env = window.__env || {};
   
-  // API URL for production (Render)
-  const RENDER_URL = 'https://backend-lab-3vw6.onrender.com';
+  // API URL for production (Public IP)
+  const RENDER_URL = 'http://181.234.10.70:42420';
   
   window.__env.API_BASE = RENDER_URL + '/api';
   // Core modules
