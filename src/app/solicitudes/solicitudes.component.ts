@@ -7,7 +7,7 @@ import { SolicitudesService } from '../services/clientes/solicitudes.service';
 import { LocationsService } from '../services/clientes/locations.service';
 import { UtilsService } from '../services/clientes/utils.service';
 import { SnackbarService } from '../shared/snackbar.service';
-import { authService, authUser } from '../services/auth.service';
+import { authService } from '../services/auth.service';
 
 @Component({
   standalone: true,
@@ -35,14 +35,14 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   clientesFiltrados = signal<Array<any>>([]);
   solicitudesFiltradas = signal<Array<any>>([]);
 
-  // Variables de estado para errores de validación (se mantienen para el template)
+  // Variables de estado para errores de validación
   clienteErrors: { [key: string]: string } = {};
   solicitudErrors: { [key: string]: string } = {};
   ofertaErrors: { [key: string]: string } = {};
   resultadoErrors: { [key: string]: string } = {};
   encuestaErrors: { [key: string]: string } = {};
 
-  // Variables de formulario (igual que antes)
+  // Variables de formulario
   clienteNombre = '';
   clienteIdNum = '';
   clienteEmail = '';
@@ -54,6 +54,9 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   clienteTipoId = '';
   clienteSexo = '';
   clienteTipoPobl = '';
+  clienteTipoPoblCustomOptions: string[] = [];
+  showTipoPoblModal: boolean = false;
+  modalTipoPoblText: string = '';
   clienteDireccion = '';
   clienteIdCiudad = '';
   clienteIdDepartamento = '';
@@ -70,14 +73,27 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   solicitudTipo = '';
   solicitudLote = '';
   solicitudFechaVenc = '';
+  solicitudFechaSolicitud = '';
+  solicitudNumeroFrontPreview: string = '';
   solicitudTipoMuestra = '';
   solicitudCondEmpaque = '';
+  solicitudTipoEmpaqueCustomOptions: string[] = [];
+  showTipoEmpaqueModal: boolean = false;
+  modalTipoEmpaqueText: string = '';
   solicitudTipoAnalisis = '';
+  solicitudTipoAnalisisCustomOptions: string[] = [];
+  showTipoAnalisisModal: boolean = false;
+  modalTipoAnalisisText: string = '';
   solicitudRequiereVarios: any = '';
   solicitudCantidad: number | null = null;
   solicitudFechaEstimada = '';
   solicitudPuedeSuministrar: any = '';
-  solicitudServicioViable: any = '';
+  solicitudServicioViable: any = false;
+  solicitudRecibida: string = '';
+  solicitudRecibePersonal: string = '';
+  solicitudCargoPersonal: string = '';
+  solicitudObservaciones: string = '';
+  solicitudConsecutivo: number | null = null;
 
   ofertaSolicitudId: any = '';
   ofertaGeneroCotizacion: any = '';
@@ -90,6 +106,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   resultadoFechaLimite = '';
   resultadoNumeroInforme = '';
   resultadoFechaEnvio = '';
+  resultadoServicioViable: any = '';
 
   encuestaSolicitudId: any = '';
   encuestaFecha = '';
@@ -99,10 +116,114 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   encuestaClienteRespondio: any = '';
   encuestaSolicitoNueva: any = '';
 
+  // Formulario alterno: actualizar viabilidad
+  viableSolicitudId: any = '';
+  viableEstado: any = '';
+
   // Estado UI
   detallesVisibles: { [key: number]: boolean } = {};
-  private expandedSolicitudes = new Set<number>();
+  solicitudExpandida: number | null = null;
   lastCopiedMessage: string | null = null;
+  
+  // Tabs para tarjetas de solicitudes
+  solicitudTabs = [
+    { key: 'detalle', label: 'Detalle' },
+    { key: 'oferta', label: 'Oferta' },
+    { key: 'revision', label: 'Revisión' },
+    { key: 'encuesta', label: 'Encuesta' }
+  ];
+  activeSolicitudTab: { [id: number]: string } = {};
+
+  // Opciones para selects
+  tiposCliente = [
+    'Emprendedor',
+    'Persona Natural', 
+    'Persona Jurídica',
+    'Aprendiz SENA',
+    'Instructor SENA',
+    'Centros SENA'
+  ];
+
+  tiposIdentificacion = [
+    { value: 'CC', label: 'CC - Cédula de Ciudadanía' },
+    { value: 'TI', label: 'TI - Tarjeta de Identidad' },
+    { value: 'CE', label: 'CE - Cédula de Extranjería' },
+    { value: 'NIT', label: 'NIT - Número de Identificación Tributaria' },
+    { value: 'PASAPORTE', label: 'Pasaporte' },
+    { value: 'OTRO', label: 'Otro' }
+  ];
+
+  opcionesSexo = [
+    { value: 'M', label: 'Masculino' },
+    { value: 'F', label: 'Femenino' },
+    { value: 'Otro', label: 'Otro' }
+  ];
+
+  tiposComunidad = [
+    'Campesino',
+    'Economía Popular',
+    'Madre Cabeza de Familia',
+    'Egresado SENA',
+    'Indígena',
+    'Afrocolombiano',
+    'Ninguna',
+    'Otras'
+  ];
+
+  tiposSolicitud = [
+    { value: 'AF', label: 'AF - Apoyo Formación' },
+    { value: 'EN', label: 'EN - Ensayos' },
+    { value: 'UI', label: 'UI - Uso Infraestructura' },
+    { value: 'IA', label: 'IA - Investigación Aplicada' }
+  ];
+
+  tiposEmpaque = [
+    'Sellado al vacío',
+    'Tetrabrik (Tetra Pak)',
+    'Envase plástico',
+    'Envase de vidrio',
+    'Envase metálico',
+    'Otras'
+  ];
+
+  tiposAnalisis = [
+    'BT-Extracción de ADN',
+    'MB-Bacterias productoras de ácido láctico-Recuento',
+    'MB-Coliformes totales-Recuento-Método horizontal',
+    'MB-E. Coli-Recuento-Método horizontal',
+    'MB-Hongos y levaduras-Enumeración-Método horizontal',
+    'MB-Salmonella-Presencia-Ausencia',
+    'QA-Acidez en aderezos',
+    'QA-Conductividad en agua',
+    'QA-Contenido de Ácido Acético-Ácido Láctico-Etanol-UHPLC',
+    'QA-Contenido de Ácido Ascórbico-UHPLC',
+    'QA-Contenido de alcohol por hidrometría en bebidas alcohólicas',
+    'QA-Extracto seco',
+    'QA-Humedad',
+    'QA-pH en agua',
+    'QA-pH en bebidas alcohólicas',
+    'QA-Proteinas por el método de Bradford',
+    'QA-Sacarosa-Fructosa-Glucosa-UHPLC',
+    'Otro'
+  ];
+
+  clienteFields = [
+    { key: 'nombre_solicitante', label: 'Nombre solicitante', copyable: true },
+    { key: 'razon_social', label: 'Razón social', copyable: true },
+    { key: 'fecha_vinculacion', label: 'Fecha vinculación', copyable: true },
+    { key: 'tipo_identificacion', label: 'Tipo identificación', copyable: true },
+    { key: 'sexo', label: 'Sexo', copyable: false },
+    { key: 'tipo_poblacion', label: 'Población', copyable: false },
+    { key: 'direccion', label: 'Dirección', copyable: true },
+    { key: 'ciudad_departamento', label: 'Ciudad / Departamento', copyable: true, fullWidth: false },
+    { key: 'telefono_celular', label: 'Teléfono / Celular', copyable: true, fullWidth: false },
+    { key: 'correo_electronico', label: 'Correo', copyable: true },
+    { key: 'tipo_vinculacion', label: 'Tipo vinculación', copyable: true },
+    { key: 'observaciones', label: 'Observaciones', copyable: true, fullWidth: true },
+    { key: 'registro_realizado_por', label: 'Registro por', copyable: true, small: true },
+    { key: 'created_at', label: 'Creado', copyable: true, small: true },
+    { key: 'updated_at', label: 'Actualizado', copyable: true, small: true }
+  ];
 
   ngOnInit() {
     console.log('🎯 Solicitudes component: Iniciando...');
@@ -122,12 +243,183 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       console.log('✅ Departamentos cargados:', this.departamentos().length);
       await this.loadClientes();
       console.log('✅ Clientes cargados:', this.clientes().length);
+      // Preload ciudades for all departamentos present among clients
+      const clientesList = this.clientes() || [];
+      const depCodes = Array.from(new Set(
+        clientesList
+          .map(c => c.id_departamento || c.departamento_codigo)
+          .filter(Boolean)
+          .map(x => String(x))
+      ));
+      for (const depCode of depCodes) {
+        try {
+          await this.locationsService.loadCiudades(depCode);
+        } catch (e) {
+          console.warn('No se pudieron cargar ciudades para departamento', depCode, e);
+        }
+      }
+      this.computeNextClienteNumero();
       await this.loadSolicitudes();
       console.log('✅ Solicitudes cargadas:', this.solicitudes().length);
+      this.computeNextSolicitudConsecutivo();
     } catch (err) {
       console.error('❌ Error cargando datos iniciales:', err);
       this.manejarError(err, 'cargar datos iniciales');
     }
+  }
+
+  // Calcula el siguiente consecutivo para solicitud
+  computeNextSolicitudConsecutivo(): void {
+    try {
+      const items = this.solicitudes() || [];
+      let maxId = 0;
+      for (const s of items) {
+        const n = Number(s.solicitud_id || s.id_solicitud || 0);
+        if (!isNaN(n) && n > maxId) maxId = n;
+      }
+      const siguiente = maxId + 1;
+      if (!this.solicitudConsecutivo || Number(this.solicitudConsecutivo) < siguiente) {
+        this.solicitudConsecutivo = siguiente;
+      }
+    } catch (err) {
+      console.warn('computeNextSolicitudConsecutivo error', err);
+    }
+  }
+
+  // Calcula el siguiente valor para el campo "Consecutivo" del cliente
+  computeNextClienteNumero(): void {
+    try {
+      const clientes = this.clientes() || [];
+      let maxNum = 0;
+      for (const c of clientes) {
+        const n = Number(c.numero || c.numero_cliente || 0);
+        if (!isNaN(n) && n > maxNum) maxNum = n;
+      }
+      const siguiente = maxNum + 1;
+      if (!this.clienteNumero || Number(this.clienteNumero) < siguiente) {
+        this.clienteNumero = siguiente;
+      }
+    } catch (err) {
+      console.warn('computeNextClienteNumero error', err);
+    }
+  }
+
+  // Maneja el cambio del select de tipo de población / comunidad
+  handleTipoPoblChange(value: string): void {
+    if (value === 'Otras') {
+      this.modalTipoPoblText = '';
+      this.showTipoPoblModal = true;
+      this.clienteTipoPobl = '';
+    } else {
+      this.clienteTipoPobl = value;
+    }
+  }
+
+  confirmTipoPoblModal(): void {
+    const text = (this.modalTipoPoblText || '').trim();
+    if (!text) {
+      this.snackbarService.warn('Por favor escribe la descripción de la comunidad');
+      return;
+    }
+
+    if (!this.clienteTipoPoblCustomOptions.includes(text)) {
+      this.clienteTipoPoblCustomOptions.push(text);
+    }
+
+    this.clienteTipoPobl = text;
+    this.showTipoPoblModal = false;
+    this.modalTipoPoblText = '';
+  }
+
+  cancelTipoPoblModal(): void {
+    this.showTipoPoblModal = false;
+    this.modalTipoPoblText = '';
+    this.clienteTipoPobl = '';
+  }
+
+  // Maneja el cambio del select de Tipo de análisis
+  handleTipoAnalisisChange(value: string): void {
+    if (value === 'Otro') {
+      this.modalTipoAnalisisText = '';
+      this.showTipoAnalisisModal = true;
+      this.solicitudTipoAnalisis = '';
+    } else {
+      this.solicitudTipoAnalisis = value;
+    }
+  }
+
+  // Maneja el cambio del select de Tipo de empaque
+  handleTipoEmpaqueChange(value: string): void {
+    if (value === 'Otras') {
+      this.modalTipoEmpaqueText = '';
+      this.showTipoEmpaqueModal = true;
+      this.solicitudCondEmpaque = '';
+    } else {
+      this.solicitudCondEmpaque = value;
+    }
+  }
+
+  confirmTipoEmpaqueModal(): void {
+    const text = (this.modalTipoEmpaqueText || '').trim();
+    if (!text) {
+      this.snackbarService.warn('Por favor escribe la descripción del tipo de empaque');
+      return;
+    }
+    if (!this.solicitudTipoEmpaqueCustomOptions.includes(text)) {
+      this.solicitudTipoEmpaqueCustomOptions.push(text);
+    }
+    this.solicitudCondEmpaque = text;
+    this.showTipoEmpaqueModal = false;
+    this.modalTipoEmpaqueText = '';
+  }
+
+  cancelTipoEmpaqueModal(): void {
+    this.showTipoEmpaqueModal = false;
+    this.modalTipoEmpaqueText = '';
+    this.solicitudCondEmpaque = '';
+  }
+
+  confirmTipoAnalisisModal(): void {
+    const text = (this.modalTipoAnalisisText || '').trim();
+    if (!text) {
+      this.snackbarService.warn('Por favor escribe la descripción del análisis');
+      return;
+    }
+    if (!this.solicitudTipoAnalisisCustomOptions.includes(text)) {
+      this.solicitudTipoAnalisisCustomOptions.push(text);
+    }
+    this.solicitudTipoAnalisis = text;
+    this.showTipoAnalisisModal = false;
+    this.modalTipoAnalisisText = '';
+  }
+
+  cancelTipoAnalisisModal(): void {
+    this.showTipoAnalisisModal = false;
+    this.modalTipoAnalisisText = '';
+    this.solicitudTipoAnalisis = '';
+  }
+
+  // Recalcula el preview del código tipo-año-consecutivo
+  computeNumeroFrontPreview(): void {
+    const tipo = (this.solicitudTipo || '').trim();
+    if (!tipo) { 
+      this.solicitudNumeroFrontPreview = ''; 
+      return; 
+    }
+    
+    const fecha = this.solicitudFechaSolicitud ? new Date(this.solicitudFechaSolicitud) : new Date();
+    const year = fecha.getFullYear();
+    let count = 0;
+    
+    for (const s of (this.solicitudes() || [])) {
+      const t = (s.tipo_solicitud || '').trim();
+      const y = s.fecha_solicitud ? new Date(s.fecha_solicitud).getFullYear() : new Date().getFullYear();
+      if (t === tipo && y === year) count++;
+    }
+    
+    const next = count + 1;
+    const cc = String(next).padStart(2, '0');
+    this.solicitudNumeroFrontPreview = `${tipo}-${year}-${cc}`;
   }
 
   // ========== MÉTODOS DE CARGA ==========
@@ -144,17 +436,28 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     try {
       await this.solicitudesService.loadSolicitudes();
       this.filtrarSolicitudes();
+      this.computeNumeroFrontPreview();
     } catch (err: any) {
       this.manejarError(err, 'cargar solicitudes');
     }
   }
 
   onDepartamentoChange(): void {
-    this.locationsService.loadCiudades(this.clienteIdDepartamento);
     this.clienteIdCiudad = '';
+    (async () => {
+      try {
+        await this.locationsService.loadCiudades(this.clienteIdDepartamento);
+        const count = this.ciudades().length;
+        if (count === 0) {
+          this.snackbarService.warn('No se encontraron ciudades para el departamento seleccionado');
+        }
+      } catch (err: any) {
+        this.snackbarService.error('Error cargando ciudades. Verifica la conexión.');
+      }
+    })();
   }
 
-  // ========== FILTRADO (igual que antes) ==========
+  // ========== FILTRADO ==========
   filtrarClientes(): void {
     const clientes = this.clientes();
     
@@ -184,15 +487,49 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   }
 
   filtrarSolicitudes(): void {
-    const arr = [...this.solicitudes()].sort((a, b) => a.id_solicitud - b.id_solicitud);
-    const solicitudes = arr.map((s) => {
-      const tipo = s.codigo || '';
-      const fecha = s.fecha_solicitud ? new Date(s.fecha_solicitud) : new Date();
-      const year = fecha.getFullYear();
-      const consecutivo = s.numero_solicitud ? String(s.numero_solicitud).padStart(2, '0') : '00';
+    const base = [...this.solicitudes()];
+    
+    // Ordenar por fecha y luego por id
+    const arr = base.sort((a, b) => {
+      const da = a.fecha_solicitud ? new Date(a.fecha_solicitud).getTime() : 0;
+      const db = b.fecha_solicitud ? new Date(b.fecha_solicitud).getTime() : 0;
+      if (da !== db) return da - db;
+      return (a.solicitud_id || a.id_solicitud || 0) - (b.solicitud_id || b.id_solicitud || 0);
+    });
+
+    // Normalizar campos
+    const normalized = arr.map((s) => {
+      const id = s?.solicitud_id ?? s?.id_solicitud ?? s?.solicitudId ?? null;
+      const tipo = (s?.tipo_solicitud ?? s?.tipo ?? '').toString().trim();
+      const fecha = s?.fecha_solicitud ?? s?.created_at ?? s?.fecha ?? null;
+      const nombreSolicitante = s?.nombre_solicitante ?? s?.cliente_nombre ?? s?.nombre_cliente ?? (s?.cliente?.nombre) ?? '';
+      const nombreMuestra = s?.nombre_muestra ?? s?.muestra_nombre ?? s?.producto_nombre ?? '';
+      
       return {
         ...s,
-        numero_solicitud_front: `${tipo}-${year}-${consecutivo}`
+        id_solicitud: id,
+        solicitud_id: id,
+        tipo_solicitud: tipo,
+        fecha_solicitud: fecha,
+        nombre_solicitante: nombreSolicitante,
+        nombre_muestra: nombreMuestra
+      };
+    });
+
+    // Calcular consecutivo por año y tipo
+    const counters = new Map<string, number>();
+    const solicitudes = normalized.map((s) => {
+      const tipo = (s.tipo_solicitud || '').trim();
+      const fecha = s.fecha_solicitud ? new Date(s.fecha_solicitud) : new Date();
+      const year = fecha.getFullYear();
+      const key = `${tipo}|${year}`;
+      const curr = counters.get(key) || 0;
+      const next = curr + 1;
+      counters.set(key, next);
+      const consecutivoStr = String(next).padStart(2, '0');
+      return {
+        ...s,
+        numero_solicitud_front: tipo ? `${tipo}-${year}-${consecutivoStr}` : `--${year}-${consecutivoStr}`
       };
     });
 
@@ -203,23 +540,25 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
     const filtro = this.solicitudesQ.toLowerCase().trim();
     const solicitudesFiltradas = solicitudes.filter(solicitud => {
-      const id = (solicitud.id_solicitud || '').toString();
-      const codigo = (solicitud.codigo || '').toLowerCase();
+      const id = (solicitud.solicitud_id || solicitud.id_solicitud || '').toString();
+      const tipo = (solicitud.tipo_solicitud || '').toLowerCase();
       const numeroFront = (solicitud.numero_solicitud_front || '').toLowerCase();
       const nombreSolicitante = (solicitud.nombre_solicitante || '').toLowerCase();
-      const nombreMuestra = (solicitud.nombre_muestra_producto || '').toLowerCase();
+      const nombreMuestra = (solicitud.nombre_muestra || '').toLowerCase();
       const tipoMuestra = (solicitud.tipo_muestra || '').toLowerCase();
-      const tipoAnalisis = (solicitud.tipo_analisis_requerido || '').toLowerCase();
+      const tipoAnalisis = (solicitud.analisis_requerido || '').toLowerCase();
       const lote = (solicitud.lote_producto || '').toLowerCase();
-      return id.includes(filtro) || codigo.includes(filtro) ||
+      
+      return id.includes(filtro) || tipo.includes(filtro) ||
              numeroFront.includes(filtro) || nombreSolicitante.includes(filtro) ||
              nombreMuestra.includes(filtro) || tipoMuestra.includes(filtro) ||
              tipoAnalisis.includes(filtro) || lote.includes(filtro);
     });
+    
     this.solicitudesFiltradas.set(solicitudesFiltradas);
   }
 
-  // ========== VALIDACIONES (simplificadas - solo retornan boolean) ==========
+  // ========== VALIDACIONES ==========
   validarCliente(): boolean {
     this.clienteErrors = {};
     let isValid = true;
@@ -251,8 +590,15 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       }
     }
 
-    // ... (mantener todas las validaciones existentes, pero sin mensajes en variables)
-    // Solo actualizar el objeto de errores para mostrar en el template
+    if (!this.clienteIdNum.trim()) {
+      this.clienteErrors['idNum'] = 'El número de identificación es obligatorio';
+      isValid = false;
+    }
+
+    if (this.clienteEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.clienteEmail)) {
+      this.clienteErrors['email'] = 'Correo electrónico inválido';
+      isValid = false;
+    }
 
     return isValid;
   }
@@ -260,6 +606,14 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   validarSolicitud(): boolean {
     this.solicitudErrors = {};
     let isValid = true;
+    
+    if (this.solicitudFechaSolicitud) {
+      const f = new Date(this.solicitudFechaSolicitud);
+      if (isNaN(f.getTime())) {
+        this.solicitudErrors['fechaSolicitud'] = 'Fecha de solicitud inválida';
+        isValid = false;
+      }
+    }
 
     if (!this.solicitudClienteId) {
       this.solicitudErrors['clienteId'] = 'Debe seleccionar un cliente';
@@ -279,7 +633,26 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       isValid = false;
     }
 
-    // ... (mantener todas las validaciones existentes)
+    // Validaciones nuevas según esquema
+    if (this.solicitudRecibida && this.solicitudRecibida.length > 255) {
+      this.solicitudErrors['solicitudRecibida'] = 'Máx 255 caracteres';
+      isValid = false;
+    }
+    
+    if (this.solicitudRecibePersonal && this.solicitudRecibePersonal.length > 255) {
+      this.solicitudErrors['solicitudRecibePersonal'] = 'Máx 255 caracteres';
+      isValid = false;
+    }
+    
+    if (this.solicitudCargoPersonal && this.solicitudCargoPersonal.length > 100) {
+      this.solicitudErrors['solicitudCargoPersonal'] = 'Máx 100 caracteres';
+      isValid = false;
+    }
+    
+    if (this.solicitudObservaciones && this.solicitudObservaciones.length > 5000) {
+      this.solicitudErrors['observaciones'] = 'Observaciones demasiado largas';
+      isValid = false;
+    }
 
     return isValid;
   }
@@ -301,7 +674,10 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       isValid = false;
     }
 
-    // ... (mantener todas las validaciones existentes)
+    if (!this.ofertaFechaEnvio) {
+      this.ofertaErrors['fechaEnvio'] = 'La fecha de envío es obligatoria';
+      isValid = false;
+    }
 
     return isValid;
   }
@@ -320,7 +696,20 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       isValid = false;
     }
 
-    // ... (mantener todas las validaciones existentes)
+    if (!this.resultadoNumeroInforme) {
+      this.resultadoErrors['numeroInforme'] = 'El número de informe es obligatorio';
+      isValid = false;
+    }
+
+    if (!this.resultadoFechaEnvio) {
+      this.resultadoErrors['fechaEnvio'] = 'La fecha de envío es obligatoria';
+      isValid = false;
+    }
+
+    if (this.resultadoServicioViable === '') {
+      this.resultadoErrors['servicioViable'] = 'Debe indicar si el servicio es viable';
+      isValid = false;
+    }
 
     return isValid;
   }
@@ -339,12 +728,10 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       isValid = false;
     }
 
-    // ... (mantener todas las validaciones existentes)
-
     return isValid;
   }
 
-  // ========== OPERACIONES CRUD CON MANEJO DETALLADO DE ERRORES ==========
+  // ========== OPERACIONES CRUD ==========
   async createCliente(e: Event): Promise<void> {
     e.preventDefault();
 
@@ -353,7 +740,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Verificar permisos antes de intentar crear
     const permError = this.utilsService.getOperationErrorMessage('crear');
     if (permError) {
       this.snackbarService.error(`No puedes crear clientes: ${permError}`);
@@ -363,7 +749,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     try {
       const payload: any = {
         nombre_solicitante: this.clienteNombre,
-        numero: this.clienteNumero,
         fecha_vinculacion: this.clienteFechaVinc,
         tipo_usuario: this.clienteTipoUsuario,
         razon_social: this.clienteRazonSocial,
@@ -380,7 +765,8 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
         correo_electronico: this.clienteEmail,
         tipo_vinculacion: this.clienteTipoVinc,
         registro_realizado_por: this.clienteRegistroPor,
-        observaciones: this.clienteObservaciones
+        observaciones: this.clienteObservaciones,
+        numero: this.clienteNumero
       };
 
       await this.clientesService.createCliente(payload);
@@ -388,9 +774,8 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.snackbarService.success('✅ Cliente creado exitosamente');
       this.clienteErrors = {};
 
-      // Limpiar formulario
       this.limpiarFormularioCliente();
-      // Los servicios ya actualizan sus signals automáticamente
+      this.computeNextClienteNumero();
 
     } catch (err: any) {
       console.error('Error creating cliente:', err);
@@ -406,7 +791,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Verificar permisos
     const permError = this.utilsService.getOperationErrorMessage('crear');
     if (permError) {
       this.snackbarService.error(`No puedes crear solicitudes: ${permError}`);
@@ -415,28 +799,39 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
     try {
       const body: any = {
+        solicitud_id: this.solicitudConsecutivo ?? null,
         id_cliente: this.solicitudClienteId,
-        nombre_muestra_producto: this.solicitudNombre,
-        codigo: this.solicitudTipo,
+        tipo_solicitud: this.solicitudTipo,
+        nombre_muestra: this.solicitudNombre,
         lote_producto: this.solicitudLote || null,
-        fecha_vencimiento_producto: this.solicitudFechaVenc || null,
-        tipo_muestra: this.solicitudTipoMuestra,
-        condiciones_empaque: this.solicitudCondEmpaque || null,
-        tipo_analisis_requerido: this.solicitudTipoAnalisis,
-        requiere_varios_analisis: this.solicitudRequiereVarios ? 1 : 0,
-        cantidad_muestras_analizar: this.solicitudCantidad,
-        fecha_estimada_entrega_muestra: this.solicitudFechaEstimada,
-        puede_suministrar_informacion_adicional: this.solicitudPuedeSuministrar ? 1 : 0,
-        servicio_viable: this.solicitudServicioViable ? 1 : 0,
+        fecha_solicitud: this.solicitudFechaSolicitud || null,
+        fecha_vencimiento_muestra: this.solicitudFechaVenc || null,
+        tipo_muestra: this.solicitudTipoMuestra || null,
+        tipo_empaque: this.solicitudCondEmpaque || null,
+        analisis_requerido: this.solicitudTipoAnalisis || null,
+        req_analisis: this.solicitudRequiereVarios ? 1 : 0,
+        cant_muestras: this.solicitudCantidad || null,
+        fecha_entrega_muestra: this.solicitudFechaEstimada || null,
+        solicitud_recibida: this.solicitudRecibida || (this.solicitudPuedeSuministrar ? 'Sí' : 'No'),
+        recibe_personal: this.solicitudRecibePersonal || null,
+        cargo_personal: this.solicitudCargoPersonal || null,
+        observaciones: this.solicitudObservaciones || null
       };
 
-      await this.solicitudesService.createSolicitud(body);
+      const nuevo: any = await this.solicitudesService.createSolicitud(body);
 
       this.snackbarService.success('✅ Solicitud creada exitosamente');
       this.solicitudErrors = {};
 
-      // Limpiar formulario
       this.limpiarFormularioSolicitud();
+      // Asegurar que la nueva solicitud se vea inmediatamente en la lista filtrada
+      this.filtrarSolicitudes();
+      // Expandir la tarjeta recién creada en la pestaña Detalle
+      const nid = Number(nuevo?.solicitud_id ?? nuevo?.id_solicitud ?? 0);
+      if (nid) {
+        this.solicitudExpandida = nid;
+        this.activeSolicitudTab[nid] = 'detalle';
+      }
 
     } catch (err: any) {
       console.error('Error creating solicitud:', err);
@@ -452,7 +847,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Verificar permisos
     const permError = this.utilsService.getOperationErrorMessage('crear');
     if (permError) {
       this.snackbarService.error(`No puedes crear ofertas: ${permError}`);
@@ -468,12 +862,17 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
         observacion_oferta: this.ofertaObservacion || null
       };
 
-      await this.solicitudesService.updateSolicitud(this.ofertaSolicitudId, body);
+      const ofertaId = Number(this.ofertaSolicitudId);
+      if (isNaN(ofertaId) || ofertaId <= 0) {
+        this.snackbarService.warn('Selecciona una solicitud válida antes de registrar la oferta');
+        return;
+      }
+
+      await this.solicitudesService.upsertOferta(ofertaId, body);
 
       this.snackbarService.success('✅ Oferta registrada exitosamente');
       this.ofertaErrors = {};
 
-      // Limpiar formulario
       this.limpiarFormularioOferta();
 
     } catch (err: any) {
@@ -490,7 +889,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Verificar permisos
     const permError = this.utilsService.getOperationErrorMessage('crear');
     if (permError) {
       this.snackbarService.error(`No puedes registrar resultados: ${permError}`);
@@ -499,17 +897,17 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
     try {
       const body = {
-        fecha_limite_entrega_resultados: this.resultadoFechaLimite,
-        numero_informe_resultados: this.resultadoNumeroInforme,
-        fecha_envio_resultados: this.resultadoFechaEnvio
+        fecha_limite_entrega: this.resultadoFechaLimite,
+        Codigo_informe_resultados: this.resultadoNumeroInforme,
+        fecha_envio_resultados: this.resultadoFechaEnvio,
+        servicio_es_viable: this.resultadoServicioViable ? 1 : 0
       };
 
-      await this.solicitudesService.updateSolicitud(this.resultadoSolicitudId, body);
+      await this.solicitudesService.upsertRevision(Number(this.resultadoSolicitudId), body);
 
       this.snackbarService.success('✅ Resultados registrados exitosamente');
       this.resultadoErrors = {};
 
-      // Limpiar formulario
       this.limpiarFormularioResultado();
 
     } catch (err: any) {
@@ -526,7 +924,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Verificar permisos
     const permError = this.utilsService.getOperationErrorMessage('crear');
     if (permError) {
       this.snackbarService.error(`No puedes crear encuestas: ${permError}`);
@@ -535,21 +932,26 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
     try {
       const body = {
-        id_solicitud: this.encuestaSolicitudId,
         fecha_encuesta: this.encuestaFecha,
-        puntuacion_satisfaccion: this.encuestaPuntuacion || null,
         comentarios: this.encuestaComentarios || null,
         recomendaria_servicio: this.encuestaRecomendaria,
-        cliente_respondio_encuesta: this.encuestaClienteRespondio,
+        cliente_respondio: this.encuestaClienteRespondio,
         solicito_nueva_encuesta: this.encuestaSolicitoNueva
       };
 
-      await this.solicitudesService.createEncuesta(body);
+      await this.solicitudesService.upsertSeguimientoEncuesta(Number(this.encuestaSolicitudId), body);
 
       this.snackbarService.success('✅ Encuesta registrada exitosamente');
       this.encuestaErrors = {};
 
-      // Limpiar formulario
+      // Optimistic UX: expand card and show 'encuesta' tab with fresh data
+      const sid = Number(this.encuestaSolicitudId);
+      if (sid) {
+        this.activeSolicitudTab[sid] = 'encuesta';
+        this.solicitudExpandida = sid;
+        this.filtrarSolicitudes();
+      }
+
       this.limpiarFormularioEncuesta();
 
     } catch (err: any) {
@@ -561,7 +963,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   async deleteCliente(id: number): Promise<void> {
     if (!confirm('¿Estás seguro de que quieres eliminar este cliente?')) return;
     
-    // Verificar permisos de eliminación
     if (!this.canDelete()) {
       const errorMsg = this.utilsService.getDeleteErrorMessage();
       this.snackbarService.error(`❌ No puedes eliminar clientes: ${errorMsg}`);
@@ -580,7 +981,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   async deleteSolicitud(id: number): Promise<void> {
     if (!confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) return;
     
-    // Verificar permisos de eliminación
     if (!this.canDelete()) {
       const errorMsg = this.utilsService.getDeleteErrorMessage();
       this.snackbarService.error(`❌ No puedes eliminar solicitudes: ${errorMsg}`);
@@ -596,46 +996,10 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     }
   }
 
-  async toggleCheck(s: any, field: string, value: any): Promise<void> {
-    // Verificar permisos para editar
-    const permError = this.utilsService.getOperationErrorMessage('editar');
-    if (permError) {
-      this.snackbarService.error(`No puedes modificar este campo: ${permError}`);
-      return;
-    }
-
-    try {
-      const body: any = {};
-      if (field === 'numero_informe_resultados') {
-        body[field] = value ? '1' : null;
-      } else {
-        body[field] = value ? 1 : 0;
-      }
-      
-      await this.solicitudesService.updateSolicitud(s.id_solicitud, body);
-      s[field] = body[field];
-      
-      const fieldNames: {[key: string]: string} = {
-        'servicio_viable': 'Servicio viable',
-        'genero_cotizacion': 'Generar cotización', 
-        'cliente_respondio_encuesta': 'Encuesta respondida',
-        'numero_informe_resultados': 'Resultados enviados'
-      };
-      
-      const fieldName = fieldNames[field] || field;
-      const action = value ? 'activado' : 'desactivado';
-      this.snackbarService.info(`✅ ${fieldName} ${action}`);
-    } catch (err: any) {
-      console.error('toggleCheck', err);
-      this.manejarError(err, 'actualizar campo');
-    }
-  }
-
   // ========== MÉTODOS AUXILIARES PARA MANEJO DE ERRORES ==========
   private manejarError(err: any, operacion: string): void {
     const errorMessage = err.message || err.toString();
     
-    // Detectar tipo de error
     if (errorMessage.includes('No autorizado') || errorMessage.includes('401')) {
       this.snackbarService.error(`🔐 Sesión expirada. Por favor, inicia sesión nuevamente.`);
       setTimeout(() => {
@@ -662,7 +1026,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.snackbarService.error('📝 Error de validación: Verifica los datos ingresados.');
     }
     else {
-      // Error genérico
       this.snackbarService.error(`❌ Error al ${operacion}: ${this.obtenerMensajeAmigable(errorMessage)}`);
     }
   }
@@ -683,7 +1046,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Si no encuentra un mensaje amigable, devuelve uno genérico
     return mensaje.length > 100 ? 'Error del sistema. Contacta al administrador.' : mensaje;
   }
 
@@ -714,6 +1076,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     this.solicitudTipo = '';
     this.solicitudLote = '';
     this.solicitudFechaVenc = '';
+    this.solicitudFechaSolicitud = '';
     this.solicitudTipoMuestra = '';
     this.solicitudCondEmpaque = '';
     this.solicitudTipoAnalisis = '';
@@ -722,6 +1085,11 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     this.solicitudFechaEstimada = '';
     this.solicitudPuedeSuministrar = false;
     this.solicitudServicioViable = false;
+    this.solicitudRecibida = '';
+    this.solicitudRecibePersonal = '';
+    this.solicitudCargoPersonal = '';
+    this.solicitudObservaciones = '';
+    this.computeNextSolicitudConsecutivo();
   }
 
   private limpiarFormularioOferta(): void {
@@ -738,6 +1106,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     this.resultadoFechaLimite = '';
     this.resultadoNumeroInforme = '';
     this.resultadoFechaEnvio = '';
+    this.resultadoServicioViable = false;
   }
 
   private limpiarFormularioEncuesta(): void {
@@ -750,7 +1119,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     this.encuestaSolicitoNueva = false;
   }
 
-  // ========== MÉTODOS UI (igual que antes) ==========
+  // ========== MÉTODOS UI ==========
   canDelete(): boolean {
     return this.utilsService.canDelete();
   }
@@ -760,15 +1129,77 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   }
 
   toggleExpandSolicitud(s: any): void {
-    const key = Number(s?.id_solicitud ?? 0);
+    const key = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
     if (!key) return;
-    if (this.expandedSolicitudes.has(key)) this.expandedSolicitudes.delete(key);
-    else this.expandedSolicitudes.add(key);
+    
+    this.solicitudExpandida = this.solicitudExpandida === key ? null : key;
+    
+    if (this.solicitudExpandida === key && !this.activeSolicitudTab[key]) {
+      this.activeSolicitudTab[key] = 'detalle';
+    }
+    
+    // Debug para verificar datos
+    console.log('=== DEBUG Solicitud Expandida ===');
+    console.log('ID:', key);
+    console.log('Datos completos:', s);
+    console.log('Campos de oferta:', {
+      genero_cotizacion: s?.genero_cotizacion,
+      valor_cotizacion: s?.valor_cotizacion,
+      fecha_envio_oferta: s?.fecha_envio_oferta,
+      realizo_seguimiento_oferta: s?.realizo_seguimiento_oferta,
+      observacion_oferta: s?.observacion_oferta
+    });
+    console.log('Campos de revisión:', {
+      fecha_limite_entrega: s?.fecha_limite_entrega,
+      Codigo_informe_resultados: s?.Codigo_informe_resultados,
+      fecha_envio_resultados: s?.fecha_envio_resultados,
+      servicio_es_viable: s?.servicio_es_viable
+    });
+    console.log('Campos de encuesta:', {
+      fecha_encuesta: s?.fecha_encuesta,
+      comentarios: s?.comentarios,
+      recomendaria_servicio: s?.recomendaria_servicio,
+      cliente_respondio: s?.cliente_respondio,
+      solicito_nueva_encuesta: s?.solicito_nueva_encuesta
+    });
+    console.log('=== FIN DEBUG ===');
   }
 
   isSolicitudExpanded(s: any): boolean {
-    const key = Number(s?.id_solicitud ?? 0);
-    return key ? this.expandedSolicitudes.has(key) : false;
+    const key = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
+    return key ? this.solicitudExpandida === key : false;
+  }
+
+  selectSolicitudTab(id: number, tabKey: string): void {
+    this.activeSolicitudTab[id] = tabKey;
+  }
+
+  // Helpers: resolve display names for departamento/ciudad from IDs or codes
+  resolveDepartamento(cliente: any): string {
+    const nombre = cliente?.departamento;
+    if (nombre) return this.formatValue(nombre);
+    const codigo = cliente?.id_departamento || cliente?.departamento_codigo;
+    const depList = this.departamentos();
+    const found = depList.find(d => String(d.codigo) === String(codigo));
+    return this.formatValue(found?.nombre) || '—';
+  }
+
+  resolveCiudad(cliente: any): string {
+    // Try common name keys first
+    const nombre = cliente?.ciudad
+      || cliente?.ciudad_nombre
+      || cliente?.nombre_ciudad
+      || cliente?.municipio
+      || cliente?.municipio_nombre;
+    if (nombre) return this.formatValue(nombre);
+    // Try to resolve by code if we have cities loaded
+    const codigo = cliente?.id_ciudad || cliente?.ciudad_codigo || cliente?.codigo_ciudad;
+    const cityList = this.ciudades();
+    if (codigo && Array.isArray(cityList) && cityList.length) {
+      const found = cityList.find(c => String(c.codigo) === String(codigo));
+      if (found?.nombre) return this.formatValue(found.nombre);
+    }
+    return '—';
   }
 
   async copyField(key: string, value: string | null): Promise<void> {
@@ -777,13 +1208,46 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     this.showToast('Copiado');
   }
 
+  getClienteFieldValue(cliente: any, key: string): string {
+    switch (key) {
+      case 'nombre_solicitante':
+        return this.formatValue(cliente.nombre_solicitante);
+      case 'razon_social':
+        return this.formatValue(cliente.razon_social);
+      case 'fecha_vinculacion':
+        return this.formatValue(cliente.fecha_vinculacion);
+      case 'tipo_identificacion':
+        return this.formatValue(cliente.tipo_identificacion);
+      case 'sexo':
+        return cliente.sexo || '-';
+      case 'tipo_poblacion':
+        return cliente.tipo_poblacion || '-';
+      case 'direccion':
+        return this.formatValue(cliente.direccion);
+      case 'ciudad_departamento':
+        return `${this.formatValue(cliente.ciudad)} / ${this.formatValue(cliente.departamento)}`;
+      case 'telefono_celular':
+        return `${this.formatValue(cliente.telefono)} / ${this.formatValue(cliente.celular)}`;
+      case 'correo_electronico':
+        return this.formatValue(cliente.correo_electronico);
+      case 'tipo_vinculacion':
+        return this.formatValue(cliente.tipo_vinculacion);
+      case 'observaciones':
+        return this.formatValue(cliente.observaciones);
+      case 'registro_realizado_por':
+        return this.formatValue(cliente.registro_realizado_por);
+      case 'created_at':
+        return this.formatValue(cliente.created_at);
+      case 'updated_at':
+        return this.formatValue(cliente.updated_at);
+      default:
+        return this.formatValue(cliente[key]);
+    }
+  }
+
   showToast(message: string, ms = 1400): void {
     this.lastCopiedMessage = message;
     setTimeout(() => { this.lastCopiedMessage = null; }, ms);
-  }
-
-  formatDate(dateStr: string | null): string {
-    return this.utilsService.formatDate(dateStr);
   }
 
   formatValue(val: any): string {

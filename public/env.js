@@ -1,10 +1,10 @@
-// Production environment configuration
-// ngrok URL for backend
 (function(window) {
   window.__env = window.__env || {};
   
-  // API URL for production (Cloudflare Tunnel)
-  const RENDER_URL = 'https://personality-eyed-supervisor-nicole.trycloudflare.com';
+  // API URL (Cloudflare Tunnel or local dev)
+  // Update this URL if your backend tunnel changes
+  const RENDER_URL = 'https://oxford-receives-lots-clean.trycloudflare.com';
+  // const RENDER_URL = 'http://localhost:3000';
   
   window.__env.API_BASE = RENDER_URL + '/api';
   // Core modules
@@ -18,6 +18,9 @@
   window.__env.API_USUARIOS = window.__env.API_BASE + '/usuarios';
   window.__env.API_DASHBOARD = window.__env.API_BASE + '/dashboard';
   window.__env.API_SOLICITUDES = window.__env.API_BASE + '/solicitudes';
+  // Joined endpoints for solicitudes
+  window.__env.API_SOLICITUDES_DETALLE = window.__env.API_SOLICITUDES + '/detalle';
+  window.__env.API_SOLICITUDES_DETALLE_LISTA = window.__env.API_SOLICITUDES_DETALLE + '/lista';
   // Equipos submodules
   window.__env.API_HISTORIAL_HV = window.__env.API_EQUIPOS + '/historial';
   window.__env.API_INTERVALO_HV = window.__env.API_EQUIPOS + '/intervalo';

@@ -630,7 +630,7 @@
         </div>
         <div>
           <label for="fecha_c2">Fecha calibración 2</label>
-          <input id="fecha_c2" name="fecha_c2" type="date" [(ngModel)]="fecha_c2" (ngModelChange)="calcularDiferenciaDias()" />
+          <input id="fecha_c2" name="fecha_c2" type="date" [(ngModel)]="fecha_c2" (ngModelChange)="calcularDiferenciaDias()" [attr.min]="fecha_c1 || null" />
         </div>
         <div>
           <label for="error_c2_g">Error calibración 2 (g)</label>
@@ -711,14 +711,63 @@
             </button>
           </div>
         </div>
-        <div class="card-name" [title]="equipo.nombre">
-          <div class="name-line">{{ equipo.nombre }}</div>
-          <div class="meta-line">
-            <span class="chip">{{ equipo.tipo || 'Sin tipo' }}</span>
-            <span class="chip">Ubicación: {{ equipo.ubicacion || '—' }}</span>
-            <span class="chip">{{ equipo.acreditacion || 'Sin acreditación' }}</span>
+        <div class="card-header-row">
+          <div class="card-name" [title]="equipo.nombre">
+            <div class="name-line">{{ equipo.nombre }}</div>
+            <div class="meta-line">
+              <span class="chip">{{ equipo.tipo || 'Sin tipo' }}</span>
+              <span class="chip">Ubicación: {{ equipo.ubicacion || '—' }}</span>
+              <span class="chip">{{ equipo.acreditacion || 'Sin acreditación' }}</span>
+            </div>
+            <div class="card-right-controls" (click)="$event.stopPropagation()">
+              <div class="card-controls-inner">
+                <div class="pdf-field">
+                  <svg class="pdf-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="2" width="18" height="20" rx="5" fill="#fff" stroke="#e5e7eb" stroke-width="1.6" />
+                    <rect x="7" y="13.5" width="10" height="6" rx="3" fill="#ff3b30"/>
+                    <text x="9" y="17.2" font-size="5.5" fill="#fff" font-weight="600">PDF</text>
+                  </svg>
+
+                  <select class="pdf-select" [(ngModel)]="selectedPdfByEquipo[equipo.codigo_identificacion]" [class.placeholder]="!selectedPdfByEquipo[equipo.codigo_identificacion]">
+                    <option [ngValue]="null" disabled>Seleccionar PDF...</option>
+                    <option *ngFor="let pdf of (pdfListByEquipo[equipo.codigo_identificacion] || [])" [value]="pdf.url" [title]="pdf.name">{{ pdf.displayName || pdf.name }}</option>
+                    <option *ngIf="!(pdfListByEquipo[equipo.codigo_identificacion] || []).length" [ngValue]="null" disabled>Sin archivos</option>
+                  </select>
+
+                  <button class="btn view pdf-action" (click)="openPdf(equipo.codigo_identificacion, $event)">Ver</button>
+                  <button class="btn delete pdf-action eliminar" (click)="deletePdf(equipo.codigo_identificacion, $event)">Eliminar</button>
+                </div>
+
+                <div class="compact-group">
+                <div class="pdf-icon-left" aria-hidden="true" title="PDF/Archivo">
+                  <i class="fas fa-file-pdf"></i>
+                </div>
+                <details class="compact-dropdown">
+                  <summary class="compact-action" title="Subir/gestionar PDF" (click)="$event.stopPropagation()">
+                  <span class="action-leading">
+                    <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14" class="icon-plus">
+                      <path d="M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z"></path>
+                    </svg>
+                  </span>
+                  <span class="action-label">
+                    <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14" class="icon-caret">
+                      <path d="m4.427 7.427 3.396 3.396a.25.25 0 0 0 .354 0l3.396-3.396A.25.25 0 0 0 11.396 7H4.604a.25.25 0 0 0-.177.427Z"></path>
+                    </svg>
+                  </span>
+                  </summary>
+                  <ul class="compact-menu" role="menu" aria-label="Tipo de PDF">
+                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Manual de usuario', $event)">Manual de usuario</li>
+                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Certificados de calificación', $event)">Certificados de calificación</li>
+                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Certificados de verificación', $event)">Certificados de verificación</li>
+                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Certificados de calibración', $event)">Certificados de calibración</li>
+                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Certificados de mantenimiento', $event)">Certificados de mantenimiento</li>
+                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Ficha técnica de especificaciones', $event)">Ficha técnica de especificaciones</li>
+                  </ul>
+                </details>
+              </div>
+            </div>
+            </div>
           </div>
-          <span class="toggle-icon" [class.open]="equipoExpandido === equipo.codigo_identificacion">▾</span>
         </div>
         <div *ngIf="equipoExpandido === equipo.codigo_identificacion" class="equipo-detalles">
           <!-- Menú de pestañas para información del equipo -->
@@ -741,8 +790,8 @@
                     <div class="detalle-item"><span class="detalle-label">Inventario SENA</span><span>{{ equipo.inventario_sena || 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Tipo Manual</span><span>{{ equipo.tipo_manual || 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Manual Usuario</span><span>{{ equipo.manual_usuario || 'N/A' }}</span></div>
-                    <div class="detalle-item"><span class="detalle-label">Puesta en Servicio</span><span>{{ equipo.puesta_en_servicio ? (equipo.puesta_en_servicio | date: 'dd/MM/yyyy') : 'N/A' }}</span></div>
-                    <div class="detalle-item"><span class="detalle-label">Fecha Adquisición</span><span>{{ equipo.fecha_adquisicion ? (equipo.fecha_adquisicion | date: 'dd/MM/yyyy') : 'N/A' }}</span></div>
+                    <div class="detalle-item"><span class="detalle-label">Puesta en Servicio</span><span>{{ equipo.puesta_en_servicio ? (equipo.puesta_en_servicio | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
+                    <div class="detalle-item"><span class="detalle-label">Fecha Adquisición</span><span>{{ equipo.fecha_adquisicion ? (equipo.fecha_adquisicion | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
                     <div class="detalle-item detalle-item-full"><span class="detalle-label">Requerimientos</span><span>{{ equipo.requerimientos_equipo || 'N/A' }}</span></div>
                     <div class="detalle-item detalle-item-full"><span class="detalle-label">Accesorios</span><span>{{ equipo.accesorios || 'N/A' }}</span></div>
                   </div>
@@ -773,9 +822,9 @@
                   <div class="seccion-titulo">Información de Ficha Técnica</div>
                   <div class="detalle-grid-compacto">
                     <div class="detalle-item"><span class="detalle-label">Fabricante</span><span>{{ equipo.fabricante || 'N/A' }}</span></div>
-                    <div class="detalle-item"><span class="detalle-label">Fecha Adquisición FT</span><span>{{ equipo.fecha_adq ? (equipo.fecha_adq | date: 'dd/MM/yyyy') : 'N/A' }}</span></div>
+                    <div class="detalle-item"><span class="detalle-label">Fecha Adquisición FT</span><span>{{ equipo.fecha_adq ? (equipo.fecha_adq | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Uso</span><span>{{ equipo.uso || 'N/A' }}</span></div>
-                    <div class="detalle-item"><span class="detalle-label">Fecha Funcionamiento</span><span>{{ equipo.fecha_func ? (equipo.fecha_func | date: 'dd/MM/yyyy') : 'N/A' }}</span></div>
+                    <div class="detalle-item"><span class="detalle-label">Fecha Funcionamiento</span><span>{{ equipo.fecha_func ? (equipo.fecha_func | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Precio</span><span>{{ equipo.precio || 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Manual Operación</span><span>{{ equipo.manual_ope || 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Idioma Manual</span><span>{{ equipo.idioma_manual || 'N/A' }}</span></div>
@@ -821,7 +870,7 @@
                     <div class="detalle-item"><span class="detalle-label">Proveedor</span><span>{{ equipo.proveedor || 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Email</span><span>{{ equipo.email || 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Teléfono</span><span>{{ equipo.telefono || 'N/A' }}</span></div>
-                    <div class="detalle-item"><span class="detalle-label">Fecha Instalación</span><span>{{ equipo.fecha_de_instalacion ? (equipo.fecha_de_instalacion | date: 'dd/MM/yyyy') : 'N/A' }}</span></div>
+                    <div class="detalle-item"><span class="detalle-label">Fecha Instalación</span><span>{{ equipo.fecha_de_instalacion ? (equipo.fecha_de_instalacion | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
                     <div class="detalle-item detalle-item-full"><span class="detalle-label">Alcance Servicio</span><span>{{ equipo.alcance_del_servicio || 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Garantía</span><span>{{ equipo.garantia || 'N/A' }}</span></div>
                     <div class="detalle-item detalle-item-full"><span class="detalle-label">Observaciones</span><span>{{ equipo.observaciones || 'N/A' }}</span></div>
@@ -842,7 +891,7 @@
                         <span *ngIf="!(equipo.codigo_identificador || equipo.codigo_identificacion)">N/A</span>
                       </span>
                     </div>
-                    <div class="detalle-item"><span class="detalle-label">Fecha</span><span>{{ equipo.fecha ? (equipo.fecha | date: 'dd/MM/yyyy') : 'N/A' }}</span></div>
+                    <div class="detalle-item"><span class="detalle-label">Fecha</span><span>{{ equipo.fecha ? (equipo.fecha | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
                   </div>
                 </div>
                 <div *ngSwitchCase="'historial'">
@@ -854,7 +903,7 @@
                             <i class="fas" [ngClass]="historialExpandido[equipo.codigo_identificacion + '_' + registro.consecutivo] ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                             Registro #{{ registro.consecutivo }}
                           </span>
-                          <span class="historial-fecha">{{ registro.fecha ? (registro.fecha | date: 'dd/MM/yyyy') : 'N/A' }}</span>
+                          <span class="historial-fecha">{{ registro.fecha ? (registro.fecha | date: 'yyyy/MM/dd') : 'N/A' }}</span>
                         </div>
                         <div class="historial-body" *ngIf="historialExpandido[equipo.codigo_identificacion + '_' + registro.consecutivo]">
                           <div class="historial-grid">
@@ -893,10 +942,10 @@
                           <div class="historial-grid">
                             <div class="historial-item"><span class="historial-label">Unidad Nominal (g):</span><span>{{ registro.unidad_nominal_g || 'N/A' }}</span></div>
                             <div class="historial-item"><span class="historial-label">Calibración 1:</span><span>{{ registro.calibracion_1 || 'N/A' }}</span></div>
-                            <div class="historial-item"><span class="historial-label">Fecha Cal. 1:</span><span>{{ registro.fecha_c1 ? (registro.fecha_c1 | date: 'dd/MM/yyyy') : 'N/A' }}</span></div>
+                            <div class="historial-item"><span class="historial-label">Fecha Cal. 1:</span><span>{{ registro.fecha_c1 ? (registro.fecha_c1 | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
                             <div class="historial-item"><span class="historial-label">Error Cal. 1 (g):</span><span>{{ registro.error_c1_g || 'N/A' }}</span></div>
                             <div class="historial-item"><span class="historial-label">Calibración 2:</span><span>{{ registro.calibracion_2 || 'N/A' }}</span></div>
-                            <div class="historial-item"><span class="historial-label">Fecha Cal. 2:</span><span>{{ registro.fecha_c2 ? (registro.fecha_c2 | date: 'dd/MM/yyyy') : 'N/A' }}</span></div>
+                            <div class="historial-item"><span class="historial-label">Fecha Cal. 2:</span><span>{{ registro.fecha_c2 ? (registro.fecha_c2 | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
                             <div class="historial-item"><span class="historial-label">Error Cal. 2 (g):</span><span>{{ registro.error_c2_g || 'N/A' }}</span></div>
                             <div class="historial-item"><span class="historial-label">Diferencia Días:</span><span>{{ registro.diferencia_dias || 'N/A' }}</span></div>
                             <div class="historial-item"><span class="historial-label">Desviación:</span><span>{{ registro.desviacion || 'N/A' }}</span></div>

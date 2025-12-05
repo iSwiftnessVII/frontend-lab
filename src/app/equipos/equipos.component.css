@@ -1,3 +1,249 @@
+.compact-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #d0d6dd);
+  color: var(--text-color, #374151);
+  border-radius: 6px; /* less rounded for a more squared look */
+  padding: 6px; /* equal padding for a compact square feel */
+  line-height: 1;
+  cursor: pointer;
+  min-height: 28px;
+  min-width: 28px;
+}
+
+.compact-action:hover {
+  background: var(--hover-bg, #f3f4f6);
+}
+
+.compact-action .action-leading,
+.compact-action .action-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.compact-action .icon-plus,
+.compact-action .icon-caret {
+  fill: currentColor;
+}
+/* Place right controls inside card-name without leaving it */
+.card-name {
+  position: relative;
+}
+.equipos-grid {
+  position: relative; /* create stacking context above page footer */
+  z-index: 1;
+  overflow: visible; /* allow dropdowns to overflow cards */
+}
+
+.equipo-card {
+  position: relative; /* ensure dropdown can stack over siblings */
+  z-index: 2;
+  overflow: visible;
+}
+
+/* When the dropdown is open, lift the whole card above siblings */
+.equipo-card:has(.compact-dropdown[open]) {
+  z-index: 100002;
+}
+
+.equipo-card .compact-dropdown[open] {
+  z-index: 100000; /* force above other cards and footer */
+}
+
+.card-name .name-line {
+  font-weight: 600;
+  padding-right: 280px; /* extra room so it doesn't feel crowded */
+}
+
+.card-name .card-right-controls {
+  position: absolute;
+  top: 50%;
+  right: 12px; /* pull away from the edge */
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px; /* a bit more breathing room */
+  z-index: 3; /* ensure above name-line for clicks */
+}
+.compact-group {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 6px;
+  background: var(--card-bg, #fff);
+  overflow: visible; /* allow dropdown menu to overflow */
+}
+
+.compact-group .pdf-icon-left {
+  border: none;
+  border-right: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 0;
+}
+
+.compact-group .compact-dropdown .compact-action {
+  border: none;
+  border-radius: 0;
+}
+
+.compact-group .compact-dropdown[open] .compact-menu {
+  right: 0;
+}
+.pdf-icon-left {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 6px;
+  background: var(--card-bg, #fff);
+  color: var(--text-color, #374151);
+  pointer-events: none; /* decorative; do not block clicks */
+}
+
+.pdf-icon-left i {
+  font-size: 14px;
+}
+.compact-dropdown {
+  position: relative;
+  display: inline-block;
+  z-index: 100000; /* ensure above other card content */
+}
+
+.compact-dropdown > summary.compact-action {
+  display: inline-flex;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
+}
+
+.compact-dropdown > summary::-webkit-details-marker {
+  display: none;
+}
+
+.compact-dropdown > summary:focus {
+  outline: none;
+}
+
+.compact-dropdown[open] .compact-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* When JS decides the menu should flip, add the 'flip' helper class */
+.compact-dropdown.flip .compact-menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+  transform: translateY(4px);
+}
+
+.compact-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 6px;
+  list-style: none;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 120ms ease, transform 120ms ease;
+  z-index: 100001; /* above everything local */
+}
+
+/* Flip menu upward if near bottom of viewport */
+/* Prefer native position-anchor when available, but the experimental
+   at-rules (@position-fallback/@try) were removed because they break
+   CSS parsing in many build pipelines and browsers. The media-query
+   fallback below handles flipping the menu for older browsers. If
+   you want native anchor positioning later, we can add a feature
+   detection script to apply it at runtime. */
+
+/* Alternative using container query for older browsers */
+.compact-dropdown[open] .compact-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* Fallback: flip to top if parent is in bottom half of screen */
+@media (min-height: 600px) {
+  .equipo-card:nth-last-child(-n+2) .compact-menu,
+  .equipo-card:last-child .compact-menu {
+    top: auto;
+    bottom: calc(100% + 6px);
+    transform: translateY(4px);
+  }
+  
+  .equipo-card:nth-last-child(-n+2) .compact-dropdown[open] .compact-menu,
+  .equipo-card:last-child .compact-dropdown[open] .compact-menu {
+    transform: translateY(0);
+  }
+}
+
+.compact-menu li {
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--text-color, #1f2937);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.compact-menu li:hover {
+  background: var(--hover-bg, #f3f4f6);
+}
+
+.card-name .pdf-uploader .upload-btn {
+  padding: 6px 10px;
+}
+/* Compact type select shows selected label clearly */
+.type-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.type-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 6px;
+  color: var(--text-color, #1f2937);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  padding: 6px 28px 6px 10px; /* room for chevron */
+  min-width: 140px; /* show label without breaking compact look */
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.type-select:focus {
+  outline: none;
+  border-color: var(--primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.chevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted, #6b7280);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
 /* ===== Menú de pestañas para información de equipo ===== */
 .equipo-tabs-menu {
   display: flex;
@@ -843,6 +1089,75 @@ input[readonly] {
   transform: rotate(180deg);
 }
 
+/* ====== Cabecera: nombre + controles derechos ====== */
+.equipo-card .card-header-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.equipo-card .card-header-row .card-name {
+  flex: 1 1 auto;
+}
+
+.equipo-card .card-right-controls {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+/* Control combinado similar a pestaña de navegador para subir PDF */
+.equipo-card .pdf-uploader {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #cfd3da;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.equipo-card .pdf-uploader .upload-btn {
+  all: unset;
+  background: #d9d9d9;
+  color: #1f2030;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  padding: 10px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.equipo-card .pdf-uploader .upload-btn:hover { background: #d3d3d3; }
+
+.equipo-card .pdf-uploader .type-wrap {
+  position: relative;
+  background: #bfbfbf;
+  min-width: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.equipo-card .pdf-uploader .type-wrap .type-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: none;
+  background: transparent;
+
+  width: 44px;
+  height: 100%;
+  cursor: pointer;
+}
+
+.equipo-card .pdf-uploader .type-wrap .chevron {
+  position: absolute;
+  right: 12px;
+  font-size: 18px;
+  color: #1f2030;
+  pointer-events: none;
+}
+
 .equipo-info-principal {
   background: var(--light-gray);
   padding: 1.25rem;
@@ -1316,7 +1631,82 @@ input[readonly] {
   border-radius: 8px;
 }
 
-/* Excluir las pestañas de la regla global de button */
-button:not(.tab-btn) {
-  /* ...estilos globales para otros botones... */
+/* Regla vacía eliminada para evitar lint error */
+
+/* PDF field styles (left of card-right-controls) */
+.pdf-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 500px;
+  margin-right: 10px; /* give space to right controls */
+}
+
+.pdf-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+}
+
+.pdf-select {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 15px;
+  border: none;
+  background: transparent;
+  outline: none;
+}
+
+.btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn.view {
+  background: #e5e7eb;
+}
+
+.btn.delete {
+  background: #ff3b30;
+  color: white;
+}
+
+/* Ensure pdf-field matches the height and alignment of the right controls */
+.card-controls-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-right-controls .pdf-field,
+.card-right-controls .compact-group {
+  min-height: 28px; /* match .compact-action min-height */
+  display: inline-flex;
+  align-items: center;
+}
+
+.card-right-controls .pdf-field {
+  padding: 6px 10px; /* make visually closer to the compact action */
+  border-radius: 6px;
+}
+
+.card-right-controls .pdf-select {
+  font-size: 0.92rem;
+}
+
+/* Style placeholder state for the select to make it visually clearer */
+.pdf-select.placeholder {
+  color: #6b7280; /* slightly muted */
+  font-style: italic;
+}
+
+.pdf-select option[disabled] {
+  color: #6b7280;
 }

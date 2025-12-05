@@ -1,4 +1,4 @@
-import { Component, signal, effect, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, signal, effect, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { equiposService } from '../services/equipos.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { CommonModule } from '@angular/common';
@@ -13,6 +13,9 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class EquiposComponent implements OnInit {
+  // Map to keep references to event handlers for cleanup
+  private _dropdownToggleHandler: EventListener | null = null;
+  private _resizeHandler: EventListener | null = null;
       // API base URL from environment
       API_EQUIPOS = (window as any).__env?.API_EQUIPOS || 'http://localhost:4000/api/equipos';
 
@@ -65,30 +68,8 @@ export class EquiposComponent implements OnInit {
       // Seleccionar pestaña
       async selectTab(codigo: string, tabKey: string) {
         this.activeTab[codigo] = tabKey;
-        // Cargar historial si se selecciona la pestaña y no se ha cargado antes
-        if (tabKey === 'historial' && !this.historialPorEquipo[codigo]) {
-          try {
-            const data = await equiposService.listarHistorialPorEquipo(codigo);
-            this.historialPorEquipo[codigo] = data;
-            this.cdr.detectChanges(); // Forzar actualización
-          } catch (error) {
-            this.snack.warn('Error al cargar historial del equipo');
-            this.historialPorEquipo[codigo] = [];
-            this.cdr.detectChanges();
-          }
-        }
-        // Cargar intervalo si se selecciona la pestaña y no se ha cargado antes
-        if (tabKey === 'intervalo' && !this.intervaloPorEquipo[codigo]) {
-          try {
-            const data = await equiposService.listarIntervaloPorEquipo(codigo);
-            this.intervaloPorEquipo[codigo] = data;
-            this.cdr.detectChanges(); // Forzar actualización
-          } catch (error) {
-            this.snack.warn('Error al cargar intervalo del equipo');
-            this.intervaloPorEquipo[codigo] = [];
-            this.cdr.detectChanges();
-          }
-        }
+        // Los datos ya están precargados, solo cambiar de pestaña
+        this.cdr.detectChanges();
       }
 
     // Formatea una fecha ISO a yyyy-MM-dd para el input type="date"
@@ -98,6 +79,128 @@ export class EquiposComponent implements OnInit {
       const month = (d.getMonth() + 1).toString().padStart(2, '0');
       const day = d.getDate().toString().padStart(2, '0');
       return `${d.getFullYear()}-${month}-${day}`;
+    }
+  
+    // PDF lists per equipo (map keyed by codigo_identificacion)
+    pdfListByEquipo: { [codigo: string]: Array<{ id?: number; name: string; url: string; categoria?: string; size?: number; mime?: string; fecha_subida?: Date | null; displayName?: string }> } = {};
+    selectedPdfByEquipo: { [codigo: string]: string | null } = {};
+
+    async listarPdfs(codigo: string) {
+      try {
+          const data: any[] = await equiposService.listarPdfsPorEquipo(codigo);
+          // Normalize and keep fecha_subida for ordering
+          const items: any[] = (data || []).map(p => ({
+            id: p.id,
+            name: p.nombre_archivo || p.name || 'Archivo',
+            url: p.url_archivo || p.url,
+            categoria: p.categoria,
+            size: p.size_bytes,
+            mime: p.mime,
+            fecha_subida: p.fecha_subida ? new Date(p.fecha_subida) : null
+          }));
+
+          // Sort by fecha_subida ascending so the earliest uploaded is first
+          items.sort((a, b) => {
+            if (!a.fecha_subida && !b.fecha_subida) return 0;
+            if (!a.fecha_subida) return 1;
+            if (!b.fecha_subida) return -1;
+            return a.fecha_subida.getTime() - b.fecha_subida.getTime();
+          });
+
+          // Assign display names by grouping per category and numbering only when there are multiple
+          const groups: { [cat: string]: Array<any> } = {};
+          for (const it of items) {
+            const cat = (it.categoria || '').trim();
+            if (!cat) continue;
+            groups[cat] = groups[cat] || [];
+            groups[cat].push(it);
+          }
+
+          // For each group, sort by fecha_subida (already sorted globally) and assign numbers only if group has more than one
+          for (const cat of Object.keys(groups)) {
+            const group = groups[cat];
+            if (group.length > 1) {
+              for (let i = 0; i < group.length; i++) {
+                group[i].displayName = `${cat} - ${i + 1}`;
+              }
+            } else {
+              group[0].displayName = cat;
+            }
+          }
+
+          // For items without category, fallback to filename
+          for (const it of items) {
+            if (!it.categoria || !it.categoria.toString().trim()) {
+              it.displayName = it.name;
+            }
+          }
+
+          this.pdfListByEquipo[codigo] = items;
+          this.selectedPdfByEquipo[codigo] = this.pdfListByEquipo[codigo]?.[0]?.url || null;
+          this.cdr.detectChanges();
+        } catch (err) {
+          console.warn('Error listando PDFs', err);
+          this.pdfListByEquipo[codigo] = [];
+          this.selectedPdfByEquipo[codigo] = null;
+          this.cdr.detectChanges();
+        }
+    }
+
+    openPdf(codigo: string, event?: Event) {
+      if (event) event.stopPropagation();
+      const url = this.selectedPdfByEquipo[codigo] || this.pdfListByEquipo[codigo]?.[0]?.url;
+      if (!url) {
+        this.snack.warn('No hay PDF seleccionado para ver');
+        return;
+      }
+      window.open(url, '_blank');
+    }
+
+    async deletePdf(codigo: string, event?: Event) {
+      if (event) event.stopPropagation();
+      const url = this.selectedPdfByEquipo[codigo];
+      if (!url) {
+        this.snack.warn('Seleccione un PDF para eliminar');
+        return;
+      }
+      const item = (this.pdfListByEquipo[codigo] || []).find(p => p.url === url);
+      if (!item || !item.id) {
+        this.snack.warn('No se encontró el PDF para eliminar');
+        return;
+      }
+
+      const confirmMsg = `¿Eliminar "${item.name}"? Esta acción no se puede deshacer.`;
+      if (!window.confirm(confirmMsg)) return;
+
+      try {
+        await equiposService.eliminarPdf(item.id);
+        this.snack.success('PDF eliminado');
+        await this.listarPdfs(codigo);
+      } catch (err: any) {
+        console.error('Error eliminando PDF', err);
+        this.snack.error(err.message || 'Error al eliminar PDF');
+      }
+    }
+
+    // Start upload flow: open file picker and upload selected PDF with given category
+    iniciarUpload(codigo: string, categoria: string, event?: Event) {
+      if (event) event.stopPropagation();
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/pdf';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        try {
+          await equiposService.subirPdfEquipo(codigo, categoria, file);
+          this.snack.success('PDF subido correctamente');
+          await this.listarPdfs(codigo);
+        } catch (err: any) {
+          console.error('Error subiendo PDF', err);
+          this.snack.error(err.message || 'Error al subir PDF');
+        }
+      };
+      input.click();
     }
   // Variable para controlar el formulario activo
   formularioActivo: string | null = null;
@@ -278,6 +381,27 @@ export class EquiposComponent implements OnInit {
     console.log('🎯 EquiposComponent inicializado - cargando equipos...');
     // Cargar equipos al inicializar el componente
     this.obtenerEquiposRegistrados();
+    // Attach dropdown flip handlers: use event delegation for details 'toggle'
+    this._dropdownToggleHandler = (evt: Event) => {
+      const target = evt.target as HTMLElement;
+      if (!target) return;
+      if (target.classList && target.classList.contains('compact-dropdown')) {
+        this._adjustDropdown(target as HTMLDetailsElement);
+      }
+    };
+    document.addEventListener('toggle', this._dropdownToggleHandler, true);
+
+    this._resizeHandler = () => {
+      // Adjust any open dropdowns on resize
+      const openDropdowns = Array.from(document.querySelectorAll('.compact-dropdown[open]')) as HTMLElement[];
+      for (const d of openDropdowns) this._adjustDropdown(d as HTMLDetailsElement);
+    };
+    window.addEventListener('resize', this._resizeHandler);
+  }
+
+  ngOnDestroy(): void {
+    if (this._dropdownToggleHandler) document.removeEventListener('toggle', this._dropdownToggleHandler, true);
+    if (this._resizeHandler) window.removeEventListener('resize', this._resizeHandler);
   }
 
   // (Implementaciones reales al final del archivo)
@@ -319,6 +443,35 @@ export class EquiposComponent implements OnInit {
           );
       }
     });
+  }
+
+  // Adjust dropdown position by adding/removing the 'flip' class
+  private _adjustDropdown(details: HTMLDetailsElement) {
+    try {
+      const menu = details.querySelector('.compact-menu') as HTMLElement | null;
+      if (!menu) return;
+      // Ensure menu is visible to compute size
+      // If details is closed, nothing to do
+      if (!details.open) {
+        details.classList.remove('flip');
+        return;
+      }
+
+      const rect = menu.getBoundingClientRect();
+      const margin = 8; // small margin from viewport edge
+      const overBottom = rect.bottom > (window.innerHeight - margin);
+      const overTop = rect.top < margin;
+
+      if (overBottom && !overTop) {
+        details.classList.add('flip');
+      } else if (overTop && !overBottom) {
+        details.classList.add('flip');
+      } else {
+        details.classList.remove('flip');
+      }
+    } catch (err) {
+      // silent
+    }
   }
 
   // Función para cambiar el tipo de filtro
@@ -399,6 +552,43 @@ export class EquiposComponent implements OnInit {
     try {
       const equipos = await equiposService.listarEquipos();
       console.log('✅ Equipos recibidos del servicio:', equipos);
+      
+      // Precargar historial e intervalo para todos los equipos
+      await Promise.all(equipos.map(async (equipo: any) => {
+        const codigo = equipo.codigo_identificacion;
+        try {
+          const [historial, intervalo] = await Promise.all([
+            equiposService.listarHistorialPorEquipo(codigo),
+            equiposService.listarIntervaloPorEquipo(codigo)
+          ]);
+          this.historialPorEquipo[codigo] = historial;
+          this.intervaloPorEquipo[codigo] = intervalo;
+          // Inicializar lista de PDFs por equipo (si el backend devuelve un campo `pdfs`),
+          // si no existen, consultamos el servicio específico
+          if (equipo.pdfs && equipo.pdfs.length) {
+            this.pdfListByEquipo[codigo] = (equipo.pdfs || []).map((p: any) => ({ id: p.id, name: p.nombre_archivo || p.name || 'Archivo', url: p.url_archivo || p.url, categoria: p.categoria }));
+            this.selectedPdfByEquipo[codigo] = this.pdfListByEquipo[codigo]?.[0]?.url || null;
+            // Ensure displayName numbering is applied for initial data
+            this.computePdfDisplayNames(codigo);
+          } else {
+            try {
+              const pdfsData: any[] = await equiposService.listarPdfsPorEquipo(codigo);
+              this.pdfListByEquipo[codigo] = (pdfsData || []).map(p => ({ id: p.id, name: p.nombre_archivo || p.name || 'Archivo', url: p.url_archivo || p.url, categoria: p.categoria, fecha_subida: p.fecha_subida }));
+              // Normalize display names/numbering
+              this.computePdfDisplayNames(codigo);
+              this.selectedPdfByEquipo[codigo] = this.pdfListByEquipo[codigo]?.[0]?.url || null;
+            } catch (err) {
+              this.pdfListByEquipo[codigo] = [];
+              this.selectedPdfByEquipo[codigo] = null;
+            }
+          }
+        } catch (error) {
+          console.warn(`Error al precargar datos para equipo ${codigo}:`, error);
+          this.historialPorEquipo[codigo] = [];
+          this.intervaloPorEquipo[codigo] = [];
+        }
+      }));
+      
       // Aseguramos que cada equipo tenga todos los campos necesarios para la visualización
       this.equiposRegistrados = equipos.map((equipo: any) => ({
         codigo_identificacion: equipo.codigo_identificacion,
@@ -473,6 +663,52 @@ export class EquiposComponent implements OnInit {
       this.cdr.detectChanges(); // Forzar detección de cambios
       console.log('✅ Estado cargandoEquipos después de finally:', this.cargandoEquipos);
     }
+  }
+
+  // Compute displayName for pdfListByEquipo[codigo]: if multiple files share the same category,
+  // append numbering like 'Categoria - 1', otherwise show just the category. Fallback to filename.
+  computePdfDisplayNames(codigo: string) {
+    const items = this.pdfListByEquipo[codigo] || [];
+    if (!items.length) return;
+
+    // Ensure fecha_subida is Date where present
+    for (const it of items) {
+      if (it.fecha_subida && !(it.fecha_subida instanceof Date)) {
+        try { it.fecha_subida = new Date(it.fecha_subida); } catch { it.fecha_subida = null; }
+      }
+    }
+
+    // Maintain current order (or by fecha_subida if present)
+    items.sort((a: any, b: any) => {
+      if (a.fecha_subida && b.fecha_subida) return new Date(a.fecha_subida).getTime() - new Date(b.fecha_subida).getTime();
+      return 0; // keep existing order
+    });
+
+    const groups: { [cat: string]: any[] } = {};
+    for (const it of items) {
+      const cat = (it.categoria || '').toString().trim();
+      if (!cat) continue;
+      groups[cat] = groups[cat] || [];
+      groups[cat].push(it);
+    }
+
+    for (const cat of Object.keys(groups)) {
+      const group = groups[cat];
+      if (group.length > 1) {
+        for (let i = 0; i < group.length; i++) {
+          group[i].displayName = `${cat} - ${i + 1}`;
+        }
+      } else {
+        group[0].displayName = cat;
+      }
+    }
+
+    for (const it of items) {
+      if (!it.categoria || !it.categoria.toString().trim()) it.displayName = it.name;
+    }
+
+    // write back
+    this.pdfListByEquipo[codigo] = items;
   }
 
   // Método para crear ficha técnica
@@ -667,6 +903,17 @@ export class EquiposComponent implements OnInit {
     if (!consecutivo || !equipo_id) {
       this.snack.warn('Debe seleccionar un equipo y tener un consecutivo válido');
       return;
+    }
+    // Validation: fecha_c2 cannot be earlier than fecha_c1
+    if (this.fecha_c1 && this.fecha_c2) {
+      const f1 = new Date(this.fecha_c1);
+      const f2 = new Date(this.fecha_c2);
+      f1.setHours(0,0,0,0);
+      f2.setHours(0,0,0,0);
+      if (f2 < f1) {
+        this.snack.warn('La fecha de calibración 2 no puede ser anterior a la fecha de calibración 1');
+        return;
+      }
     }
     
     try {

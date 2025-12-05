@@ -506,7 +506,7 @@ select:disabled { background-color: #f5f7fb; color: #9aa4b2; cursor: not-allowed
 /* =====================================================
    BUTTONS
    ===================================================== */
-.liba-theme button:not(.pdf-btn):not(.eliminar):not(.tab-btn) {
+.liba-theme button:not(.pdf-btn):not(.eliminar):not(.tab-btn):not(.pdf-action) {
 	background: linear-gradient(135deg, var(--primary-turquoise) 0%, #009a98 100%);
 	color: var(--primary-white);
 	padding: 0.8rem 1.5rem;
@@ -524,7 +524,7 @@ select:disabled { background-color: #f5f7fb; color: #9aa4b2; cursor: not-allowed
 	overflow: hidden;
 }
 
-.liba-theme button:not(.pdf-btn):not(.eliminar):not(.tab-btn)::before {
+.liba-theme button:not(.pdf-btn):not(.eliminar):not(.tab-btn):not(.pdf-action)::before {
 	content: '';
 	position: absolute;
 	top: 50%;
@@ -537,18 +537,18 @@ select:disabled { background-color: #f5f7fb; color: #9aa4b2; cursor: not-allowed
 	transition: width 0.6s, height 0.6s;
 }
 
-.liba-theme button:not(.pdf-btn):not(.eliminar):not(.tab-btn):hover::before {
+.liba-theme button:not(.pdf-btn):not(.eliminar):not(.tab-btn):not(.pdf-action):hover::before {
 	width: 300px;
 	height: 300px;
 }
 
-.liba-theme button:not(.pdf-btn):not(.eliminar):not(.tab-btn):hover {
+.liba-theme button:not(.pdf-btn):not(.eliminar):not(.tab-btn):not(.pdf-action):hover {
 	background: linear-gradient(135deg, #009a98 0%, var(--primary-turquoise) 100%);
 	transform: translateY(-2px);
 	box-shadow: 0 6px 20px rgba(0, 184, 181, 0.4);
 }
 
-.liba-theme button:not(.pdf-btn):not(.eliminar):not(.tab-btn):active {
+.liba-theme button:not(.pdf-btn):not(.eliminar):not(.tab-btn):not(.pdf-action):active {
 	transform: translateY(0);
 	
 }

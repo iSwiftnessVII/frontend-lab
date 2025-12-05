@@ -67,9 +67,10 @@ export class UtilsService {
     try {
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleString(undefined, {
-        year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
-      });
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}/${month}/${day}`;
     } catch (e) {
       return dateStr;
     }

@@ -188,6 +188,60 @@ export const equiposService = {
     return await res.json();
   },
 
+  // PDFs por equipo
+  async listarPdfsPorEquipo(codigo: string) {
+    const res = await fetch(`${API}/pdfs/${encodeURIComponent(codigo)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      }
+    });
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'Error listando PDFs');
+    // Normalize urls to be absolute if backend returns relative
+    if (Array.isArray(data)) {
+      data = data.map((p: any) => {
+        // Build a download URL that streams the blob: /api/equipos/pdfs/download/:id
+        try {
+          const base = (window as any).__env?.API_EQUIPOS || API;
+          p.url_archivo = `${base.replace(/\/$/, '')}/pdfs/download/${p.id}`;
+        } catch (e) { p.url_archivo = null; }
+        return p;
+      });
+    }
+    return data;
+  },
+
+  async subirPdfEquipo(codigo: string, categoria: string, file: File) {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('categoria', categoria);
+    const res = await fetch(`${API}/pdfs/${encodeURIComponent(codigo)}`, {
+      method: 'POST',
+      headers: {
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      },
+      body: fd
+    });
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'Error al subir PDF');
+    return data;
+  },
+
+  async eliminarPdf(id: number) {
+    const res = await fetch(`${API}/pdfs/${encodeURIComponent(String(id))}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      }
+    });
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'Error al eliminar PDF');
+    return data;
+  },
+
   // Eliminar equipo por código
   async eliminarEquipo(codigo: string) {
     const res = await fetch(`${API}/${encodeURIComponent(codigo)}`, {
