@@ -272,6 +272,18 @@
   z-index: 1;
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
+
+.tab-count {
+  display: inline-block;
+  background: #28a745;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.08rem 0.45rem;
+  border-radius: 999px;
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  vertical-align: middle;
+}
 .tab-btn.active {
   background: #fff;
   color: var(--primary-blue);

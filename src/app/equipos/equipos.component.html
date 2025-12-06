@@ -774,6 +774,7 @@
           <div class="equipo-tabs-menu">
             <button type="button" class="tab-btn" *ngFor="let tab of equipoTabs" [class.active]="activeTab[equipo.codigo_identificacion] === tab.key" (click)="selectTab(equipo.codigo_identificacion, tab.key); $event.stopPropagation()">
               {{ tab.label }}
+              <span *ngIf="tab.key === 'historial' || tab.key === 'intervalo'" class="tab-count" aria-hidden="true">{{ getTabCount(equipo, tab.key) }}</span>
             </button>
           </div>
           <div class="equipo-info-card" [attr.aria-labelledby]="'info-equipo-title-' + equipo.codigo_identificacion" (click)="$event.stopPropagation()">

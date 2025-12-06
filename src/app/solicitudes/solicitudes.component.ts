@@ -1,4 +1,4 @@
-import { Component, signal, OnDestroy, OnInit, ViewEncapsulation, inject } from '@angular/core';
+import { Component, signal, effect, EffectRef, OnDestroy, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -139,6 +139,17 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   // Estado de carga local (para mostrar skeletons)
   cargando = signal<boolean>(true);
 
+  // Oferta: display string for formatted input
+  ofertaValorDisplay: string = '';
+  // Keep the last valid raw display to restore when input exceeds limits
+  private ofertaValorPrevDisplay: string = '';
+  // Error message to show under the oferta valor input
+  ofertaValorError: string = '';
+
+  // Efectos (disponibles para limpiar en ngOnDestroy)
+  private clientesEffectStop?: EffectRef;
+  private solicitudesEffectStop?: EffectRef;
+
   // Opciones para selects
   tiposCliente = [
     'Emprendedor',
@@ -235,10 +246,24 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     this.loadInitialData();
     this.filtrarClientes();
     this.filtrarSolicitudes();
+
+    // Efectos: cuando los signals de los servicios cambien, re-filtramos automáticamente
+    this.clientesEffectStop = effect(() => {
+      this.clientes(); // subscribir
+      this.filtrarClientes();
+    });
+
+    this.solicitudesEffectStop = effect(() => {
+      this.solicitudes(); // subscribir
+      this.filtrarSolicitudes();
+      try { this.computeNextSolicitudConsecutivo(); } catch (e) { console.warn('computeNextSolicitudConsecutivo effect error', e); }
+    });
   }
 
   ngOnDestroy() {
     console.log('🔴 Solicitudes component: Destruyendo...');
+    try { if (this.clientesEffectStop) this.clientesEffectStop.destroy(); } catch {}
+    try { if (this.solicitudesEffectStop) this.solicitudesEffectStop.destroy(); } catch {}
   }
 
   private async loadInitialData(): Promise<void> {
@@ -252,8 +277,9 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       // If no solicitud cliente selected, default to first cliente for new solicitudes
       const firstClient = (this.clientes() || [])[0];
       if (firstClient) {
+        // Keep selectedCliente for autofill helpers, but do NOT preselect the client in the "Agregar solicitud" form.
+        // The placeholder should be shown instead of forcing the first client selection.
         this.selectedCliente.set(firstClient);
-        if (!this.solicitudClienteId) this.solicitudClienteId = firstClient.id_cliente || firstClient.id || null;
       }
 
       // Preload ciudades for all departamentos present among clients
@@ -301,9 +327,9 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
         if (!isNaN(n) && n > maxId) maxId = n;
       }
       const siguiente = maxId + 1;
-      if (!this.solicitudConsecutivo || Number(this.solicitudConsecutivo) < siguiente) {
-        this.solicitudConsecutivo = siguiente;
-      }
+      // Siempre actualizar el consecutivo para reflejar el estado actual de la base de datos.
+      // Esto evita que el contador se quede en un valor anterior cuando se borran todas las solicitudes.
+      this.solicitudConsecutivo = siguiente;
     } catch (err) {
       console.warn('computeNextSolicitudConsecutivo error', err);
     }
@@ -845,6 +871,8 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
       // Reload solicitudes from server to get canonical IDs and joined data
       await this.loadSolicitudes();
+      // Ensure consecutivo is recalculated after the fresh data is loaded
+      try { this.computeNextSolicitudConsecutivo(); } catch (e) { console.warn('Error computing consecutivo after createSolicitud load', e); }
       // Try to locate the created solicitud. Prefer ID from response, otherwise match by client + nombre_muestra + fecha_solicitud
       let created = null;
       const nidFromResp = Number(nuevo?.solicitud_id ?? nuevo?.id_solicitud ?? nuevo?.id ?? nuevo?.insertId ?? 0);
@@ -959,6 +987,14 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.snackbarService.success('✅ Resultados registrados exitosamente');
       this.resultadoErrors = {};
 
+      // Optimistic UX: expand card and show 'revision' tab with fresh data
+      const sid = Number(this.resultadoSolicitudId);
+      if (sid) {
+        this.activeSolicitudTab[sid] = 'revision';
+        this.solicitudExpandida = sid;
+        this.filtrarSolicitudes();
+      }
+
       this.limpiarFormularioResultado();
 
     } catch (err: any) {
@@ -1023,6 +1059,10 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     try {
       await this.clientesService.deleteCliente(id);
       this.snackbarService.success('✅ Cliente eliminado exitosamente');
+      try {
+        const next = this.clientesFiltrados().filter(c => Number(c.id_cliente || c.id || c.cliente_id) !== Number(id));
+        this.clientesFiltrados.set(next);
+      } catch (e) { console.warn('Error actualizando clientesFiltrados tras deleteCliente', e); }
     } catch (err: any) {
       console.error('deleteCliente', err);
       this.manejarError(err, 'eliminar cliente');
@@ -1041,6 +1081,11 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     try {
       await this.solicitudesService.deleteSolicitud(id);
       this.snackbarService.success('✅ Solicitud eliminada exitosamente');
+      try {
+        const next = this.solicitudesFiltradas().filter(s => Number(s.solicitud_id || s.id_solicitud || s.id) !== Number(id));
+        this.solicitudesFiltradas.set(next);
+      } catch (e) { console.warn('Error actualizando solicitudesFiltradas tras deleteSolicitud', e); }
+      try { this.computeNextSolicitudConsecutivo(); } catch (e) { console.warn('Error computing consecutivo after delete', e); }
     } catch (err: any) {
       console.error('deleteSolicitud', err);
       this.manejarError(err, 'eliminar solicitud');
@@ -1122,7 +1167,8 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   }
 
   private limpiarFormularioSolicitud(): void {
-    this.solicitudClienteId = null;
+    // Reset to empty string so the <select> shows the placeholder option (value="").
+    this.solicitudClienteId = '';
     this.solicitudNombre = '';
     this.solicitudTipo = '';
     this.solicitudLote = '';
@@ -1150,10 +1196,12 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     this.ofertaFechaEnvio = '';
     this.ofertaRealizoSeguimiento = false;
     this.ofertaObservacion = '';
+    this.ofertaValorDisplay = '';
   }
 
   private limpiarFormularioResultado(): void {
-    this.resultadoSolicitudId = null;
+    // Reset to empty string so the select shows its placeholder option
+    this.resultadoSolicitudId = '';
     this.resultadoFechaLimite = '';
     this.resultadoFechaEnvio = '';
     this.resultadoServicioViable = false;
@@ -1707,6 +1755,112 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   formatValue(val: any): string {
     return this.utilsService.formatValue(val);
+  }
+
+  formatCurrency(val: any): string {
+    return this.utilsService.formatCurrency(val);
+  }
+
+  // Indica si la pestaña para una solicitud ya tiene datos completados
+  hasTabCompleted(solicitud: any, tabKey: string): boolean {
+    if (!solicitud) return false;
+    switch ((tabKey || '').toString()) {
+      case 'oferta': {
+        const gen = solicitud.genero_cotizacion;
+        const val = solicitud.valor_cotizacion;
+        if (gen === 1 || gen === true) return true;
+        if (val !== null && val !== undefined && String(val).trim() !== '') return true;
+        return false;
+      }
+      case 'revision': {
+        if (solicitud.fecha_limite_entrega) return true;
+        if (solicitud.fecha_envio_resultados) return true;
+        if (solicitud.servicio_es_viable === 1 || solicitud.servicio_es_viable === true) return true;
+        return false;
+      }
+      case 'encuesta': {
+        if (solicitud.fecha_encuesta) return true;
+        if (solicitud.comentarios) return true;
+        if (solicitud.recomendaria_servicio === 1 || solicitud.recomendaria_servicio === true) return true;
+        if (solicitud.cliente_respondio === 1 || solicitud.cliente_respondio === true) return true;
+        if (solicitud.solicito_nueva_encuesta === 1 || solicitud.solicito_nueva_encuesta === true) return true;
+        return false;
+      }
+      default:
+        return false;
+    }
+  }
+
+  onOfertaValorInput(value: string): void {
+    // Reject letters immediately: if user types letters, restore previous and show error
+    if (/[A-Za-zÀ-ÖØ-öø-ÿ]/.test(String(value || ''))) {
+      this.ofertaValorError = 'Solo se permiten números y separador decimal';
+      this.ofertaValorDisplay = this.ofertaValorPrevDisplay;
+      return;
+    }
+
+    this.ofertaValorError = '';
+
+    // Keep user's raw input in the display while typing to avoid cursor jumps,
+    // but enforce a maximum of 13 integer digits and up to 2 decimal digits.
+    let raw = String(value || '').replace(/[^0-9,.,-]/g, '').trim();
+    // Normalize comma to dot for decimal parsing
+    raw = raw.replace(/,/g, '.');
+
+    // Determine last dot as decimal separator (if any)
+    const lastDot = raw.lastIndexOf('.');
+    let intPart = '';
+    let decPart = '';
+    if (lastDot === -1) {
+      // No decimal separator; remove any stray dots used as thousand separators
+      intPart = raw.replace(/\./g, '');
+    } else {
+      intPart = raw.slice(0, lastDot).replace(/\./g, '');
+      decPart = raw.slice(lastDot + 1).replace(/\./g, '');
+    }
+
+    // Enforce limits: if exceeded, reject the new input and restore previous valid display
+    if (intPart.length > 13 || decPart.length > 2) {
+      // Restore previous valid entry (prevent typing extra digits)
+      this.ofertaValorError = 'Máx. 13 enteros y 2 decimales';
+      this.ofertaValorDisplay = this.ofertaValorPrevDisplay;
+      return;
+    }
+
+    // Reconstruct normalized value without thousands separators to keep typing stable
+    const normalized = decPart ? `${intPart}.${decPart}` : intPart;
+
+    // Update internal numeric value
+    if (normalized === '' || normalized === '.') {
+      this.ofertaValor = null as any;
+      this.ofertaValorDisplay = '';
+      this.ofertaValorPrevDisplay = '';
+      this.ofertaValorError = '';
+    } else {
+      const num = Number(normalized);
+      this.ofertaValor = isNaN(num) ? null as any : num;
+      // Show unformatted numeric string while typing to avoid cursor jumps
+      this.ofertaValorDisplay = decPart ? `${intPart}.${decPart}` : intPart;
+      this.ofertaValorPrevDisplay = this.ofertaValorDisplay;
+      this.ofertaValorError = '';
+    }
+  }
+
+  onOfertaValorFocus(): void {
+    // When focusing, show the raw numeric value (no formatting) to allow smooth editing
+    if (this.ofertaValor !== null && this.ofertaValor !== undefined) {
+      // Use plain number string without thousands separators
+      this.ofertaValorDisplay = String(this.ofertaValor);
+    }
+  }
+
+  onOfertaValorBlur(): void {
+    // When leaving the field, show formatted currency for clarity
+    if (this.ofertaValor !== null && this.ofertaValor !== undefined && !isNaN(Number(this.ofertaValor))) {
+      this.ofertaValorDisplay = this.formatCurrency(this.ofertaValor);
+    } else {
+      this.ofertaValorDisplay = '';
+    }
   }
 
   // Control de formularios (mostrar/ocultar desde las tarjetas de acción)

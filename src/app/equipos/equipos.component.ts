@@ -474,6 +474,22 @@ export class EquiposComponent implements OnInit {
     }
   }
 
+  // Devuelve el número de registros asociados a una pestaña (historial/intervalo)
+  getTabCount(equipo: any, tabKey: string): number {
+    if (!equipo || !tabKey) return 0;
+    const codigo = equipo.codigo_identificacion || equipo.codigo_identificador || equipo.codigo || equipo.id;
+    if (!codigo) return 0;
+    if (tabKey === 'historial') {
+      const arr = this.historialPorEquipo[codigo];
+      return Array.isArray(arr) ? arr.length : 0;
+    }
+    if (tabKey === 'intervalo') {
+      const arr = this.intervaloPorEquipo[codigo];
+      return Array.isArray(arr) ? arr.length : 0;
+    }
+    return 0;
+  }
+
   // Función para cambiar el tipo de filtro
   cambiarTipoFiltro(tipo: string) {
     this.tipoFiltro = tipo;

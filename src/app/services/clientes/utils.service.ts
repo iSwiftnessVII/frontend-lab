@@ -84,4 +84,22 @@ export class UtilsService {
     }
     return val.toString();
   }
+
+  formatCurrency(val: any): string {
+    if (val === null || val === undefined || val === '') return '-';
+    try {
+      let num: number;
+      if (typeof val === 'number') num = val;
+      else {
+        const cleaned = String(val).replace(/[^0-9,.-]/g, '').replace(/,/g, '.');
+        num = parseFloat(cleaned);
+      }
+      if (isNaN(num)) return String(val);
+      // Use 'es-CO' locale to get '.' as thousands separator and ',' as decimals
+      const formatted = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 2 }).format(num);
+      return '$ ' + formatted;
+    } catch (e) {
+      return String(val);
+    }
+  }
 }
