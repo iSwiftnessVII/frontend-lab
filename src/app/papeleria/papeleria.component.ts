@@ -84,6 +84,26 @@ export class PapeleriaComponent implements OnInit {
   // Estado para skeletons
   readonly skeletonPapeleria = Array.from({ length: 6 });
 
+  // Control de cual formulario rápido está abierto (null = ninguno)
+  formularioActivo: string | null = null;
+
+  // Alterna el formulario activo; si se abre 'crear-papeleria' intenta hacer scroll y focus
+  toggleFormulario(tipo: string) {
+    const opening = this.formularioActivo !== tipo;
+    this.formularioActivo = opening ? tipo : null;
+    if (opening && tipo === 'crear-papeleria') {
+      setTimeout(() => {
+        try {
+          if (this.papFormSection) {
+            this.papFormSection.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const first = this.papFormSection.nativeElement.querySelector('input, textarea, select') as HTMLElement | null;
+            if (first) first.focus();
+          }
+        } catch (e) { /* ignore */ }
+      }, 60);
+    }
+  }
+
   // ===== FILTROS INVENTARIO =====
   readonly invItemFiltro = signal<string>('');
   readonly invNombreFiltro = signal<string>('');

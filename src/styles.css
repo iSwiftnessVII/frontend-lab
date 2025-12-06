@@ -1,5 +1,6 @@
 /* Fonts and icons loaded globally via index.html */
 @import url('./app/shared/inventory-cards.css');
+@import url('./app/shared/dashboard-cards.css');
 [data-theme] .details-grid,
 .details-grid {
 	display: grid;

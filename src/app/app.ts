@@ -19,12 +19,16 @@ export class App implements OnDestroy {
   readonly inventoryMenuOpen = signal(false);
   readonly currentYear = new Date().getFullYear();
   readonly isNavigating = signal(false);
+  // whether footer should be shown because page needs scrolling
+  readonly footerNeeded = signal<boolean>(false);
   
   // NUEVO: Signals para los menús seleccionados
   readonly selectedInventory = signal<string | null>(null);
   readonly selectedAnalysis = signal<string | null>(null);
   
   private routerSub?: any;
+  private resizeHandler?: () => void;
+  private routeEndHandler?: () => void;
   private handleSelectClickRef = (ev: Event) => this.handleSelectClick(ev);
   private handleSelectFocusOutRef = (ev: FocusEvent) => this.handleSelectFocusOut(ev);
   private handleSelectKeydownRef = (ev: KeyboardEvent) => this.handleSelectKeydown(ev);
@@ -58,11 +62,14 @@ export class App implements OnDestroy {
     this.setSelectionsFromRoute(this.router.url);
     
     // NUEVO: Suscribirse a cambios de ruta para actualizar automáticamente
-    this.router.events.subscribe(event => {
+        (this as any)._footerRouterSub = this.router.events.subscribe((event: any) => {
       if (event instanceof NavigationEnd) {
         this.setSelectionsFromRoute(event.url);
       }
     });
+
+    // Setup footer visibility detection (show footer only when page is scrollable)
+    this.setupFooterDetection();
   }
 
   // NUEVO: Método para detectar automáticamente las selecciones desde la ruta
@@ -296,10 +303,51 @@ export class App implements OnDestroy {
     try { document.removeEventListener('focusout', this.handleSelectFocusOutRef, true); } catch {}
     try { document.removeEventListener('keydown', this.handleSelectKeydownRef, true); } catch {}
     try { this.routerSub?.unsubscribe?.(); } catch {}
+    try { window.removeEventListener('resize', this.resizeHandler!); } catch {}
+    try { (this as any)._footerMutationObserver?.disconnect?.(); } catch {}
+    try { (this as any)._footerRouterSub?.unsubscribe?.(); } catch {}
   }
-
   showFooter(): boolean {
     const url = this.router.url || '';
-    return !url.startsWith('/login') && !url.startsWith('/register') && !url.startsWith('/forgot');
+    // Only show footer on non-auth routes and when page requires scrolling
+    const routeOk = !url.startsWith('/login') && !url.startsWith('/register') && !url.startsWith('/forgot');
+    return routeOk && this.footerNeeded();
+  }
+
+  // Observe page size and update `footerNeeded` whenever content height changes
+  private setupFooterDetection(): void {
+    const recompute = () => {
+      try {
+        const needs = (typeof window !== 'undefined' && typeof document !== 'undefined')
+          ? (document.body.scrollHeight > window.innerHeight)
+          : false;
+        this.footerNeeded.set(!!needs);
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    // Initial check after small delay to let view render
+    setTimeout(recompute, 120);
+
+    // Recompute on window resize
+    this.resizeHandler = () => recompute();
+    window.addEventListener('resize', this.resizeHandler);
+
+    // Also recompute after navigation end (content changed)
+    this.router.events.subscribe(ev => {
+      if (ev instanceof NavigationEnd) {
+        // give route a moment to render
+        setTimeout(recompute, 80);
+      }
+    });
+
+    // MutationObserver to detect content changes that affect height
+    try {
+      const mo = new MutationObserver(() => recompute());
+      mo.observe(document.body, { childList: true, subtree: true, attributes: true });
+      // store on this for potential cleanup (not strictly necessary)
+      (this as any)._footerMutationObserver = mo;
+    } catch (e) {}
   }
 }

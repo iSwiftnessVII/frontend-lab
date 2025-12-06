@@ -63,7 +63,22 @@ export class LocationsService {
       
       const data = await res.json();
       const arr = Array.isArray(data) ? data : (data.rows || data.data || []);
-      this._ciudades.set(arr);
+      // If departamentoCodigo provided, merge into existing ciudades list to avoid overwriting
+      if (departamentoCodigo) {
+        const existing = this._ciudades();
+        const map = new Map<string, any>();
+        for (const c of existing || []) {
+          const key = String(c.codigo || c.id || c.codigo_ciudad || c.id_ciudad || c.code || c.value || '').trim();
+          if (key) map.set(key, c);
+        }
+        for (const c of arr || []) {
+          const key = String(c.codigo || c.id || c.codigo_ciudad || c.id_ciudad || c.code || c.value || '').trim();
+          if (key && !map.has(key)) map.set(key, c);
+        }
+        this._ciudades.set(Array.from(map.values()));
+      } else {
+        this._ciudades.set(arr);
+      }
     } catch (err) {
       console.error('Error cargando ciudades', err);
       throw err;

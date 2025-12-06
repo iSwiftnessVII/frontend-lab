@@ -73,6 +73,8 @@ export class ReactivosComponent implements OnInit {
   reactivoSeleccionado: any = null;
   mostrarDetalles: boolean = false;
   private expandedLotes = new Set<string>();
+  // Control which form is currently active via dashboard action cards
+  formularioActivo: string | null = null;
   
   ngOnInit() {
     // Ejecutar inicialización al montar el componente
@@ -214,6 +216,11 @@ export class ReactivosComponent implements OnInit {
   }
 
   constructor(private sanitizer: DomSanitizer, private cdr: ChangeDetectorRef, public snack: SnackbarService) {}
+
+  toggleFormulario(tipo: string) {
+    this.formularioActivo = this.formularioActivo === tipo ? null : tipo;
+    try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
+  }
 
   async init() {
     try {

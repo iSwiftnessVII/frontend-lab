@@ -4,6 +4,30 @@
     | Solicitudes
   </h1>
   
+  <div class="dashboard-cards">
+    <div class="action-card" (click)="toggleFormulario('cliente')" [class.active]="formularioActivo === 'cliente'">
+      <i class="fas fa-user-plus"></i>
+      <span>Agregar Cliente</span>
+    </div>
+    <div class="action-card" (click)="toggleFormulario('solicitud')" [class.active]="formularioActivo === 'solicitud'">
+      <i class="fas fa-clipboard-list"></i>
+      <span>Agregar Solicitud</span>
+    </div>
+    <div class="action-card" (click)="toggleFormulario('oferta')" [class.active]="formularioActivo === 'oferta'">
+      <i class="fas fa-hand-holding-dollar"></i>
+      <span>Registrar Oferta</span>
+    </div>
+    <div class="action-card" (click)="toggleFormulario('revision')" [class.active]="formularioActivo === 'revision'">
+      <i class="fas fa-check-double"></i>
+      <span>Registrar Revisión</span>
+    </div>
+    <div class="action-card" (click)="toggleFormulario('encuesta')" [class.active]="formularioActivo === 'encuesta'">
+      <i class="fas fa-star"></i>
+      <span>Seguimiento Encuesta</span>
+    </div>
+  </div>
+
+  @if (formularioActivo === 'cliente') {
   <h2>Agregar cliente</h2>
   
   <!-- SECCIÓN: Agregar cliente -->
@@ -293,8 +317,10 @@
       </div>
     </form>
   </section>
-
+  }
+  
   <!-- SECCIÓN: AGREGAR SOLICITUD-->
+  @if (formularioActivo === 'solicitud') {
   <h2>Agregar solicitud</h2>
   <section>
     <form (submit)="createSolicitud($event)">
@@ -310,7 +336,8 @@
         <!-- Cliente -->
         <div class="form-field">
           <label for="solicitudClienteId">Cliente:</label>
-          <select id="solicitudClienteId" [(ngModel)]="solicitudClienteId" name="solicitudClienteId" required
+            <select id="solicitudClienteId" [(ngModel)]="solicitudClienteId" name="solicitudClienteId" required
+            (ngModelChange)="onSelectSolicitudCliente($event)"
             [class.error]="solicitudErrors['clienteId']">
             <option value="">Seleccionar cliente</option>
             @for (u of clientes(); track u.id_cliente) {
@@ -511,8 +538,8 @@
 
         <!-- Solicitud recibida -->
         <div class="form-field">
-          <label for="solicitudRecibida">Solicitud recibida por:</label>
-          <input id="solicitudRecibida" [(ngModel)]="solicitudRecibida" name="solicitudRecibida" placeholder="Ej: Correo, Ventanilla" />
+          <label for="solicitudRecibida">Solicitud recibida a través de:</label>
+          <input id="solicitudRecibida" class="form-control" type="text" [(ngModel)]="solicitudRecibida" name="solicitudRecibida" placeholder="Ej: Correo, Presencial" />
         </div>
 
         <!-- Recibe personal -->
@@ -542,8 +569,10 @@
       </div>
     </form>
   </section>
+  }
 
   <!-- SECCIÓN: AGREGAR OFERTA -->
+  @if (formularioActivo === 'oferta') {
   <h2>Agregar oferta</h2>
   <section>
     <form (submit)="createOferta($event)">
@@ -552,7 +581,8 @@
         <!-- Solicitud -->
         <div class="form-field">
           <label for="ofertaSolicitudId">Solicitud:</label>
-          <select id="ofertaSolicitudId" [(ngModel)]="ofertaSolicitudId" name="ofertaSolicitudId" required
+            <select id="ofertaSolicitudId" [(ngModel)]="ofertaSolicitudId" name="ofertaSolicitudId" required
+            (ngModelChange)="onSelectSolicitudOferta($event)"
             [class.error]="ofertaErrors['solicitudId']">
             <option value="">Seleccionar solicitud</option>
             @for (s of solicitudesFiltradas(); track s.solicitud_id) {
@@ -630,8 +660,10 @@
       </div>
     </form>
   </section>
+  }
 
   <!-- SECCIÓN: AGREGAR RESULTADOS -->
+  @if (formularioActivo === 'revision') {
   <h2>Revisión de la oferta</h2>
   <section>
     <form (submit)="createResultado($event)">
@@ -668,17 +700,7 @@
           }
         </div>
 
-        <!-- Número de informe -->
-        <div class="form-field">
-          <label for="resultadoNumeroInforme">Número del informe de resultados:</label>
-          <input id="resultadoNumeroInforme" [(ngModel)]="resultadoNumeroInforme" name="resultadoNumeroInforme"
-            [class.error]="resultadoErrors['numeroInforme']" placeholder="Ej: INF-2025-001" />
-          @if (resultadoErrors['numeroInforme']) {
-            <small class="error-message">
-              ⚠️ {{ resultadoErrors['numeroInforme'] }}
-            </small>
-          }
-        </div>
+        <!-- Número de informe removed per request -->
 
         <!-- Fecha de envío -->
         <div class="form-field">
@@ -708,8 +730,10 @@
       </div>
     </form>
   </section>
+  }
 
   <!-- SECCIÓN: AGREGAR ENCUESTA -->
+  @if (formularioActivo === 'encuesta') {
   <h2>Seguimiento Encuesta</h2>
   <section>
     <form (submit)="createEncuesta($event)">
@@ -794,6 +818,7 @@
       </div>
     </form>
   </section>
+  }
 
   <!-- SECCIÓN: Lista rápida de solicitudes -->
   <h2>Catalogo de Solicitudes</h2>
@@ -821,8 +846,17 @@
     </div>
 
     <div class="equipos-grid">
-      @for (s of solicitudesFiltradas(); track s.solicitud_id) {
-        <article class="equipo-card" 
+      @if (cargando()) {
+        <div class="sin-equipos">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Cargando solicitudes...</p>
+        </div>
+      }
+
+      @if (!cargando()) {
+        <div class="fade-in">
+        @for (s of solicitudesFiltradas(); track s.solicitud_id) {
+          <article class="equipo-card" 
                  (click)="toggleExpandSolicitud(s)" 
                  [attr.aria-expanded]="isSolicitudExpanded(s)" 
                  tabindex="0">
@@ -841,6 +875,12 @@
                         aria-label="Eliminar solicitud" 
                         (click)="deleteSolicitud(s.solicitud_id); $event.stopPropagation()">
                   <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="pdf-btn edit"
+                  title="Editar solicitud"
+                  aria-label="Editar solicitud"
+                  (click)="editSolicitudOpen(s); $event.stopPropagation()">
+                  <i class="fas fa-edit" aria-hidden="true"></i>
                 </button>
               }
             </div>
@@ -956,10 +996,6 @@
                           <span>{{ formatValue(s.fecha_limite_entrega) }}</span>
                         </div>
                         <div class="detalle-item">
-                          <div class="detalle-label">Código informe resultados</div>
-                          <span>{{ s.Codigo_informe_resultados || '—' }}</span>
-                        </div>
-                        <div class="detalle-item">
                           <div class="detalle-label">Fecha envío resultados</div>
                           <span>{{ formatValue(s.fecha_envio_resultados) }}</span>
                         </div>
@@ -1003,13 +1039,238 @@
             </div>
           }
         </article>
-      }
-      
-      @if (solicitudesFiltradas().length === 0) {
-        <p class="sin-equipos">No hay solicitudes para mostrar</p>
+        }
+        </div>
+
+        @if (solicitudesFiltradas().length === 0) {
+          <p class="sin-equipos">No hay solicitudes para mostrar</p>
+        }
       }
     </div>
   </section>
+
+  <!-- Modal editar Cliente -->
+  @if (editClienteModalOpen) {
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:9999">
+      <div style="background:#fff;padding:16px;border-radius:8px;min-width:360px;max-width:90%">
+        <h3>Editar cliente</h3>
+        <div class="form-grid">
+          <div class="form-field"><label>Nombre</label><input [(ngModel)]="editClienteNombre" /></div>
+          <div class="form-field"><label>Razón social</label><input [(ngModel)]="editClienteRazonSocial" /></div>
+          <div class="form-field"><label>NIT</label><input [(ngModel)]="editClienteNit" /></div>
+          <div class="form-field"><label>Tipo cliente</label>
+            <select [(ngModel)]="editClienteTipoUsuario">
+              <option value="">Seleccionar tipo de cliente</option>
+              @for (tipo of tiposCliente; track tipo) {
+                <option [value]="tipo">{{ tipo }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field"><label>Tipo identificación</label>
+            <select [(ngModel)]="editClienteTipoId">
+              <option value="">Seleccionar tipo de id</option>
+              @for (tipo of tiposIdentificacion; track tipo.value) {
+                <option [value]="tipo.value">{{ tipo.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field"><label>Número identificación</label><input [(ngModel)]="editClienteNumeroIdentificacion" /></div>
+          <div class="form-field"><label>Sexo</label>
+            <select [(ngModel)]="editClienteSexo">
+              <option value="">Seleccione el sexo</option>
+              @for (sexo of opcionesSexo; track sexo.value) {
+                <option [value]="sexo.value">{{ sexo.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field"><label>Tipo comunidad</label>
+            <select [(ngModel)]="editClienteTipoPobl">
+              <option value="">Seleccionar tipo de comunidad</option>
+              @for (comunidad of tiposComunidad; track comunidad) {
+                <option [value]="comunidad">{{ comunidad }}</option>
+              }
+              @for (opt of clienteTipoPoblCustomOptions; track opt) {
+                <option [value]="opt">{{ opt }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field"><label>Correo</label><input [(ngModel)]="editClienteCorreo" /></div>
+          <div class="form-field"><label>Celular</label><input [(ngModel)]="editClienteCelular" /></div>
+          <div class="form-field"><label>Teléfono</label><input [(ngModel)]="editClienteTelefono" /></div>
+          <div class="form-field span-full"><label>Dirección</label><input [(ngModel)]="editClienteDireccion" /></div>
+          <div class="form-field"><label>Departamento</label>
+            <select [(ngModel)]="editClienteDep" (change)="onEditDepChange()">
+              <option value="">Seleccionar departamento</option>
+              @for (dep of departamentos(); track dep.codigo) {
+                <option [value]="dep.codigo">{{ dep.nombre }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field"><label>Ciudad</label>
+            <select [(ngModel)]="editClienteCiudad">
+              <option value="">Seleccionar ciudad</option>
+              @for (ciudad of ciudades(); track ciudad.codigo) {
+                <option [value]="ciudad.codigo">{{ ciudad.nombre }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field"><label>Fecha vinculación</label><input type="date" [(ngModel)]="editClienteFechaVinculacion" /></div>
+          <div class="form-field"><label>Tipo vinculación</label><input [(ngModel)]="editClienteTipoVinculacion" /></div>
+          <div class="form-field span-full"><label>Registro por</label><input [(ngModel)]="editClienteRegistroPor" /></div>
+          <div class="form-field span-full"><label>Observaciones</label><textarea rows="3" [(ngModel)]="editClienteObservaciones"></textarea></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+          <button type="button" (click)="saveEditCliente()">Guardar</button>
+          <button type="button" (click)="closeEditClienteModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal editar Solicitud -->
+  @if (editSolicitudModalOpen) {
+    <div class="modal-overlay">
+      <div class="edit-modal">
+        <h3>Editar solicitud</h3>
+        <div>
+          <div class="equipo-tabs-menu">
+            <button type="button" class="tab-btn" [class.active]="editSolicitudActiveTab === 'solicitud'" (click)="editSolicitudActiveTab = 'solicitud'">Solicitud</button>
+            <button type="button" class="tab-btn" [class.active]="editSolicitudActiveTab === 'oferta'" (click)="editSolicitudActiveTab = 'oferta'">Oferta</button>
+            <button type="button" class="tab-btn" [class.active]="editSolicitudActiveTab === 'revision'" (click)="editSolicitudActiveTab = 'revision'">Revisión</button>
+            <button type="button" class="tab-btn" [class.active]="editSolicitudActiveTab === 'encuesta'" (click)="editSolicitudActiveTab = 'encuesta'">Encuesta</button>
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+              <button type="button" class="tab-btn" (click)="saveAllEditSolicitud()">Guardar todo</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            @if (editSolicitudActiveTab === 'solicitud') {
+              <div class="form-grid">
+                <div class="form-field"><label>Nombre muestra</label><input [(ngModel)]="editSolicitudNombreMuestra" /></div>
+                <div class="form-field"><label>Tipo solicitud</label>
+                  <select [(ngModel)]="editSolicitudTipo">
+                    <option value="">Seleccionar tipo de solicitud</option>
+                    @for (tipo of tiposSolicitud; track tipo.value) {
+                      <option [value]="tipo.value">{{ tipo.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-field"><label>Lote del producto</label><input [(ngModel)]="editSolicitudLote" /></div>
+                <div class="form-field"><label>Tipo de muestra</label><input [(ngModel)]="editSolicitudTipoMuestra" /></div>
+                <div class="form-field"><label>Tipo de empaque</label>
+                  <select [(ngModel)]="editSolicitudTipoEmpaque">
+                    <option value="">Seleccionar empaque</option>
+                    @for (e of tiposEmpaque; track e) {
+                      <option [value]="e">{{ e }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-field"><label>Análisis requerido</label>
+                  <select [(ngModel)]="editSolicitudAnalisisRequerido">
+                    <option value="">Seleccionar análisis</option>
+                    @for (a of tiposAnalisis; track a) {
+                      <option [value]="a">{{ a }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-field"><label>Requiere análisis adicional</label>
+                  <select [(ngModel)]="editSolicitudReqAnalisis">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Cantidad de muestras</label><input type="number" min="0" [(ngModel)]="editSolicitudCantMuestras" /></div>
+                <div class="form-field"><label>Solicitud recibida a través de</label><input [(ngModel)]="editSolicitudSolicitudRecibida" /></div>
+                <div class="form-field"><label>Fecha entrega</label><input type="date" [(ngModel)]="editSolicitudFechaEntrega" /></div>
+                <div class="form-field"><label>Recibe (personal)</label><input [(ngModel)]="editSolicitudRecibePersonal" /></div>
+                <div class="form-field"><label>Cargo (personal)</label><input [(ngModel)]="editSolicitudCargoPersonal" /></div>
+                <div class="form-field span-full"><label>Observaciones</label><textarea rows="3" [(ngModel)]="editSolicitudObservaciones"></textarea></div>
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+                <button type="button" (click)="saveEditSolicitud()">Guardar</button>
+                <button type="button" (click)="closeEditSolicitudModal()">Cancelar</button>
+              </div>
+            }
+
+            @if (editSolicitudActiveTab === 'oferta') {
+              <div class="form-grid">
+                <div class="form-field"><label>¿Generó cotización?</label>
+                  <select [(ngModel)]="editOfertaGeneroCotizacion">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Valor cotización</label><input type="number" [(ngModel)]="editOfertaValorCotizacion" step="0.01" /></div>
+                <div class="form-field"><label>Fecha envío oferta</label><input type="date" [(ngModel)]="editOfertaFechaEnvio" /></div>
+                <div class="form-field"><label>Seguimiento oferta</label>
+                  <select [(ngModel)]="editOfertaRealizoSeguimiento">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field span-full"><label>Observación oferta</label><textarea [(ngModel)]="editOfertaObservacion"></textarea></div>
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+                <button type="button" (click)="saveEditOferta()">Guardar Oferta</button>
+              </div>
+            }
+
+            @if (editSolicitudActiveTab === 'revision') {
+              <div class="form-grid">
+                <div class="form-field"><label>Fecha límite entrega</label><input type="date" [(ngModel)]="editRevisionFechaLimite" /></div>
+                <!-- Código informe resultados removed per request -->
+                <div class="form-field"><label>Fecha envío resultados</label><input type="date" [(ngModel)]="editRevisionFechaEnvio" /></div>
+                <div class="form-field"><label>Servicio viable</label>
+                  <select [(ngModel)]="editRevisionServicioViable">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+                <button type="button" (click)="saveEditRevision()">Guardar Revisión</button>
+              </div>
+            }
+
+            @if (editSolicitudActiveTab === 'encuesta') {
+              <div class="form-grid">
+                <div class="form-field"><label>Fecha encuesta</label><input type="date" [(ngModel)]="editEncuestaFecha" /></div>
+                <div class="form-field"><label>Recomendaría servicio</label>
+                  <select [(ngModel)]="editEncuestaRecomendaria">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Cliente respondió</label>
+                  <select [(ngModel)]="editEncuestaClienteRespondio">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Solicitó nueva encuesta</label>
+                  <select [(ngModel)]="editEncuestaSolicitoNueva">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field span-full"><label>Comentarios</label><textarea [(ngModel)]="editEncuestaComentarios"></textarea></div>
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+                <button type="button" (click)="saveEditEncuesta()">Guardar Encuesta</button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- SECCIÓN: Lista de clientes -->
   <h2>Catalogo de Clientes</h2>
@@ -1036,11 +1297,20 @@
     </div>
 
     <div class="equipos-grid">
-      @for (u of clientesFiltrados(); track u.id_cliente) {
-        <article class="equipo-card" 
-                 (click)="toggleClienteDetails(u.id_cliente)" 
-                 [attr.aria-expanded]="detallesVisibles[u.id_cliente] ? 'true' : 'false'" 
-                 tabindex="0">
+      @if (cargando()) {
+        <div class="sin-equipos">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Cargando clientes...</p>
+        </div>
+      }
+
+      @if (!cargando()) {
+        <div class="fade-in">
+        @for (u of clientesFiltrados(); track u.id_cliente) {
+          <article class="equipo-card" 
+                   (click)="toggleClienteDetails(u.id_cliente)" 
+                   [attr.aria-expanded]="detallesVisibles[u.id_cliente] ? 'true' : 'false'" 
+                   tabindex="0">
           <div class="card-top">
             <div class="tags">
               <span class="tag"><strong>ID:</strong> {{ u.id_cliente }}</span>
@@ -1055,6 +1325,12 @@
                         aria-label="Eliminar cliente" 
                         (click)="$event.stopPropagation(); deleteCliente(u.id_cliente)">
                   <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="pdf-btn edit"
+                        title="Editar cliente"
+                        aria-label="Editar cliente"
+                        (click)="$event.stopPropagation(); editCliente(u)">
+                  <i class="fas fa-edit" aria-hidden="true"></i>
                 </button>
               }
             </div>
@@ -1128,10 +1404,12 @@
             </div>
           }
         </article>
-      }
+        }
 
-      @empty {
-        <p class="sin-equipos">No hay clientes para mostrar</p>
+        @empty {
+          <p class="sin-equipos">No hay clientes para mostrar</p>
+        }
+        </div>
       }
     </div>
   </section>

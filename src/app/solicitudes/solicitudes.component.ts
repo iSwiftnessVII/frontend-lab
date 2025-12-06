@@ -34,6 +34,9 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   // Signals locales
   clientesFiltrados = signal<Array<any>>([]);
   solicitudesFiltradas = signal<Array<any>>([]);
+  // Selected items as signals for reactive templates and auto-fill
+  selectedCliente = signal<any>(null);
+  selectedSolicitud = signal<any>(null);
 
   // Variables de estado para errores de validación
   clienteErrors: { [key: string]: string } = {};
@@ -104,7 +107,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   resultadoSolicitudId: any = '';
   resultadoFechaLimite = '';
-  resultadoNumeroInforme = '';
   resultadoFechaEnvio = '';
   resultadoServicioViable: any = '';
 
@@ -133,6 +135,9 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     { key: 'encuesta', label: 'Encuesta' }
   ];
   activeSolicitudTab: { [id: number]: string } = {};
+
+  // Estado de carga local (para mostrar skeletons)
+  cargando = signal<boolean>(true);
 
   // Opciones para selects
   tiposCliente = [
@@ -243,6 +248,14 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       console.log('✅ Departamentos cargados:', this.departamentos().length);
       await this.loadClientes();
       console.log('✅ Clientes cargados:', this.clientes().length);
+
+      // If no solicitud cliente selected, default to first cliente for new solicitudes
+      const firstClient = (this.clientes() || [])[0];
+      if (firstClient) {
+        this.selectedCliente.set(firstClient);
+        if (!this.solicitudClienteId) this.solicitudClienteId = firstClient.id_cliente || firstClient.id || null;
+      }
+
       // Preload ciudades for all departamentos present among clients
       const clientesList = this.clientes() || [];
       const depCodes = Array.from(new Set(
@@ -258,13 +271,23 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
           console.warn('No se pudieron cargar ciudades para departamento', depCode, e);
         }
       }
+
       this.computeNextClienteNumero();
       await this.loadSolicitudes();
       console.log('✅ Solicitudes cargadas:', this.solicitudes().length);
+
+      // Default selected solicitud when possible
+      const firstSolicitud = (this.solicitudes() || [])[0];
+      if (firstSolicitud) {
+        this.selectedSolicitud.set(firstSolicitud);
+      }
       this.computeNextSolicitudConsecutivo();
     } catch (err) {
       console.error('❌ Error cargando datos iniciales:', err);
       this.manejarError(err, 'cargar datos iniciales');
+    } finally {
+      // Marcar carga inicial como finalizada (muestra listas o mensajes)
+      try { this.cargando.set(false); } catch { }
     }
   }
 
@@ -696,11 +719,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       isValid = false;
     }
 
-    if (!this.resultadoNumeroInforme) {
-      this.resultadoErrors['numeroInforme'] = 'El número de informe es obligatorio';
-      isValid = false;
-    }
-
     if (!this.resultadoFechaEnvio) {
       this.resultadoErrors['fechaEnvio'] = 'La fecha de envío es obligatoria';
       isValid = false;
@@ -824,13 +842,34 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       this.solicitudErrors = {};
 
       this.limpiarFormularioSolicitud();
-      // Asegurar que la nueva solicitud se vea inmediatamente en la lista filtrada
+
+      // Reload solicitudes from server to get canonical IDs and joined data
+      await this.loadSolicitudes();
+      // Try to locate the created solicitud. Prefer ID from response, otherwise match by client + nombre_muestra + fecha_solicitud
+      let created = null;
+      const nidFromResp = Number(nuevo?.solicitud_id ?? nuevo?.id_solicitud ?? nuevo?.id ?? nuevo?.insertId ?? 0);
+      if (nidFromResp) {
+        created = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === nidFromResp);
+      }
+      if (!created) {
+        const candidates = (this.solicitudes() || []).filter(s => {
+          return Number(s.id_cliente || s.id_cliente) === Number(body.id_cliente) &&
+                 ((s.nombre_muestra || '').trim() === (body.nombre_muestra || '').trim());
+        });
+        if (candidates.length) {
+          // pick the one with highest solicitud_id
+          created = candidates.reduce((a, b) => (Number(a.solicitud_id || 0) > Number(b.solicitud_id || 0) ? a : b));
+        }
+      }
+
+      // Update filtered list and expand created card
       this.filtrarSolicitudes();
-      // Expandir la tarjeta recién creada en la pestaña Detalle
-      const nid = Number(nuevo?.solicitud_id ?? nuevo?.id_solicitud ?? 0);
-      if (nid) {
-        this.solicitudExpandida = nid;
-        this.activeSolicitudTab[nid] = 'detalle';
+      if (created) {
+        const nid = Number(created.solicitud_id || created.id_solicitud || 0);
+        if (nid) {
+          this.solicitudExpandida = nid;
+          this.activeSolicitudTab[nid] = 'detalle';
+        }
       }
 
     } catch (err: any) {
@@ -875,6 +914,19 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
       this.limpiarFormularioOferta();
 
+      // Refresh solicitudes and expand the oferta tab for the affected solicitud
+      await this.loadSolicitudes();
+      this.filtrarSolicitudes();
+      const created = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === Number(ofertaId));
+      if (created) {
+        const nid = Number(created.solicitud_id || created.id_solicitud || 0);
+        if (nid) {
+          this.solicitudExpandida = nid;
+          this.activeSolicitudTab[nid] = 'oferta';
+          this.selectedSolicitud.set(created);
+        }
+      }
+
     } catch (err: any) {
       console.error('Error creating oferta:', err);
       this.manejarError(err, 'crear oferta');
@@ -898,7 +950,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     try {
       const body = {
         fecha_limite_entrega: this.resultadoFechaLimite,
-        Codigo_informe_resultados: this.resultadoNumeroInforme,
         fecha_envio_resultados: this.resultadoFechaEnvio,
         servicio_es_viable: this.resultadoServicioViable ? 1 : 0
       };
@@ -1104,7 +1155,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   private limpiarFormularioResultado(): void {
     this.resultadoSolicitudId = null;
     this.resultadoFechaLimite = '';
-    this.resultadoNumeroInforme = '';
     this.resultadoFechaEnvio = '';
     this.resultadoServicioViable = false;
   }
@@ -1126,6 +1176,10 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   toggleClienteDetails(id: number): void {
     this.detallesVisibles[id] = !this.detallesVisibles[id];
+    if (this.detallesVisibles[id]) {
+      const c = (this.clientes() || []).find(x => Number(x.id_cliente) === Number(id));
+      if (c) this.selectedCliente.set(c);
+    }
   }
 
   toggleExpandSolicitud(s: any): void {
@@ -1151,7 +1205,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     });
     console.log('Campos de revisión:', {
       fecha_limite_entrega: s?.fecha_limite_entrega,
-      Codigo_informe_resultados: s?.Codigo_informe_resultados,
       fecha_envio_resultados: s?.fecha_envio_resultados,
       servicio_es_viable: s?.servicio_es_viable
     });
@@ -1163,6 +1216,8 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       solicito_nueva_encuesta: s?.solicito_nueva_encuesta
     });
     console.log('=== FIN DEBUG ===');
+    // set selected solicitud for reactive forms/cards
+    this.selectedSolicitud.set(s || null);
   }
 
   isSolicitudExpanded(s: any): boolean {
@@ -1172,6 +1227,406 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   selectSolicitudTab(id: number, tabKey: string): void {
     this.activeSolicitudTab[id] = tabKey;
+  }
+
+  // ========== EDITAR TARJETAS ==========
+  editSolicitud(s: any): void {
+    const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
+    if (!sid) return;
+    this.solicitudExpandida = sid;
+    this.activeSolicitudTab[sid] = this.activeSolicitudTab[sid] || 'detalle';
+    this.snackbarService.info('Edita los campos desde las pestañas');
+  }
+
+  editCliente(u: any): void {
+    const cid = Number(u?.id_cliente ?? 0);
+    if (!cid) return;
+    // Toggle details open for inline editing in the card grid
+    this.detallesVisibles[cid] = true;
+    this.snackbarService.info('Edita los campos del cliente en el panel');
+    // Open modal with prefilled data
+    this.editClienteModalOpen = true;
+    this.editClienteId = cid;
+    this.editClienteNombre = u?.nombre_solicitante || '';
+    this.editClienteCorreo = u?.correo_electronico || '';
+    this.editClienteCelular = u?.celular || '';
+    this.editClienteTelefono = u?.telefono || '';
+    this.editClienteDireccion = u?.direccion || '';
+    this.editClienteDep = String(u?.id_departamento || u?.departamento_codigo || '');
+    this.editClienteCiudad = String(u?.id_ciudad || u?.ciudad_codigo || '');
+    this.editClienteRazonSocial = u?.razon_social || '';
+    this.editClienteNit = u?.nit || '';
+    this.editClienteTipoUsuario = u?.tipo_usuario || '';
+    this.editClienteTipoId = u?.tipo_identificacion || '';
+    this.editClienteNumeroIdentificacion = u?.numero_identificacion || '';
+    this.editClienteSexo = u?.sexo || '';
+    this.editClienteTipoPobl = u?.tipo_poblacion || '';
+    this.editClienteFechaVinculacion = this.toDateInput(u?.fecha_vinculacion);
+    this.editClienteTipoVinculacion = u?.tipo_vinculacion || '';
+    this.editClienteRegistroPor = u?.registro_realizado_por || '';
+    this.editClienteObservaciones = u?.observaciones || '';
+    // set reactive selected cliente
+    this.selectedCliente.set(u);
+  }
+
+  // Normaliza valores de fecha a formato input date (YYYY-MM-DD)
+  private toDateInput(v: any): string {
+    if (!v) return '';
+    try {
+      // Si viene como Date o timestamp
+      if (v instanceof Date) {
+        const yyyy = v.getFullYear();
+        const mm = String(v.getMonth() + 1).padStart(2, '0');
+        const dd = String(v.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+      const s = String(v);
+      // Si viene como ISO, tomar primeros 10 caracteres
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+        return s.slice(0, 10);
+      }
+      // Intentar parsear
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  }
+
+  // ======= Estado modal de edición de cliente =======
+  editClienteModalOpen = false;
+  editClienteId: number | null = null;
+  editClienteNombre = '';
+  editClienteCorreo = '';
+  editClienteCelular = '';
+  editClienteTelefono = '';
+  editClienteDireccion = '';
+  editClienteDep = '';
+  editClienteCiudad = '';
+  editClienteRazonSocial = '';
+  editClienteNit = '';
+  editClienteTipoUsuario = '';
+  editClienteTipoId = '';
+  editClienteNumeroIdentificacion = '';
+  editClienteSexo = '';
+  editClienteTipoPobl = '';
+  editClienteFechaVinculacion = '';
+  editClienteTipoVinculacion = '';
+  editClienteRegistroPor = '';
+  editClienteObservaciones = '';
+
+  closeEditClienteModal(): void {
+    this.editClienteModalOpen = false;
+    this.editClienteId = null;
+  }
+
+  async onEditDepChange(): Promise<void> {
+    try {
+      await this.locationsService.loadCiudades(this.editClienteDep);
+    } catch (err: any) {
+      console.warn('onEditDepChange: error cargando ciudades', err);
+    }
+  }
+
+  async saveEditCliente(): Promise<void> {
+    if (!this.editClienteId) return;
+    const body = {
+      nombre_solicitante: this.editClienteNombre,
+      correo_electronico: this.editClienteCorreo,
+      celular: this.editClienteCelular || null,
+      telefono: this.editClienteTelefono || null,
+      direccion: this.editClienteDireccion || null,
+      id_departamento: this.editClienteDep || null,
+      id_ciudad: this.editClienteCiudad || null,
+      razon_social: this.editClienteRazonSocial || null,
+      nit: this.editClienteNit || null,
+      tipo_usuario: this.editClienteTipoUsuario || null,
+      tipo_identificacion: this.editClienteTipoId || null,
+      numero_identificacion: this.editClienteNumeroIdentificacion || null,
+      sexo: this.editClienteSexo || null,
+      tipo_poblacion: this.editClienteTipoPobl || null,
+      fecha_vinculacion: this.editClienteFechaVinculacion || null,
+      tipo_vinculacion: this.editClienteTipoVinculacion || null,
+      registro_realizado_por: this.editClienteRegistroPor || null,
+      observaciones: this.editClienteObservaciones || null
+    };
+    try {
+      await this.clientesService.updateCliente(this.editClienteId, body);
+      this.snackbarService.success('✅ Cliente actualizado');
+      this.closeEditClienteModal();
+    } catch (err: any) {
+      console.error('saveEditCliente', err);
+      this.manejarError(err, 'actualizar cliente');
+    }
+  }
+
+  // ======= Estado modal de edición de solicitud =======
+  editSolicitudModalOpen = false;
+  editSolicitudId: number | null = null;
+  editSolicitudNombreMuestra = '';
+  editSolicitudTipo = '';
+  editSolicitudFechaSolicitud = '';
+  editSolicitudFechaVenc = '';
+  // Additional solicitud fields
+  editSolicitudLote = '';
+  editSolicitudTipoMuestra = '';
+  editSolicitudTipoEmpaque = '';
+  editSolicitudAnalisisRequerido = '';
+  editSolicitudReqAnalisis: any = null;
+  editSolicitudCantMuestras: number | null = null;
+  editSolicitudSolicitudRecibida = '';
+  editSolicitudFechaEntrega = '';
+  editSolicitudRecibePersonal = '';
+  editSolicitudCargoPersonal = '';
+  editSolicitudObservaciones = '';
+  // Tabs state for solicitud edit modal
+  editSolicitudActiveTab: 'solicitud' | 'oferta' | 'revision' | 'encuesta' = 'solicitud';
+
+  // Oferta fields
+  editOfertaGeneroCotizacion: any = null;
+  editOfertaValorCotizacion: any = null;
+  editOfertaFechaEnvio: string = '';
+  editOfertaRealizoSeguimiento: any = null;
+  editOfertaObservacion: string = '';
+
+  // Revision fields
+  editRevisionFechaLimite: string = '';
+  editRevisionFechaEnvio: string = '';
+  editRevisionServicioViable: any = null;
+
+  // Encuesta fields
+  editEncuestaFecha: string = '';
+  editEncuestaComentarios: string = '';
+  editEncuestaRecomendaria: any = null;
+  editEncuestaClienteRespondio: any = null;
+  editEncuestaSolicitoNueva: any = null;
+
+  editSolicitudOpen(s: any): void {
+    const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
+    if (!sid) return;
+    this.editSolicitudModalOpen = true;
+    this.editSolicitudId = sid;
+    this.editSolicitudNombreMuestra = s?.nombre_muestra || '';
+    this.editSolicitudTipo = s?.tipo_solicitud || '';
+    this.editSolicitudFechaSolicitud = this.toDateInput(s?.fecha_solicitud);
+    this.editSolicitudFechaVenc = this.toDateInput(s?.fecha_vencimiento_muestra);
+    // additional solicitud prefill
+    this.editSolicitudLote = s?.lote_producto || '';
+    this.editSolicitudTipoMuestra = s?.tipo_muestra || '';
+    this.editSolicitudTipoEmpaque = s?.tipo_empaque || '';
+    this.editSolicitudAnalisisRequerido = s?.analisis_requerido || '';
+    this.editSolicitudReqAnalisis = s?.req_analisis === null ? null : (s?.req_analisis ? true : false);
+    this.editSolicitudCantMuestras = s?.cant_muestras ?? null;
+    this.editSolicitudSolicitudRecibida = s?.solicitud_recibida || '';
+    this.editSolicitudFechaEntrega = this.toDateInput(s?.fecha_entrega_muestra);
+    this.editSolicitudRecibePersonal = s?.recibe_personal || '';
+    this.editSolicitudCargoPersonal = s?.cargo_personal || '';
+    this.editSolicitudObservaciones = s?.observaciones || '';
+    // reset tab
+    this.editSolicitudActiveTab = 'solicitud';
+
+    // Prefill oferta
+    this.editOfertaGeneroCotizacion = s?.genero_cotizacion === null ? null : (s?.genero_cotizacion ? true : false);
+    this.editOfertaValorCotizacion = s?.valor_cotizacion ?? null;
+    this.editOfertaFechaEnvio = this.toDateInput(s?.fecha_envio_oferta);
+    this.editOfertaRealizoSeguimiento = s?.realizo_seguimiento_oferta === null ? null : (s?.realizo_seguimiento_oferta ? true : false);
+    this.editOfertaObservacion = s?.observacion_oferta || '';
+
+    // Prefill revision
+    this.editRevisionFechaLimite = this.toDateInput(s?.fecha_limite_entrega);
+    this.editRevisionFechaEnvio = this.toDateInput(s?.fecha_envio_resultados);
+    this.editRevisionServicioViable = s?.servicio_es_viable === null ? null : (s?.servicio_es_viable ? true : false);
+
+    // Prefill encuesta
+    this.editEncuestaFecha = this.toDateInput(s?.fecha_encuesta);
+    this.editEncuestaComentarios = s?.comentarios || '';
+    this.editEncuestaRecomendaria = s?.recomendaria_servicio === null ? null : (s?.recomendaria_servicio ? true : false);
+    this.editEncuestaClienteRespondio = s?.cliente_respondio === null ? null : (s?.cliente_respondio ? true : false);
+    this.editEncuestaSolicitoNueva = s?.solicito_nueva_encuesta === null ? null : (s?.solicito_nueva_encuesta ? true : false);
+    // set reactive selected solicitud
+    this.selectedSolicitud.set(s);
+  }
+
+  // When user chooses a client in the create-solicitud select, update selectedCliente signal
+  onSelectSolicitudCliente(value: any): void {
+    try {
+      const id = Number(value);
+      const found = (this.clientes() || []).find(c => Number(c.id_cliente) === id);
+      if (found) this.selectedCliente.set(found);
+    } catch (err) { /* ignore */ }
+  }
+
+  // When user chooses a solicitud in oferta/result/encuesta selects, update selectedSolicitud signal
+  onSelectSolicitudOferta(value: any): void {
+    try {
+      const id = Number(value);
+      const found = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === id || Number(s.id_solicitud) === id);
+      if (found) this.selectedSolicitud.set(found);
+    } catch (err) { /* ignore */ }
+  }
+
+  closeEditSolicitudModal(): void {
+    this.editSolicitudModalOpen = false;
+    this.editSolicitudId = null;
+  }
+
+  async saveEditSolicitud(): Promise<void> {
+    if (!this.editSolicitudId) return;
+    const body: any = {
+      nombre_muestra: this.editSolicitudNombreMuestra,
+      tipo_solicitud: this.editSolicitudTipo,
+      lote_producto: this.editSolicitudLote || null,
+      fecha_solicitud: this.editSolicitudFechaSolicitud || null,
+      fecha_vencimiento_muestra: this.editSolicitudFechaVenc || null,
+      tipo_muestra: this.editSolicitudTipoMuestra || null,
+      tipo_empaque: this.editSolicitudTipoEmpaque || null,
+      analisis_requerido: this.editSolicitudAnalisisRequerido || null,
+      req_analisis: this.editSolicitudReqAnalisis === null ? null : (this.editSolicitudReqAnalisis ? 1 : 0),
+      cant_muestras: this.editSolicitudCantMuestras ?? null,
+      fecha_entrega_muestra: this.editSolicitudFechaEntrega || null,
+      solicitud_recibida: this.editSolicitudSolicitudRecibida || null,
+      recibe_personal: this.editSolicitudRecibePersonal || null,
+      cargo_personal: this.editSolicitudCargoPersonal || null,
+      observaciones: this.editSolicitudObservaciones || null
+    };
+    try {
+      await this.solicitudesService.updateSolicitud(this.editSolicitudId, body);
+      this.snackbarService.success('✅ Solicitud actualizada');
+      this.closeEditSolicitudModal();
+      await this.loadSolicitudes();
+    } catch (err: any) {
+      console.error('saveEditSolicitud', err);
+      this.manejarError(err, 'actualizar solicitud');
+    }
+  }
+
+  // Save oferta tab
+  async saveEditOferta(): Promise<void> {
+    if (!this.editSolicitudId) return;
+    const body: any = {
+      genero_cotizacion: this.editOfertaGeneroCotizacion === null ? null : (this.editOfertaGeneroCotizacion ? 1 : 0),
+      valor_cotizacion: this.editOfertaValorCotizacion,
+      fecha_envio_oferta: this.editOfertaFechaEnvio || null,
+      realizo_seguimiento_oferta: this.editOfertaRealizoSeguimiento === null ? null : (this.editOfertaRealizoSeguimiento ? 1 : 0),
+      observacion_oferta: this.editOfertaObservacion || null
+    };
+    try {
+      await this.solicitudesService.upsertOferta(Number(this.editSolicitudId), body);
+      this.snackbarService.success('✅ Oferta actualizada');
+      // refresh local prefill
+      await this.loadSolicitudes();
+      const updated = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === Number(this.editSolicitudId));
+      if (updated) this.editSolicitudOpen(updated);
+    } catch (err: any) {
+      console.error('saveEditOferta', err);
+      this.manejarError(err, 'actualizar oferta');
+    }
+  }
+
+  // Save revision tab
+  async saveEditRevision(): Promise<void> {
+    if (!this.editSolicitudId) return;
+    const body: any = {
+      fecha_limite_entrega: this.editRevisionFechaLimite || null,
+      fecha_envio_resultados: this.editRevisionFechaEnvio || null,
+      servicio_es_viable: this.editRevisionServicioViable === null ? null : (this.editRevisionServicioViable ? 1 : 0)
+    };
+    try {
+      await this.solicitudesService.upsertRevision(Number(this.editSolicitudId), body);
+      this.snackbarService.success('✅ Revisión actualizada');
+      await this.loadSolicitudes();
+      const updated = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === Number(this.editSolicitudId));
+      if (updated) this.editSolicitudOpen(updated);
+    } catch (err: any) {
+      console.error('saveEditRevision', err);
+      this.manejarError(err, 'actualizar revisión');
+    }
+  }
+
+  // Save encuesta tab
+  async saveEditEncuesta(): Promise<void> {
+    if (!this.editSolicitudId) return;
+    const body: any = {
+      fecha_encuesta: this.editEncuestaFecha || null,
+      comentarios: this.editEncuestaComentarios || null,
+      recomendaria_servicio: this.editEncuestaRecomendaria === null ? null : (this.editEncuestaRecomendaria ? 1 : 0),
+      cliente_respondio: this.editEncuestaClienteRespondio === null ? null : (this.editEncuestaClienteRespondio ? 1 : 0),
+      solicito_nueva_encuesta: this.editEncuestaSolicitoNueva === null ? null : (this.editEncuestaSolicitoNueva ? 1 : 0)
+    };
+    try {
+      await this.solicitudesService.upsertSeguimientoEncuesta(Number(this.editSolicitudId), body);
+      this.snackbarService.success('✅ Encuesta actualizada');
+      await this.loadSolicitudes();
+      const updated = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === Number(this.editSolicitudId));
+      if (updated) this.editSolicitudOpen(updated);
+    } catch (err: any) {
+      console.error('saveEditEncuesta', err);
+      this.manejarError(err, 'actualizar encuesta');
+    }
+  }
+
+  // Save all tabs at once (global save)
+  async saveAllEditSolicitud(): Promise<void> {
+    if (!this.editSolicitudId) return;
+    try {
+      // 1) Update main solicitud
+      await this.solicitudesService.updateSolicitud(this.editSolicitudId, {
+        nombre_muestra: this.editSolicitudNombreMuestra,
+        tipo_solicitud: this.editSolicitudTipo,
+        lote_producto: this.editSolicitudLote || null,
+        fecha_solicitud: this.editSolicitudFechaSolicitud || null,
+        fecha_vencimiento_muestra: this.editSolicitudFechaVenc || null,
+        tipo_muestra: this.editSolicitudTipoMuestra || null,
+        tipo_empaque: this.editSolicitudTipoEmpaque || null,
+        analisis_requerido: this.editSolicitudAnalisisRequerido || null,
+        req_analisis: this.editSolicitudReqAnalisis === null ? null : (this.editSolicitudReqAnalisis ? 1 : 0),
+        cant_muestras: this.editSolicitudCantMuestras ?? null,
+        fecha_entrega_muestra: this.editSolicitudFechaEntrega || null,
+        solicitud_recibida: this.editSolicitudSolicitudRecibida || null,
+        recibe_personal: this.editSolicitudRecibePersonal || null,
+        cargo_personal: this.editSolicitudCargoPersonal || null,
+        observaciones: this.editSolicitudObservaciones || null
+      });
+
+      // 2) Oferta
+      await this.solicitudesService.upsertOferta(Number(this.editSolicitudId), {
+        genero_cotizacion: this.editOfertaGeneroCotizacion === null ? null : (this.editOfertaGeneroCotizacion ? 1 : 0),
+        valor_cotizacion: this.editOfertaValorCotizacion,
+        fecha_envio_oferta: this.editOfertaFechaEnvio || null,
+        realizo_seguimiento_oferta: this.editOfertaRealizoSeguimiento === null ? null : (this.editOfertaRealizoSeguimiento ? 1 : 0),
+        observacion_oferta: this.editOfertaObservacion || null
+      });
+
+      // 3) Revision
+      await this.solicitudesService.upsertRevision(Number(this.editSolicitudId), {
+        fecha_limite_entrega: this.editRevisionFechaLimite || null,
+        fecha_envio_resultados: this.editRevisionFechaEnvio || null,
+        servicio_es_viable: this.editRevisionServicioViable === null ? null : (this.editRevisionServicioViable ? 1 : 0)
+      });
+
+      // 4) Encuesta
+      await this.solicitudesService.upsertSeguimientoEncuesta(Number(this.editSolicitudId), {
+        fecha_encuesta: this.editEncuestaFecha || null,
+        comentarios: this.editEncuestaComentarios || null,
+        recomendaria_servicio: this.editEncuestaRecomendaria === null ? null : (this.editEncuestaRecomendaria ? 1 : 0),
+        cliente_respondio: this.editEncuestaClienteRespondio === null ? null : (this.editEncuestaClienteRespondio ? 1 : 0),
+        solicito_nueva_encuesta: this.editEncuestaSolicitoNueva === null ? null : (this.editEncuestaSolicitoNueva ? 1 : 0)
+      });
+
+      // Refresh and close
+      await this.loadSolicitudes();
+      this.snackbarService.success('✅ Todos los cambios guardados');
+      this.closeEditSolicitudModal();
+    } catch (err: any) {
+      console.error('saveAllEditSolicitud', err);
+      this.manejarError(err, 'guardar cambios');
+    }
   }
 
   // Helpers: resolve display names for departamento/ciudad from IDs or codes
@@ -1252,5 +1707,18 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   formatValue(val: any): string {
     return this.utilsService.formatValue(val);
+  }
+
+  // Control de formularios (mostrar/ocultar desde las tarjetas de acción)
+  formularioActivo: string | null = null;
+
+  // Mostrar/ocultar formularios al pulsar las tarjetas de acción
+  toggleFormulario(tipo: string) {
+    if (this.formularioActivo === tipo) {
+      this.formularioActivo = null;
+    } else {
+      // cerrar cualquiera abierto y abrir el solicitado
+      this.formularioActivo = tipo;
+    }
   }
 }

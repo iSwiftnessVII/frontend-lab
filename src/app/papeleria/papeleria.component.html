@@ -4,8 +4,27 @@
     | Papeleria
   </h1>
   
+  <div class="dashboard-cards">
+    <div class="action-card" (click)="toggleFormulario('catalogo')" [class.active]="formularioActivo === 'catalogo'">
+      <i class="fas fa-book-medical"></i>
+      <span>Crear en Catálogo</span>
+    </div>
+    <div class="action-card" (click)="toggleFormulario('catalogo-list')" [class.active]="formularioActivo === 'catalogo-list'">
+      <i class="fas fa-th-list"></i>
+      <span>Ver Catálogo</span>
+    </div>
+    <div class="action-card" (click)="toggleFormulario('crear-papeleria')" [class.active]="formularioActivo === 'crear-papeleria'">
+      <i class="fas fa-plus-circle"></i>
+      <span>Crear Registro</span>
+    </div>
+    <div class="action-card" (click)="toggleFormulario('listado')" [class.active]="formularioActivo === 'listado'">
+      <i class="fas fa-boxes-stacked"></i>
+      <span>Listado</span>
+    </div>
+  </div>
+
   <!-- SECCIÓN: Crear nuevo item en catálogo -->
-  @if (!esAuxiliar()) {
+  @if ((formularioActivo === 'catalogo') && !esAuxiliar()) {
     <h2>Crear nuevo item en catálogo (Papelería)</h2>
     <section>
       <form class="form-grid" (ngSubmit)="crearCatalogo($event)">
@@ -35,6 +54,7 @@
   }
 
   <!-- SECCIÓN: Catálogo de papelería -->
+  @if (formularioActivo === 'catalogo-list') {
   <h2>Catálogo de papelería</h2>
   <section>
     <div>
@@ -124,6 +144,7 @@
       </div>
     </div>
   </section>
+  }
 
   <!-- Menú contextual -->
   @if (contextMenuVisible()) {
@@ -134,7 +155,7 @@
   }
 
   <!-- SECCIÓN: Crear registro de Papelería -->
-  @if (item_catalogo() != null && !esAuxiliar()) {
+  @if ((formularioActivo === 'crear-papeleria' || item_catalogo() != null) && !esAuxiliar()) {
     <h2>Crear registro de Papelería</h2>
     <section #papFormSection>
       <form class="form-grid" (ngSubmit)="crearPapeleria($event)">
@@ -192,6 +213,7 @@
   }
 
   <!-- SECCIÓN: Listado de papelería -->
+  @if (formularioActivo === 'listado') {
   <div (click)="onGlobalClick($event)">
     <h2>Listado de papelería</h2>
     <section>
@@ -301,4 +323,5 @@
       </div>
     </section>
   </div>
+  }
 </div>

@@ -3,7 +3,27 @@
     <i class="fas fa-boxes"></i>
     | Insumos
   </h1>
+  
+    <div class="dashboard-cards">
+        <div class="action-card" (click)="toggleFormulario('catalogo')" [class.active]="formularioActivo === 'catalogo'">
+            <i class="fas fa-book-medical"></i>
+            <span>Crear en Catálogo</span>
+        </div>
+        <div class="action-card" (click)="toggleFormulario('catalogo-list')" [class.active]="formularioActivo === 'catalogo-list'">
+            <i class="fas fa-th-list"></i>
+            <span>Ver Catálogo</span>
+        </div>
+        <div class="action-card" (click)="toggleFormulario('crear-insumo')" [class.active]="formularioActivo === 'crear-insumo'">
+            <i class="fas fa-plus-circle"></i>
+            <span>Crear Insumo</span>
+        </div>
+        <div class="action-card" (click)="toggleFormulario('listado')" [class.active]="formularioActivo === 'listado'">
+            <i class="fas fa-boxes-stacked"></i>
+            <span>Listado Insumos</span>
+        </div>
+    </div>
     <!-- Catálogo de insumos -->
+    @if (formularioActivo === 'catalogo') {
     <h2>Crear nuevo insumo en catálogo</h2>
     <section>
         <form class="form-grid" (submit)="crearCatalogo($event)">
@@ -31,10 +51,12 @@
                 <div class="actions" *ngIf="!esAuxiliar">
                     <button class="btn-compact" type="submit">Agregar al catálogo</button>
                 </div>
-            </form>
+                </form>
     
-    </section>
+            </section>
+            }
 
+    @if (formularioActivo === 'catalogo-list') {
     <h2>Catálogo de insumos</h2>
     <section>
         <div>
@@ -121,12 +143,12 @@
             </div>
         </div>
     </section>
+    }
 
     <!-- Inventario de insumos -->
-        @if (item_catalogo != null) {
+        @if (formularioActivo === 'crear-insumo' || item_catalogo != null) {
             <h2>Crear nuevo insumo</h2>
-        }
-        @if (item_catalogo != null) {
+        
         <section #insumoFormSection>
     <form class="form-grid" (submit)="crearInsumo($event)">
             <div>
@@ -185,6 +207,7 @@
     }
 
         <!-- ===== Listado de insumos (tarjetas) al final de la página ===== -->
+    @if (formularioActivo === 'listado') {
     <div>
         <h2>Listado de insumos</h2>
         <section>
@@ -267,6 +290,7 @@
             </div>
         </section>
     </div>
+    }
 
     <!-- Menú contextual (click derecho) para catálogo de insumos -->
     @if (contextMenuVisible) {

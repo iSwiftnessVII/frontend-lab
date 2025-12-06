@@ -3,8 +3,27 @@
     <i class="fas fa-flask"></i>
     | Reactivos
   </h1>
-  <h2>Crear nuevo reactivo en Catalogo</h2>
-  <section>
+  <div class="dashboard-cards">
+    <div class="action-card" (click)="toggleFormulario('catalogo')" [class.active]="formularioActivo === 'catalogo'">
+      <i class="fas fa-book-medical"></i>
+      <span>Crear en Catálogo</span>
+    </div>
+    <div class="action-card" (click)="toggleFormulario('catalogo-list')" [class.active]="formularioActivo === 'catalogo-list'">
+      <i class="fas fa-th-list"></i>
+      <span>Ver Catálogo</span>
+    </div>
+    <div class="action-card" (click)="toggleFormulario('crear-reactivo')" [class.active]="formularioActivo === 'crear-reactivo'">
+      <i class="fas fa-plus-circle"></i>
+      <span>Crear Reactivo</span>
+    </div>
+    <div class="action-card" (click)="toggleFormulario('inventario')" [class.active]="formularioActivo === 'inventario'">
+      <i class="fas fa-boxes"></i>
+      <span>Ver Inventario</span>
+    </div>
+  </div>
+  @if (formularioActivo === 'catalogo') {
+    <h2>Crear nuevo reactivo en Catálogo</h2>
+    <section>
     <form class="form-grid" #catalogoForm="ngForm" (ngSubmit)="crearCatalogo($event, catalogoForm)">
       <div *ngIf="!esAuxiliar">
         <label for="catCodigo">Código</label>
@@ -67,10 +86,12 @@
     @if (toastMsg) {
     <div class="toast" role="status" aria-live="polite">{{ toastMsg }}</div>
     }
-  </section>
+    </section>
+  }
 
-  <h2>Catalogo de Reactivos</h2>
-  <section>
+  @if (formularioActivo === 'catalogo-list') {
+    <h2>Catálogo de Reactivos</h2>
+    <section>
     <div>
       <div class="filters-grid catalogo-filters">
         <div>
@@ -139,11 +160,13 @@
         }
       </div>
     </div>
-  </section>
+    </section>
+  }
 
   <!-- Inventario de reactivos -->
-  <h2>Crear reactivo</h2>
-  <section>
+  @if (formularioActivo === 'crear-reactivo') {
+    <h2>Crear reactivo</h2>
+    <section>
     <!-- Formulario de creación -->
     <form class="form-grid" #reactivoForm="ngForm" (ngSubmit)="crearReactivo($event, reactivoForm)">
       <div class="field-sm field-autocomplete">
@@ -402,10 +425,12 @@
     </form>
 
     <!-- Mensajes inline eliminados: usar snackbars globales -->
-  </section>
+    </section>
+  }
 
-  <h2>Inventario de Reactivos</h2>
-  <section>
+  @if (formularioActivo === 'inventario') {
+    <h2>Inventario de Reactivos</h2>
+    <section>
     <!-- Lista y búsqueda de reactivos existentes -->
     <div>
       <div class="filters-row reactivos-filters">
@@ -657,7 +682,8 @@
         }
       </div>
     </div>
-  </section>
+    </section>
+  }
 
   <!-- Modal de edición de reactivo -->
   @if (editModalOpen) {

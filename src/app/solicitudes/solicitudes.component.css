@@ -1,3 +1,5 @@
+@import '../shared/dashboard-cards.css';
+
 .compact-action {
   display: inline-flex;
   align-items: center;
@@ -337,95 +339,12 @@
   }
 }
 
+/* Utility to fade-in lists when data becomes available */
+.fade-in {
+  animation: fadeInUp 360ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
 /* ===== Tarjetas de Equipo ===== */
-.dashboard-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin: 2rem 0;
-  animation: fadeInUp 0.8s ease-out;
-}
-
-.dashboard-cards .action-card {
-    background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%);
-    border: 3px solid var(--border-gray);
-    border-radius: 20px;
-    padding: 1.5rem;
-    text-decoration: none;
-    color: var(--text-gray);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    text-align: center;
-    box-shadow: var(--shadow-sm);
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(10px);
-    cursor: pointer;
-}
-
-.dashboard-cards .action-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(0, 184, 181, 0.08) 0%, transparent 100%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-}
-
-.dashboard-cards .action-card::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 0;
-    background: linear-gradient(180deg, transparent 0%, rgba(0, 184, 181, 0.1) 100%);
-    transition: height 0.4s ease;
-}
-
-.dashboard-cards .action-card:hover::before {
-    opacity: 1;
-}
-
-.dashboard-cards .action-card:hover::after {
-    height: 100%;
-}
-
-.dashboard-cards .action-card:hover {
-    transform: translateY(-8px) scale(1.03);
-    box-shadow: 0 15px 40px rgba(0, 184, 181, 0.25);
-    border-color: var(--primary-turquoise);
-    color: var(--primary-blue);
-    text-decoration: none;
-}
-
-.dashboard-cards .action-card i {
-  font-size: 2rem;
-  color: var(--primary-turquoise);
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  filter: drop-shadow(0 6px 12px rgba(0, 184, 181, 0.4));
-  position: relative;
-  z-index: 1;
-}
-
-.dashboard-cards .action-card:hover i {
-  transform: scale(1.25) rotate(15deg);
-  color: var(--primary-blue);
-}
-
-.dashboard-cards .action-card span {
-  font-weight: 600;
-  font-size: 0.95rem;
-  letter-spacing: 0.5px;
-  position: relative;
-  z-index: 1;
-}
 
 /* ===== Sección de Acciones Rápidas ===== */
 .actions-section {
@@ -501,6 +420,50 @@
 .actions-grid .action-card:hover::before {
     opacity: 1;
 }
+  /* Modal overlay and fixed-size edit modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+
+  .edit-modal {
+    background: #fff;
+    padding: 18px;
+    border-radius: 8px;
+    width: 900px; /* fixed width based on the largest tab (Solicitud) */
+    max-width: calc(100vw - 40px);
+    height: 620px; /* fixed height to avoid resizing when switching tabs */
+    max-height: 90vh;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Make the modal content scrollable while keeping header and footer visible */
+  .edit-modal > div:last-child,
+  .edit-modal > .form-grid,
+  .edit-modal .form-grid,
+  .edit-modal .equipo-tabs-menu + div {
+    overflow: auto;
+  }
+
+  /* Ensure the tab content area can scroll without increasing modal size */
+  .edit-modal .equipo-tabs-menu + div {
+    flex: 1 1 auto;
+    padding-right: 8px; /* room for scrollbar */
+  }
+
+  /* Keep actions pinned at the bottom (if any) */
+  .edit-modal .form-actions,
+  .edit-modal > div > div[style*="justify-content:flex-end"] {
+    z-index: 2;
+  }
 
 .actions-grid .action-card:hover::after {
     height: 100%;

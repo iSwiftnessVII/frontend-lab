@@ -98,4 +98,22 @@ export class ClientesService {
     // Recargar la lista de clientes automáticamente
     await this.loadClientes();
   }
+
+  async updateCliente(id: number, body: any): Promise<void> {
+    const res = await fetch(API + '/clientes/' + id, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(body)
+    });
+
+    if (res.status === 401) {
+      throw new Error('No autorizado - Token inválido o expirado');
+    }
+
+    if (!res.ok) {
+      throw new Error(await res.text());
+    }
+
+    await this.loadClientes();
+  }
 }

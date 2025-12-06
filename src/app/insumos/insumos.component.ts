@@ -32,6 +32,29 @@ export class InsumosComponent implements OnInit {
   insumoSeleccionado: any = null;
   mostrarDetalles: boolean = false;
 
+  // Track which quick-action form is active (null = none)
+  formularioActivo: string | null = null;
+
+  // Toggle which formulario is active; clicking again closes it
+  toggleFormulario(tipo: string) {
+    const opening = this.formularioActivo !== tipo;
+    this.formularioActivo = opening ? tipo : null;
+    // Only auto-scroll when opening the 'crear-insumo' form to avoid
+    // jumping the page for other quick-actions.
+    if (opening && tipo === 'crear-insumo') {
+      setTimeout(() => {
+        try {
+          if (this.insumoFormSection) {
+            this.insumoFormSection.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Optionally focus the first input inside the section
+            const first = this.insumoFormSection.nativeElement.querySelector('input, textarea, select') as HTMLElement | null;
+            if (first) first.focus();
+          }
+        } catch (e) { /* ignore scroll/focus errors */ }
+      }, 60);
+    }
+  }
+
   ngOnInit() {
     // Ejecutar inicialización al montar el componente
     this.init();
