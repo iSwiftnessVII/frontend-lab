@@ -496,51 +496,7 @@ button[type="button"]:hover,
     gap: 0.3rem;
 }
 
-.pdf-btn {
-    padding: 0.4rem;
-    border: none;
-    background: var(--light-gray);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-}
-
-.pdf-btn .icon {
-    width: 16px;
-    height: 16px;
-}
-
-.pdf-btn.upload {
-    color: var(--primary-turquoise);
-}
-
-.pdf-btn.upload:hover {
-    background: var(--primary-turquoise);
-    color: var(--primary-white);
-}
-
-.pdf-btn.view {
-    color: var(--primary-blue);
-}
-
-.pdf-btn.view:hover {
-    background: var(--primary-blue);
-    color: var(--primary-white);
-}
-
-.pdf-btn.delete {
-    color: #e53e3e;
-}
-
-.pdf-btn.delete:hover {
-    background: #e53e3e;
-    color: var(--primary-white);
-}
+/* PDF button styles are centralized in shared/inventory-cards.css */
 
 /* ===== PDF Badges ===== */
 .pdf-badges {

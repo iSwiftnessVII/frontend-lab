@@ -258,6 +258,21 @@ export const equiposService = {
     return await res.json();
   },
 
+  // Actualizar equipo por código (PUT)
+  async actualizarEquipo(codigo: string, payload: any) {
+    const res = await fetch(`${API}/${encodeURIComponent(codigo)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      },
+      body: JSON.stringify(payload)
+    });
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'Error al actualizar equipo');
+    return data;
+  },
+
 // Obtener el siguiente consecutivo para historial_hv por equipo específico
 async obtenerSiguienteConsecutivoHistorialPorEquipo(equipoId: string) {
   const API_MAX_CONSECUTIVO = `${API}/historial/max-consecutivo/${equipoId}`;

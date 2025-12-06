@@ -291,12 +291,10 @@ body {
   0%,
   100% {
     transform: scale(1);
-    box-shadow: 0 8px 24px rgba(0, 184, 181, 0.3);
   }
 
   50% {
     transform: scale(1.05);
-    box-shadow: 0 12px 32px rgba(0, 184, 181, 0.4);
   }
 }
 
@@ -312,6 +310,52 @@ body {
   font-size: 1rem;
   color: #6b7280;
   font-weight: 400;
+}
+
+/* Brand/logo sizing */
+/* Fallback for <img> if used elsewhere */
+.logo-container img.brand-circle {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  display: inline-block;
+  background: transparent;
+  border-radius: 0;
+}
+
+/* Inline SVG logo: apply breathing animation only to the <svg> element */
+.logo-container svg.brand-svg {
+  width: 200px;
+  height: 200px;
+  display: inline-block;
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
+  animation: brandPulse 4s ease-in-out infinite;
+}
+
+@media (max-width: 480px) {
+  .logo-container img.brand-circle,
+  .logo-container svg.brand-svg {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+/* Remove inline whitespace and extra padding so only the SVG drawing is visible */
+.logo-container {
+  padding: 0;
+  margin: 0 auto 0 auto;
+  background: transparent;
+  line-height: 0; /* remove baseline gap for inline SVG/img */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Force svg to render without inline gaps */
+.logo-container svg.brand-svg {
+  display: block;
 }
 
 /* Formulario */

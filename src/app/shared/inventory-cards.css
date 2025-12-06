@@ -94,17 +94,148 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  border: 1px solid rgba(0,0,0,0.08);
+  /* start fully transparent: no border, no background, no shadow */
+  border: none;
+  background: transparent;
+  box-shadow: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 0;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.04) inset;
+  transition: background 160ms ease, color 160ms ease, transform 120ms ease;
 }
-.pdf-btn.delete { background: #d11a1a; color: #fff; border-color: #b11212; }
+.pdf-btn.delete { color: #d11a1a; }
+.pdf-btn.edit { color: #0369a1; }
 .pdf-btn:hover { transform: translateY(-1px); }
 .pdf-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* Hover states show full color */
+.pdf-btn.delete:hover { background: #d11a1a; color: #fff; }
+.pdf-btn.edit:hover { background: #60a5fa; color: #fff; }
+/* Upload variant: match the turquoise used elsewhere */
+.pdf-btn.upload { color: var(--primary-turquoise); }
+.pdf-btn.upload:hover { background: var(--primary-turquoise); color: #fff; }
+/* alias: view buttons behave same as edit (blue) */
+.pdf-btn.view { color: #0369a1; }
+.pdf-btn.view:hover { background: #60a5fa; color: #fff; }
+
+/* Ensure the inner icon uses currentColor and becomes white on hover */
+.pdf-btn svg,
+.pdf-btn i,
+.pdf-btn .icon {
+  color: inherit;
+  fill: currentColor;
+  width: 18px;
+  height: 18px;
+  display: inline-block; /* inline-block works better for font-icons */
+  line-height: 18px; /* match height to vertically center */
+  text-align: center;
+  vertical-align: middle;
+}
+.pdf-btn.upload svg,
+.pdf-btn.upload .icon {
+  /* small visual nudge for upload icons which can render slightly high
+     due to arrow geometry inside the SVG viewBox. Adjust if needed. */
+  transform: translateY(1px);
+}
+.pdf-btn:hover svg,
+.pdf-btn:hover i,
+.pdf-btn:hover .icon {
+  color: inherit; /* inherit will be white when :hover sets color */
+  fill: currentColor;
+}
+
+/* Force hover/fill behavior across common containers (high specificity to override local rules) */
+.reactivos-page .pdf-btn.edit:hover,
+.catalog-card .pdf-btn.edit:hover,
+.pdf-group .pdf-btn.edit:hover,
+.equipo-card .pdf-btn.edit:hover,
+.insumo-card .pdf-btn.edit:hover,
+.inventory-card .pdf-btn.edit:hover,
+.solicitudes-page .pdf-btn.edit:hover,
+.card-top .pdf-btn.edit:hover {
+  background: #60a5fa !important;
+  color: #fff !important;
+}
+.reactivos-page .pdf-btn.delete:hover,
+.catalog-card .pdf-btn.delete:hover,
+.pdf-group .pdf-btn.delete:hover,
+.equipo-card .pdf-btn.delete:hover,
+.insumo-card .pdf-btn.delete:hover,
+.inventory-card .pdf-btn.delete:hover,
+.solicitudes-page .pdf-btn.delete:hover,
+.card-top .pdf-btn.delete:hover {
+  background: #d11a1a !important;
+  color: #fff !important;
+}
+.reactivos-page .pdf-btn.upload:hover,
+.catalog-card .pdf-btn.upload:hover,
+.pdf-group .pdf-btn.upload:hover,
+.equipo-card .pdf-btn.upload:hover,
+.insumo-card .pdf-btn.upload:hover,
+.inventory-card .pdf-btn.upload:hover,
+.solicitudes-page .pdf-btn.upload:hover,
+.card-top .pdf-btn.upload:hover {
+  background: var(--primary-turquoise) !important;
+  color: #fff !important;
+}
+
+/* Ensure icons become white on hover too (cover svg and font icons) */
+.reactivos-page .pdf-btn:hover svg,
+.catalog-card .pdf-btn:hover svg,
+.pdf-group .pdf-btn:hover svg,
+.equipo-card .pdf-btn:hover svg,
+.insumo-card .pdf-btn:hover svg,
+.inventory-card .pdf-btn:hover svg,
+.solicitudes-page .pdf-btn:hover svg,
+.card-top .pdf-btn:hover svg,
+.reactivos-page .pdf-btn:hover i,
+.catalog-card .pdf-btn:hover i,
+.pdf-group .pdf-btn:hover i,
+.equipo-card .pdf-btn:hover i,
+.insumo-card .pdf-btn:hover i,
+.inventory-card .pdf-btn:hover i,
+.solicitudes-page .pdf-btn:hover i,
+.card-top .pdf-btn:hover i,
+.reactivos-page .pdf-btn:hover .icon,
+.catalog-card .pdf-btn:hover .icon,
+.pdf-group .pdf-btn:hover .icon,
+.equipo-card .pdf-btn:hover .icon,
+.insumo-card .pdf-btn:hover .icon,
+.inventory-card .pdf-btn:hover .icon,
+.solicitudes-page .pdf-btn:hover .icon,
+.card-top .pdf-btn:hover .icon {
+  fill: #fff !important;
+  stroke: #fff !important;
+  color: #fff !important;
+}
+
+/* Extra safeguard: center icon wrappers */
+.pdf-btn .icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Stronger centering guard in case other rules interfere */
+.pdf-btn {
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle;
+}
+
+.pdf-btn i {
+  font-size: 16px;
+  line-height: 16px;
+  height: 16px;
+  width: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0;
+}
 
 /* Position card delete buttons top-right for any card */
 :is(.insumo-card, .inventory-card, .catalog-card) .card-delete-btn {

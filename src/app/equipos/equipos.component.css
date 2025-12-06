@@ -916,42 +916,7 @@ input[readonly] {
   flex-wrap: nowrap;
 }
 
-.equipo-card .pdf-btn {
-  padding: 0.4rem;
-  border: none;
-  background: var(--light-gray);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-}
-
-.equipo-card .pdf-btn .icon {
-  width: 16px;
-  height: 16px;
-}
-
-.equipo-card .pdf-btn.upload {
-  color: var(--primary-turquoise);
-}
-
-.equipo-card .pdf-btn.upload:hover {
-  background: var(--primary-turquoise);
-  color: var(--primary-white);
-}
-
-.equipo-card .pdf-btn.delete {
-  color: #e53e3e;
-}
-
-.equipo-card .pdf-btn.delete:hover {
-  background: #e53e3e;
-  color: var(--primary-white);
-}
+/* Use shared .pdf-btn styles from shared/inventory-cards.css for consistent behavior */
 
 /* Card name section with gradient background */
 .equipo-card .card-name {

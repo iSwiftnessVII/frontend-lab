@@ -47,6 +47,49 @@ export class EquiposComponent implements OnInit {
         this.firmaModalSrc = null;
       }
 
+      // Edit mode for equipo: open form prefilled
+      editEquipoMode: boolean = false;
+      editingEquipoCodigo: string | null = null;
+
+      abrirEditarEquipo(equipo: any, event?: Event) {
+        if (event) event.stopPropagation();
+        if (!equipo) return;
+        // Prefill the form fields used by crearEquipo
+        this.codigo_identificacion = equipo.codigo_identificacion || '';
+        this.nombre = equipo.nombre || '';
+        this.modelo = equipo.modelo || '';
+        this.marca = equipo.marca || '';
+        this.inventario_sena = equipo.inventario_sena || '';
+        this.ubicacion = equipo.ubicacion || '';
+        this.acreditacion = equipo.acreditacion || '';
+        this.tipo_manual = equipo.tipo_manual || '';
+        this.numero_serie = equipo.numero_serie || '';
+        this.tipo = equipo.tipo || '';
+        this.clasificacion = equipo.clasificacion || '';
+        this.manual_usuario = equipo.manual_usuario || '';
+        this.puesta_en_servicio = equipo.puesta_en_servicio || '';
+        this.fecha_adquisicion = equipo.fecha_adquisicion || '';
+        this.requerimientos_equipo = equipo.requerimientos_equipo || '';
+        this.elementos_electricos = equipo.elementos_electricos || '';
+        this.voltaje = equipo.voltaje || '';
+        this.elementos_mecanicos = equipo.elementos_mecanicos || '';
+        this.frecuencia = equipo.frecuencia || '';
+        this.campo_medicion = equipo.campo_medicion || '';
+        this.exactitud = equipo.exactitud || '';
+        this.sujeto_verificar = equipo.sujeto_verificar || '';
+        this.sujeto_calibracion = equipo.sujeto_calibracion || '';
+        this.resolucion_division = equipo.resolucion_division || '';
+        this.sujeto_calificacion = equipo.sujeto_calificacion || '';
+        this.accesorios = equipo.accesorios || '';
+
+        this.editEquipoMode = true;
+        this.editingEquipoCodigo = equipo.codigo_identificacion || null;
+        // Open the hojaVida form to edit
+        this.formularioActivo = 'hojaVida';
+        // Scroll to top so form is visible
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
       // Control de registros de historial expandidos
       historialExpandido: { [key: string]: boolean } = {};
 
@@ -1020,7 +1063,7 @@ export class EquiposComponent implements OnInit {
     }
     
     try {
-      await equiposService.crearEquipo({
+      const payload = {
         codigo_identificacion: this.codigo_identificacion,
         nombre: this.nombre,
         modelo: this.modelo,
@@ -1047,10 +1090,22 @@ export class EquiposComponent implements OnInit {
         resolucion_division: this.resolucion_division,
         sujeto_calificacion: this.sujeto_calificacion,
         accesorios: this.accesorios
-      });
-      this.snack.success('Equipo registrado exitosamente');
-      this.resetForm();
-      this.obtenerEquiposRegistrados(); // Actualizar lista
+      };
+
+      if (this.editEquipoMode && this.editingEquipoCodigo) {
+        // Update existing equipo
+        await equiposService.actualizarEquipo(this.editingEquipoCodigo, payload);
+        this.snack.success('Equipo actualizado exitosamente');
+        this.editEquipoMode = false;
+        this.editingEquipoCodigo = null;
+        this.resetForm();
+        await this.obtenerEquiposRegistrados();
+      } else {
+        await equiposService.crearEquipo(payload);
+        this.snack.success('Equipo registrado exitosamente');
+        this.resetForm();
+        this.obtenerEquiposRegistrados(); // Actualizar lista
+      }
     } catch (error: any) {
       this.snack.error(error.message || 'Error al registrar equipo');
     }

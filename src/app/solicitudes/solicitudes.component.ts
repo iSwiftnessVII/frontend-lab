@@ -150,6 +150,21 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   private clientesEffectStop?: EffectRef;
   private solicitudesEffectStop?: EffectRef;
 
+  constructor() {
+    // Create effects inside the constructor to ensure we are in an
+    // injection context (avoids NG0203 runtime error).
+    this.clientesEffectStop = effect(() => {
+      this.clientes(); // subscribe to signal
+      this.filtrarClientes();
+    });
+
+    this.solicitudesEffectStop = effect(() => {
+      this.solicitudes(); // subscribe to signal
+      this.filtrarSolicitudes();
+      try { this.computeNextSolicitudConsecutivo(); } catch (e) { console.warn('computeNextSolicitudConsecutivo effect error', e); }
+    });
+  }
+
   // Opciones para selects
   tiposCliente = [
     'Emprendedor',
@@ -246,18 +261,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     this.loadInitialData();
     this.filtrarClientes();
     this.filtrarSolicitudes();
-
-    // Efectos: cuando los signals de los servicios cambien, re-filtramos automáticamente
-    this.clientesEffectStop = effect(() => {
-      this.clientes(); // subscribir
-      this.filtrarClientes();
-    });
-
-    this.solicitudesEffectStop = effect(() => {
-      this.solicitudes(); // subscribir
-      this.filtrarSolicitudes();
-      try { this.computeNextSolicitudConsecutivo(); } catch (e) { console.warn('computeNextSolicitudConsecutivo effect error', e); }
-    });
   }
 
   ngOnDestroy() {
@@ -1416,6 +1419,8 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   // ======= Estado modal de edición de solicitud =======
   editSolicitudModalOpen = false;
+  // When true the modal is playing the closing animation but remains in DOM
+  editSolicitudModalClosing = false;
   editSolicitudId: number | null = null;
   editSolicitudNombreMuestra = '';
   editSolicitudTipo = '';
@@ -1458,6 +1463,8 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   editSolicitudOpen(s: any): void {
     const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
     if (!sid) return;
+    // If we were in a closing animation, cancel it and open immediately
+    this.editSolicitudModalClosing = false;
     this.editSolicitudModalOpen = true;
     this.editSolicitudId = sid;
     this.editSolicitudNombreMuestra = s?.nombre_muestra || '';
@@ -1520,8 +1527,18 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   }
 
   closeEditSolicitudModal(): void {
-    this.editSolicitudModalOpen = false;
-    this.editSolicitudId = null;
+    // Play a smooth close animation before actually removing modal from DOM.
+    if (!this.editSolicitudModalOpen || this.editSolicitudModalClosing) {
+      // already closed or closing
+      return;
+    }
+    this.editSolicitudModalClosing = true;
+    // Delay should match CSS transition duration (200ms)
+    setTimeout(() => {
+      this.editSolicitudModalClosing = false;
+      this.editSolicitudModalOpen = false;
+      this.editSolicitudId = null;
+    }, 220);
   }
 
   async saveEditSolicitud(): Promise<void> {
@@ -1873,6 +1890,22 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     } else {
       // cerrar cualquiera abierto y abrir el solicitado
       this.formularioActivo = tipo;
+    }
+  }
+
+  // Auto-resize handler for modal textareas: expand height as user types, up to a limit
+  autoResizeTextarea(e: Event): void {
+    try {
+      const el = e.target as HTMLTextAreaElement | null;
+      if (!el) return;
+      // reset to auto to correctly measure scrollHeight
+      el.style.height = 'auto';
+      const scroll = el.scrollHeight;
+      const viewportMax = Math.floor(window.innerHeight * 0.6); // up to 60% of viewport
+      const newHeight = Math.min(scroll, viewportMax);
+      el.style.height = `${newHeight}px`;
+    } catch (err) {
+      // silent
     }
   }
 }

@@ -106,9 +106,10 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: 1px solid var(--border-color, #d0d6dd);
+  /* decorative only: no border or background so only icon color shows */
+  border: none;
   border-radius: 6px;
-  background: var(--card-bg, #fff);
+  background: transparent;
   color: var(--text-color, #374151);
   pointer-events: none; /* decorative; do not block clicks */
 }
@@ -445,6 +446,9 @@
     align-items: center;
     justify-content: center;
     z-index: 9999;
+    /* Smooth fade for opening/closing */
+    transition: opacity 200ms ease;
+    opacity: 1;
   }
 
   .edit-modal {
@@ -459,6 +463,66 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    /* Smooth scale/fade for closing */
+    transition: transform 200ms ease, opacity 200ms ease;
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  /* Ensure form grid inside modal lays out fields in two columns,
+     and make .span-full occupy the full row. Textareas inside span-full
+     become large block rows that fit the modal height without breaking layout. */
+  .edit-modal .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    align-items: start;
+    /* allow children to shrink when scrolling container is constrained */
+    min-height: 0;
+  }
+
+  .edit-modal .form-field.span-full {
+    grid-column: 1 / -1;
+  }
+
+  .edit-modal .form-field.span-full textarea {
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+    resize: vertical;
+    /* Start small (same height as other fields) and expand as user types */
+    min-height: 40px;
+    max-height: calc(60vh);
+    overflow: auto;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-gray);
+    background: var(--primary-white);
+    transition: height 140ms ease;
+    line-height: 1.4;
+  }
+
+  /* Smaller screens: reduce textarea height to avoid overflowing viewport */
+  @media (max-width: 720px) {
+    .edit-modal .form-grid {
+      grid-template-columns: 1fr;
+    }
+    .edit-modal .form-field.span-full textarea {
+      min-height: 160px;
+      max-height: calc(80vh - 160px);
+    }
+  }
+
+  /* Closing state: play fade/scale out while keeping modal in DOM */
+  .modal-overlay.closing {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .edit-modal.closing {
+    transform: translateY(10px) scale(0.98);
+    opacity: 0;
+    pointer-events: none;
   }
 
   /* Make the modal content scrollable while keeping header and footer visible */
@@ -1043,42 +1107,7 @@ input[readonly] {
   flex-wrap: nowrap;
 }
 
-.equipo-card .pdf-btn {
-  padding: 0.4rem;
-  border: none;
-  background: var(--light-gray);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-}
-
-.equipo-card .pdf-btn .icon {
-  width: 16px;
-  height: 16px;
-}
-
-.equipo-card .pdf-btn.upload {
-  color: var(--primary-turquoise);
-}
-
-.equipo-card .pdf-btn.upload:hover {
-  background: var(--primary-turquoise);
-  color: var(--primary-white);
-}
-
-.equipo-card .pdf-btn.delete {
-  color: #e53e3e;
-}
-
-.equipo-card .pdf-btn.delete:hover {
-  background: #e53e3e;
-  color: var(--primary-white);
-}
+/* PDF button styles centralized in shared/inventory-cards.css; remove local duplicates */
 
 /* Card name section with gradient background */
 .equipo-card .card-name {

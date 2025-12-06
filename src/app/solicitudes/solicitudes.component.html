@@ -874,17 +874,22 @@
             </div>
             <div class="pdf-actions">
               @if (canDelete()) {
-                <button type="button" class="pdf-btn delete" 
-                        title="Eliminar solicitud" 
-                        aria-label="Eliminar solicitud" 
-                        (click)="deleteSolicitud(s.solicitud_id); $event.stopPropagation()">
-                  <i class="fas fa-trash" aria-hidden="true"></i>
-                </button>
                 <button type="button" class="pdf-btn edit"
                   title="Editar solicitud"
                   aria-label="Editar solicitud"
                   (click)="editSolicitudOpen(s); $event.stopPropagation()">
-                  <i class="fas fa-edit" aria-hidden="true"></i>
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z" fill="currentColor" />
+                    <path d="M20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.29a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" fill="currentColor" />
+                  </svg>
+                </button>
+                <button type="button" class="pdf-btn delete" 
+                        title="Eliminar solicitud" 
+                        aria-label="Eliminar solicitud" 
+                        (click)="deleteSolicitud(s.solicitud_id); $event.stopPropagation()">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                    <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  </svg>
                 </button>
               }
             </div>
@@ -1135,9 +1140,9 @@
   }
 
   <!-- Modal editar Solicitud -->
-  @if (editSolicitudModalOpen) {
-    <div class="modal-overlay">
-      <div class="edit-modal">
+  @if (editSolicitudModalOpen || editSolicitudModalClosing) {
+    <div class="modal-overlay" [class.closing]="editSolicitudModalClosing" (click)="closeEditSolicitudModal()">
+      <div class="edit-modal" [class.closing]="editSolicitudModalClosing" (click)="$event.stopPropagation()">
         <h3>Editar solicitud</h3>
         <div>
           <div class="equipo-tabs-menu">
@@ -1146,7 +1151,7 @@
             <button type="button" class="tab-btn" [class.active]="editSolicitudActiveTab === 'revision'" (click)="editSolicitudActiveTab = 'revision'">Revisión</button>
             <button type="button" class="tab-btn" [class.active]="editSolicitudActiveTab === 'encuesta'" (click)="editSolicitudActiveTab = 'encuesta'">Encuesta</button>
             <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-              <button type="button" class="tab-btn" (click)="saveAllEditSolicitud()">Guardar todo</button>
+              <button type="button" class="tab-btn" (click)="saveAllEditSolicitud()">Guardar</button>
             </div>
           </div>
 
@@ -1192,11 +1197,7 @@
                 <div class="form-field"><label>Fecha entrega</label><input type="date" [(ngModel)]="editSolicitudFechaEntrega" /></div>
                 <div class="form-field"><label>Recibe (personal)</label><input [(ngModel)]="editSolicitudRecibePersonal" /></div>
                 <div class="form-field"><label>Cargo (personal)</label><input [(ngModel)]="editSolicitudCargoPersonal" /></div>
-                <div class="form-field span-full"><label>Observaciones</label><textarea rows="3" [(ngModel)]="editSolicitudObservaciones"></textarea></div>
-              </div>
-              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-                <button type="button" (click)="saveEditSolicitud()">Guardar</button>
-                <button type="button" (click)="closeEditSolicitudModal()">Cancelar</button>
+                <div class="form-field span-full"><label>Observaciones</label><textarea rows="3" [(ngModel)]="editSolicitudObservaciones" (input)="autoResizeTextarea($event)"></textarea></div>
               </div>
             }
 
@@ -1218,10 +1219,7 @@
                     <option [ngValue]="false">No</option>
                   </select>
                 </div>
-                <div class="form-field span-full"><label>Observación oferta</label><textarea [(ngModel)]="editOfertaObservacion"></textarea></div>
-              </div>
-              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-                <button type="button" (click)="saveEditOferta()">Guardar Oferta</button>
+                <div class="form-field span-full"><label>Observación oferta</label><textarea [(ngModel)]="editOfertaObservacion" (input)="autoResizeTextarea($event)"></textarea></div>
               </div>
             }
 
@@ -1237,9 +1235,6 @@
                     <option [ngValue]="false">No</option>
                   </select>
                 </div>
-              </div>
-              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-                <button type="button" (click)="saveEditRevision()">Guardar Revisión</button>
               </div>
             }
 
@@ -1267,10 +1262,7 @@
                     <option [ngValue]="false">No</option>
                   </select>
                 </div>
-                <div class="form-field span-full"><label>Comentarios</label><textarea [(ngModel)]="editEncuestaComentarios"></textarea></div>
-              </div>
-              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-                <button type="button" (click)="saveEditEncuesta()">Guardar Encuesta</button>
+                <div class="form-field span-full"><label>Comentarios</label><textarea [(ngModel)]="editEncuestaComentarios" (input)="autoResizeTextarea($event)"></textarea></div>
               </div>
             }
           </div>
@@ -1320,31 +1312,36 @@
                    tabindex="0">
           <div class="card-top">
             <div class="tags">
-              <span class="tag"><strong>ID:</strong> {{ u.id_cliente }}</span>
+              <span class="tag"><strong>ID:</strong> {{ u.numero || u.numero_cliente || u.id_cliente }}</span>
               <span class="tag"><strong>Identificación:</strong> {{ u.numero_identificacion || '—' }}</span>
               <span class="tag"><strong>Ciudad:</strong> {{ resolveCiudad(u) }}</span>
               <span class="tag"><strong>Celular:</strong> {{ u.celular || '—' }}</span>
             </div>
             <div class="pdf-actions">
               @if (canDelete()) {
-                <button type="button" class="pdf-btn delete" 
-                        title="Eliminar cliente" 
-                        aria-label="Eliminar cliente" 
-                        (click)="$event.stopPropagation(); deleteCliente(u.id_cliente)">
-                  <i class="fas fa-trash" aria-hidden="true"></i>
-                </button>
                 <button type="button" class="pdf-btn edit"
                         title="Editar cliente"
                         aria-label="Editar cliente"
                         (click)="$event.stopPropagation(); editCliente(u)">
-                  <i class="fas fa-edit" aria-hidden="true"></i>
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z" fill="currentColor" />
+                    <path d="M20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.29a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" fill="currentColor" />
+                  </svg>
+                </button>
+                <button type="button" class="pdf-btn delete" 
+                        title="Eliminar cliente" 
+                        aria-label="Eliminar cliente" 
+                        (click)="$event.stopPropagation(); deleteCliente(u.id_cliente)">
+                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                    <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  </svg>
                 </button>
               }
             </div>
           </div>
 
           <div class="card-name">
-            <div class="name-line">{{ u.nombre_solicitante || u.razon_social || ('Cliente ' + u.id_cliente) }}</div>
+            <div class="name-line">{{ u.nombre_solicitante || u.razon_social || ('Cliente ' + (u.numero || u.numero_cliente || u.id_cliente)) }}</div>
             <div class="meta-line">
               <span class="chip">Tipo: {{ u.tipo_usuario || '—' }}</span>
               <span class="chip">Correo: {{ u.correo_electronico || '—' }}</span>

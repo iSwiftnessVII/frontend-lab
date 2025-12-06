@@ -88,41 +88,101 @@ body {
   gap: 0.8rem; /* un poco más de separación entre controles */
   align-items: center;
 }
-.reactivo-card .card-name .name-pdfs .pdf-btn {
-  /* tamaño y estilo para los botones cuadrados */
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04) inset;
+/* Local per-card .pdf-btn styles removed. Use shared styles in
+   `src/app/shared/inventory-cards.css` to control appearance, hover
+   effects and icon coloring. Keep markup compatible with shared rules. */
+
+/* Invert appearance for action buttons inside the compact name-pdfs block
+   — default: colored background + white icon. On hover: transparent
+   background and colored icon. Targets SDS/CoA groups and catalog items. */
+.reactivo-card .card-name .name-pdfs .pdf-btn,
+.catalog-card .card-name .name-pdfs .pdf-btn {
+  transition: background 160ms ease, color 160ms ease, transform 120ms ease;
 }
-.reactivo-card .card-name .name-pdfs .pdf-btn .icon {
-  width: 18px;
-  height: 18px;
-}
-.reactivo-card .card-name .name-pdfs .pdf-btn.view {
-  background: #1f6fe0;
-  color: #fff;
-  border-color: #185ecf;
-}
-.reactivo-card .card-name .name-pdfs .pdf-btn.delete {
+
+/* Delete (red) */
+.reactivo-card .card-name .name-pdfs .pdf-btn.delete,
+.catalog-card .card-name .name-pdfs .pdf-btn.delete {
   background: #d11a1a;
   color: #fff;
-  border-color: #b11212;
+  box-shadow: none;
 }
-.reactivo-card .card-name .name-pdfs .pdf-btn.upload {
-  background: #179b34;
+.reactivo-card .card-name .name-pdfs .pdf-btn.delete svg,
+.catalog-card .card-name .name-pdfs .pdf-btn.delete .icon {
+  fill: #fff;
+  stroke: #fff;
+}
+.reactivo-card .card-name .name-pdfs .pdf-btn.delete:hover,
+.catalog-card .card-name .name-pdfs .pdf-btn.delete:hover {
+  background: transparent;
+  color: #d11a1a;
+}
+.reactivo-card .card-name .name-pdfs .pdf-btn.delete:hover svg,
+.catalog-card .card-name .name-pdfs .pdf-btn.delete:hover .icon {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+/* Upload (turquoise) */
+.reactivo-card .card-name .name-pdfs .pdf-btn.upload,
+.catalog-card .card-name .name-pdfs .pdf-btn.upload {
+  background: var(--primary-turquoise);
   color: #fff;
-  border-color: #12892b;
 }
-.reactivo-card .card-name .name-pdfs .pdf-btn:hover {
-  transform: translateY(-1px);
+.reactivo-card .card-name .name-pdfs .pdf-btn.upload svg,
+.catalog-card .card-name .name-pdfs .pdf-btn.upload .icon {
+  fill: #fff;
+  stroke: #fff;
 }
+.reactivo-card .card-name .name-pdfs .pdf-btn.upload:hover,
+.catalog-card .card-name .name-pdfs .pdf-btn.upload:hover {
+  background: transparent;
+  color: var(--primary-turquoise);
+}
+.reactivo-card .card-name .name-pdfs .pdf-btn.upload:hover svg,
+.catalog-card .card-name .name-pdfs .pdf-btn.upload:hover .icon {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+/* View/Edit (blue) */
+.reactivo-card .card-name .name-pdfs .pdf-btn.view,
+.catalog-card .card-name .name-pdfs .pdf-btn.view,
+.reactivo-card .card-name .name-pdfs .pdf-btn.edit,
+.catalog-card .card-name .name-pdfs .pdf-btn.edit {
+  background: #1f6fe0;
+  color: #fff;
+}
+.reactivo-card .card-name .name-pdfs .pdf-btn.view svg,
+.reactivo-card .card-name .name-pdfs .pdf-btn.edit svg,
+.catalog-card .card-name .name-pdfs .pdf-btn.view svg,
+.catalog-card .card-name .name-pdfs .pdf-btn.edit svg,
+.reactivo-card .card-name .name-pdfs .pdf-btn.view .icon,
+.reactivo-card .card-name .name-pdfs .pdf-btn.edit .icon,
+.catalog-card .card-name .name-pdfs .pdf-btn.view .icon,
+.catalog-card .card-name .name-pdfs .pdf-btn.edit .icon {
+  fill: #fff;
+  stroke: #fff;
+}
+.reactivo-card .card-name .name-pdfs .pdf-btn.view:hover,
+.reactivo-card .card-name .name-pdfs .pdf-btn.edit:hover,
+.catalog-card .card-name .name-pdfs .pdf-btn.view:hover,
+.catalog-card .card-name .name-pdfs .pdf-btn.edit:hover {
+  background: transparent;
+  color: #1f6fe0;
+}
+.reactivo-card .card-name .name-pdfs .pdf-btn.view:hover svg,
+.reactivo-card .card-name .name-pdfs .pdf-btn.edit:hover svg,
+.catalog-card .card-name .name-pdfs .pdf-btn.view:hover svg,
+.catalog-card .card-name .name-pdfs .pdf-btn.edit:hover svg,
+.reactivo-card .card-name .name-pdfs .pdf-btn.view:hover .icon,
+.reactivo-card .card-name .name-pdfs .pdf-btn.edit:hover .icon,
+.catalog-card .card-name .name-pdfs .pdf-btn.view:hover .icon,
+.catalog-card .card-name .name-pdfs .pdf-btn.edit:hover .icon {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
 .reactivo-card .card-name .pdf-availability {
   display: inline-flex;
   align-items: center;
@@ -218,6 +278,11 @@ body {
   opacity: 0.7;
   background: #ffffff;
 }
+
+/* Local .pdf-btn rules removed: use shared styles in
+   `src/app/shared/inventory-cards.css` for all action buttons.
+   If you need component-specific tweaks, add small modifiers
+   here that do not re-declare the full button layout. */
 /* Acrónimo gris cuando no hay documento */
 .reactivo-card .card-name .name-pdfs .tag.pdf-no-existe .pdf-acronym {
   font-size: 0.85rem;
@@ -243,45 +308,8 @@ body {
   align-items: center;
 }
 .catalog-card .card-name .name-pdfs .pdf-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-}
-.catalog-card .card-name .name-pdfs .pdf-btn.view {
-  background: #1f6fe0;
-  color: #fff;
-  border-color: #185ecf;
-}
-.catalog-card .card-name .name-pdfs .pdf-btn.delete {
-  background: #d11a1a;
-  color: #fff;
-  border-color: #b11212;
-}
-.catalog-card .card-name .name-pdfs .pdf-btn.upload {
-  background: #179b34;
-  color: #fff;
-  border-color: #12892b;
-}
-.catalog-card .card-name .name-pdfs .pdf-availability {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 34px;
-  height: 30px;
-  padding: 0 8px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.85rem;
-  border: 1px solid var(--border-gray);
-  background: #ffffff; /* fondo blanco para catálogo también */
-  color: var(--text-gray);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
+  /* Catalog buttons: base layout comes from shared CSS. Use modifiers
+     here only when absolutely necessary (avoid re-declaring sizes/colors). */
 }
 .catalog-card .card-name .name-pdfs .pdf-availability.ok {
   background: #ffffff;
@@ -657,11 +685,14 @@ section {
 }
 
 /* ===== Buttons ===== */
-button[type='submit'],
-button[type='button'],
-.btn,
-.btn-primary,
-.btn-secondary {
+/* Scope general button styles to exclude icon-only action buttons
+  (those use the `.pdf-btn` class and are styled in
+  `src/app/shared/inventory-cards.css`). */
+button[type='submit']:not(.pdf-btn),
+button[type='button']:not(.pdf-btn),
+.btn:not(.pdf-btn),
+.btn-primary:not(.pdf-btn),
+.btn-secondary:not(.pdf-btn) {
   padding: 0.8rem 1.5rem;
   border: none;
   border-radius: 6px;
@@ -674,10 +705,10 @@ button[type='button'],
   color: var(--primary-white);
 }
 
-button[type='submit']:hover,
-button[type='button']:hover,
-.btn:hover,
-.btn-primary:hover {
+button[type='submit']:not(.pdf-btn):hover,
+button[type='button']:not(.pdf-btn):hover,
+.btn:not(.pdf-btn):hover,
+.btn-primary:not(.pdf-btn):hover {
   background: #008e8c;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 184, 181, 0.3);
@@ -862,51 +893,8 @@ button[type='button']:hover,
   gap: 0.3rem;
 }
 
-.pdf-btn {
-  padding: 0.4rem;
-  border: none;
-  background: var(--light-gray);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-}
-
-.pdf-btn .icon {
-  width: 16px;
-  height: 16px;
-}
-
-.pdf-btn.upload {
-  color: var(--primary-turquoise);
-}
-
-.pdf-btn.upload:hover {
-  background: var(--primary-turquoise);
-  color: var(--primary-white);
-}
-
-.pdf-btn.view {
-  color: var(--primary-blue);
-}
-
-.pdf-btn.view:hover {
-  background: var(--primary-blue);
-  color: var(--primary-white);
-}
-
-.pdf-btn.delete {
-  color: #e53e3e;
-}
-
-.pdf-btn.delete:hover {
-  background: #e53e3e;
-  color: var(--primary-white);
-}
+/* PDF button base and variants moved to shared/inventory-cards.css */
+/* Local files should not redefine .pdf-btn styles to keep consistency across the app. */
 
 /* ===== PDF Badges ===== */
 .pdf-badges {
@@ -1253,145 +1241,6 @@ mark {
   border-color: #d63d3d;
 }
 
-/* Botones PDF con colores específicos */
-.pdf-btn {
-  width: 34px;
-  height: 34px;
-  background: var(--primary-blue);
-  border: 1px solid var(--primary-blue);
-  border-radius: 8px;
-}
-
-.pdf-btn .icon {
-  width: 18px;
-  height: 18px;
-}
-
-.pdf-btn.upload {
-  background: #179b34;
-  border-color: #179b34;
-}
-
-.pdf-btn.view {
-  background: #1f6fe0;
-  border-color: #1f6fe0;
-}
-
-.pdf-btn.delete {
-  background: #d11a1a;
-  border-color: #d11a1a;
-}
-
-/* En el catálogo queremos icon-only con borde y al pasar el mouse se rellena del color de la acción */
-.catalog-card .pdf-btn {
-  --action-color: var(--primary-blue);
-  background: transparent !important;
-  border: 1px solid transparent !important;
-  color: var(--action-color) !important;
-  width: auto !important;
-  height: auto !important;
-  padding: 6px !important; /* mantener zona clicable */
-  border-radius: 6px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transition: background-color 180ms ease, color 180ms ease, transform 120ms ease,
-    box-shadow 180ms ease;
-}
-.catalog-card .pdf-btn .icon {
-  width: 18px !important;
-  height: 18px !important;
-}
-.catalog-card .pdf-btn.upload {
-  --action-color: #179b34 !important;
-  color: var(--action-color) !important;
-  border-color: var(--action-color) !important;
-}
-.catalog-card .pdf-btn.view {
-  --action-color: #1f6fe0 !important;
-  color: var(--action-color) !important;
-  border-color: var(--action-color) !important;
-}
-.catalog-card .pdf-btn.delete {
-  --action-color: #d11a1a !important;
-  color: var(--action-color) !important;
-  border-color: var(--action-color) !important;
-}
-
-/* Hover/focus: rellenar con el color y poner el icono blanco */
-.catalog-card .pdf-btn:hover,
-.catalog-card .pdf-btn:focus {
-  background: var(--action-color) !important;
-  color: #fff !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
-  outline: none !important;
-}
-
-/* Forzar que los SVG usen currentColor (para que cambien a blanco en hover) */
-.catalog-card .pdf-btn .icon {
-  fill: none;
-  stroke: currentColor !important;
-}
-
-/* Asegurar compatibilidad con reglas más específicas que puedan reaplicar fondo */
-.reactivos-page article.catalog-card .pdf-btn,
-.reactivos-page .catalog-card .pdf-btn {
-  background: transparent !important;
-}
-
-/* Regla aún más específica para asegurarnos que los botones en las tarjetas del catálogo
-   sean icon-only (sin fondo, sin borde) y mantengan el color del icono. */
-article.catalog-card .card-top .pdf-actions .pdf-group .pdf-btn,
-.catalog-card .card-top .pdf-actions .pdf-group .pdf-btn,
-.reactivos-page article.catalog-card .pdf-btn {
-  background: transparent !important;
-  border: 1px solid currentColor !important; /* show border using the icon color */
-  box-shadow: none !important;
-  width: auto !important;
-  height: auto !important;
-  padding: 6px !important;
-  border-radius: 4px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-/* Forzar el color del icono por tipo de acción (usa currentColor en los SVG) */
-.catalog-card .pdf-btn.upload {
-  color: #179b34 !important;
-}
-.catalog-card .pdf-btn.view {
-  color: #1f6fe0 !important;
-}
-.catalog-card .pdf-btn.delete {
-  color: #d11a1a !important;
-}
-
-/* Asegurar que los SVG usen currentColor y no tengan fondo */
-.catalog-card .pdf-btn .icon {
-  fill: currentColor !important;
-  stroke: currentColor !important;
-}
-
-/* Evitar que reglas generales vuelvan a pintar fondo con mayor especificidad */
-.catalog-card .pdf-btn.upload[style],
-.catalog-card .pdf-btn.view[style],
-.catalog-card .pdf-btn.delete[style] {
-  background: transparent !important;
-}
-
-.pdf-btn:hover {
-  filter: brightness(1.05);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.pdf-btn:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-/* Separador entre grupos de PDF */
 .pdf-group + .pdf-group {
   margin-left: 1rem;
   position: relative;
