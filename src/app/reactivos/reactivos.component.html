@@ -21,73 +21,82 @@
       <span>Ver Inventario</span>
     </div>
   </div>
-  @if (formularioActivo === 'catalogo') {
-    <h2>Crear nuevo reactivo en Catálogo</h2>
-    <section>
+
+ @if (formularioActivo === 'catalogo') {
+  <h2>Crear nuevo reactivo en Catálogo</h2>
+  <section>
     <form class="form-grid" #catalogoForm="ngForm" (ngSubmit)="crearCatalogo($event, catalogoForm)">
-      <div *ngIf="!esAuxiliar">
-        <label for="catCodigo">Código</label>
-        <select id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" #catCodigoCtrl="ngModel" required
-          [class.invalid]="catCodigoCtrl.invalid && (catCodigoCtrl.touched || submittedCatalogo)">
+      
+      <!-- Código (select) -->
+      <div *ngIf="!esAuxiliar" class="form-field">
+        <label for="catCodigo">Código: *</label>
+        <select id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" required
+          [class.error]="catalogoErrors['codigo']">
           <option value="">Seleccionar código</option>
           <option [value]="nextCodigoS">{{ nextCodigoS }}</option>
           <option [value]="nextCodigoR">{{ nextCodigoR }}</option>
           <option [value]="nextCodigoM">{{ nextCodigoM }}</option>
         </select>
-        @if (catCodigoCtrl.invalid && (catCodigoCtrl.touched || submittedCatalogo)) {
-        <span class="field-error">Requerido</span>
+        @if (catalogoErrors['codigo']) {
+          <small class="error-message">⚠️ {{ catalogoErrors['codigo'] }}</small>
         }
       </div>
 
-      <div>
-        <label for="catNombre">Nombre</label>
-        <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" #catNombreCtrl="ngModel" required
-          [class.invalid]="catNombreCtrl.invalid && (catNombreCtrl.touched || submittedCatalogo)" placeholder="Ej: Ácido acético" />
-        @if (catNombreCtrl.invalid && (catNombreCtrl.touched || submittedCatalogo)) {
-        <span class="field-error">Requerido</span>
+      <!-- Nombre -->
+      <div class="form-field">
+        <label for="catNombre">Nombre: *</label>
+        <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required appLettersOnly
+          [class.error]="catalogoErrors['nombre']" placeholder="Ej: Ácido acético" />
+        @if (catalogoErrors['nombre']) {
+          <small class="error-message">⚠️ {{ catalogoErrors['nombre'] }}</small>
         }
       </div>
-      <div>
-        <label for="catTipo">Tipo reactivo</label>
-        <select id="catTipo" [(ngModel)]="catTipo" name="catTipo" #catTipoCtrl="ngModel" required
-          [class.invalid]="catTipoCtrl.invalid && (catTipoCtrl.touched || submittedCatalogo)">
+
+      <!-- Tipo reactivo -->
+      <div class="form-field">
+        <label for="catTipo">Tipo reactivo: *</label>
+        <select id="catTipo" [(ngModel)]="catTipo" name="catTipo" required
+          [class.error]="catalogoErrors['tipo']">
           <option [ngValue]="''">Seleccione tipo</option>
           @for (t of tipos; track t) {
-          <option [value]="t.nombre">{{ t.nombre }}</option>
+            <option [value]="t.nombre">{{ t.nombre }}</option>
           }
         </select>
-        @if (catTipoCtrl.invalid && (catTipoCtrl.touched || submittedCatalogo)) {
-        <span class="field-error">Seleccione una opción</span>
+        @if (catalogoErrors['tipo']) {
+          <small class="error-message">⚠️ {{ catalogoErrors['tipo'] }}</small>
         }
       </div>
-      <div>
-        <label for="catClasificacion">Clasificación SGA</label>
-        <select id="catClasificacion" [(ngModel)]="catClasificacion" name="catClasificacion" #catClasifCtrl="ngModel"
-          required [class.invalid]="catClasifCtrl.invalid && (catClasifCtrl.touched || submittedCatalogo)"
+
+      <!-- Clasificación SGA -->
+      <div class="form-field">
+        <label for="catClasificacion">Clasificación SGA: *</label>
+        <select id="catClasificacion" [(ngModel)]="catClasificacion" name="catClasificacion"
+          required [class.error]="catalogoErrors['clasificacion']"
           [ngStyle]="getSelectStyleForName(catClasificacion)">
           <option [ngValue]="''">Seleccione clasificación</option>
           @for (c of clasif; track c) {
-          <option [value]="c.nombre" [style.backgroundColor]="getClasifColorByName(c.nombre)"
-            [style.color]="getClasifTextColor(getClasifColorByName(c.nombre))">
-            {{ c.nombre }}
-          </option>
+            <option [value]="c.nombre" 
+              [style.backgroundColor]="getClasifColorByName(c.nombre)"
+              [style.color]="getClasifTextColor(getClasifColorByName(c.nombre))">
+              {{ c.nombre }}
+            </option>
           }
         </select>
-        @if (catClasifCtrl.invalid && (catClasifCtrl.touched || submittedCatalogo)) {
-        <span class="field-error">Seleccione una opción</span>
+        @if (catalogoErrors['clasificacion']) {
+          <small class="error-message">⚠️ {{ catalogoErrors['clasificacion'] }}</small>
         }
       </div>
-    <div class="actions" *ngIf="!esAuxiliar">
-      <button class="btn-compact" type="submit">Agregar al catálogo</button>
-    </div>
-  </form>
 
-    <!-- Transient toast (used for upload/delete feedback) -->
+      <div class="actions" *ngIf="!esAuxiliar">
+        <button class="btn-compact" type="submit">Agregar al catálogo</button>
+      </div>
+    </form>
+
     @if (toastMsg) {
-    <div class="toast" role="status" aria-live="polite">{{ toastMsg }}</div>
+      <div class="toast" role="status" aria-live="polite">{{ toastMsg }}</div>
     }
-    </section>
-  }
+  </section>
+}
 
   @if (formularioActivo === 'catalogo-list') {
     <h2>Catálogo de Reactivos</h2>
@@ -165,268 +174,298 @@
 
   <!-- Inventario de reactivos -->
   @if (formularioActivo === 'crear-reactivo') {
-    <h2>Crear reactivo</h2>
-    <section>
-    <!-- Formulario de creación -->
+  <h2>Crear reactivo</h2>
+  <section>
     <form class="form-grid" #reactivoForm="ngForm" (ngSubmit)="crearReactivo($event, reactivoForm)">
-      <div class="field-sm field-autocomplete">
-        <label for="lote">Lote</label>
-        <input id="lote" [(ngModel)]="lote" name="lote" #loteCtrl="ngModel" required
-          [class.invalid]="loteCtrl.invalid && (loteCtrl.touched || submittedReactivo)" />
-        @if (loteCtrl.invalid && (loteCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Requerido</span>
+      
+      <!-- Lote -->
+      <div class="field-sm field-autocomplete form-field">
+        <label for="lote">Lote: *</label>
+        <input id="lote" [(ngModel)]="lote" name="lote" required appAlphaNumeric
+          [class.error]="reactivoErrors['lote']" placeholder="Ej: L202501" />
+        @if (reactivoErrors['lote']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['lote'] }}</small>
         }
       </div>
 
-      <div class="field-autocomplete">
-        <label for="codigo">Código (catálogo)</label>
-        <input id="codigo" [(ngModel)]="codigo" name="codigo" #codigoCtrl="ngModel" (input)="onCodigoInput()"
-          (focus)="onCodigoFocus()" (blur)="onCodigoBlur()" required
-          [class.invalid]="codigoCtrl.invalid && (codigoCtrl.touched || submittedReactivo)" />
-        @if (codigoCtrl.invalid && (codigoCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Requerido</span>
+      <!-- Código (catálogo) -->
+      <div class="field-autocomplete form-field">
+        <label for="codigo">Código (catálogo): *</label>
+        <input id="codigo" [(ngModel)]="codigo" name="codigo" required appAlphaNumeric
+          [class.error]="reactivoErrors['codigo']" 
+          (input)="onCodigoInput()"
+          (focus)="onCodigoFocus()" 
+          (blur)="onCodigoBlur()" 
+          placeholder="Ej: R-001" />
+        @if (reactivoErrors['codigo']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['codigo'] }}</small>
         }
 
-        @if (isCodigoFocused && (codigo.trim().length>=1) && catalogoSugerencias.length &&
-        catalogoFiltroCampo==='codigo') {
-        <div class="autocomplete-panel" role="listbox">
-          @for (s of catalogoSugerencias | slice:0:8; track s) {
-          <button type="button" class="autocomplete-item" role="option" (mousedown)="$event.preventDefault()"
-            (click)="seleccionarCatalogo(s)" [title]="s.nombre">
-            <span class="code">{{ s.codigo }}</span>
-            <span class="name">{{ s.nombre }}</span>
-          </button>
-          }
-        </div>
-        }
-      </div>
-
-      <div class="field-autocomplete">
-        <label for="nombre">Nombre (catálogo)</label>
-        <input id="nombre" [(ngModel)]="nombre" name="nombre" #nombreCtrl="ngModel" (input)="onNombreInput()"
-          (focus)="onNombreFocus()" (blur)="onNombreBlur()" required
-          [class.invalid]="nombreCtrl.invalid && (nombreCtrl.touched || submittedReactivo)" />
-        @if (nombreCtrl.invalid && (nombreCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Requerido</span>
-        }
-
-        @if (isNombreFocused && (nombre.trim().length>=1) && catalogoSugerencias.length &&
-        catalogoFiltroCampo==='nombre') {
-        <div class="autocomplete-panel" role="listbox">
-          @for (s of catalogoSugerencias | slice:0:8; track s) {
-          <button type="button" class="autocomplete-item" role="option" (mousedown)="$event.preventDefault()"
-            (click)="seleccionarCatalogo(s)" [title]="s.nombre">
-            <span class="code">{{ s.codigo }}</span>
-            <span class="name">{{ s.nombre }}</span>
-          </button>
-          }
-        </div>
+        @if (isCodigoFocused && (codigo.trim().length>=1) && catalogoSugerencias.length && catalogoFiltroCampo==='codigo') {
+          <div class="autocomplete-panel" role="listbox">
+            @for (s of catalogoSugerencias | slice:0:8; track s) {
+              <button type="button" class="autocomplete-item" role="option" 
+                (mousedown)="$event.preventDefault()"
+                (click)="seleccionarCatalogo(s)" [title]="s.nombre">
+                <span class="code">{{ s.codigo }}</span>
+                <span class="name">{{ s.nombre }}</span>
+              </button>
+            }
+          </div>
         }
       </div>
 
-      <div>
-        <label for="marca">Marca</label>
-        <input id="marca" [(ngModel)]="marca" name="marca" #marcaCtrl="ngModel" required
-          [class.invalid]="marcaCtrl.invalid && (marcaCtrl.touched || submittedReactivo)" />
-        @if (marcaCtrl.invalid && (marcaCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Requerido</span>
+      <!-- Nombre (catálogo) -->
+      <div class="field-autocomplete form-field">
+        <label for="nombre">Nombre (catálogo): *</label>
+        <input id="nombre" [(ngModel)]="nombre" name="nombre" required appAlphaNumeric
+          [class.error]="reactivoErrors['nombre']" 
+          (input)="onNombreInput()"
+          (focus)="onNombreFocus()" 
+          (blur)="onNombreBlur()" 
+          placeholder="Ej: Ácido clorhídrico" />
+        @if (reactivoErrors['nombre']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['nombre'] }}</small>
+        }
+
+        @if (isNombreFocused && (nombre.trim().length>=1) && catalogoSugerencias.length && catalogoFiltroCampo==='nombre') {
+          <div class="autocomplete-panel" role="listbox">
+            @for (s of catalogoSugerencias | slice:0:8; track s) {
+              <button type="button" class="autocomplete-item" role="option" 
+                (mousedown)="$event.preventDefault()"
+                (click)="seleccionarCatalogo(s)" [title]="s.nombre">
+                <span class="code">{{ s.codigo }}</span>
+                <span class="name">{{ s.nombre }}</span>
+              </button>
+            }
+          </div>
         }
       </div>
 
-      <div>
-        <label for="referencia">Referencia</label>
-        <input id="referencia" [(ngModel)]="referencia" name="referencia" #referenciaCtrl="ngModel" required
-          [class.invalid]="referenciaCtrl.invalid && (referenciaCtrl.touched || submittedReactivo)" />
-        @if (referenciaCtrl.invalid && (referenciaCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Requerido</span>
+      <!-- Marca -->
+      <div class="form-field">
+        <label for="marca">Marca: *</label>
+        <input id="marca" [(ngModel)]="marca" name="marca" required appAlphaNumeric
+          [class.error]="reactivoErrors['marca']" placeholder="Ej: Merck" />
+        @if (reactivoErrors['marca']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['marca'] }}</small>
         }
       </div>
 
-      <div>
-        <label for="cas">CAS</label>
-        <input id="cas" [(ngModel)]="cas" name="cas" #casCtrl="ngModel" required title="Formato: 64-17-5"
-          (blur)="onCasBlur()" [class.invalid]="casCtrl.invalid && (casCtrl.touched || submittedReactivo)" />
-        @if (casCtrl.errors?.['required'] && (casCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Requerido</span>
-        }
-        @if (casCtrl.errors?.['pattern'] && (casCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Formato CAS inválido (ej: 64-17-5)</span>
+      <!-- Referencia -->
+      <div class="form-field">
+        <label for="referencia">Referencia: *</label>
+        <input id="referencia" [(ngModel)]="referencia" name="referencia" required appNumbersOnly
+          [class.error]="reactivoErrors['referencia']" placeholder="Ej: 100512" />
+        @if (reactivoErrors['referencia']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['referencia'] }}</small>
         }
       </div>
 
-      <div class="field-sm">
-        <label for="presentacion">Presentación</label>
-        <input id="presentacion" type="number" [(ngModel)]="presentacion" name="presentacion" min="0" step="any"
-          required #presentacionCtrl="ngModel" (input)="calcularCantidadTotal()"
-          [class.invalid]="presentacionCtrl.invalid && (presentacionCtrl.touched || submittedReactivo)" />
-
-        @if (presentacionCtrl.errors?.['required'] && (presentacionCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Requerido</span>
-        }
-
-        @if (presentacionCtrl.errors?.['min'] && (presentacionCtrl.touched || submittedReactivo)) {
-        <span class="field-error">No puede ser negativo</span>
+      <!-- CAS -->
+      <div class="form-field">
+        <label for="cas">CAS: *</label>
+        <input id="cas" [(ngModel)]="cas" name="cas" required
+          [class.error]="reactivoErrors['cas']" 
+          title="Formato: 64-17-5"
+          (blur)="onCasBlur()" 
+          placeholder="Ej: 64-17-5" />
+        @if (reactivoErrors['cas']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['cas'] }}</small>
         }
       </div>
 
-      <div>
-        <label for="unidad_id">Unidad</label>
-        <select id="unidad_id" [(ngModel)]="unidad_id" name="unidad_id" #unidadCtrl="ngModel" required
-          [class.invalid]="unidadCtrl.invalid && (unidadCtrl.touched || submittedReactivo)">
+      <!-- Presentación -->
+      <div class="field-sm form-field">
+        <label for="presentacion">Presentación: *</label>
+        <input id="presentacion" type="number" [(ngModel)]="presentacion" 
+          name="presentacion" min="0" step="any" required appNumbersOnly
+          [class.error]="reactivoErrors['presentacion']" 
+          (input)="calcularCantidadTotal()" 
+          placeholder="Ej: 500" />
+        @if (reactivoErrors['presentacion']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['presentacion'] }}</small>
+        }
+      </div>
+
+      <!-- Unidad -->
+      <div class="form-field">
+        <label for="unidad_id">Unidad: *</label>
+        <select id="unidad_id" [(ngModel)]="unidad_id" name="unidad_id" required
+          [class.error]="reactivoErrors['unidad_id']">
           <option [ngValue]="''">Seleccione unidad</option>
           @for (u of unidades; track u) {
-          <option [value]="u.id">{{ u.nombre }}</option>
+            <option [value]="u.id">{{ u.nombre }}</option>
           }
         </select>
-        @if (unidadCtrl.invalid && (unidadCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Seleccione una opción</span>
+        @if (reactivoErrors['unidad_id']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['unidad_id'] }}</small>
         }
       </div>
 
-      <div class="field-sm">
-        <label for="presentacion_cant">Cantidad x presentación</label>
-        <input id="presentacion_cant" type="number" [(ngModel)]="presentacion_cant" name="presentacion_cant" min="0"
-          step="any" required #presentCantCtrl="ngModel" (input)="calcularCantidadTotal()"
-          [class.invalid]="presentCantCtrl.invalid && (presentCantCtrl.touched || submittedReactivo)" />
-        @if (presentCantCtrl.errors?.['required'] && (presentCantCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Requerido</span>
-        }
-        @if (presentCantCtrl.errors?.['min'] && (presentCantCtrl.touched || submittedReactivo)) {
-        <span class="field-error">No puede ser negativo</span>
-        }
-      </div>
-
-      <div class="field-sm">
-        <label for="cantidad_total">Cantidad total</label>
-        <input id="cantidad_total" type="number" [(ngModel)]="cantidad_total" name="cantidad_total" readonly />
-      </div>
-
-      <div>
-        <label for="fecha_adquisicion">Fecha de adquisición</label>
-        <input id="fecha_adquisicion" type="date" [(ngModel)]="fecha_adquisicion" name="fecha_adquisicion"
-          #fechaAdqCtrl="ngModel" required
-          [class.invalid]="fechaAdqCtrl.invalid && (fechaAdqCtrl.touched || submittedReactivo)" />
-        @if (fechaAdqCtrl.invalid && (fechaAdqCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Requerido</span>
+      <!-- Cantidad x presentación -->
+      <div class="field-sm form-field">
+        <label for="presentacion_cant">Cantidad x presentación: *</label>
+        <input id="presentacion_cant" type="number" [(ngModel)]="presentacion_cant" 
+          name="presentacion_cant" min="0" step="any" required appNumbersOnly
+          [class.error]="reactivoErrors['presentacion_cant']" 
+          (input)="calcularCantidadTotal()" 
+          placeholder="Ej: 1" />
+        @if (reactivoErrors['presentacion_cant']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['presentacion_cant'] }}</small>
         }
       </div>
 
-      <div>
-        <label for="fecha_vencimiento">Fecha de vencimiento</label>
-        <input id="fecha_vencimiento" type="date" [(ngModel)]="fecha_vencimiento" name="fecha_vencimiento"
-          #fechaVencCtrl="ngModel" required
-          [class.invalid]="(fechaVencCtrl.invalid && (fechaVencCtrl.touched || submittedReactivo)) || fechasInconsistentes()" />
-        @if (fechaVencCtrl.invalid && (fechaVencCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Requerido</span>
+      <!-- Cantidad total (readonly) -->
+      <div class="field-sm form-field">
+        <label for="cantidad_total">Cantidad total:</label>
+        <input id="cantidad_total" type="number" [(ngModel)]="cantidad_total" 
+          name="cantidad_total" readonly 
+          placeholder="Calculado automáticamente" />
+      </div>
+
+      <!-- Fecha de adquisición -->
+      <div class="form-field">
+        <label for="fecha_adquisicion">Fecha de adquisición: *</label>
+        <input id="fecha_adquisicion" type="date" [(ngModel)]="fecha_adquisicion" 
+          name="fecha_adquisicion" required
+          [class.error]="reactivoErrors['fecha_adquisicion']" />
+        @if (reactivoErrors['fecha_adquisicion']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['fecha_adquisicion'] }}</small>
         }
-        @if (!fechaVencCtrl.invalid && fechasInconsistentes()) {
-        <span class="field-error">Vencimiento no puede ser anterior a adquisición</span>
+      </div>
+
+      <!-- Fecha de vencimiento -->
+      <div class="form-field">
+        <label for="fecha_vencimiento">Fecha de vencimiento: *</label>
+        <input id="fecha_vencimiento" type="date" [(ngModel)]="fecha_vencimiento" 
+          name="fecha_vencimiento" required
+          [class.error]="reactivoErrors['fecha_vencimiento'] || fechasInconsistentes()" />
+        @if (reactivoErrors['fecha_vencimiento']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['fecha_vencimiento'] }}</small>
+        }
+        @if (!reactivoErrors['fecha_vencimiento'] && fechasInconsistentes()) {
+          <small class="error-message">⚠️ Vencimiento no puede ser anterior a adquisición</small>
         }
       </div>
 
-      <div class="full-row">
-        <label for="observaciones">Observaciones</label>
-        <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" rows="2"></textarea>
-      </div>
-
-      <!-- PDF uploads for reactivo creation: SDS (Hoja de seguridad) and CoA (Certificado de análisis) -->
-      <div>
-        <label for="sdsFile">Hoja de seguridad (SDS)</label>
-        <input id="sdsFile" type="file" accept="application/pdf" (change)="onSdsSelected($event)" />
-      </div>
-
-      <div>
-        <label for="coaFile">Certificado de análisis (CoA)</label>
-        <input id="coaFile" type="file" accept="application/pdf" (change)="onCoaSelected($event)" />
-      </div>
-
-      <div>
-        <label for="tipo_id">Tipo reactivo</label>
-        <select id="tipo_id" [(ngModel)]="tipo_id" name="tipo_id" #tipoIdCtrl="ngModel" required
-          [class.invalid]="tipoIdCtrl.invalid && (tipoIdCtrl.touched || submittedReactivo)">
+      <!-- Tipo reactivo -->
+      <div class="form-field">
+        <label for="tipo_id">Tipo reactivo: *</label>
+        <select id="tipo_id" [(ngModel)]="tipo_id" name="tipo_id" required
+          [class.error]="reactivoErrors['tipo_id']">
           <option [ngValue]="''">Seleccione tipo</option>
           @for (t of tipos; track t) {
-          <option [value]="t.id">{{ t.nombre }}</option>
+            <option [value]="t.id">{{ t.nombre }}</option>
           }
         </select>
-        @if (tipoIdCtrl.invalid && (tipoIdCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Seleccione una opción</span>
+        @if (reactivoErrors['tipo_id']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['tipo_id'] }}</small>
         }
       </div>
 
-      <div>
-        <label for="clasificacion_id">Clasificación SGA</label>
-        <select id="clasificacion_id" [(ngModel)]="clasificacion_id" name="clasificacion_id" #clasifIdCtrl="ngModel"
-          required [class.invalid]="clasifIdCtrl.invalid && (clasifIdCtrl.touched || submittedReactivo)"
+      <!-- Clasificación SGA -->
+      <div class="form-field">
+        <label for="clasificacion_id">Clasificación SGA: *</label>
+        <select id="clasificacion_id" [(ngModel)]="clasificacion_id" name="clasificacion_id"
+          required [class.error]="reactivoErrors['clasificacion_id']"
           [ngStyle]="getSelectStyleForId(clasificacion_id)">
           <option [ngValue]="''">Seleccione clasificación</option>
           @for (c of clasif; track c) {
-          <option [value]="c.id" [style.backgroundColor]="getClasifColorByName(c.nombre)"
-            [style.color]="getClasifTextColor(getClasifColorByName(c.nombre))">
-            {{ c.nombre }}
-          </option>
+            <option [value]="c.id" 
+              [style.backgroundColor]="getClasifColorByName(c.nombre)"
+              [style.color]="getClasifTextColor(getClasifColorByName(c.nombre))">
+              {{ c.nombre }}
+            </option>
           }
         </select>
-        @if (clasifIdCtrl.invalid && (clasifIdCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Seleccione una opción</span>
+        @if (reactivoErrors['clasificacion_id']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['clasificacion_id'] }}</small>
         }
       </div>
 
-      <div>
-        <label for="estado_id">Estado</label>
-        <select id="estado_id" [(ngModel)]="estado_id" name="estado_id" #estadoIdCtrl="ngModel" required
-          [class.invalid]="estadoIdCtrl.invalid && (estadoIdCtrl.touched || submittedReactivo)">
+      <!-- Estado -->
+      <div class="form-field">
+        <label for="estado_id">Estado: *</label>
+        <select id="estado_id" [(ngModel)]="estado_id" name="estado_id" required
+          [class.error]="reactivoErrors['estado_id']">
           <option [ngValue]="''">Seleccione estado</option>
           @for (e of estado; track e) {
-          <option [value]="e.id">{{ e.nombre }}</option>
+            <option [value]="e.id">{{ e.nombre }}</option>
           }
         </select>
-        @if (estadoIdCtrl.invalid && (estadoIdCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Seleccione una opción</span>
+        @if (reactivoErrors['estado_id']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['estado_id'] }}</small>
         }
       </div>
 
-      <div>
-        <label for="tipo_recipiente_id">Tipo de recipiente</label>
-        <select id="tipo_recipiente_id" [(ngModel)]="tipo_recipiente_id" name="tipo_recipiente_id"
-          #recipienteIdCtrl="ngModel" required
-          [class.invalid]="recipienteIdCtrl.invalid && (recipienteIdCtrl.touched || submittedReactivo)">
+      <!-- Tipo de recipiente -->
+      <div class="form-field">
+        <label for="tipo_recipiente_id">Tipo de recipiente: *</label>
+        <select id="tipo_recipiente_id" [(ngModel)]="tipo_recipiente_id" 
+          name="tipo_recipiente_id" required
+          [class.error]="reactivoErrors['tipo_recipiente_id']">
           <option [ngValue]="''">Seleccione recipiente</option>
           @for (r of recipiente; track r) {
-          <option [value]="r.id">{{ r.nombre }}</option>
+            <option [value]="r.id">{{ r.nombre }}</option>
           }
         </select>
-        @if (recipienteIdCtrl.invalid && (recipienteIdCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Seleccione una opción</span>
+        @if (reactivoErrors['tipo_recipiente_id']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['tipo_recipiente_id'] }}</small>
         }
       </div>
 
-      <div>
-        <label for="almacenamiento_id">Almacenamiento</label>
-        <select id="almacenamiento_id" [(ngModel)]="almacenamiento_id" name="almacenamiento_id" #almacenIdCtrl="ngModel"
-          required [class.invalid]="almacenIdCtrl.invalid && (almacenIdCtrl.touched || submittedReactivo)">
+      <!-- Almacenamiento -->
+      <div class="form-field">
+        <label for="almacenamiento_id">Almacenamiento: *</label>
+        <select id="almacenamiento_id" [(ngModel)]="almacenamiento_id" 
+          name="almacenamiento_id" required
+          [class.error]="reactivoErrors['almacenamiento_id']">
           <option [ngValue]="''">Seleccione almacenamiento</option>
           @for (a of almacen; track a) {
-          <option [value]="a.id">{{ a.nombre }}</option>
+            <option [value]="a.id">{{ a.nombre }}</option>
           }
         </select>
-        @if (almacenIdCtrl.invalid && (almacenIdCtrl.touched || submittedReactivo)) {
-        <span class="field-error">Seleccione una opción</span>
+        @if (reactivoErrors['almacenamiento_id']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['almacenamiento_id'] }}</small>
         }
       </div>
 
-      <div>
-        <button type="submit" class="btn-create">{{ editMode ? 'Guardar cambios' : 'Crear reactivo' }}</button>
+      <!-- Observaciones (NO obligatorio) -->
+      <div class="full-row form-field">
+        <label for="observaciones">Observaciones:</label>
+        <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" 
+          rows="2" placeholder="Observaciones adicionales"></textarea>
+      </div>
+
+      <!-- PDF uploads (NO obligatorios) -->
+      <div class="form-field">
+        <label for="sdsFile">Hoja de seguridad (SDS)</label>
+        <input id="sdsFile" type="file" accept="application/pdf" 
+          (change)="onSdsSelected($event)" />
+      </div>
+
+      <div class="form-field">
+        <label for="coaFile">Certificado de análisis (CoA)</label>
+        <input id="coaFile" type="file" accept="application/pdf" 
+          (change)="onCoaSelected($event)" />
+      </div>
+
+      <!-- Botón submit -->
+      <div class="form-field">
+        <button type="submit" class="btn-create">
+          {{ editMode ? 'Guardar cambios' : 'Crear reactivo' }}
+        </button>
         @if (editMode) {
-        <button type="button" (click)="resetReactivoForm()"
-          style="margin-left:8px; background:#777; color:#fff; border:1px solid #666;">Cancelar</button>
+          <button type="button" (click)="resetReactivoForm()"
+            style="margin-left:8px; background:#777; color:#fff; border:1px solid #666;">
+            Cancelar
+          </button>
         }
       </div>
     </form>
-
-    <!-- Mensajes inline eliminados: usar snackbars globales -->
-    </section>
-  }
+  </section>
+}
 
   @if (formularioActivo === 'inventario') {
     <h2>Inventario de Reactivos</h2>

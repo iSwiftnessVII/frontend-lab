@@ -1091,9 +1091,7 @@ p[role='status']:not(.error-message) {
 }
 
 .error-message {
-  background: var(--alert-red);
-  color: #742a2a;
-  border-left: 4px solid #742a2a;
+  color: #000000;
 }
 
 /* ===== Status Badges ===== */
@@ -1443,15 +1441,90 @@ mark {
   border-color: #d11a1a !important;
   box-shadow: 0 0 0 2px rgba(209, 26, 26, 0.12);
 }
-.reactivos-page .field-error {
-  color: #d11a1a;
-  font-size: 0.8rem;
-  margin-top: 4px;
-}
+
 .reactivos-page .field-hint {
   color: #666;
   font-size: 0.75rem;
   margin-top: 4px;
+}
+
+/* ===== ESTILOS DE ERROR IGUALES A SOLICITUDES ===== */
+
+/* Clase base para todos los campos del formulario */
+.form-field {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+/* Mensaje de error - igual que en Solicitudes */
+.form-field .error-message {
+  display: block;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  padding: 3px 8px;
+
+  border-radius: 4px;
+  animation: fadeInError 0.2s ease;
+  line-height: 1.3;
+}
+
+
+
+/* Para que el error no rompa el layout de field-sm */
+.field-sm.form-field {
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.field-sm.form-field .error-message {
+  margin-top: 2px;
+  font-size: 0.8rem;
+}
+
+/* Para field-autocomplete (con panel de sugerencias) */
+.field-autocomplete.form-field {
+  position: relative;
+}
+
+.field-autocomplete.form-field .error-message {
+  position: relative;
+  z-index: 1;
+  margin-top: 2px;
+}
+
+/* Para full-row */
+.full-row.form-field {
+  grid-column: 1 / -1;
+}
+
+.full-row.form-field .error-message {
+  margin-top: 4px;
+}
+
+/* Animación suave para errores */
+@keyframes fadeInError {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Label con asterisco para campos obligatorios */
+.form-field label:has(+ input[required]),
+.form-field label:has(+ select[required]) {
+  position: relative;
+}
+
+
+
+/* Asegurar que los campos mantengan su tamaño con errores */
+.form-grid > .form-field {
+  min-height: calc(100% - 1rem);
 }
 
 /* ===== Modal de edición ===== */

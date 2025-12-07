@@ -6,13 +6,16 @@ import { RouterModule } from '@angular/router';
 import { authService, authUser } from '../services/auth.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { reactivosService } from '../services/reactivos.service';
+import { NumbersOnlyDirective } from '../directives/numbers-only.directive';
+import { LettersOnlyDirective } from '../directives/letters-only.directive';
+import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
 
 @Component({
   standalone: true,
   selector: 'app-reactivos',
   templateUrl: './reactivos.component.html',
   styleUrls: ['./reactivos.component.css'],
-  imports: [CommonModule, FormsModule, RouterModule]
+  imports: [CommonModule, FormsModule, RouterModule, NumbersOnlyDirective, LettersOnlyDirective, AlphaNumericDirective],
 })
 export class ReactivosComponent implements OnInit {
   public get esAuxiliar(): boolean {
@@ -169,6 +172,9 @@ export class ReactivosComponent implements OnInit {
   reactivosNombreQ = '';
   reactivosFiltradosSig = signal<Array<any>>([]);
   reactivosQ = '';
+
+  catalogoErrors: { [key: string]: string } = {};
+reactivoErrors: { [key: string]: string } = {};
   // Panel de catálogo dentro del formulario (se mantiene para autocompletar)
   mostrarCatalogoFormPanel: boolean = false; // deprecado visualmente
   private catalogoDebounce: any = null;
@@ -435,6 +441,188 @@ export class ReactivosComponent implements OnInit {
       this.catalogoCargando = false;
     }
   }
+
+  // Método para validar catálogo (siguiendo el patrón de validarCliente)
+validarCatalogo(): boolean {
+  this.catalogoErrors = {};
+  let isValid = true;
+
+  // Validación de código (OBLIGATORIO)
+  if (!this.catCodigo?.trim()) {
+    this.catalogoErrors['codigo'] = 'El código es obligatorio';
+    isValid = false;
+  }
+
+  // Validación de nombre (OBLIGATORIO)
+  if (!this.catNombre?.trim()) {
+    this.catalogoErrors['nombre'] = 'El nombre es obligatorio';
+    isValid = false;
+  } else if (this.catNombre.length > 100) {
+    this.catalogoErrors['nombre'] = 'El nombre no puede exceder 100 caracteres';
+    isValid = false;
+  }
+
+  // Validación de tipo (OBLIGATORIO)
+  if (!this.catTipo?.trim()) {
+    this.catalogoErrors['tipo'] = 'El tipo de reactivo es obligatorio';
+    isValid = false;
+  }
+
+  // Validación de clasificación (OBLIGATORIO)
+  if (!this.catClasificacion?.trim()) {
+    this.catalogoErrors['clasificacion'] = 'La clasificación SGA es obligatoria';
+    isValid = false;
+  }
+
+  return isValid;
+}
+
+// Método para validar reactivo (siguiendo el patrón de validarSolicitud)
+validarReactivo(): boolean {
+  this.reactivoErrors = {};
+  let isValid = true;
+
+  // Validación de lote (OBLIGATORIO)
+  if (!this.lote?.trim()) {
+    this.reactivoErrors['lote'] = 'El lote es obligatorio';
+    isValid = false;
+  } else if (!/^[A-Z0-9\-]{3,20}$/.test(this.lote)) {
+    this.reactivoErrors['lote'] = 'Formato de lote inválido (3-20 caracteres alfanuméricos)';
+    isValid = false;
+  }
+
+  // Validación de código (OBLIGATORIO)
+  if (!this.codigo?.trim()) {
+    this.reactivoErrors['codigo'] = 'El código es obligatorio';
+    isValid = false;
+  } else if (this.codigo.length > 50) {
+    this.reactivoErrors['codigo'] = 'El código no puede exceder 50 caracteres';
+    isValid = false;
+  }
+
+  // Validación de nombre (OBLIGATORIO)
+  if (!this.nombre?.trim()) {
+    this.reactivoErrors['nombre'] = 'El nombre es obligatorio';
+    isValid = false;
+  } else if (this.nombre.length > 200) {
+    this.reactivoErrors['nombre'] = 'El nombre no puede exceder 200 caracteres';
+    isValid = false;
+  }
+
+  // Validación de marca (OBLIGATORIO)
+  if (!this.marca?.trim()) {
+    this.reactivoErrors['marca'] = 'La marca es obligatoria';
+    isValid = false;
+  } else if (this.marca.length > 100) {
+    this.reactivoErrors['marca'] = 'La marca no puede exceder 100 caracteres';
+    isValid = false;
+  }
+
+  // Validación de referencia (OBLIGATORIO)
+  if (!this.referencia?.trim()) {
+    this.reactivoErrors['referencia'] = 'La referencia es obligatoria';
+    isValid = false;
+  } else if (this.referencia.length > 100) {
+    this.reactivoErrors['referencia'] = 'La referencia no puede exceder 100 caracteres';
+    isValid = false;
+  }
+
+  // Validación de CAS (OBLIGATORIO - ya tienes validación de patrón)
+  if (!this.cas?.trim()) {
+    this.reactivoErrors['cas'] = 'El número CAS es obligatorio';
+    isValid = false;
+  } else if (!/^\d{1,7}-\d{2}-\d{1}$/.test(this.cas)) {
+    this.reactivoErrors['cas'] = 'Formato CAS inválido (ej: 64-17-5)';
+    isValid = false;
+  }
+
+  // Validación de presentación (OBLIGATORIO)
+  if (this.presentacion === null || this.presentacion === undefined) {
+    this.reactivoErrors['presentacion'] = 'La presentación es obligatoria';
+    isValid = false;
+  } else if (this.presentacion < 0) {
+    this.reactivoErrors['presentacion'] = 'La presentación no puede ser negativa';
+    isValid = false;
+  }
+
+  // Validación de unidad (OBLIGATORIO)
+  if (!this.unidad_id) {
+    this.reactivoErrors['unidad_id'] = 'La unidad es obligatoria';
+    isValid = false;
+  }
+
+  // Validación de cantidad por presentación (OBLIGATORIO)
+  if (this.presentacion_cant === null || this.presentacion_cant === undefined) {
+    this.reactivoErrors['presentacion_cant'] = 'La cantidad por presentación es obligatoria';
+    isValid = false;
+  } else if (this.presentacion_cant < 0) {
+    this.reactivoErrors['presentacion_cant'] = 'La cantidad no puede ser negativa';
+    isValid = false;
+  }
+
+  // Validación de fecha adquisición (OBLIGATORIO)
+  if (!this.fecha_adquisicion) {
+    this.reactivoErrors['fecha_adquisicion'] = 'La fecha de adquisición es obligatoria';
+    isValid = false;
+  } else {
+    const fechaAdq = new Date(this.fecha_adquisicion);
+    const hoy = new Date();
+    hoy.setHours(23, 59, 59, 999);
+    
+    if (fechaAdq > hoy) {
+      this.reactivoErrors['fecha_adquisicion'] = 'La fecha de adquisición no puede ser futura';
+      isValid = false;
+    }
+  }
+
+  // Validación de fecha vencimiento (OBLIGATORIO)
+  if (!this.fecha_vencimiento) {
+    this.reactivoErrors['fecha_vencimiento'] = 'La fecha de vencimiento es obligatoria';
+    isValid = false;
+  } else {
+    const fechaVenc = new Date(this.fecha_vencimiento);
+    const fechaAdq = this.fecha_adquisicion ? new Date(this.fecha_adquisicion) : null;
+    
+    if (fechaAdq && fechaVenc < fechaAdq) {
+      this.reactivoErrors['fecha_vencimiento'] = 'La fecha de vencimiento no puede ser anterior a la adquisición';
+      isValid = false;
+    }
+  }
+
+  // Validación de tipo reactivo (OBLIGATORIO)
+  if (!this.tipo_id) {
+    this.reactivoErrors['tipo_id'] = 'El tipo de reactivo es obligatorio';
+    isValid = false;
+  }
+
+  // Validación de clasificación SGA (OBLIGATORIO)
+  if (!this.clasificacion_id) {
+    this.reactivoErrors['clasificacion_id'] = 'La clasificación SGA es obligatoria';
+    isValid = false;
+  }
+
+  // Validación de estado (OBLIGATORIO)
+  if (!this.estado_id) {
+    this.reactivoErrors['estado_id'] = 'El estado es obligatorio';
+    isValid = false;
+  }
+
+  // Validación de tipo recipiente (OBLIGATORIO)
+  if (!this.tipo_recipiente_id) {
+    this.reactivoErrors['tipo_recipiente_id'] = 'El tipo de recipiente es obligatorio';
+    isValid = false;
+  }
+
+  // Validación de almacenamiento (OBLIGATORIO)
+  if (!this.almacenamiento_id) {
+    this.reactivoErrors['almacenamiento_id'] = 'El almacenamiento es obligatorio';
+    isValid = false;
+  }
+
+  // Observaciones NO es obligatorio - no se valida
+
+  return isValid;
+}
 
   seleccionarCatalogo(item: any) {
     this.catalogoSeleccionado = item;
@@ -1054,129 +1242,141 @@ export class ReactivosComponent implements OnInit {
   }
 
   async crearCatalogo(e: Event, form?: NgForm) {
-    e.preventDefault();
-    this.catalogoMsg = '';
-    this.submittedCatalogo = true;
-    if (form && form.invalid) {
-      try { form.control.markAllAsTouched(); } catch {}
-      this.snack.warn('Por favor corrige los campos resaltados.');
-      return;
-    }
-    try {
-      const safeTrim = (v: any): string => typeof v === 'string' ? v.trim() : '';
-      await reactivosService.crearCatalogo({
-        codigo: safeTrim(this.catCodigo),
-        nombre: safeTrim(this.catNombre),
-        tipo_reactivo: safeTrim(this.catTipo),
-        clasificacion_sga: safeTrim(this.catClasificacion),
-        descripcion: (() => { const d = safeTrim(this.catDescripcion); return d ? d : null; })()
-      });
-  this.snack.success('Catálogo creado correctamente');
-      
-      // limpiar
-      this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = this.catDescripcion = '';
-      // Resetear estado del formulario para limpiar touched/dirty y evitar resaltar en rojo
-      try { if (form) form.resetForm({ catCodigo:'', catNombre:'', catTipo:'', catClasificacion:'', catDescripcion:'' }); } catch {}
-      this.submittedCatalogo = false;
-      // Recargar base y re-aplicar filtros/búsqueda para que el nuevo elemento aparezca
-      await this.cargarCatalogoBase();
-      if ((this.codigoFiltro || '').trim() || (this.nombreFiltro || '').trim()) {
-        this.filtrarCatalogoPorCampos();
-      } else {
-        this.catalogoQ = '';
-        await this.buscarCatalogo();
-      }
-    } catch (err: any) {
-      this.snack.error(err?.message || 'Error creando catálogo');
-    }
+  e.preventDefault();
+  this.catalogoMsg = '';
+  this.submittedCatalogo = true;
+  
+  // USAR EL MÉTODO DE VALIDACIÓN NUEVO (igual que en Solicitudes)
+  if (!this.validarCatalogo()) {
+    this.snack.warn('Por favor corrige los campos resaltados.');
+    return;
   }
+  
+  try {
+    const safeTrim = (v: any): string => typeof v === 'string' ? v.trim() : '';
+    await reactivosService.crearCatalogo({
+      codigo: safeTrim(this.catCodigo),
+      nombre: safeTrim(this.catNombre),
+      tipo_reactivo: safeTrim(this.catTipo),
+      clasificacion_sga: safeTrim(this.catClasificacion),
+      descripcion: (() => { const d = safeTrim(this.catDescripcion); return d ? d : null; })()
+    });
+    this.snack.success('Catálogo creado correctamente');
+    
+    // Limpiar errores después de éxito
+    this.catalogoErrors = {};
+    
+    // limpiar
+    this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = this.catDescripcion = '';
+    // Resetear estado del formulario para limpiar touched/dirty y evitar resaltar en rojo
+    try { if (form) form.resetForm({ catCodigo:'', catNombre:'', catTipo:'', catClasificacion:'', catDescripcion:'' }); } catch {}
+    this.submittedCatalogo = false;
+    // Recargar base y re-aplicar filtros/búsqueda para que el nuevo elemento aparezca
+    await this.cargarCatalogoBase();
+    if ((this.codigoFiltro || '').trim() || (this.nombreFiltro || '').trim()) {
+      this.filtrarCatalogoPorCampos();
+    } else {
+      this.catalogoQ = '';
+      await this.buscarCatalogo();
+    }
+  } catch (err: any) {
+    this.snack.error(err?.message || 'Error creando catálogo');
+  }
+}
 
   async crearReactivo(e: Event, form?: NgForm) {
-    e.preventDefault();
-    this.reactivoMsg = '';
-    this.submittedReactivo = true;
-    // Normalizar CAS antes de validar por si el usuario no salió del campo
-    {
-      const n = this.normalizeCas(this.cas);
-      this.cas = n === null ? '' : n;
-    }
-    if (form && form.invalid) {
-      try { form.control.markAllAsTouched(); } catch {}
-      this.snack.warn('Por favor corrige los campos resaltados.');
+  e.preventDefault();
+  this.reactivoMsg = '';
+  this.submittedReactivo = true;
+  
+  // Normalizar CAS antes de validar
+  const n = this.normalizeCas(this.cas);
+  this.cas = n === null ? '' : n;
+  
+  // USAR EL MÉTODO DE VALIDACIÓN NUEVO (igual que en Solicitudes)
+  if (!this.validarReactivo()) {
+    this.snack.warn('Por favor corrige los campos resaltados.');
+    return;
+  }
+  
+  try {
+    // Validación mínima de campos obligatorios
+    if (!this.lote.trim() || !this.codigo.trim() || !this.nombre.trim()) {
+      this.snack.warn('Por favor completa Lote, Código y Nombre.');
       return;
     }
-    try {
-      // Validación mínima de campos obligatorios
-      if (!this.lote.trim() || !this.codigo.trim() || !this.nombre.trim()) {
-        this.snack.warn('Por favor completa Lote, Código y Nombre.');
-        return;
-      }
 
-      const toNull = (v: any) => {
-        if (v === null || v === undefined) return null;
-        if (typeof v === 'string') {
-          const t = v.trim();
-          return t === '' ? null : t;
-        }
-        return v;
-      };
+    const toNull = (v: any) => {
+      if (v === null || v === undefined) return null;
+      if (typeof v === 'string') {
+        const t = v.trim();
+        return t === '' ? null : t;
+      }
+      return v;
+    };
 
-      this.calcularCantidadTotal();
-      const payload = {
-        lote: this.lote.trim(),
-        codigo: this.codigo.trim(),
-        nombre: this.nombre.trim(),
-        marca: toNull(this.marca),
-        referencia: toNull(this.referencia),
-        cas: this.normalizeCas(this.cas),
-        presentacion: this.presentacion,
-        presentacion_cant: this.presentacion_cant,
-        cantidad_total: this.cantidad_total,
-        fecha_adquisicion: toNull(this.fecha_adquisicion),
-        fecha_vencimiento: toNull(this.fecha_vencimiento),
-        observaciones: toNull(this.observaciones),
-        tipo_id: toNull(this.tipo_id),
-        clasificacion_id: toNull(this.clasificacion_id),
-        unidad_id: toNull(this.unidad_id),
-        estado_id: toNull(this.estado_id),
-        almacenamiento_id: toNull(this.almacenamiento_id),
-        tipo_recipiente_id: toNull(this.tipo_recipiente_id)
-      };
-      if (this.editMode && this.editOriginalLote) {
-        // Actualizar: usar lote original como clave en la URL
-        await reactivosService.actualizarReactivo(this.editOriginalLote, payload);
-        this.snack.success('Reactivo actualizado correctamente');
-      } else {
-        await reactivosService.crearReactivo(payload);
-        this.snack.success('Reactivo creado correctamente');
-      }
-      // If files were selected during creation/edit, upload them now (by lote)
-      try {
-        const lote = payload.lote;
-        if (this.reactivoSdsFile) {
-          await reactivosService.subirHojaSeguridadReactivo(lote, this.reactivoSdsFile);
-          this.setReactivoPdfStatus(lote, { hoja: true });
-          this.reactivoSdsFile = null;
-        }
-        if (this.reactivoCoaFile) {
-          await reactivosService.subirCertAnalisisReactivo(lote, this.reactivoCoaFile);
-          this.setReactivoPdfStatus(lote, { cert: true });
-          this.reactivoCoaFile = null;
-        }
-      } catch (upErr) {
-        // don't fail creation if upload fails; show a message
-        console.warn('Error uploading docs for reactivo:', upErr);
-        this.snack.warn('Reactivo creado pero ocurrió un error subiendo documentos');
-      }
-      await this.loadReactivos();
-      // Limpiar modelo y restablecer estado visual del formulario (pristine/untouched)
-      this.resetReactivoForm();
-      this.submittedReactivo = false;
-      try { if (form) form.resetForm(); } catch {}
-    } catch (err: any) {
-      this.snack.error(err?.message || 'Error creando reactivo');
+    this.calcularCantidadTotal();
+    const payload = {
+      lote: this.lote.trim(),
+      codigo: this.codigo.trim(),
+      nombre: this.nombre.trim(),
+      marca: toNull(this.marca),
+      referencia: toNull(this.referencia),
+      cas: this.normalizeCas(this.cas),
+      presentacion: this.presentacion,
+      presentacion_cant: this.presentacion_cant,
+      cantidad_total: this.cantidad_total,
+      fecha_adquisicion: toNull(this.fecha_adquisicion),
+      fecha_vencimiento: toNull(this.fecha_vencimiento),
+      observaciones: toNull(this.observaciones),
+      tipo_id: toNull(this.tipo_id),
+      clasificacion_id: toNull(this.clasificacion_id),
+      unidad_id: toNull(this.unidad_id),
+      estado_id: toNull(this.estado_id),
+      almacenamiento_id: toNull(this.almacenamiento_id),
+      tipo_recipiente_id: toNull(this.tipo_recipiente_id)
+    };
+    
+    if (this.editMode && this.editOriginalLote) {
+      // Actualizar: usar lote original como clave en la URL
+      await reactivosService.actualizarReactivo(this.editOriginalLote, payload);
+      this.snack.success('Reactivo actualizado correctamente');
+    } else {
+      await reactivosService.crearReactivo(payload);
+      this.snack.success('Reactivo creado correctamente');
     }
+    
+    // Limpiar errores después de éxito
+    this.reactivoErrors = {};
+    
+    // If files were selected during creation/edit, upload them now (by lote)
+    try {
+      const lote = payload.lote;
+      if (this.reactivoSdsFile) {
+        await reactivosService.subirHojaSeguridadReactivo(lote, this.reactivoSdsFile);
+        this.setReactivoPdfStatus(lote, { hoja: true });
+        this.reactivoSdsFile = null;
+      }
+      if (this.reactivoCoaFile) {
+        await reactivosService.subirCertAnalisisReactivo(lote, this.reactivoCoaFile);
+        this.setReactivoPdfStatus(lote, { cert: true });
+        this.reactivoCoaFile = null;
+      }
+    } catch (upErr) {
+      // don't fail creation if upload fails; show a message
+      console.warn('Error uploading docs for reactivo:', upErr);
+      this.snack.warn('Reactivo creado pero ocurrió un error subiendo documentos');
+    }
+    
+    await this.loadReactivos();
+    // Limpiar modelo y restablecer estado visual del formulario (pristine/untouched)
+    this.resetReactivoForm();
+    this.submittedReactivo = false;
+    try { if (form) form.resetForm(); } catch {}
+  } catch (err: any) {
+    this.snack.error(err?.message || 'Error creando reactivo');
   }
+}
 
   canDelete(): boolean {
   const user = authUser();

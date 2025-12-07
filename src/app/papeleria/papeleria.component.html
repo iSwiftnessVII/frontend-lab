@@ -24,34 +24,65 @@
   </div>
 
   <!-- SECCIÓN: Crear nuevo item en catálogo -->
-  @if ((formularioActivo === 'catalogo') && !esAuxiliar()) {
-    <h2>Crear nuevo item en catálogo (Papelería)</h2>
-    <section>
-      <form class="form-grid" (ngSubmit)="crearCatalogo($event)">
-        <div>
-          <label for="catNombre">Nombre</label>
-          <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required placeholder="Ej: Resmas de papel" />
-        </div>
-        <div>
-          <label for="catItem">Item</label>
-          <input id="catItem" type="number" min="1" step="1" [(ngModel)]="catItem" name="catItem" required placeholder="Ej: 2001" />
-        </div>
-        <div>
-          <label for="catImagen">Imagen
-            <span class="hint-icon" tabindex="0" data-tooltip="Peso máximo: 5 MB.">?</span>
-          </label>
-          <input id="catImagen" type="file" accept="image/*" (change)="onCatImagenChange($event)" />
-        </div>
-        <div class="full-row">
-          <label for="catDescripcion">Descripción</label>
-          <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"></textarea>
-        </div>
-        <div class="actions">
-          <button class="btn-compact" type="submit">Agregar al catálogo</button>
-        </div>
-      </form>
-    </section>
-  }
+ <!-- SECCIÓN: Crear nuevo item en catálogo -->
+@if ((formularioActivo === 'catalogo') && !esAuxiliar()) {
+  <h2>Crear nuevo item en catálogo (Papelería)</h2>
+  <section>
+    <form class="form-grid" (ngSubmit)="crearCatalogo($event)">
+      <!-- Nombre (OBLIGATORIO) -->
+      <div class="form-field">
+        <label for="catNombre">Nombre: *</label>
+        <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required 
+          appLettersOnly
+          [class.error]="catalogoErrors['nombre']"
+          placeholder="Ej: Resmas de papel A4" />
+        @if (catalogoErrors['nombre']) {
+          <small class="error-message">⚠️ {{ catalogoErrors['nombre'] }}</small>
+        }
+      </div>
+      
+      <!-- Item (OBLIGATORIO) -->
+      <div class="form-field">
+        <label for="catItem">Item: *</label>
+        <input id="catItem" type="number" min="1" step="1" [(ngModel)]="catItem" 
+          name="catItem" required appNumbersOnly
+          [class.error]="catalogoErrors['item']" 
+          placeholder="Ej: 2001" />
+        @if (catalogoErrors['item']) {
+          <small class="error-message">⚠️ {{ catalogoErrors['item'] }}</small>
+        }
+      </div>
+      
+      <!-- Imagen (NO obligatorio) -->
+      <div class="form-field">
+        <label for="catImagen">Imagen
+          <span class="hint-icon" tabindex="0" data-tooltip="Peso máximo: 5 MB.">?</span>
+        </label>
+        <input id="catImagen" type="file" accept="image/*" 
+          (change)="onCatImagenChange($event)" 
+          [class.error]="catalogoErrors['imagen']" />
+        @if (catalogoErrors['imagen']) {
+          <small class="error-message">⚠️ {{ catalogoErrors['imagen'] }}</small>
+        }
+      </div>
+      
+      <!-- Descripción (NO obligatorio) -->
+      <div class="full-row form-field">
+        <label for="catDescripcion">Descripción:</label>
+        <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" 
+          rows="2" placeholder="Descripción adicional del item"
+          [class.error]="catalogoErrors['descripcion']"></textarea>
+        @if (catalogoErrors['descripcion']) {
+          <small class="error-message">⚠️ {{ catalogoErrors['descripcion'] }}</small>
+        }
+      </div>
+      
+      <div class="actions">
+        <button class="btn-compact" type="submit">Agregar al catálogo</button>
+      </div>
+    </form>
+  </section>
+}
 
   <!-- SECCIÓN: Catálogo de papelería -->
   @if (formularioActivo === 'catalogo-list') {
@@ -154,63 +185,138 @@
     </div>
   }
 
-  <!-- SECCIÓN: Crear registro de Papelería -->
-  @if ((formularioActivo === 'crear-papeleria' || item_catalogo() != null) && !esAuxiliar()) {
-    <h2>Crear registro de Papelería</h2>
-    <section #papFormSection>
-      <form class="form-grid" (ngSubmit)="crearPapeleria($event)">
-        <div>
-          <label for="item_catalogo">Item catálogo</label>
-          <input #itemCatalogoInput id="item_catalogo" [(ngModel)]="item_catalogo" name="item_catalogo" required />
-        </div>
-        <div>
-          <label for="nombre">Nombre</label>
-          <input id="nombre" [(ngModel)]="nombre" name="nombre" required />
-        </div>
-        <div>
-          <label for="cantidad_adquirida">Cantidad adquirida</label>
-          <input id="cantidad_adquirida" type="number" [(ngModel)]="cantidad_adquirida" name="cantidad_adquirida" required />
-        </div>
-        <div>
-          <label for="cantidad_existente">Cantidad existente</label>
-          <input id="cantidad_existente" type="number" [(ngModel)]="cantidad_existente" name="cantidad_existente" required />
-        </div>
-        <div>
-          <label for="presentacion">Presentación</label>
-          <select id="presentacion" [(ngModel)]="presentacion" name="presentacion">
-            <option value="">Seleccione</option>
-            <option value="unidad">Unidad</option>
-            <option value="paquete">Paquete</option>
-            <option value="caja">Caja</option>
-            <option value="cajas">Cajas</option>
-          </select>
-        </div>
-        <div>
-          <label for="marca">Marca</label>
-          <input id="marca" [(ngModel)]="marca" name="marca" />
-        </div>
-        <div>
-          <label for="ubicacion">Ubicación</label>
-          <input id="ubicacion" [(ngModel)]="ubicacion" name="ubicacion" />
-        </div>
-        <div>
-          <label for="fecha_adquisicion">Fecha de adquisición</label>
-          <input id="fecha_adquisicion" type="date" [(ngModel)]="fecha_adquisicion" name="fecha_adquisicion" />
-        </div>
-        <div class="full-row">
-          <label for="descripcion">Descripción</label>
-          <textarea id="descripcion" [(ngModel)]="descripcion" name="descripcion" rows="2"></textarea>
-        </div>
-        <div class="full-row">
-          <label for="observaciones">Observaciones</label>
-          <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" rows="2"></textarea>
-        </div>
-        <div class="actions">
-          <button class="btn-compact" type="submit">Crear</button>
-        </div>
-      </form>
-    </section>
-  }
+ <!-- SECCIÓN: Crear registro de Papelería -->
+@if ((formularioActivo === 'crear-papeleria' || item_catalogo() != null) && !esAuxiliar()) {
+  <h2>Crear registro de Papelería</h2>
+  <section #papFormSection>
+    <form class="form-grid" (ngSubmit)="crearPapeleria($event)">
+      <!-- Item catálogo (OBLIGATORIO) -->
+      <div class="form-field">
+        <label for="item_catalogo">Item catálogo: *</label>
+        <input #itemCatalogoInput id="item_catalogo" [(ngModel)]="item_catalogo" 
+          name="item_catalogo" required appNumbersOnly
+          [class.error]="papeleriaErrors['item_catalogo']" 
+          placeholder="Ej: 2001" />
+        @if (papeleriaErrors['item_catalogo']) {
+          <small class="error-message">⚠️ {{ papeleriaErrors['item_catalogo'] }}</small>
+        }
+      </div>
+      
+      <!-- Nombre (OBLIGATORIO) -->
+      <div class="form-field">
+        <label for="nombre">Nombre: *</label>
+        <input id="nombre" [(ngModel)]="nombre" name="nombre" required 
+          appLettersOnly
+          [class.error]="papeleriaErrors['nombre']"
+          placeholder="Ej: Resmas de papel A4" />
+        @if (papeleriaErrors['nombre']) {
+          <small class="error-message">⚠️ {{ papeleriaErrors['nombre'] }}</small>
+        }
+      </div>
+      
+      <!-- Cantidad adquirida (OBLIGATORIO) -->
+      <div class="form-field">
+        <label for="cantidad_adquirida">Cantidad adquirida: *</label>
+        <input id="cantidad_adquirida" type="number" [(ngModel)]="cantidad_adquirida" 
+          name="cantidad_adquirida" required appNumbersOnly
+          [class.error]="papeleriaErrors['cantidad_adquirida']" 
+          placeholder="Ej: 10" min="0" />
+        @if (papeleriaErrors['cantidad_adquirida']) {
+          <small class="error-message">⚠️ {{ papeleriaErrors['cantidad_adquirida'] }}</small>
+        }
+      </div>
+      
+      <!-- Cantidad existente (OBLIGATORIO) -->
+      <div class="form-field">
+        <label for="cantidad_existente">Cantidad existente: *</label>
+        <input id="cantidad_existente" type="number" [(ngModel)]="cantidad_existente" 
+          name="cantidad_existente" required appNumbersOnly
+          [class.error]="papeleriaErrors['cantidad_existente']" 
+          placeholder="Ej: 10" min="0" />
+        @if (papeleriaErrors['cantidad_existente']) {
+          <small class="error-message">⚠️ {{ papeleriaErrors['cantidad_existente'] }}</small>
+        }
+      </div>
+      
+      <!-- Presentación (OBLIGATORIO - select) -->
+      <div class="form-field">
+        <label for="presentacion">Presentación: *</label>
+        <select id="presentacion" [(ngModel)]="presentacion" name="presentacion" required
+          [class.error]="papeleriaErrors['presentacion']">
+          <option value="">Seleccione</option>
+          <option value="unidad">Unidad</option>
+          <option value="paquete">Paquete</option>
+          <option value="caja">Caja</option>
+          <option value="cajas">Cajas</option>
+        </select>
+        @if (papeleriaErrors['presentacion']) {
+          <small class="error-message">⚠️ {{ papeleriaErrors['presentacion'] }}</small>
+        }
+      </div>
+      
+      <!-- Marca (OBLIGATORIO) -->
+      <div class="form-field">
+        <label for="marca">Marca: *</label>
+        <input id="marca" [(ngModel)]="marca" name="marca" required
+          appAlphaNumeric
+          [class.error]="papeleriaErrors['marca']"
+          placeholder="Ej: Norma" />
+        @if (papeleriaErrors['marca']) {
+          <small class="error-message">⚠️ {{ papeleriaErrors['marca'] }}</small>
+        }
+      </div>
+      
+      <!-- Ubicación (OBLIGATORIO) -->
+      <div class="form-field">
+        <label for="ubicacion">Ubicación: *</label>
+        <input id="ubicacion" [(ngModel)]="ubicacion" name="ubicacion" required
+          appAlphaNumeric
+          [class.error]="papeleriaErrors['ubicacion']"
+          placeholder="Ej: Estantería B-2" />
+        @if (papeleriaErrors['ubicacion']) {
+          <small class="error-message">⚠️ {{ papeleriaErrors['ubicacion'] }}</small>
+        }
+      </div>
+      
+      <!-- Fecha adquisición (OBLIGATORIO) -->
+      <div class="form-field">
+        <label for="fecha_adquisicion">Fecha de adquisición: *</label>
+        <input id="fecha_adquisicion" type="date" [(ngModel)]="fecha_adquisicion" 
+          name="fecha_adquisicion" required
+          [class.error]="papeleriaErrors['fecha_adquisicion']" />
+        @if (papeleriaErrors['fecha_adquisicion']) {
+          <small class="error-message">⚠️ {{ papeleriaErrors['fecha_adquisicion'] }}</small>
+        }
+      </div>
+      
+      <!-- Descripción (NO obligatorio) -->
+      <div class="full-row form-field">
+        <label for="descripcion">Descripción:</label>
+        <textarea id="descripcion" [(ngModel)]="descripcion" name="descripcion" 
+          rows="2" placeholder="Descripción del material"
+          [class.error]="papeleriaErrors['descripcion']"></textarea>
+        @if (papeleriaErrors['descripcion']) {
+          <small class="error-message">⚠️ {{ papeleriaErrors['descripcion'] }}</small>
+        }
+      </div>
+      
+      <!-- Observaciones (NO obligatorio) -->
+      <div class="full-row form-field">
+        <label for="observaciones">Observaciones:</label>
+        <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" 
+          rows="2" placeholder="Observaciones adicionales"
+          [class.error]="papeleriaErrors['observaciones']"></textarea>
+        @if (papeleriaErrors['observaciones']) {
+          <small class="error-message">⚠️ {{ papeleriaErrors['observaciones'] }}</small>
+        }
+      </div>
+      
+      <div class="actions">
+        <button class="btn-compact" type="submit">Crear</button>
+      </div>
+    </form>
+  </section>
+}
 
   <!-- SECCIÓN: Listado de papelería -->
   @if (formularioActivo === 'listado') {

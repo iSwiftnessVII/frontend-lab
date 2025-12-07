@@ -356,6 +356,75 @@ button[type="button"]:hover,
     display: inline-block;
 }
 
+/* ===== ESTILOS DE ERROR IGUALES A SOLICITUDES Y REACTIVOS ===== */
+
+/* Clase base para todos los campos del formulario */
+.form-field {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+/* Mensaje de error */
+.form-field .error-message {
+  display: block;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  animation: fadeInError 0.2s ease;
+  line-height: 1.3;
+  min-height: 1.5em; /* Altura mínima para no colapsar */
+}
+
+
+
+
+
+/* Para full-row */
+.full-row.form-field {
+  grid-column: 1 / -1;
+}
+
+.full-row.form-field .error-message {
+  margin-top: 4px;
+}
+
+/* Animación suave para errores */
+@keyframes fadeInError {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Label con asterisco para campos obligatorios */
+.form-field label:has(+ input[required]),
+.form-field label:has(+ select[required]) {
+  position: relative;
+}
+
+
+
+/* Asegurar que los contenedores tengan altura mínima */
+.form-grid > .form-field {
+  min-height: calc(100% - 1rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.form-grid > .form-field > * {
+  flex-shrink: 0;
+}
+
+.form-grid > .form-field .error-message {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
 /* ===== Insumo actions row (input + quitar) ===== */
 .insumo-actions-row {
     display: grid;
@@ -677,9 +746,7 @@ p[role="status"]:not(.error-message) {
 }
 
 .error-message {
-    background: var(--alert-red);
-    color: #742a2a;
-    border-left: 4px solid #742a2a;
+    color: #000000;
 }
 
 /* ===== Status Badges ===== */

@@ -6,13 +6,16 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService, authUser } from '../services/auth.service';
 import { insumosService } from '../services/insumos.service';
+import { NumbersOnlyDirective } from '../directives/numbers-only.directive';
+import { LettersOnlyDirective } from '../directives/letters-only.directive';
+import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
 
 @Component({  
   standalone: true,
   selector: 'app-insumos',
   templateUrl: './insumos.component.html',
   styleUrls: ['./insumos.component.css'],
-  imports: [CommonModule, FormsModule, RouterModule]
+  imports: [CommonModule, FormsModule, RouterModule, NumbersOnlyDirective, LettersOnlyDirective, AlphaNumericDirective],
 })
 
 export class InsumosComponent implements OnInit {
@@ -31,6 +34,9 @@ export class InsumosComponent implements OnInit {
   almacen: Array<any> = [];
   insumoSeleccionado: any = null;
   mostrarDetalles: boolean = false;
+  catalogoErrors: { [key: string]: string } = {};
+insumoErrors: { [key: string]: string } = {};
+
 
   // Track which quick-action form is active (null = none)
   formularioActivo: string | null = null;
@@ -642,73 +648,144 @@ highlightField(value: string, field:'nombre' | 'otro' | 'item'): SafeHtml {
 }
 
 async crearCatalogo(e: Event) {
-    e.preventDefault();
+  e.preventDefault();
   this.catalogoMsg = '';
-    
+  
+  // USAR EL MÉTODO DE VALIDACIÓN NUEVO (igual que en Solicitudes)
+  if (!this.validarCatalogo()) {
+    this.snack.warn('Por favor corrige los campos resaltados.');
+    return;
+  }
+  
+  try {
     const itemStr = (this.catItem ?? '').toString().trim();
     const nombreStr = (this.catNombre ?? '').toString().trim();
-    if (!itemStr || !nombreStr) {
-      this.snack.warn('Falta completar: Item y Nombre');
-      return;
-    }
-    // validar item numérico
-    if (isNaN(Number(itemStr))) {
-      this.snack.warn('El item debe ser numérico');
-      return;
-    }
     
+    const form = new FormData();
+    form.append('nombre', nombreStr);
+    const descStr = (this.catDescripcion ?? '').toString().trim();
+    if (descStr) form.append('descripcion', descStr);
+    if (itemStr) form.append('item', itemStr);
+    if (this.catImagen) form.append('imagen', this.catImagen);
+    
+    await insumosService.crearCatalogo(form);
+    
+    this.snack.success('Se creó el item de catálogo');
+    
+    // Limpiar errores después de éxito
+    this.catalogoErrors = {};
+    
+    // Limpiar formulario
+    this.catItem = '' as any;
+    this.catNombre = '';
+    this.catDescripcion = '';
+    this.catImagen = null;
+    // Limpiar input file explícitamente (si existe)
     try {
-      const form = new FormData();
-      form.append('nombre', nombreStr);
-      const descStr = (this.catDescripcion ?? '').toString().trim();
-      if (descStr) form.append('descripcion', descStr);
-      if (itemStr) form.append('item', itemStr);
-      if (this.catImagen) form.append('imagen', this.catImagen);
-      await insumosService.crearCatalogo(form);
-      
-  this.snack.success('Se creó el item de catálogo');
-      
-      // Limpiar formulario
-      this.catItem = '' as any;
-      this.catNombre = '';
-      this.catDescripcion = '';
-      this.catImagen = null;
-      // Limpiar input file explícitamente (si existe)
-      try {
-        const input = document.getElementById('catImagen') as HTMLInputElement | null;
-        if (input) input.value = '';
-      } catch {}
-      
-      // Recargar catálogo
-      await this.cargarCatalogoBase();
-      
-      if ((this.itemFiltro || '').trim() || (this.nombreFiltro || '').trim()) {
-        this.filtrarCatalogoPorCampos();
-      } else {
-        this.catalogoQ = '';
-        await this.buscarCatalogo();
-      }
-    } catch (err: any) {
-      this.snack.error(err?.message || 'Error al crear el item de catálogo');
+      const input = document.getElementById('catImagen') as HTMLInputElement | null;
+      if (input) input.value = '';
+    } catch {}
+    
+    // Recargar catálogo
+    await this.cargarCatalogoBase();
+    
+    if ((this.itemFiltro || '').trim() || (this.nombreFiltro || '').trim()) {
+      this.filtrarCatalogoPorCampos();
+    } else {
+      this.catalogoQ = '';
+      await this.buscarCatalogo();
+    }
+  } catch (err: any) {
+    this.snack.error(err?.message || 'Error al crear el item de catálogo');
+  }
+}
+
+validarCatalogo(): boolean {
+  this.catalogoErrors = {};
+  let isValid = true;
+
+  // ===== VALIDACIÓN DE CAMPOS OBLIGATORIOS =====
+
+  // 1. Validación de item (OBLIGATORIO)
+  const itemStr = (this.catItem ?? '').toString().trim();
+  if (!itemStr) {
+    this.catalogoErrors['item'] = 'El item es obligatorio';
+    isValid = false;
+  } else if (isNaN(Number(itemStr))) {
+    this.catalogoErrors['item'] = 'El item debe ser numérico';
+    isValid = false;
+  } else if (Number(itemStr) <= 0) {
+    this.catalogoErrors['item'] = 'El item debe ser mayor a 0';
+    isValid = false;
+  } else if (Number(itemStr) > 999999) {
+    this.catalogoErrors['item'] = 'El item no puede exceder 999,999';
+    isValid = false;
+  }
+
+  // 2. Validación de nombre (OBLIGATORIO)
+  const nombreStr = (this.catNombre ?? '').toString().trim();
+  if (!nombreStr) {
+    this.catalogoErrors['nombre'] = 'El nombre es obligatorio';
+    isValid = false;
+  } else if (nombreStr.length > 200) {
+    this.catalogoErrors['nombre'] = 'El nombre no puede exceder 200 caracteres';
+    isValid = false;
+  } else if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s\-\.\,\/\(\)]{2,200}$/.test(nombreStr)) {
+    this.catalogoErrors['nombre'] = 'El nombre contiene caracteres no permitidos';
+    isValid = false;
+  }
+
+  // ===== VALIDACIÓN DE CAMPOS NO OBLIGATORIOS (si se ingresan) =====
+
+  // 3. Validación de descripción (NO obligatorio)
+  if (this.catDescripcion && this.catDescripcion.trim()) {
+    if (this.catDescripcion.length > 500) {
+      this.catalogoErrors['descripcion'] = 'La descripción no puede exceder 500 caracteres';
+      isValid = false;
     }
   }
 
+  // 4. Validación de imagen (NO obligatorio, pero validar tipo si se sube)
+  if (this.catImagen) {
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    
+    // Validar tipo de archivo
+    if (!validTypes.includes(this.catImagen.type.toLowerCase())) {
+      this.catalogoErrors['imagen'] = 'Formato de imagen no válido (JPEG, PNG, GIF, WebP)';
+      isValid = false;
+    }
+    
+    // Validar tamaño
+    if (this.catImagen.size > maxSize) {
+      this.catalogoErrors['imagen'] = 'La imagen no puede exceder 5 MB';
+      isValid = false;
+    }
+    
+    // Validar nombre de archivo (opcional)
+    const fileName = this.catImagen.name.toLowerCase();
+    const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+    
+    if (!hasValidExtension) {
+      this.catalogoErrors['imagen'] = 'Extensión de archivo no válida';
+      isValid = false;
+    }
+  }
+
+  return isValid;
+}
+
 async crearInsumo(e: Event) {
   e.preventDefault();
-  this.insumoMsgSig.set(''); // limpiar mensaje
-  // Validación mínima de campos requeridos
-  if (!this.item_catalogo || !(this.nombre || '').trim()) {
-    this.snack.warn('Faltan campos requeridos: Item catálogo y Nombre');
+  this.insumoMsgSig.set('');
+  
+  // USAR EL MÉTODO DE VALIDACIÓN NUEVO (igual que en Solicitudes)
+  if (!this.validarInsumo()) {
+    this.snack.warn('Por favor corrige los campos resaltados.');
     return;
   }
-  if (this.cantidad_adquirida == null || this.cantidad_existente == null) {
-    this.snack.warn('Faltan las cantidades adquirida y existente');
-    return;
-  }
-  if ((this.cantidad_adquirida as any) < 0 || (this.cantidad_existente as any) < 0) {
-    this.snack.warn('Las cantidades deben ser números >= 0');
-    return;
-  }
+  
   try {
     const payload = {
       item_catalogo: this.item_catalogo,
@@ -727,14 +804,147 @@ async crearInsumo(e: Event) {
     await insumosService.crearInsumo(payload);
     this.snack.success('Se creó el insumo');
 
+    // Limpiar errores después de éxito
+    this.insumoErrors = {};
+
     await this.loadInsumos();
-    // Reset campos y limpiar input file del catálogo si estuvo precargado
     this.resetInsumoForm();
   } catch (err: any) {
     this.snack.error(err?.message || 'Error al crear el insumo');
   }
 }
 
+validarInsumo(): boolean {
+  this.insumoErrors = {};
+  let isValid = true;
+
+  // ===== VALIDACIÓN DE TODOS LOS CAMPOS OBLIGATORIOS =====
+
+  // 1. Validación de item catálogo (OBLIGATORIO)
+  if (!this.item_catalogo && this.item_catalogo !== 0) {
+    this.insumoErrors['item_catalogo'] = 'El item de catálogo es obligatorio';
+    isValid = false;
+  } else if (isNaN(Number(this.item_catalogo))) {
+    this.insumoErrors['item_catalogo'] = 'El item debe ser numérico';
+    isValid = false;
+  } else if (Number(this.item_catalogo) <= 0) {
+    this.insumoErrors['item_catalogo'] = 'El item debe ser mayor a 0';
+    isValid = false;
+  }
+
+  // 2. Validación de nombre (OBLIGATORIO)
+  if (!this.nombre?.trim()) {
+    this.insumoErrors['nombre'] = 'El nombre es obligatorio';
+    isValid = false;
+  } else if (this.nombre.length > 200) {
+    this.insumoErrors['nombre'] = 'El nombre no puede exceder 200 caracteres';
+    isValid = false;
+  }
+
+  // 3. Validación de cantidad adquirida (OBLIGATORIO)
+  if (this.cantidad_adquirida === null || this.cantidad_adquirida === undefined) {
+    this.insumoErrors['cantidad_adquirida'] = 'La cantidad adquirida es obligatoria';
+    isValid = false;
+  } else if (this.cantidad_adquirida < 0) {
+    this.insumoErrors['cantidad_adquirida'] = 'La cantidad no puede ser negativa';
+    isValid = false;
+  }
+
+  // 4. Validación de cantidad existente (OBLIGATORIO)
+  if (this.cantidad_existente === null || this.cantidad_existente === undefined) {
+    this.insumoErrors['cantidad_existente'] = 'La cantidad existente es obligatoria';
+    isValid = false;
+  } else if (this.cantidad_existente < 0) {
+    this.insumoErrors['cantidad_existente'] = 'La cantidad no puede ser negativa';
+    isValid = false;
+  }
+
+  // 5. Validación de presentación (OBLIGATORIO)
+  if (!this.presentacion?.trim()) {
+    this.insumoErrors['presentacion'] = 'La presentación es obligatoria';
+    isValid = false;
+  } else if (this.presentacion.length > 100) {
+    this.insumoErrors['presentacion'] = 'La presentación no puede exceder 100 caracteres';
+    isValid = false;
+  }
+
+  // 6. Validación de marca (OBLIGATORIO)
+  if (!this.marca?.trim()) {
+    this.insumoErrors['marca'] = 'La marca es obligatoria';
+    isValid = false;
+  } else if (this.marca.length > 100) {
+    this.insumoErrors['marca'] = 'La marca no puede exceder 100 caracteres';
+    isValid = false;
+  }
+
+  // 7. Validación de referencia (OBLIGATORIO)
+  if (!this.referencia?.trim()) {
+    this.insumoErrors['referencia'] = 'La referencia es obligatoria';
+    isValid = false;
+  } else if (this.referencia.length > 100) {
+    this.insumoErrors['referencia'] = 'La referencia no puede exceder 100 caracteres';
+    isValid = false;
+  }
+
+  // 8. Validación de ubicación (OBLIGATORIO)
+  if (!this.ubicacion?.trim()) {
+    this.insumoErrors['ubicacion'] = 'La ubicación es obligatoria';
+    isValid = false;
+  } else if (this.ubicacion.length > 200) {
+    this.insumoErrors['ubicacion'] = 'La ubicación no puede exceder 200 caracteres';
+    isValid = false;
+  }
+
+  // 9. Validación de fecha adquisición (OBLIGATORIO)
+  if (!this.fecha_adquisicion?.trim()) {
+    this.insumoErrors['fecha_adquisicion'] = 'La fecha de adquisición es obligatoria';
+    isValid = false;
+  } else if (!/^\d{4}-\d{2}-\d{2}$/.test(this.fecha_adquisicion)) {
+    this.insumoErrors['fecha_adquisicion'] = 'Formato de fecha inválido (AAAA-MM-DD)';
+    isValid = false;
+  } else {
+    const fecha = new Date(this.fecha_adquisicion);
+    const hoy = new Date();
+    hoy.setHours(23, 59, 59, 999);
+    
+    if (isNaN(fecha.getTime())) {
+      this.insumoErrors['fecha_adquisicion'] = 'Fecha inválida';
+      isValid = false;
+    } else if (fecha > hoy) {
+      this.insumoErrors['fecha_adquisicion'] = 'La fecha no puede ser futura';
+      isValid = false;
+    }
+  }
+
+  // ===== VALIDACIÓN DE CAMPOS NO OBLIGATORIOS =====
+
+  // 10. Validación de descripción (NO obligatorio)
+  if (this.descripcion && this.descripcion.trim()) {
+    if (this.descripcion.length > 500) {
+      this.insumoErrors['descripcion'] = 'La descripción no puede exceder 500 caracteres';
+      isValid = false;
+    }
+  }
+
+  // 11. Validación de observaciones (NO obligatorio)
+  if (this.observaciones && this.observaciones.trim()) {
+    if (this.observaciones.length > 1000) {
+      this.insumoErrors['observaciones'] = 'Las observaciones no pueden exceder 1000 caracteres';
+      isValid = false;
+    }
+  }
+
+  // ===== VALIDACIONES CRUZADAS =====
+
+  // 12. Validar que cantidad existente no sea mayor que cantidad adquirida
+  if (this.cantidad_adquirida !== null && this.cantidad_existente !== null &&
+      Number(this.cantidad_existente) > Number(this.cantidad_adquirida)) {
+    this.insumoErrors['cantidad_existente'] = 'La cantidad existente no puede ser mayor que la cantidad adquirida';
+    isValid = false;
+  }
+
+  return isValid;
+}
 
 resetInsumoForm() {
   this.item_catalogo = null;

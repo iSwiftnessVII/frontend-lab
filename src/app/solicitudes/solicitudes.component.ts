@@ -8,11 +8,14 @@ import { LocationsService } from '../services/clientes/locations.service';
 import { UtilsService } from '../services/clientes/utils.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { authService } from '../services/auth.service';
+import { NumbersOnlyDirective } from '../directives/numbers-only.directive';
+import { LettersOnlyDirective } from '../directives/letters-only.directive';
+import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
 
 @Component({
   standalone: true,
   selector: 'app-solicitudes',
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, NumbersOnlyDirective, LettersOnlyDirective, AlphaNumericDirective],
   templateUrl: './solicitudes.component.html',
   styleUrls: ['./solicitudes.component.css'],
   encapsulation: ViewEncapsulation.None
@@ -611,172 +614,493 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   }
 
   // ========== VALIDACIONES ==========
-  validarCliente(): boolean {
-    this.clienteErrors = {};
-    let isValid = true;
+ validarCliente(): boolean {
+  this.clienteErrors = {};
+  let isValid = true;
 
-    if (!this.clienteNombre.trim()) {
-      this.clienteErrors['nombre'] = 'El nombre es obligatorio';
-      isValid = false;
-    } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,50}$/.test(this.clienteNombre)) {
-      this.clienteErrors['nombre'] = 'Solo letras y espacios (máx 50 caracteres)';
-      isValid = false;
-    }
-
-    if (!this.clienteNumero) {
-      this.clienteErrors['numero'] = 'El número es obligatorio';
-      isValid = false;
-    }
-
-    if (!this.clienteFechaVinc) {
-      this.clienteErrors['fechaVinc'] = 'La fecha es obligatoria';
-      isValid = false;
-    } else {
-      const fecha = new Date(this.clienteFechaVinc);
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      fecha.setHours(0, 0, 0, 0);
-      if (fecha > hoy) {
-        this.clienteErrors['fechaVinc'] = 'La fecha no puede ser futura';
-        isValid = false;
-      }
-    }
-
-    if (!this.clienteIdNum.trim()) {
-      this.clienteErrors['idNum'] = 'El número de identificación es obligatorio';
-      isValid = false;
-    }
-
-    if (this.clienteEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.clienteEmail)) {
-      this.clienteErrors['email'] = 'Correo electrónico inválido';
-      isValid = false;
-    }
-
-    return isValid;
+  // Validación de nombre (OBLIGATORIO)
+  if (!this.clienteNombre.trim()) {
+    this.clienteErrors['nombre'] = 'El nombre del solicitante es obligatorio';
+    isValid = false;
+  } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\.\-]{2,100}$/.test(this.clienteNombre)) {
+    this.clienteErrors['nombre'] = 'El nombre debe contener solo letras, espacios y puntos (2-100 caracteres)';
+    isValid = false;
   }
+
+  // Validación de consecutivo (OBLIGATORIO)
+  if (!this.clienteNumero) {
+    this.clienteErrors['numero'] = 'El número consecutivo es obligatorio';
+    isValid = false;
+  } else if (this.clienteNumero < 1 || this.clienteNumero > 9999) {
+    this.clienteErrors['numero'] = 'El consecutivo debe estar entre 1 y 9999';
+    isValid = false;
+  }
+
+  // Validación de fecha de vinculación (OBLIGATORIO)
+  if (!this.clienteFechaVinc) {
+    this.clienteErrors['fechaVinc'] = 'La fecha de vinculación es obligatoria';
+    isValid = false;
+  } else {
+    const fecha = new Date(this.clienteFechaVinc);
+    const hoy = new Date();
+    hoy.setHours(23, 59, 59, 999);
+    
+    if (fecha > hoy) {
+      this.clienteErrors['fechaVinc'] = 'La fecha de vinculación no puede ser futura';
+      isValid = false;
+    }
+  }
+
+  // Validación de tipo de usuario (OBLIGATORIO)
+  if (!this.clienteTipoUsuario) {
+    this.clienteErrors['tipoUsuario'] = 'Debe seleccionar el tipo de cliente';
+    isValid = false;
+  }
+
+  // Validación de razón social (OBLIGATORIO) - YA EXISTE
+  if (!this.clienteRazonSocial.trim()) {
+    this.clienteErrors['razonSocial'] = 'La razón social es obligatoria';
+    isValid = false;
+  } else if (this.clienteRazonSocial.length > 200) {
+    this.clienteErrors['razonSocial'] = 'La razón social no puede exceder 200 caracteres';
+    isValid = false;
+  }
+
+  // Validación de NIT (OBLIGATORIO) - YA EXISTE
+  if (!this.clienteNit.trim()) {
+    this.clienteErrors['nit'] = 'El NIT es obligatorio';
+    isValid = false;
+  } else if (!/^[0-9]{9}-[0-9]$/.test(this.clienteNit)) {
+    this.clienteErrors['nit'] = 'Formato de NIT inválido (ej: 900123456-7)';
+    isValid = false;
+  }
+
+  // Validación de tipo de identificación (OBLIGATORIO)
+  if (!this.clienteTipoId) {
+    this.clienteErrors['tipoId'] = 'Debe seleccionar el tipo de identificación';
+    isValid = false;
+  }
+
+  // Validación de número de identificación (OBLIGATORIO)
+  if (!this.clienteIdNum.trim()) {
+    this.clienteErrors['idNum'] = 'El número de identificación es obligatorio';
+    isValid = false;
+  } else if (!/^[0-9A-Za-z]{5,20}$/.test(this.clienteIdNum)) {
+    this.clienteErrors['idNum'] = 'Número de identificación inválido (5-20 caracteres alfanuméricos)';
+    isValid = false;
+  }
+
+  // Validación de sexo (OBLIGATORIO) - YA EXISTE
+  if (!this.clienteSexo) {
+    this.clienteErrors['sexo'] = 'Debe seleccionar el sexo';
+    isValid = false;
+  } else if (!['M', 'F', 'Otro'].includes(this.clienteSexo)) {
+    this.clienteErrors['sexo'] = 'Seleccione una opción válida para sexo';
+    isValid = false;
+  }
+
+  // Validación de tipo población/comunidad (OBLIGATORIO) - NUEVA
+  if (!this.clienteTipoPobl.trim()) {
+    this.clienteErrors['tipoPobl'] = 'El tipo de comunidad es obligatorio';
+    isValid = false;
+  } else if (this.clienteTipoPobl.length > 50) {
+    this.clienteErrors['tipoPobl'] = 'El tipo de comunidad no puede exceder 50 caracteres';
+    isValid = false;
+  }
+
+  // Validación de dirección (OBLIGATORIO) - YA EXISTE
+  if (!this.clienteDireccion.trim()) {
+    this.clienteErrors['direccion'] = 'La dirección es obligatoria';
+    isValid = false;
+  } else if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#\-\.\,]{5,200}$/.test(this.clienteDireccion)) {
+    this.clienteErrors['direccion'] = 'La dirección contiene caracteres inválidos (máx 200 caracteres)';
+    isValid = false;
+  }
+
+  // Validación de departamento y ciudad (OBLIGATORIOS)
+  if (!this.clienteIdDepartamento) {
+    this.clienteErrors['departamento'] = 'Debe seleccionar un departamento';
+    isValid = false;
+  }
+  if (!this.clienteIdCiudad) {
+    this.clienteErrors['ciudad'] = 'Debe seleccionar una ciudad';
+    isValid = false;
+  }
+
+  //  Validación de celular (OBLIGATORIO) - YA EXISTE
+  if (!this.clienteCelular) {
+    this.clienteErrors['celular'] = 'El celular es obligatorio';
+    isValid = false;
+  } else if (!/^3[0-9]{9}$/.test(this.clienteCelular.replace(/\s/g, ''))) {
+    this.clienteErrors['celular'] = 'Formato de celular inválido (ej: 3001234567)';
+    isValid = false;
+  }
+
+  //  Validación de teléfono (NO obligatorio)
+  if (this.clienteTelefono && !/^[0-9]{7,15}$/.test(this.clienteTelefono.replace(/\s/g, ''))) {
+    this.clienteErrors['telefono'] = 'Formato de teléfono inválido (7-15 dígitos)';
+    isValid = false;
+  }
+
+  // Validación de correo (OBLIGATORIO) - YA EXISTE
+  if (!this.clienteEmail.trim()) {
+    this.clienteErrors['email'] = 'El correo electrónico es obligatorio';
+    isValid = false;
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.clienteEmail)) {
+    this.clienteErrors['email'] = 'Formato de correo electrónico inválido';
+    isValid = false;
+  }
+
+  // Validación de tipo vinculación (OBLIGATORIO) - YA EXISTE
+  if (!this.clienteTipoVinc.trim()) {
+    this.clienteErrors['tipoVinc'] = 'El tipo de vinculación es obligatorio';
+    isValid = false;
+  } else if (this.clienteTipoVinc.length > 50) {
+    this.clienteErrors['tipoVinc'] = 'El tipo de vinculación no puede exceder 50 caracteres';
+    isValid = false;
+  }
+
+  //  Validación de registro realizado por (OBLIGATORIO) - YA EXISTE
+  if (!this.clienteRegistroPor.trim()) {
+    this.clienteErrors['registroPor'] = 'El registro realizado por es obligatorio';
+    isValid = false;
+  } else if (this.clienteRegistroPor.length > 100) {
+    this.clienteErrors['registroPor'] = 'El registro realizado por no puede exceder 100 caracteres';
+    isValid = false;
+  }
+
+  // Validación de observaciones (NO obligatorio)
+  if (this.clienteObservaciones && !/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#\-\.\,\(\)]{0,500}$/.test(this.clienteObservaciones)) {
+    this.clienteErrors['observaciones'] = 'Las observaciones exceden el límite de 500 caracteres';
+    isValid = false;
+  }
+
+  return isValid;
+}
 
   validarSolicitud(): boolean {
-    this.solicitudErrors = {};
-    let isValid = true;
-    
-    if (this.solicitudFechaSolicitud) {
-      const f = new Date(this.solicitudFechaSolicitud);
-      if (isNaN(f.getTime())) {
-        this.solicitudErrors['fechaSolicitud'] = 'Fecha de solicitud inválida';
+  this.solicitudErrors = {};
+  let isValid = true;
+  
+  // Validación de consecutivo (OBLIGATORIO)
+  if (!this.solicitudConsecutivo) {
+    this.solicitudErrors['consecutivo'] = 'El consecutivo es obligatorio';
+    isValid = false;
+  }
+
+  // Validación de cliente (OBLIGATORIO)
+  if (!this.solicitudClienteId) {
+    this.solicitudErrors['clienteId'] = 'Debe seleccionar un cliente';
+    isValid = false;
+  }
+
+  // Validación de tipo de solicitud (OBLIGATORIO)
+  if (!this.solicitudTipo.trim()) {
+    this.solicitudErrors['tipo'] = 'Debe seleccionar el tipo de solicitud';
+    isValid = false;
+  }
+
+  // Validación de nombre de muestra (OBLIGATORIO)
+  if (!this.solicitudNombre.trim()) {
+    this.solicitudErrors['nombre'] = 'El nombre de la muestra es obligatorio';
+    isValid = false;
+  } else if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s\-\.]{2,100}$/.test(this.solicitudNombre)) {
+    this.solicitudErrors['nombre'] = 'Nombre de muestra inválido (2-100 caracteres alfanuméricos)';
+    isValid = false;
+  }
+
+  // Validación de lote (OBLIGATORIO)
+  if (!this.solicitudLote.trim()) {
+    this.solicitudErrors['lote'] = 'El lote del producto es obligatorio';
+    isValid = false;
+  } else if (!/^[A-Z0-9\-]{3,20}$/.test(this.solicitudLote)) {
+    this.solicitudErrors['lote'] = 'Formato de lote inválido (3-20 caracteres alfanuméricos)';
+    isValid = false;
+  }
+
+  // Validación de fecha de solicitud (OBLIGATORIO)
+  if (!this.solicitudFechaSolicitud) {
+    this.solicitudErrors['fechaSolicitud'] = 'La fecha de solicitud es obligatoria';
+    isValid = false;
+  } else {
+    const f = new Date(this.solicitudFechaSolicitud);
+    if (isNaN(f.getTime())) {
+      this.solicitudErrors['fechaSolicitud'] = 'Fecha de solicitud inválida';
+      isValid = false;
+    } else {
+      const hoy = new Date();
+      hoy.setHours(23, 59, 59, 999);
+      if (f > hoy) {
+        this.solicitudErrors['fechaSolicitud'] = 'La fecha de solicitud no puede ser futura';
         isValid = false;
       }
     }
-
-    if (!this.solicitudClienteId) {
-      this.solicitudErrors['clienteId'] = 'Debe seleccionar un cliente';
-      isValid = false;
-    }
-
-    if (!this.solicitudTipo.trim()) {
-      this.solicitudErrors['tipo'] = 'Debe seleccionar el tipo de solicitud';
-      isValid = false;
-    }
-
-    if (!this.solicitudNombre.trim()) {
-      this.solicitudErrors['nombre'] = 'El nombre de la muestra es obligatorio';
-      isValid = false;
-    } else if (this.solicitudNombre.length > 100) {
-      this.solicitudErrors['nombre'] = 'Máximo 100 caracteres (' + this.solicitudNombre.length + ' actuales)';
-      isValid = false;
-    }
-
-    // Validaciones nuevas según esquema
-    if (this.solicitudRecibida && this.solicitudRecibida.length > 255) {
-      this.solicitudErrors['solicitudRecibida'] = 'Máx 255 caracteres';
-      isValid = false;
-    }
-    
-    if (this.solicitudRecibePersonal && this.solicitudRecibePersonal.length > 255) {
-      this.solicitudErrors['solicitudRecibePersonal'] = 'Máx 255 caracteres';
-      isValid = false;
-    }
-    
-    if (this.solicitudCargoPersonal && this.solicitudCargoPersonal.length > 100) {
-      this.solicitudErrors['solicitudCargoPersonal'] = 'Máx 100 caracteres';
-      isValid = false;
-    }
-    
-    if (this.solicitudObservaciones && this.solicitudObservaciones.length > 5000) {
-      this.solicitudErrors['observaciones'] = 'Observaciones demasiado largas';
-      isValid = false;
-    }
-
-    return isValid;
   }
 
-  validarOferta(): boolean {
-    this.ofertaErrors = {};
-    let isValid = true;
-
-    if (!this.ofertaSolicitudId) {
-      this.ofertaErrors['solicitudId'] = 'Debe seleccionar una solicitud';
+  // Validación de fecha de vencimiento (OBLIGATORIO)
+  if (!this.solicitudFechaVenc) {
+    this.solicitudErrors['fechaVenc'] = 'La fecha de vencimiento es obligatoria';
+    isValid = false;
+  } else {
+    const fechaVenc = new Date(this.solicitudFechaVenc);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    fechaVenc.setHours(0, 0, 0, 0);
+    
+    if (fechaVenc < hoy) {
+      this.solicitudErrors['fechaVenc'] = 'La fecha de vencimiento no puede ser una fecha pasada';
       isValid = false;
     }
-
-    if (!this.ofertaValor) {
-      this.ofertaErrors['valor'] = 'El valor de la oferta es obligatorio';
-      isValid = false;
-    } else if (this.ofertaValor <= 0) {
-      this.ofertaErrors['valor'] = 'El valor debe ser mayor a 0';
-      isValid = false;
-    }
-
-    if (!this.ofertaFechaEnvio) {
-      this.ofertaErrors['fechaEnvio'] = 'La fecha de envío es obligatoria';
-      isValid = false;
-    }
-
-    return isValid;
   }
+
+  // Validación de tipo de muestra (OBLIGATORIO)
+  if (!this.solicitudTipoMuestra.trim()) {
+    this.solicitudErrors['tipoMuestra'] = 'El tipo de muestra es obligatorio';
+    isValid = false;
+  } else if (this.solicitudTipoMuestra.length > 50) {
+    this.solicitudErrors['tipoMuestra'] = 'El tipo de muestra no puede exceder 50 caracteres';
+    isValid = false;
+  }
+
+  // Validación de tipo de empaque (OBLIGATORIO)
+  if (!this.solicitudCondEmpaque.trim()) {
+    this.solicitudErrors['condEmpaque'] = 'El tipo de empaque es obligatorio';
+    isValid = false;
+  } else if (this.solicitudCondEmpaque.length > 100) {
+    this.solicitudErrors['condEmpaque'] = 'El tipo de empaque no puede exceder 100 caracteres';
+    isValid = false;
+  }
+
+  // Validación de tipo de análisis (OBLIGATORIO)
+  if (!this.solicitudTipoAnalisis.trim()) {
+    this.solicitudErrors['tipoAnalisis'] = 'El tipo de análisis requerido es obligatorio';
+    isValid = false;
+  } else if (this.solicitudTipoAnalisis.length > 100) {
+    this.solicitudErrors['tipoAnalisis'] = 'El tipo de análisis no puede exceder 100 caracteres';
+    isValid = false;
+  }
+
+  // Validación de cantidad de muestras (OBLIGATORIO)
+  if (!this.solicitudCantidad) {
+    this.solicitudErrors['cantidad'] = 'La cantidad de muestras es obligatoria';
+    isValid = false;
+  } else if (this.solicitudCantidad < 1 || this.solicitudCantidad > 1000) {
+    this.solicitudErrors['cantidad'] = 'La cantidad debe estar entre 1 y 1000 muestras';
+    isValid = false;
+  }
+
+  // Validación de fecha estimada de entrega (OBLIGATORIO)
+  if (!this.solicitudFechaEstimada) {
+    this.solicitudErrors['fechaEstimada'] = 'La fecha estimada de entrega es obligatoria';
+    isValid = false;
+  } else {
+    const fechaEstimada = new Date(this.solicitudFechaEstimada);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    if (fechaEstimada < hoy) {
+      this.solicitudErrors['fechaEstimada'] = 'La fecha estimada no puede ser anterior a hoy';
+      isValid = false;
+    }
+
+    // Validar que la fecha estimada no sea mayor a 1 año
+    const maxFecha = new Date();
+    maxFecha.setFullYear(maxFecha.getFullYear() + 1);
+    if (fechaEstimada > maxFecha) {
+      this.solicitudErrors['fechaEstimada'] = 'La fecha estimada no puede ser mayor a 1 año';
+      isValid = false;
+    }
+  }
+
+  // Validación de "Requiere varios análisis" (OBLIGATORIO)
+  if (this.solicitudRequiereVarios === '' || this.solicitudRequiereVarios === null || this.solicitudRequiereVarios === undefined) {
+    this.solicitudErrors['requiereVarios'] = 'Debe indicar si requiere varios análisis';
+    isValid = false;
+  }
+
+  // Validación de solicitud recibida (OBLIGATORIO)
+  if (!this.solicitudRecibida.trim()) {
+    this.solicitudErrors['solicitudRecibida'] = 'Debe indicar cómo se recibió la solicitud';
+    isValid = false;
+  } else if (this.solicitudRecibida.length > 255) {
+    this.solicitudErrors['solicitudRecibida'] = 'Máximo 255 caracteres';
+    isValid = false;
+  }
+
+  // Validación de recibe personal (OBLIGATORIO)
+  if (!this.solicitudRecibePersonal.trim()) {
+    this.solicitudErrors['recibePersonal'] = 'Debe indicar quién recibe la solicitud';
+    isValid = false;
+  } else if (this.solicitudRecibePersonal.length > 255) {
+    this.solicitudErrors['recibePersonal'] = 'Máximo 255 caracteres';
+    isValid = false;
+  }
+
+  // Validación de cargo personal (OBLIGATORIO)
+  if (!this.solicitudCargoPersonal.trim()) {
+    this.solicitudErrors['cargoPersonal'] = 'Debe indicar el cargo del personal';
+    isValid = false;
+  } else if (this.solicitudCargoPersonal.length > 100) {
+    this.solicitudErrors['cargoPersonal'] = 'Máximo 100 caracteres';
+    isValid = false;
+  }
+
+  // Validación de observaciones (NO obligatorio)
+  if (this.solicitudObservaciones && this.solicitudObservaciones.length > 5000) {
+    this.solicitudErrors['observaciones'] = 'Observaciones demasiado largas';
+    isValid = false;
+  }
+
+  return isValid;
+}
+
+ validarOferta(): boolean {
+  this.ofertaErrors = {};
+  let isValid = true;
+
+  // Validación de solicitud (OBLIGATORIO)
+  if (!this.ofertaSolicitudId) {
+    this.ofertaErrors['solicitudId'] = 'Debe seleccionar una solicitud';
+    isValid = false;
+  }
+
+  // Validación de valor (OBLIGATORIO)
+  if (!this.ofertaValor) {
+    this.ofertaErrors['valor'] = 'El valor de la oferta es obligatorio';
+    isValid = false;
+  } else if (this.ofertaValor <= 0) {
+    this.ofertaErrors['valor'] = 'El valor debe ser mayor a 0';
+    isValid = false;
+  } else if (this.ofertaValor > 1000000000) {
+    this.ofertaErrors['valor'] = 'El valor no puede exceder $1.000.000.000';
+    isValid = false;
+  }
+
+  // Validación de fecha de envío (OBLIGATORIO)
+  if (!this.ofertaFechaEnvio) {
+    this.ofertaErrors['fechaEnvio'] = 'La fecha de envío es obligatoria';
+    isValid = false;
+  } else {
+    const fechaEnvio = new Date(this.ofertaFechaEnvio);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    if (fechaEnvio > hoy) {
+      this.ofertaErrors['fechaEnvio'] = 'La fecha de envío no puede ser futura';
+      isValid = false;
+    }
+  }
+
+  // Validación de "¿Se generó cotización?" (OBLIGATORIO)
+  if (this.ofertaGeneroCotizacion === '' || this.ofertaGeneroCotizacion === null || this.ofertaGeneroCotizacion === undefined) {
+    this.ofertaErrors['generoCotizacion'] = 'Debe indicar si se generó cotización';
+    isValid = false;
+  }
+
+  // Validación de "¿Se realizó seguimiento?" (OBLIGATORIO)
+  if (this.ofertaRealizoSeguimiento === '' || this.ofertaRealizoSeguimiento === null || this.ofertaRealizoSeguimiento === undefined) {
+    this.ofertaErrors['realizoSeguimiento'] = 'Debe indicar si se realizó seguimiento';
+    isValid = false;
+  }
+
+  // Validación de observación (NO obligatorio)
+  if (this.ofertaObservacion && this.ofertaObservacion.length > 200) {
+    this.ofertaErrors['observacion'] = 'La observación no puede exceder 200 caracteres';
+    isValid = false;
+  }
+
+  return isValid;
+}
 
   validarResultado(): boolean {
-    this.resultadoErrors = {};
-    let isValid = true;
+  this.resultadoErrors = {};
+  let isValid = true;
 
-    if (!this.resultadoSolicitudId) {
-      this.resultadoErrors['solicitudId'] = 'Debe seleccionar una solicitud';
-      isValid = false;
-    }
-
-    if (!this.resultadoFechaLimite) {
-      this.resultadoErrors['fechaLimite'] = 'La fecha límite es obligatoria';
-      isValid = false;
-    }
-
-    if (!this.resultadoFechaEnvio) {
-      this.resultadoErrors['fechaEnvio'] = 'La fecha de envío es obligatoria';
-      isValid = false;
-    }
-
-    if (this.resultadoServicioViable === '') {
-      this.resultadoErrors['servicioViable'] = 'Debe indicar si el servicio es viable';
-      isValid = false;
-    }
-
-    return isValid;
+  if (!this.resultadoSolicitudId) {
+    this.resultadoErrors['solicitudId'] = 'Debe seleccionar una solicitud';
+    isValid = false;
   }
+
+  if (!this.resultadoFechaLimite) {
+    this.resultadoErrors['fechaLimite'] = 'La fecha límite es obligatoria';
+    isValid = false;
+  } else {
+    const fechaLimite = new Date(this.resultadoFechaLimite);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    if (fechaLimite < hoy) {
+      this.resultadoErrors['fechaLimite'] = 'La fecha límite no puede ser anterior a hoy';
+      isValid = false;
+    }
+  }
+
+  if (!this.resultadoFechaEnvio) {
+    this.resultadoErrors['fechaEnvio'] = 'La fecha de envío es obligatoria';
+    isValid = false;
+  } else {
+    const fechaEnvio = new Date(this.resultadoFechaEnvio);
+    const fechaLimite = this.resultadoFechaLimite ? new Date(this.resultadoFechaLimite) : null;
+    
+    if (fechaLimite && fechaEnvio > fechaLimite) {
+      this.resultadoErrors['fechaEnvio'] = 'La fecha de envío no puede ser posterior a la fecha límite';
+      isValid = false;
+    }
+  }
+
+  if (this.resultadoServicioViable === '' || this.resultadoServicioViable === null || this.resultadoServicioViable === undefined) {
+    this.resultadoErrors['servicioViable'] = 'Debe indicar si el servicio es viable';
+    isValid = false;
+  }
+
+  return isValid;
+}
 
   validarEncuesta(): boolean {
-    this.encuestaErrors = {};
-    let isValid = true;
+  this.encuestaErrors = {};
+  let isValid = true;
 
-    if (!this.encuestaSolicitudId) {
-      this.encuestaErrors['solicitudId'] = 'Debe seleccionar una solicitud';
-      isValid = false;
-    }
-
-    if (!this.encuestaFecha) {
-      this.encuestaErrors['fecha'] = 'La fecha de la encuesta es obligatoria';
-      isValid = false;
-    }
-
-    return isValid;
+  if (!this.encuestaSolicitudId) {
+    this.encuestaErrors['solicitudId'] = 'Debe seleccionar una solicitud';
+    isValid = false;
   }
+
+  if (!this.encuestaFecha) {
+    this.encuestaErrors['fecha'] = 'La fecha de la encuesta es obligatoria';
+    isValid = false;
+  } else {
+    const fechaEncuesta = new Date(this.encuestaFecha);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    if (fechaEncuesta > hoy) {
+      this.encuestaErrors['fecha'] = 'La fecha de encuesta no puede ser futura';
+      isValid = false;
+    }
+  }
+
+  if (this.encuestaRecomendaria === '' || this.encuestaRecomendaria === null || this.encuestaRecomendaria === undefined) {
+    this.encuestaErrors['recomendaria'] = 'Debe indicar si recomendaría el servicio';
+    isValid = false;
+  }
+
+  if (this.encuestaClienteRespondio === '' || this.encuestaClienteRespondio === null || this.encuestaClienteRespondio === undefined) {
+    this.encuestaErrors['clienteRespondio'] = 'Debe indicar si el cliente respondió';
+    isValid = false;
+  }
+
+  if (this.encuestaSolicitoNueva === '' || this.encuestaSolicitoNueva === null || this.encuestaSolicitoNueva === undefined) {
+    this.encuestaErrors['solicitoNueva'] = 'Debe indicar si se solicitó nueva encuesta';
+    isValid = false;
+  }
+
+  if (this.encuestaComentarios && this.encuestaComentarios.length > 1000) {
+    this.encuestaErrors['comentarios'] = 'Los comentarios no pueden exceder 1000 caracteres';
+    isValid = false;
+  }
+
+  return isValid;
+}
 
   // ========== OPERACIONES CRUD ==========
   async createCliente(e: Event): Promise<void> {
