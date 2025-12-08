@@ -307,10 +307,7 @@ body {
   gap: 0.5rem;
   align-items: center;
 }
-.catalog-card .card-name .name-pdfs .pdf-btn {
-  /* Catalog buttons: base layout comes from shared CSS. Use modifiers
-     here only when absolutely necessary (avoid re-declaring sizes/colors). */
-}
+
 .catalog-card .card-name .name-pdfs .pdf-availability.ok {
   background: #ffffff;
   color: #16a34a;
