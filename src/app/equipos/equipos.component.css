@@ -1512,6 +1512,103 @@ input[readonly] {
 
 /* Regla vacía eliminada para evitar lint error */
 
+/* --- Modal overlay and fixed-size edit modal (copied from solicitudes styles) --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 200ms ease;
+  opacity: 1;
+}
+
+.edit-modal {
+  background: #fff;
+  padding: 18px;
+  border-radius: 8px;
+  width: 900px;
+  max-width: calc(100vw - 40px);
+  height: 620px;
+  max-height: 90vh;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 200ms ease, opacity 200ms ease;
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.edit-modal .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  align-items: start;
+  min-height: 0;
+}
+
+.edit-modal .form-field.span-full {
+  grid-column: 1 / -1;
+}
+
+.edit-modal .form-field.span-full textarea {
+  width: 100%;
+  box-sizing: border-box;
+  display: block;
+  resize: vertical;
+  min-height: 40px;
+  max-height: calc(60vh);
+  overflow: auto;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-gray);
+  background: var(--primary-white);
+  transition: height 140ms ease;
+  line-height: 1.4;
+}
+
+@media (max-width: 720px) {
+  .edit-modal .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .edit-modal .form-field.span-full textarea {
+    min-height: 160px;
+    max-height: calc(80vh - 160px);
+  }
+}
+
+.modal-overlay.closing {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.edit-modal.closing {
+  transform: translateY(10px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.edit-modal > div:last-child,
+.edit-modal > .form-grid,
+.edit-modal .form-grid,
+.edit-modal .equipo-tabs-menu + div {
+  overflow: auto;
+}
+
+.edit-modal .equipo-tabs-menu + div {
+  flex: 1 1 auto;
+  padding-right: 8px;
+}
+
+.edit-modal .form-actions,
+.edit-modal > div > div[style*="justify-content:flex-end"] {
+  z-index: 2;
+}
+
+
 /* PDF field styles (left of card-right-controls) */
 .pdf-field {
   display: flex;

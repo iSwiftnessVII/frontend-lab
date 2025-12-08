@@ -172,6 +172,42 @@ export const equiposService = {
     return await res.json();
   },
 
+  // Actualizar historial por equipo y consecutivo
+  async actualizarHistorial(equipo: string, consecutivo: number | string, payload: any) {
+    const API_HISTORIAL = (window as any).__env?.API_HISTORIAL_HV || 'http://localhost:4000/api/equipos/historial';
+    const res = await fetch(`${API_HISTORIAL}/${encodeURIComponent(String(equipo))}/${encodeURIComponent(String(consecutivo))}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || 'Error al actualizar historial');
+    }
+    return await res.json();
+  },
+
+  // Actualizar intervalo por equipo y consecutivo
+  async actualizarIntervalo(equipo: string, consecutivo: number | string, payload: any) {
+    const API_INTERVALO = (window as any).__env?.API_INTERVALO_HV || 'http://localhost:4000/api/equipos/intervalo';
+    const res = await fetch(`${API_INTERVALO}/${encodeURIComponent(String(equipo))}/${encodeURIComponent(String(consecutivo))}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || 'Error al actualizar intervalo');
+    }
+    return await res.json();
+  },
+
   // Listar intervalo por equipo
   async listarIntervaloPorEquipo(codigo: string) {
     const res = await fetch(`${API}/intervalo/list/${codigo}`, {

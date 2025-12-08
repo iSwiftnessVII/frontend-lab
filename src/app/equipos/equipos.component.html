@@ -975,5 +975,259 @@
         </div>
       </article>
     </div>
+
+    <!-- Edit Equipo Modal (tabs: Hoja de vida, Ficha técnica, Historial, Intervalo) -->
+    <div *ngIf="editModalVisible || editModalClosing" class="modal-overlay" [class.closing]="editModalClosing" (click)="closeEditEquipoModal()">
+      <div class="edit-modal" [class.closing]="editModalClosing" (click)="$event.stopPropagation()">
+        <h3>Editar Equipo</h3>
+
+        <div class="equipo-tabs-menu">
+          <button type="button" class="tab-btn" [class.active]="editModalActiveTab === 'hojaVida'" (click)="editModalActiveTab = 'hojaVida'">Hoja de vida</button>
+          <button type="button" class="tab-btn" [class.active]="editModalActiveTab === 'fichaTecnica'" (click)="editModalActiveTab = 'fichaTecnica'">Ficha técnica</button>
+          <button type="button" class="tab-btn" [class.active]="editModalActiveTab === 'historial'" (click)="editModalActiveTab = 'historial'">Historial</button>
+          <button type="button" class="tab-btn" [class.active]="editModalActiveTab === 'intervalo'" (click)="editModalActiveTab = 'intervalo'">Intervalo</button>
+          <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+            <button type="button" class="tab-btn" (click)="saveAllEditEquipo()">Guardar</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="edit-modal-body">
+          <div *ngIf="editModalActiveTab === 'hojaVida'">
+            <div class="form-grid">
+              <div>
+                <label>Código</label>
+                <input [(ngModel)]="codigo_identificacion" />
+              </div>
+              <div>
+                <label>Nombre</label>
+                <input [(ngModel)]="nombre" />
+              </div>
+              <div>
+                <label>Marca</label>
+                <input [(ngModel)]="marca" />
+              </div>
+              <div>
+                <label>Modelo</label>
+                <input [(ngModel)]="modelo" />
+              </div>
+              <div>
+                <label>Serie</label>
+                <input [(ngModel)]="numero_serie" />
+              </div>
+              <div>
+                <label>Inventario SENA</label>
+                <input [(ngModel)]="inventario_sena" />
+              </div>
+              <div>
+                <label>Ubicación</label>
+                <input [(ngModel)]="ubicacion" />
+              </div>
+              <div>
+                <label>Acreditación</label>
+                <select [(ngModel)]="acreditacion">
+                  <option value="">Ninguna</option>
+                  <option value="Acreditado">Acreditado</option>
+                  <option value="No acreditado">No acreditado</option>
+                </select>
+              </div>
+              <div>
+                <label>Tipo de manual</label>
+                <select [(ngModel)]="tipo_manual">
+                  <option value="">Seleccione</option>
+                  <option value="Manual de usuario">Manual de usuario</option>
+                  <option value="Ficha técnica">Ficha técnica</option>
+                </select>
+              </div>
+              <div>
+                <label>Manual de usuario</label>
+                <select [(ngModel)]="manual_usuario">
+                  <option value="">Sin manual</option>
+                  <option value="Sí">Sí</option>
+                </select>
+              </div>
+              <div>
+                <label>Puesta en servicio</label>
+                <input type="date" [(ngModel)]="puesta_en_servicio" />
+              </div>
+              <div>
+                <label>Fecha adquisición</label>
+                <input type="date" [(ngModel)]="fecha_adquisicion" />
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <label>Requerimientos del equipo</label>
+                <textarea [(ngModel)]="requerimientos_equipo"></textarea>
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <label>Accesorios</label>
+                <textarea [(ngModel)]="accesorios"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="editModalActiveTab === 'fichaTecnica'">
+            <div class="form-grid">
+              <div>
+                <label>Clasificación</label>
+                <input [(ngModel)]="clasificacion" />
+              </div>
+              <div>
+                <label>Tipo</label>
+                <input [(ngModel)]="tipo" />
+              </div>
+              <div>
+                <label>Voltaje</label>
+                <input [(ngModel)]="voltaje" />
+              </div>
+              <div>
+                <label>Frecuencia</label>
+                <input [(ngModel)]="frecuencia" />
+              </div>
+              <div>
+                <label>Campo de medición</label>
+                <input [(ngModel)]="campo_medicion" />
+              </div>
+              <div>
+                <label>Exactitud</label>
+                <input [(ngModel)]="exactitud" />
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="editModalActiveTab === 'historial'">
+            <!-- List existing historial registros for the editing equipo -->
+            <div *ngIf="editingEquipoCodigo && historialPorEquipo[editingEquipoCodigo] && historialPorEquipo[editingEquipoCodigo].length > 0; else noModalHistorial">
+              <div class="historial-records-container">
+                <div *ngFor="let registro of historialPorEquipo[editingEquipoCodigo]" class="historial-record-card">
+                  <div class="historial-header" (click)="toggleHistorialRegistro(editingEquipoCodigo, registro.consecutivo)">
+                    <span class="historial-consecutivo">
+                      <i class="fas" [ngClass]="historialExpandido[editingEquipoCodigo + '_' + registro.consecutivo] ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                      Registro #{{ registro.consecutivo }}
+                    </span>
+                    <span class="historial-fecha">{{ registro.fecha ? (registro.fecha | date: 'yyyy/MM/dd') : 'N/A' }}</span>
+                  </div>
+                  <div class="historial-body" *ngIf="historialExpandido[editingEquipoCodigo + '_' + registro.consecutivo]">
+                    <div *ngIf="registro._edit; else viewHistorial">
+                      <div class="form-grid">
+                        <div><label>Tipo</label><input [(ngModel)]="registro._edit.tipo_historial" /></div>
+                        <div><label>Código Registro</label><input [(ngModel)]="registro._edit.codigo_registro" /></div>
+                        <div><label>Fecha</label><input type="date" [(ngModel)]="registro._edit.fecha" /></div>
+                        <div><label>Realizó</label><input [(ngModel)]="registro._edit.realizo" /></div>
+                        <div><label>Supervisó</label><input [(ngModel)]="registro._edit.superviso" /></div>
+                        <div style="grid-column:1 / -1;"><label>Observaciones</label><textarea [(ngModel)]="registro._edit.observaciones"></textarea></div>
+                      </div>
+                      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+                        <button type="button" class="tab-btn" (click)="saveHistorialEdits(editingEquipoCodigo, registro)">Guardar</button>
+                        <button type="button" class="tab-btn" (click)="cancelHistorialEdits(registro)">Cancelar</button>
+                      </div>
+                    </div>
+                    <ng-template #viewHistorial>
+                      <div class="historial-grid">
+                        <div class="historial-item"><span class="historial-label">Tipo Historial:</span><span>{{ registro.tipo_historial || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Código Registro:</span><span>{{ registro.codigo_registro || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Realizó:</span><span>{{ registro.realizo || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Supervisó:</span><span>{{ registro.superviso || 'N/A' }}</span></div>
+                        <div class="historial-item historial-item-full" *ngIf="registro.observaciones"><span class="historial-label">Observaciones:</span><span>{{ registro.observaciones }}</span></div>
+                      </div>
+                      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+                        <button type="button" class="tab-btn" (click)="startEditHistorial(registro)">Editar</button>
+                      </div>
+                    </ng-template>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ng-template #noModalHistorial>
+              <div class="no-historial-message">
+                <i class="fas fa-history"></i>
+                <p>No hay registros de historial para este equipo</p>
+              </div>
+            </ng-template>
+
+          </div>
+
+          <div *ngIf="editModalActiveTab === 'intervalo'">
+            <!-- List existing intervalo registros for the editing equipo -->
+            <div *ngIf="editingEquipoCodigo && intervaloPorEquipo[editingEquipoCodigo] && intervaloPorEquipo[editingEquipoCodigo].length > 0; else noModalIntervalo">
+              <div class="historial-records-container">
+                <div *ngFor="let registro of intervaloPorEquipo[editingEquipoCodigo]" class="historial-record-card">
+                  <div class="historial-header" (click)="toggleIntervaloRegistro(editingEquipoCodigo, registro.consecutivo)">
+                    <span class="historial-consecutivo">
+                      <i class="fas" [ngClass]="intervaloExpandido[editingEquipoCodigo + '_' + registro.consecutivo] ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                      Registro #{{ registro.consecutivo }}
+                    </span>
+                    <span class="historial-fecha">{{ registro.fecha_c2 ? (registro.fecha_c2 | date: 'yyyy/MM/dd') : (registro.fecha_c1 ? (registro.fecha_c1 | date: 'yyyy/MM/dd') : 'N/A') }}</span>
+                  </div>
+                  <div class="historial-body" *ngIf="intervaloExpandido[editingEquipoCodigo + '_' + registro.consecutivo]">
+                    <div *ngIf="registro._edit; else viewIntervalo">
+                      <div class="form-grid">
+                        <div><label>Unidad nominal (g)</label><input type="number" step="0.0001" [(ngModel)]="registro._edit.unidad_nominal_g" /></div>
+                        <div><label>Calibración 1</label><input [(ngModel)]="registro._edit.calibracion_1" /></div>
+                        <div><label>Fecha Cal. 1</label><input type="date" [(ngModel)]="registro._edit.fecha_c1" /></div>
+                        <div><label>Error Cal. 1 (g)</label><input type="number" step="0.0001" [(ngModel)]="registro._edit.error_c1_g" /></div>
+                        <div><label>Calibración 2</label><input [(ngModel)]="registro._edit.calibracion_2" /></div>
+                        <div><label>Fecha Cal. 2</label><input type="date" [(ngModel)]="registro._edit.fecha_c2" /></div>
+                        <div><label>Error Cal. 2 (g)</label><input type="number" step="0.0001" [(ngModel)]="registro._edit.error_c2_g" /></div>
+                        <div><label>Diferencia días</label><input type="number" [(ngModel)]="registro._edit.diferencia_dias" /></div>
+                        <div><label>Desviación</label><input type="number" step="0.0001" [(ngModel)]="registro._edit.desviacion" /></div>
+                        <div><label>Deriva</label><input type="number" step="0.0001" [(ngModel)]="registro._edit.deriva" /></div>
+                        <div><label>Tolerancia (g)</label><input type="number" step="0.0001" [(ngModel)]="registro._edit.tolerancia_g" /></div>
+                        <div><label>Intervalo Cal. (días)</label><input type="number" [(ngModel)]="registro._edit.intervalo_calibraciones_dias" /></div>
+                        <div style="grid-column:1 / -1;"><label>Intervalo Cal. (años)</label><input type="number" step="0.0001" [(ngModel)]="registro._edit.intervalo_calibraciones_anios" /></div>
+                      </div>
+                      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+                        <button type="button" class="tab-btn" (click)="saveIntervaloEdits(editingEquipoCodigo, registro)">Guardar</button>
+                        <button type="button" class="tab-btn" (click)="cancelIntervaloEdits(registro)">Cancelar</button>
+                      </div>
+                    </div>
+                    <ng-template #viewIntervalo>
+                      <div class="historial-grid">
+                        <div class="historial-item"><span class="historial-label">Unidad Nominal (g):</span><span>{{ registro.unidad_nominal_g || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Calibración 1:</span><span>{{ registro.calibracion_1 || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Fecha Cal. 1:</span><span>{{ registro.fecha_c1 ? (registro.fecha_c1 | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Error Cal. 1 (g):</span><span>{{ registro.error_c1_g || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Calibración 2:</span><span>{{ registro.calibracion_2 || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Fecha Cal. 2:</span><span>{{ registro.fecha_c2 ? (registro.fecha_c2 | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Error Cal. 2 (g):</span><span>{{ registro.error_c2_g || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Diferencia Días:</span><span>{{ registro.diferencia_dias || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Desviación:</span><span>{{ registro.desviacion || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Deriva:</span><span>{{ registro.deriva || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Tolerancia (g):</span><span>{{ registro.tolerancia_g || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Intervalo Cal. (días):</span><span>{{ registro.intervalo_calibraciones_dias || 'N/A' }}</span></div>
+                        <div class="historial-item"><span class="historial-label">Intervalo Cal. (años):</span><span>{{ registro.intervalo_calibraciones_anios || 'N/A' }}</span></div>
+                      </div>
+                      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+                        <button type="button" class="tab-btn" (click)="startEditIntervalo(registro)">Editar</button>
+                      </div>
+                    </ng-template>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ng-template #noModalIntervalo>
+              <div class="no-historial-message">
+                <i class="fas fa-calendar-alt"></i>
+                <p>No hay registros de intervalo para este equipo</p>
+              </div>
+            </ng-template>
+
+            <!-- Small quick-add inputs (kept for convenience) -->
+            <div style="margin-top:12px" class="form-grid">
+              <div>
+                <label>Descripción</label>
+                <input [(ngModel)]="newIntervaloDescripcion" />
+              </div>
+              <div>
+                <label>Fecha</label>
+                <input type="date" [(ngModel)]="newIntervaloFecha" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div>
+
+      </div>
+    </div>
+
   </div>
-</div>
+    

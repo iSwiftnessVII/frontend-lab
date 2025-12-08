@@ -3,7 +3,11 @@
   
   // API URL (Cloudflare Tunnel or local dev)
   // Update this URL if your backend tunnel changes
+<<<<<<< Updated upstream
   const RENDER_URL = 'https://game-leaf-asbestos-responsibility.trycloudflare.com'
+=======
+  const RENDER_URL = 'https://levitra-fighter-batch-protest.trycloudflare.com'
+>>>>>>> Stashed changes
   // const RENDER_URL = 'http://localhost:3000';
   
   window.__env.API_BASE = RENDER_URL + '/api';

@@ -47,6 +47,110 @@ export class EquiposComponent implements OnInit {
         this.firmaModalSrc = null;
       }
 
+      // Edit modal state (tabs + save)
+      editModalVisible: boolean = false;
+      editModalClosing: boolean = false;
+      editModalActiveTab: string = 'hojaVida';
+
+      // Temporary fields for adding a historial/intervalo from modal
+      newHistorialTipo: string = '';
+      newHistorialFecha: string = '';
+      newHistorialObservaciones: string = '';
+      newHistorialRealizo: string = '';
+      newHistorialSuperviso: string = '';
+
+      newIntervaloDescripcion: string = '';
+      newIntervaloFecha: string = '';
+
+      closeEditEquipoModal() {
+        this.editModalVisible = false;
+        this.editModalClosing = false;
+        // clear new entry fields
+        this.newHistorialTipo = '';
+        this.newHistorialFecha = '';
+        this.newHistorialObservaciones = '';
+        this.newHistorialRealizo = '';
+        this.newHistorialSuperviso = '';
+        this.newIntervaloDescripcion = '';
+        this.newIntervaloFecha = '';
+      }
+
+      async saveAllEditEquipo() {
+        // Build payload from current form fields
+        if (!this.editingEquipoCodigo) {
+          this.snack.error('No se ha seleccionado equipo para editar');
+          return;
+        }
+        const payload: any = {
+          codigo_identificacion: this.codigo_identificacion,
+          nombre: this.nombre,
+          modelo: this.modelo,
+          marca: this.marca,
+          inventario_sena: this.inventario_sena,
+          ubicacion: this.ubicacion,
+          acreditacion: this.acreditacion,
+          tipo_manual: this.tipo_manual,
+          numero_serie: this.numero_serie,
+          tipo: this.tipo,
+          clasificacion: this.clasificacion,
+          manual_usuario: this.manual_usuario,
+          puesta_en_servicio: this.puesta_en_servicio,
+          fecha_adquisicion: this.fecha_adquisicion,
+          requerimientos_equipo: this.requerimientos_equipo,
+          elementos_electricos: this.elementos_electricos,
+          voltaje: this.voltaje,
+          elementos_mecanicos: this.elementos_mecanicos,
+          frecuencia: this.frecuencia,
+          campo_medicion: this.campo_medicion,
+          exactitud: this.exactitud,
+          sujeto_verificar: this.sujeto_verificar,
+          sujeto_calibracion: this.sujeto_calibracion,
+          resolucion_division: this.resolucion_division,
+          sujeto_calificacion: this.sujeto_calificacion,
+          accesorios: this.accesorios
+        };
+
+        try {
+          await equiposService.actualizarEquipo(this.editingEquipoCodigo, payload);
+          // If user added a historial entry in modal, create it
+          if (this.newHistorialTipo || this.newHistorialFecha || this.newHistorialObservaciones) {
+            try {
+              await equiposService.crearHistorial({
+                codigo_registro: this.editingEquipoCodigo,
+                fecha: this.newHistorialFecha || undefined,
+                tipo_historial: this.newHistorialTipo || undefined,
+                observaciones: this.newHistorialObservaciones || undefined,
+                realizo: this.newHistorialRealizo || undefined,
+                superviso: this.newHistorialSuperviso || undefined
+              });
+            } catch (hErr) {
+              console.warn('No se pudo crear historial desde modal:', hErr);
+            }
+          }
+          // If user added an intervalo entry in modal, create it
+          if (this.newIntervaloDescripcion || this.newIntervaloFecha) {
+            try {
+              await equiposService.crearIntervalo({
+                codigo_registro: this.editingEquipoCodigo,
+                fecha: this.newIntervaloFecha || undefined,
+                descripcion: this.newIntervaloDescripcion || undefined
+              });
+            } catch (iErr) {
+              console.warn('No se pudo crear intervalo desde modal:', iErr);
+            }
+          }
+
+          this.snack.success('Cambios guardados');
+          await this.obtenerEquiposRegistrados();
+          this.closeEditEquipoModal();
+          this.editEquipoMode = false;
+          this.editingEquipoCodigo = null;
+        } catch (err: any) {
+          console.error('Error actualizando equipo:', err);
+          this.snack.error(err?.message || 'Error al guardar cambios del equipo');
+        }
+      }
+
       // Edit mode for equipo: open form prefilled
       editEquipoMode: boolean = false;
       editingEquipoCodigo: string | null = null;
@@ -54,7 +158,7 @@ export class EquiposComponent implements OnInit {
       abrirEditarEquipo(equipo: any, event?: Event) {
         if (event) event.stopPropagation();
         if (!equipo) return;
-        // Prefill the form fields used by crearEquipo
+        // Prefill the form fields used by crearEquipo / modal
         this.codigo_identificacion = equipo.codigo_identificacion || '';
         this.nombre = equipo.nombre || '';
         this.modelo = equipo.modelo || '';
@@ -67,8 +171,9 @@ export class EquiposComponent implements OnInit {
         this.tipo = equipo.tipo || '';
         this.clasificacion = equipo.clasificacion || '';
         this.manual_usuario = equipo.manual_usuario || '';
-        this.puesta_en_servicio = equipo.puesta_en_servicio || '';
-        this.fecha_adquisicion = equipo.fecha_adquisicion || '';
+        // Format date fields for type="date" inputs (yyyy-MM-dd)
+        this.puesta_en_servicio = equipo.puesta_en_servicio ? this.formatearFecha(equipo.puesta_en_servicio) : '';
+        this.fecha_adquisicion = equipo.fecha_adquisicion ? this.formatearFecha(equipo.fecha_adquisicion) : '';
         this.requerimientos_equipo = equipo.requerimientos_equipo || '';
         this.elementos_electricos = equipo.elementos_electricos || '';
         this.voltaje = equipo.voltaje || '';
@@ -84,10 +189,10 @@ export class EquiposComponent implements OnInit {
 
         this.editEquipoMode = true;
         this.editingEquipoCodigo = equipo.codigo_identificacion || null;
-        // Open the hojaVida form to edit
-        this.formularioActivo = 'hojaVida';
-        // Scroll to top so form is visible
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Open edit modal with tabs
+        this.editModalVisible = true;
+        this.editModalClosing = false;
+        this.editModalActiveTab = 'hojaVida';
       }
 
       // Control de registros de historial expandidos
@@ -106,6 +211,118 @@ export class EquiposComponent implements OnInit {
       toggleIntervaloRegistro(equipoId: string, consecutivo: number) {
         const key = `${equipoId}_${consecutivo}`;
         this.intervaloExpandido[key] = !this.intervaloExpandido[key];
+      }
+
+      // Start editing a historial registro inline in the modal
+      startEditHistorial(registro: any) {
+        if (!registro) return;
+        if (!registro._edit) {
+          // create a shallow clone for editing
+          registro._edit = { ...registro };
+          // Ensure date inputs get a yyyy-MM-dd string so type="date" shows the value
+          if (registro.fecha) {
+            try {
+              registro._edit.fecha = this.formatearFecha(registro.fecha);
+            } catch (e) {
+              // fallback: leave as-is
+            }
+          } else {
+            registro._edit.fecha = '';
+          }
+        }
+      }
+
+      // Save edited historial registro
+      async saveHistorialEdits(equipoCodigo: string, registro: any) {
+        if (!registro || !registro._edit) return;
+        try {
+          const payload = { ...registro._edit };
+          // call service to update by equipo + consecutivo
+          const updated = await equiposService.actualizarHistorial(equipoCodigo, registro.consecutivo, payload);
+          // merge updated fields back into registro
+          Object.assign(registro, updated);
+          delete registro._edit;
+          this.snack.success('Registro de historial actualizado');
+          // refresh local list if needed
+          if (this.historialPorEquipo[equipoCodigo]) {
+            const arr = this.historialPorEquipo[equipoCodigo];
+            const idx = arr.findIndex((r: any) => r.id === registro.id);
+            if (idx >= 0) arr[idx] = registro;
+          }
+        } catch (err: any) {
+          console.error('Error actualizando historial:', err);
+          // If backend returns 404 it likely means the API doesn't support updates for historial
+          if (err && err.message && err.message.toString().includes('404')) {
+            this.snack.error('El servidor no admite actualización de historial (404)');
+          } else {
+            this.snack.error(err?.message || 'Error al actualizar historial');
+          }
+        }
+      }
+
+      // Cancel editing and discard changes
+      cancelHistorialEdits(registro: any) {
+        if (registro && registro._edit) delete registro._edit;
+      }
+
+      // Start editing an intervalo registro inline in the modal
+      startEditIntervalo(registro: any) {
+        if (!registro) return;
+        if (!registro._edit) {
+          registro._edit = { ...registro };
+          // Ensure date inputs get a yyyy-MM-dd string so type="date" shows the value
+          if (registro.fecha_c1) {
+            try { registro._edit.fecha_c1 = this.formatearFecha(registro.fecha_c1); } catch (e) { }
+          } else {
+            registro._edit.fecha_c1 = '';
+          }
+          if (registro.fecha_c2) {
+            try { registro._edit.fecha_c2 = this.formatearFecha(registro.fecha_c2); } catch (e) { }
+          } else {
+            registro._edit.fecha_c2 = '';
+          }
+        }
+      }
+
+      // Save edited intervalo registro
+      async saveIntervaloEdits(equipoCodigo: string, registro: any) {
+        if (!registro || !registro._edit) return;
+        try {
+          const payload = { ...registro._edit };
+          const svc: any = equiposService as any;
+          if (svc && typeof svc.actualizarIntervalo === 'function') {
+            // backend supports update by equipo + consecutivo
+            const updated = await svc.actualizarIntervalo(equipoCodigo, registro.consecutivo, payload);
+            // merge updated fields back into registro
+            Object.assign(registro, updated);
+            delete registro._edit;
+            this.snack.success('Registro de intervalo actualizado');
+            // refresh list for equipo
+            try {
+              const data = await equiposService.listarIntervaloPorEquipo(equipoCodigo);
+              this.intervaloPorEquipo[equipoCodigo] = data;
+            } catch (e) {
+              // ignore refresh errors
+            }
+          } else {
+            // No backend update route available — apply changes locally
+            Object.assign(registro, registro._edit);
+            delete registro._edit;
+            this.snack.warn('Actualización local aplicada (el servidor no soporta actualización de intervalo)');
+          }
+        } catch (err: any) {
+          console.error('Error actualizando intervalo:', err);
+          if (err && err.message && err.message.toString().includes('404')) {
+            this.snack.error('El servidor no admite actualización de intervalo (404)');
+          } else {
+            this.snack.error(err?.message || 'Error al actualizar intervalo');
+          }
+        }
+      }
+
+      // Cancel editing intervalo and discard changes
+      cancelIntervaloEdits(registro: any) {
+        if (registro && registro._edit) delete registro._edit;
       }
 
       // Seleccionar pestaña
