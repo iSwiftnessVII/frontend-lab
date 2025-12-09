@@ -2107,19 +2107,15 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     if (!solicitud) return false;
     switch ((tabKey || '').toString()) {
       case 'oferta': {
-        const gen = solicitud.genero_cotizacion;
-        const val = solicitud.valor_cotizacion;
-        if (gen === 1 || gen === true) return true;
-        if (val !== null && val !== undefined && String(val).trim() !== '') return true;
-        return false;
+        // Chulo solo cuando el usuario elige SÍ en seguimiento oferta
+        return solicitud.realizo_seguimiento_oferta === 1 || solicitud.realizo_seguimiento_oferta === true;
       }
       case 'revision': {
-        if (solicitud.fecha_limite_entrega) return true;
-        if (solicitud.fecha_envio_resultados) return true;
-        if (solicitud.servicio_es_viable === 1 || solicitud.servicio_es_viable === true) return true;
-        return false;
+        // Chulo solo cuando el usuario elige SÍ en servicio viable
+        return solicitud.servicio_es_viable === 1 || solicitud.servicio_es_viable === true;
       }
       case 'encuesta': {
+        // Mantener la lógica existente para encuesta
         if (solicitud.fecha_encuesta) return true;
         if (solicitud.comentarios) return true;
         if (solicitud.recomendaria_servicio === 1 || solicitud.recomendaria_servicio === true) return true;

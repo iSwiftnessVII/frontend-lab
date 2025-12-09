@@ -344,6 +344,19 @@ export class EquiposComponent implements OnInit {
     // PDF lists per equipo (map keyed by codigo_identificacion)
     pdfListByEquipo: { [codigo: string]: Array<{ id?: number; name: string; url: string; categoria?: string; size?: number; mime?: string; fecha_subida?: Date | null; displayName?: string }> } = {};
     selectedPdfByEquipo: { [codigo: string]: string | null } = {};
+    menuCategoriaPdfVisible: { [codigo: string]: boolean } = {};
+
+    mostrarMenuCategoriaPdf(codigo: string, event?: Event) {
+      if (event) event.stopPropagation();
+      // Alternar visibilidad del menú
+      this.menuCategoriaPdfVisible[codigo] = !this.menuCategoriaPdfVisible[codigo];
+      // Cerrar otros menús abiertos
+      Object.keys(this.menuCategoriaPdfVisible).forEach(key => {
+        if (key !== codigo) {
+          this.menuCategoriaPdfVisible[key] = false;
+        }
+      });
+    }
 
     async listarPdfs(codigo: string) {
       try {
@@ -445,6 +458,9 @@ export class EquiposComponent implements OnInit {
     // Start upload flow: open file picker and upload selected PDF with given category
     iniciarUpload(codigo: string, categoria: string, event?: Event) {
       if (event) event.stopPropagation();
+      // Cerrar el menú de categorías
+      this.menuCategoriaPdfVisible[codigo] = false;
+      
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'application/pdf';
@@ -657,6 +673,16 @@ export class EquiposComponent implements OnInit {
       for (const d of openDropdowns) this._adjustDropdown(d as HTMLDetailsElement);
     };
     window.addEventListener('resize', this._resizeHandler);
+
+    // Cerrar menú de categorías cuando se hace clic fuera
+    document.addEventListener('click', (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.categoria-pdf-menu') && !target.closest('.btn.add')) {
+        Object.keys(this.menuCategoriaPdfVisible).forEach(key => {
+          this.menuCategoriaPdfVisible[key] = false;
+        });
+      }
+    });
   }
 
   ngOnDestroy(): void {

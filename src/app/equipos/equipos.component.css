@@ -50,6 +50,11 @@
   z-index: 100002;
 }
 
+/* When the categoria-pdf-menu is visible, lift the whole card above siblings */
+.equipo-card:has(.categoria-pdf-menu) {
+  z-index: 100002;
+}
+
 .equipo-card .compact-dropdown[open] {
   z-index: 100000; /* force above other cards and footer */
 }
@@ -1643,10 +1648,16 @@ input[readonly] {
   border: none;
   cursor: pointer;
   font-size: 14px;
+  transition: all 0.2s ease;
 }
 
 .btn.view {
   background: #e5e7eb;
+  color: #374151;
+}
+
+.btn.view:hover {
+  background: #d1d5db;
 }
 
 .btn.delete {
@@ -1654,11 +1665,57 @@ input[readonly] {
   color: white;
 }
 
+.btn.delete:hover {
+  background: #dc2626;
+}
+
+.btn.add {
+  background: #00b8b5;
+  color: white;
+}
+
+.btn.add:hover {
+  background: #009996;
+}
+
+/* Menú de categorías de PDF */
+.categoria-pdf-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100001;
+  min-width: 200px;
+  padding: 6px;
+  list-style: none;
+  margin: 0;
+}
+
+.categoria-pdf-menu li {
+  padding: 6px 8px;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--text-color, #1f2937);
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.categoria-pdf-menu li:hover {
+  background: var(--hover-bg, #f3f4f6);
+}
+
 /* Ensure pdf-field matches the height and alignment of the right controls */
 .card-controls-inner {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  position: relative;
 }
 
 .card-right-controls .pdf-field,

@@ -736,35 +736,18 @@
 
                   <button class="btn view pdf-action" (click)="openPdf(equipo.codigo_identificacion, $event)">Ver</button>
                   <button class="btn delete pdf-action eliminar" (click)="deletePdf(equipo.codigo_identificacion, $event)">Eliminar</button>
+                  <button class="btn add pdf-action" (click)="mostrarMenuCategoriaPdf(equipo.codigo_identificacion, $event)">Añadir</button>
                 </div>
 
-                <div class="compact-group">
-                <div class="pdf-icon-left" aria-hidden="true" title="PDF/Archivo">
-                  <i class="fas fa-file-pdf"></i>
-                </div>
-                <details class="compact-dropdown">
-                  <summary class="compact-action" title="Subir/gestionar PDF" (click)="$event.stopPropagation()">
-                  <span class="action-leading">
-                    <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14" class="icon-plus">
-                      <path d="M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z"></path>
-                    </svg>
-                  </span>
-                  <span class="action-label">
-                    <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14" class="icon-caret">
-                      <path d="m4.427 7.427 3.396 3.396a.25.25 0 0 0 .354 0l3.396-3.396A.25.25 0 0 0 11.396 7H4.604a.25.25 0 0 0-.177.427Z"></path>
-                    </svg>
-                  </span>
-                  </summary>
-                  <ul class="compact-menu" role="menu" aria-label="Tipo de PDF">
-                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Manual de usuario', $event)">Manual de usuario</li>
-                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Certificados de calificación', $event)">Certificados de calificación</li>
-                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Certificados de verificación', $event)">Certificados de verificación</li>
-                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Certificados de calibración', $event)">Certificados de calibración</li>
-                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Certificados de mantenimiento', $event)">Certificados de mantenimiento</li>
-                    <li role="menuitem" (click)="$event.stopPropagation(); iniciarUpload(equipo.codigo_identificacion, 'Ficha técnica de especificaciones', $event)">Ficha técnica de especificaciones</li>
-                  </ul>
-                </details>
-              </div>
+                <!-- Menú de categorías de PDF (se muestra al hacer clic en Añadir) -->
+                <ul *ngIf="menuCategoriaPdfVisible[equipo.codigo_identificacion]" class="categoria-pdf-menu" (click)="$event.stopPropagation()">
+                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Manual de usuario', $event)">Manual de usuario</li>
+                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de calificación', $event)">Certificados de calificación</li>
+                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de verificación', $event)">Certificados de verificación</li>
+                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de calibración', $event)">Certificados de calibración</li>
+                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de mantenimiento', $event)">Certificados de mantenimiento</li>
+                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Ficha técnica de especificaciones', $event)">Ficha técnica de especificaciones</li>
+                </ul>
             </div>
             </div>
           </div>
