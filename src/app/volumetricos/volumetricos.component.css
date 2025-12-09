@@ -1,0 +1,652 @@
+@import '../shared/dashboard-cards.css';
+
+@import '../shared/dashboard-cards.css';
+@import '../shared/inventory-cards.css';
+
+:root {
+  --primary-blue: #2563eb;
+  --primary-white: #ffffff;
+  --hover-blue: #1d4ed8;
+  --border-gray: #d1d5db;
+  --text-gray: #6b7280;
+  --bg-gray: #f9fafb;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+h1 {
+  font-size: 2rem;
+  color: #1f2937;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+  color: #374151;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-grid > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-grid label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  padding: 0.75rem;
+  border: 1px solid var(--border-gray);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button[type="submit"] {
+  background: var(--primary-blue);
+  color: white;
+}
+
+button[type="submit"]:hover {
+  background: var(--hover-blue);
+}
+
+button[type="button"] {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+button[type="button"]:hover {
+  background: #d1d5db;
+}
+
+/* Material cards grid */
+/* ====== Materiales Volumétricos Grid ====== */
+.materiales-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+/* Material card (siguiendo diseño de Equipos) */
+.material-card {
+  background: var(--primary-white);
+  border: 2px solid var(--border-gray);
+  border-radius: 10px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  cursor: pointer;
+  width: 100%;
+}
+
+.material-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-turquoise);
+}
+
+/* Card top section layout (like Equipos/Reactivos) */
+.material-card .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.material-card .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.material-card .tag {
+  background: var(--light-gray);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-gray);
+  border: 1px solid var(--border-gray);
+  white-space: nowrap;
+}
+
+.material-card .tag strong {
+  color: var(--primary-blue);
+  margin-right: 0.25rem;
+}
+
+/* PDF Actions buttons (reuse from inventory-cards.css) */
+.material-card .pdf-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+/* Card name section with gradient background */
+.material-card .card-name {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%);
+  color: var(--primary-white);
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.material-card .card-name .name-line {
+  font-size: 1.05rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  padding-right: 280px;
+}
+
+.material-card .card-name .meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  opacity: 0.95;
+}
+
+.material-card .card-name .meta-line .chip {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 0.25rem 0.6rem;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.material-card .card-name .card-right-controls {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 3;
+}
+
+/* Compact dropdown components */
+.compact-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #d0d6dd);
+  color: var(--text-color, #374151);
+  border-radius: 6px;
+  padding: 6px;
+  line-height: 1;
+  cursor: pointer;
+  min-height: 28px;
+  min-width: 28px;
+}
+
+.compact-action:hover {
+  background: var(--hover-bg, #f3f4f6);
+}
+
+.compact-action .action-leading,
+.compact-action .action-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.compact-action .icon-plus,
+.compact-action .icon-caret {
+  fill: currentColor;
+}
+
+.compact-group {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 6px;
+  background: var(--card-bg, #fff);
+  overflow: visible;
+}
+
+.compact-group .pdf-icon-left {
+  border: none;
+  border-right: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 0;
+}
+
+.compact-group .compact-dropdown .compact-action {
+  border: none;
+  border-radius: 0;
+}
+
+.compact-group .compact-dropdown[open] .compact-menu {
+  right: 0;
+}
+
+.pdf-icon-left {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 6px;
+  background: var(--card-bg, #fff);
+  color: var(--text-color, #374151);
+  pointer-events: none;
+}
+
+.pdf-icon-left i {
+  font-size: 14px;
+}
+
+.compact-dropdown {
+  position: relative;
+  display: inline-block;
+  z-index: 100000;
+}
+
+.compact-dropdown > summary.compact-action {
+  display: inline-flex;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
+}
+
+.compact-dropdown > summary::-webkit-details-marker {
+  display: none;
+}
+
+.compact-dropdown > summary:focus {
+  outline: none;
+}
+
+.compact-dropdown[open] .compact-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.compact-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 6px;
+  list-style: none;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 120ms ease, transform 120ms ease;
+  z-index: 100001;
+}
+
+.compact-menu li {
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--text-color, #1f2937);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.compact-menu li:hover {
+  background: var(--hover-bg, #f3f4f6);
+}
+
+/* PDF controls specific to volumetricos */
+.pdf-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.pdf-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 6px;
+  color: var(--text-color, #1f2937);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  padding: 6px 10px;
+  min-width: 140px;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pdf-select:focus {
+  outline: none;
+  border-color: var(--primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.pdf-select.placeholder {
+  color: #9ca3af;
+}
+
+.btn.pdf-action {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn.view {
+  background: #2563eb;
+  color: white;
+}
+
+.btn.view:hover {
+  background: #1d4ed8;
+}
+
+.btn.delete {
+  background: #ef4444;
+  color: white;
+}
+
+.btn.delete:hover {
+  background: #dc2626;
+}
+
+/* Material details container */
+.material-detalles {
+  margin-top: 1rem;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+/* Tabs menu for material details */
+.material-tabs-menu {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab-btn {
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.tab-btn:hover {
+  background: #f3f4f6;
+}
+
+.tab-btn.active {
+  background: var(--primary-blue);
+  color: white;
+  border-color: var(--primary-blue);
+}
+
+.tab-count {
+  display: inline-block;
+  background: rgba(0,0,0,0.1);
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+.tab-btn.active .tab-count {
+  background: rgba(255,255,255,0.25);
+}
+
+/* Material details container */
+.material-detalles {
+  margin-top: 1rem;
+}
+
+/* Material info card */
+.material-info-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.material-info-card-header {
+  padding: 1rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.material-info-card-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-gray);
+}
+
+.material-info-card-body {
+  padding: 1.25rem;
+}
+
+/* Historial/Intervalo records */
+.records-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.record-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.record-header {
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.record-header:hover {
+  background: #f3f4f6;
+}
+
+.record-consecutivo {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.record-body {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.record-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.record-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.record-label {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+  font-weight: 500;
+}
+
+.record-item span:not(.record-label) {
+  color: #1f2937;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 200ms ease;
+}
+
+.edit-modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 900px;
+  max-width: calc(100vw - 40px);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+}
+
+.modal-overlay.closing {
+  opacity: 0;
+}
+
+.edit-modal.closing {
+  transform: translateY(10px) scale(0.98);
+  opacity: 0;
+}
+
+/* Loading state */
+.sin-materiales {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-gray);
+}
+
+/* Filtros section */
+.filtros-section {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.filtros-section input {
+  width: 100%;
+}
+
+/* PDF Controls */
+.pdf-controls select {
+  font-size: 0.875rem;
+}
+
+.pdf-controls button {
+  white-space: nowrap;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.pdf-controls button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.pdf-controls button i {
+  margin-right: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .materiales-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .record-grid {
+    grid-template-columns: 1fr;
+  }
+}

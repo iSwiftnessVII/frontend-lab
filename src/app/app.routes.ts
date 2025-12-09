@@ -22,6 +22,12 @@ export const routes: Routes = [
     data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
   },
   { 
+    path: 'materiales-referencia', 
+    loadComponent: () => import('./referencia/referencia.component').then(m => m.ReferenciaComponent), 
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
+  },
+  { 
     path: 'reactivos', 
     loadComponent: () => import('./reactivos/reactivos.component').then(m => m.ReactivosComponent), 
     canActivate: [authGuard, roleGuard],
@@ -60,6 +66,12 @@ export const routes: Routes = [
 { 
   path: 'equipos', 
   loadComponent: () => import('./equipos/equipos.component').then(m => m.EquiposComponent), 
+  canActivate: [authGuard, roleGuard],
+  data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
+},
+{ 
+  path: 'materiales-volumetricos', 
+  loadComponent: () => import('./volumetricos/volumetricos.component').then(m => m.VolumetricosComponent), 
   canActivate: [authGuard, roleGuard],
   data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
 }];

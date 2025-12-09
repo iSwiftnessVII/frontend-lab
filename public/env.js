@@ -3,11 +3,7 @@
   
   // API URL (Cloudflare Tunnel or local dev)
   // Update this URL if your backend tunnel changes
-<<<<<<< Updated upstream
-  const RENDER_URL = 'https://game-leaf-asbestos-responsibility.trycloudflare.com'
-=======
-  const RENDER_URL = 'https://levitra-fighter-batch-protest.trycloudflare.com'
->>>>>>> Stashed changes
+  const RENDER_URL = 'https://investigate-waiver-very-birds.trycloudflare.com'
   // const RENDER_URL = 'http://localhost:3000';
   
   window.__env.API_BASE = RENDER_URL + '/api';
@@ -22,6 +18,8 @@
   window.__env.API_USUARIOS = window.__env.API_BASE + '/usuarios';
   window.__env.API_DASHBOARD = window.__env.API_BASE + '/dashboard';
   window.__env.API_SOLICITUDES = window.__env.API_BASE + '/solicitudes';
+  window.__env.API_VOLUMETRICOS = window.__env.API_BASE + '/volumetricos';
+  window.__env.API_REFERENCIA = window.__env.API_BASE + '/material-referencia';
   // Joined endpoints for solicitudes
   window.__env.API_SOLICITUDES_DETALLE = window.__env.API_SOLICITUDES + '/detalle';
   window.__env.API_SOLICITUDES_DETALLE_LISTA = window.__env.API_SOLICITUDES_DETALLE + '/lista';

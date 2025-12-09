@@ -80,7 +80,7 @@ export class App implements OnDestroy {
       '/papeleria': 'papeleria',
       '/equipos': 'equipos',
       '/materiales-volumetricos': 'volumetricos',
-      '/material-referencia': 'referencia'
+      '/materiales-referencia': 'referencia'
     };
 
     const analysisRoutes: { [key: string]: string } = {
