@@ -362,7 +362,7 @@ body.auth-page .app-header {
 	transition: transform .18s ease;
 }
 
-.dropdown:hover > .dropdown-toggle .caret { 
+.dropdown.is-open > .dropdown-toggle .caret { 
 	transform: rotate(180deg); 
 }
 
@@ -379,13 +379,12 @@ body.auth-page .app-header {
 	padding: 6px;
 	z-index: 950;
 	opacity: 0;
-	transform: translateY(-8px);
 	pointer-events: none;
 	visibility: hidden;
-	transition: opacity 260ms ease, transform 260ms ease;
+	transition: opacity 200ms ease, visibility 200ms ease;
 }
 
-.dropdown:hover .dropdown-menu {
+.dropdown.is-open .dropdown-menu {
 	opacity: 1;
 	pointer-events: auto;
 	visibility: visible;
@@ -471,9 +470,8 @@ body.auth-page .app-header {
 	position: absolute !important;
 	width: 85vw !important;
 	left: 50% !important;
-	transform: translateX(-50%) translateY(-8px) !important;
-	top: 100% !important;
-	margin-top: 0.5rem !important;
+	transform: translateX(-50%) !important;
+	top: calc(100% + 0.5rem) !important;
 	padding: 1.2rem !important;
 	border-radius: 16px !important;
 	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
@@ -485,14 +483,13 @@ body.auth-page .app-header {
 	opacity: 0;
 	visibility: hidden;
 	pointer-events: none;
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: opacity 0.2s ease, visibility 0.2s ease;
 }
-
-.full-width-dropdown:hover .dropdown-menu.inventory-menu.full-width-menu {
+.full-width-dropdown.is-open .dropdown-menu.inventory-menu.full-width-menu,
+.dropdown-menu.inventory-menu.full-width-menu.open {
 	opacity: 1;
 	visibility: visible;
 	pointer-events: auto;
-	transform: translateX(-50%) translateY(0) !important;
 }
 
 /* Active state for inventory button */
@@ -966,11 +963,11 @@ body.auth-page .app-header {
 	.dropdown .dropdown-menu {
 		left: 50%;
 		width: 90vw;
-		transform: translateX(-50%) translateY(-8px);
+		transform: translateX(-50%);
 	}
 	
-	.dropdown:hover .dropdown-menu {
-		transform: translateX(-50%) translateY(0);
+	.dropdown.is-open .dropdown-menu {
+		transform: translateX(-50%);
 	}
 }
 

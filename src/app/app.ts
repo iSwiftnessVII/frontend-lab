@@ -17,6 +17,7 @@ export class App implements OnDestroy {
   readonly isLoggingOut = signal(false);
   readonly menuOpen = signal(false);
   readonly inventoryMenuOpen = signal(false);
+  readonly analysisMenuOpen = signal(false);
   readonly currentYear = new Date().getFullYear();
   readonly isNavigating = signal(false);
   // whether footer should be shown because page needs scrolling
@@ -236,6 +237,15 @@ export class App implements OnDestroy {
     this.inventoryMenuOpen.set(false);
   }
 
+  toggleAnalysisMenu(ev?: Event) {
+    try { ev?.stopPropagation(); } catch {}
+    this.analysisMenuOpen.set(!this.analysisMenuOpen());
+  }
+
+  closeAnalysisMenu() {
+    this.analysisMenuOpen.set(false);
+  }
+
   userShortName(): string {
     try {
       const email = this.user()?.email ?? '';
@@ -256,9 +266,15 @@ export class App implements OnDestroy {
       }
 
       // Close inventory dropdown when clicking outside
-      const inv = document.querySelector('.nav-menu .dropdown');
+      const inv = document.querySelector('.nav-menu .full-width-dropdown');
       if (target && inv && !inv.contains(target)) {
         this.inventoryMenuOpen.set(false);
+      }
+
+      // Close analysis dropdown when clicking outside
+      const analysis = document.querySelector('.nav-menu .analysis-dropdown');
+      if (target && analysis && !analysis.contains(target)) {
+        this.analysisMenuOpen.set(false);
       }
     } catch (e) {
       // ignore
