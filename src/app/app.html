@@ -108,7 +108,7 @@
               routerLink="/reactivos" 
               class="inventory-card" 
               role="menuitem"
-              (click)="setSelectedInventory('reactivos')"
+              (click)="setSelectedInventory('reactivos'); $event.stopPropagation()"
             >
               <div class="inventory-icon reactivos">
                 <i class="fas fa-flask" aria-hidden="true"></i>
@@ -124,7 +124,7 @@
               routerLink="/insumos" 
               class="inventory-card" 
               role="menuitem"
-              (click)="setSelectedInventory('insumos')"
+              (click)="setSelectedInventory('insumos'); $event.stopPropagation()"
             >
               <div class="inventory-icon insumos">
                 <i class="fas fa-boxes" aria-hidden="true"></i>
@@ -140,7 +140,7 @@
               routerLink="/papeleria" 
               class="inventory-card" 
               role="menuitem"
-              (click)="setSelectedInventory('papeleria')"
+              (click)="setSelectedInventory('papeleria'); $event.stopPropagation()"
             >
               <div class="inventory-icon papeleria">
                 <i class="fas fa-paperclip" aria-hidden="true"></i>
@@ -157,7 +157,7 @@
               routerLink="/equipos" 
               class="inventory-card" 
               role="menuitem"
-              (click)="setSelectedInventory('equipos')"
+              (click)="setSelectedInventory('equipos'); $event.stopPropagation()"
             >
               <div class="inventory-icon equipos">
                 <i class="fas fa-microscope" aria-hidden="true"></i>
@@ -173,7 +173,7 @@
               routerLink="/materiales-volumetricos" 
               class="inventory-card" 
               role="menuitem"
-              (click)="setSelectedInventory('volumetricos')"
+              (click)="setSelectedInventory('volumetricos'); $event.stopPropagation()"
             >
               <div class="inventory-icon volumetricos">
                 <i class="fas fa-vial" aria-hidden="true"></i>
@@ -189,7 +189,7 @@
               routerLink="/materiales-referencia" 
               class="inventory-card" 
               role="menuitem"
-              (click)="setSelectedInventory('referencia')"
+              (click)="setSelectedInventory('referencia'); $event.stopPropagation()"
             >
               <div class="inventory-icon referencia">
                 <i class="fas fa-vials" aria-hidden="true"></i>
@@ -238,7 +238,7 @@
         routerLink="/auditoria" 
         class="dropdown-item" 
         role="menuitem"
-        (click)="setSelectedAnalysis('auditoria')"
+        (click)="setSelectedAnalysis('auditoria'); $event.stopPropagation()"
       >
         <i class="fas fa-clipboard-check" aria-hidden="true"></i>
         <span>Auditoría</span>
@@ -249,7 +249,7 @@
         routerLink="/reportes" 
         class="dropdown-item" 
         role="menuitem"
-        (click)="setSelectedAnalysis('reportes')"
+        (click)="setSelectedAnalysis('reportes'); $event.stopPropagation()"
       >
         <i class="fas fa-chart-bar" aria-hidden="true"></i>
         <span>Reportes</span>

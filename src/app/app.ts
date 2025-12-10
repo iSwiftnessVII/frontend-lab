@@ -149,6 +149,7 @@ export class App implements OnDestroy {
   // NUEVO: Métodos para Análisis
   setSelectedAnalysis(analysis: string): void {
     this.selectedAnalysis.set(analysis);
+    this.analysisMenuOpen.set(false);
   }
 
   getAnalysisIcon(analysis: string): string {
