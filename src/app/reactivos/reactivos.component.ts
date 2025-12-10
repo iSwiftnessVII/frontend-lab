@@ -624,6 +624,181 @@ validarReactivo(): boolean {
   return isValid;
 }
 
+// ===== VALIDACIÓN EN TIEMPO REAL PARA CATÁLOGO =====
+validarCampoCatalogoEnTiempoReal(campo: string, event?: Event): void {
+  const valor = this.getValorCatalogo(campo);
+  this.catalogoErrors[campo] = this.validarCampoCatalogoIndividual(campo, valor);
+}
+
+private getValorCatalogo(campo: string): any {
+  switch (campo) {
+    case 'codigo': return this.catCodigo;
+    case 'nombre': return this.catNombre;
+    case 'tipo': return this.catTipo;
+    case 'clasificacion': return this.catClasificacion;
+    case 'descripcion': return this.catDescripcion;
+    default: return '';
+  }
+}
+
+private validarCampoCatalogoIndividual(campo: string, valor: any): string {
+  switch (campo) {
+    case 'codigo':
+      if (!valor?.trim()) return 'El código es obligatorio';
+      return '';
+      
+    case 'nombre':
+      const nombreStr = (valor ?? '').toString().trim();
+      if (!nombreStr) return 'El nombre es obligatorio';
+      if (nombreStr.length > 100) return 'El nombre no puede exceder 100 caracteres';
+      return '';
+      
+    case 'tipo':
+      if (!valor?.trim()) return 'El tipo de reactivo es obligatorio';
+      return '';
+      
+    case 'clasificacion':
+      if (!valor?.trim()) return 'La clasificación SGA es obligatoria';
+      return '';
+      
+    case 'descripcion':
+      // NO obligatorio - no hay validación
+      return '';
+      
+    default:
+      return '';
+  }
+}
+
+// ===== VALIDACIÓN EN TIEMPO REAL PARA REACTIVO =====
+validarCampoReactivoEnTiempoReal(campo: string, event?: Event): void {
+  const valor = this.getValorReactivo(campo);
+  this.reactivoErrors[campo] = this.validarCampoReactivoIndividual(campo, valor);
+}
+
+private getValorReactivo(campo: string): any {
+  switch (campo) {
+    case 'lote': return this.lote;
+    case 'codigo': return this.codigo;
+    case 'nombre': return this.nombre;
+    case 'marca': return this.marca;
+    case 'referencia': return this.referencia;
+    case 'cas': return this.cas;
+    case 'presentacion': return this.presentacion;
+    case 'presentacion_cant': return this.presentacion_cant;
+    case 'unidad_id': return this.unidad_id;
+    case 'fecha_adquisicion': return this.fecha_adquisicion;
+    case 'fecha_vencimiento': return this.fecha_vencimiento;
+    case 'tipo_id': return this.tipo_id;
+    case 'clasificacion_id': return this.clasificacion_id;
+    case 'estado_id': return this.estado_id;
+    case 'tipo_recipiente_id': return this.tipo_recipiente_id;
+    case 'almacenamiento_id': return this.almacenamiento_id;
+    case 'observaciones': return this.observaciones;
+    default: return '';
+  }
+}
+
+private validarCampoReactivoIndividual(campo: string, valor: any): string {
+  switch (campo) {
+    case 'lote':
+      if (!valor?.trim()) return 'El lote es obligatorio';
+      if (!/^[A-Z0-9\-]{3,20}$/.test(valor)) 
+        return 'Formato de lote inválido (3-20 caracteres alfanuméricos)';
+      return '';
+      
+    case 'codigo':
+      if (!valor?.trim()) return 'El código es obligatorio';
+      if (valor.length > 50) return 'El código no puede exceder 50 caracteres';
+      return '';
+      
+    case 'nombre':
+      const nombreStr = (valor ?? '').toString().trim();
+      if (!nombreStr) return 'El nombre es obligatorio';
+      if (nombreStr.length > 200) return 'El nombre no puede exceder 200 caracteres';
+      return '';
+      
+    case 'marca':
+      if (!valor?.trim()) return 'La marca es obligatoria';
+      if (valor.length > 100) return 'La marca no puede exceder 100 caracteres';
+      return '';
+      
+    case 'referencia':
+      if (!valor?.trim()) return 'La referencia es obligatoria';
+      if (valor.length > 100) return 'La referencia no puede exceder 100 caracteres';
+      return '';
+      
+    case 'cas':
+      if (!valor?.trim()) return 'El número CAS es obligatorio';
+      if (!/^\d{1,7}-\d{2}-\d{1}$/.test(valor)) 
+        return 'Formato CAS inválido (ej: 64-17-5)';
+      return '';
+      
+    case 'presentacion':
+      if (valor === null || valor === undefined) return 'La presentación es obligatoria';
+      if (valor < 0) return 'La presentación no puede ser negativa';
+      return '';
+      
+    case 'presentacion_cant':
+      if (valor === null || valor === undefined) return 'La cantidad por presentación es obligatoria';
+      if (valor < 0) return 'La cantidad no puede ser negativa';
+      return '';
+      
+    case 'unidad_id':
+      if (!valor) return 'La unidad es obligatoria';
+      return '';
+      
+    case 'fecha_adquisicion':
+      if (!valor) return 'La fecha de adquisición es obligatoria';
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) 
+        return 'Formato de fecha inválido (AAAA-MM-DD)';
+      
+      const fechaAdqValidacion = new Date(valor);
+      const hoy = new Date();
+      hoy.setHours(23, 59, 59, 999);
+      
+      if (fechaAdqValidacion > hoy) return 'La fecha de adquisición no puede ser futura';
+      return '';
+      
+    case 'fecha_vencimiento':
+      if (!valor) return 'La fecha de vencimiento es obligatoria';
+      
+      const fechaVencValidacion = new Date(valor);
+      const fechaAdqActual = this.fecha_adquisicion ? new Date(this.fecha_adquisicion) : null;
+      
+      if (fechaAdqActual && fechaVencValidacion < fechaAdqActual) 
+        return 'La fecha de vencimiento no puede ser anterior a la adquisición';
+      return '';
+      
+    case 'tipo_id':
+      if (!valor) return 'El tipo de reactivo es obligatorio';
+      return '';
+      
+    case 'clasificacion_id':
+      if (!valor) return 'La clasificación SGA es obligatoria';
+      return '';
+      
+    case 'estado_id':
+      if (!valor) return 'El estado es obligatorio';
+      return '';
+      
+    case 'tipo_recipiente_id':
+      if (!valor) return 'El tipo de recipiente es obligatorio';
+      return '';
+      
+    case 'almacenamiento_id':
+      if (!valor) return 'El almacenamiento es obligatorio';
+      return '';
+      
+    case 'observaciones':
+      // NO obligatorio - no hay validación
+      return '';
+      
+    default:
+      return '';
+  }
+}
+
   seleccionarCatalogo(item: any) {
     this.catalogoSeleccionado = item;
     // Rellenar campos del formulario reactivo

@@ -23,8 +23,8 @@
     </div>
   </div>
 
-  <!-- SECCIÓN: Crear nuevo item en catálogo -->
- <!-- SECCIÓN: Crear nuevo item en catálogo -->
+
+<!-- SECCIÓN: Crear nuevo item en catálogo -->
 @if ((formularioActivo === 'catalogo') && !esAuxiliar()) {
   <h2>Crear nuevo item en catálogo (Papelería)</h2>
   <section>
@@ -32,8 +32,13 @@
       <!-- Nombre (OBLIGATORIO) -->
       <div class="form-field">
         <label for="catNombre">Nombre: *</label>
-        <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required 
+        <input id="catNombre" 
+          [(ngModel)]="catNombre" 
+          name="catNombre" 
+          required 
           appLettersOnly
+          (input)="validarCampoCatalogoEnTiempoReal('nombre', $event)"
+          (blur)="validarCampoCatalogoEnTiempoReal('nombre', $event)"
           [class.error]="catalogoErrors['nombre']"
           placeholder="Ej: Resmas de papel A4" />
         @if (catalogoErrors['nombre']) {
@@ -44,8 +49,16 @@
       <!-- Item (OBLIGATORIO) -->
       <div class="form-field">
         <label for="catItem">Item: *</label>
-        <input id="catItem" type="number" min="1" step="1" [(ngModel)]="catItem" 
-          name="catItem" required appNumbersOnly
+        <input id="catItem" 
+          type="number" 
+          min="1" 
+          step="1" 
+          [(ngModel)]="catItem" 
+          name="catItem" 
+          required 
+          appNumbersOnly
+          (input)="validarCampoCatalogoEnTiempoReal('item', $event)"
+          (blur)="validarCampoCatalogoEnTiempoReal('item', $event)"
           [class.error]="catalogoErrors['item']" 
           placeholder="Ej: 2001" />
         @if (catalogoErrors['item']) {
@@ -58,8 +71,10 @@
         <label for="catImagen">Imagen
           <span class="hint-icon" tabindex="0" data-tooltip="Peso máximo: 5 MB.">?</span>
         </label>
-        <input id="catImagen" type="file" accept="image/*" 
-          (change)="onCatImagenChange($event)" 
+        <input id="catImagen" 
+          type="file" 
+          accept="image/*" 
+          (change)="onCatImagenChange($event); validarCampoCatalogoEnTiempoReal('imagen', $event)"
           [class.error]="catalogoErrors['imagen']" />
         @if (catalogoErrors['imagen']) {
           <small class="error-message">⚠️ {{ catalogoErrors['imagen'] }}</small>
@@ -69,8 +84,13 @@
       <!-- Descripción (NO obligatorio) -->
       <div class="full-row form-field">
         <label for="catDescripcion">Descripción:</label>
-        <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" 
-          rows="2" placeholder="Descripción adicional del item"
+        <textarea id="catDescripcion" 
+          [(ngModel)]="catDescripcion" 
+          name="catDescripcion" 
+          rows="2" 
+          placeholder="Descripción adicional del item"
+          (input)="validarCampoCatalogoEnTiempoReal('descripcion', $event)"
+          (blur)="validarCampoCatalogoEnTiempoReal('descripcion', $event)"
           [class.error]="catalogoErrors['descripcion']"></textarea>
         @if (catalogoErrors['descripcion']) {
           <small class="error-message">⚠️ {{ catalogoErrors['descripcion'] }}</small>
@@ -193,8 +213,14 @@
       <!-- Item catálogo (OBLIGATORIO) -->
       <div class="form-field">
         <label for="item_catalogo">Item catálogo: *</label>
-        <input #itemCatalogoInput id="item_catalogo" [(ngModel)]="item_catalogo" 
-          name="item_catalogo" required appNumbersOnly
+        <input #itemCatalogoInput 
+          id="item_catalogo" 
+          [(ngModel)]="item_catalogo" 
+          name="item_catalogo" 
+          required 
+          appNumbersOnly
+          (input)="validarCampoPapeleriaEnTiempoReal('item_catalogo', $event)"
+          (blur)="validarCampoPapeleriaEnTiempoReal('item_catalogo', $event)"
           [class.error]="papeleriaErrors['item_catalogo']" 
           placeholder="Ej: 2001" />
         @if (papeleriaErrors['item_catalogo']) {
@@ -205,8 +231,13 @@
       <!-- Nombre (OBLIGATORIO) -->
       <div class="form-field">
         <label for="nombre">Nombre: *</label>
-        <input id="nombre" [(ngModel)]="nombre" name="nombre" required 
+        <input id="nombre" 
+          [(ngModel)]="nombre" 
+          name="nombre" 
+          required 
           appLettersOnly
+          (input)="validarCampoPapeleriaEnTiempoReal('nombre', $event)"
+          (blur)="validarCampoPapeleriaEnTiempoReal('nombre', $event)"
           [class.error]="papeleriaErrors['nombre']"
           placeholder="Ej: Resmas de papel A4" />
         @if (papeleriaErrors['nombre']) {
@@ -217,10 +248,17 @@
       <!-- Cantidad adquirida (OBLIGATORIO) -->
       <div class="form-field">
         <label for="cantidad_adquirida">Cantidad adquirida: *</label>
-        <input id="cantidad_adquirida" type="number" [(ngModel)]="cantidad_adquirida" 
-          name="cantidad_adquirida" required appNumbersOnly
+        <input id="cantidad_adquirida" 
+          type="number" 
+          [(ngModel)]="cantidad_adquirida" 
+          name="cantidad_adquirida" 
+          required 
+          appNumbersOnly
+          (input)="validarCampoPapeleriaEnTiempoReal('cantidad_adquirida', $event)"
+          (blur)="validarCampoPapeleriaEnTiempoReal('cantidad_adquirida', $event)"
           [class.error]="papeleriaErrors['cantidad_adquirida']" 
-          placeholder="Ej: 10" min="0" />
+          placeholder="Ej: 10" 
+          min="0" />
         @if (papeleriaErrors['cantidad_adquirida']) {
           <small class="error-message">⚠️ {{ papeleriaErrors['cantidad_adquirida'] }}</small>
         }
@@ -229,10 +267,17 @@
       <!-- Cantidad existente (OBLIGATORIO) -->
       <div class="form-field">
         <label for="cantidad_existente">Cantidad existente: *</label>
-        <input id="cantidad_existente" type="number" [(ngModel)]="cantidad_existente" 
-          name="cantidad_existente" required appNumbersOnly
+        <input id="cantidad_existente" 
+          type="number" 
+          [(ngModel)]="cantidad_existente" 
+          name="cantidad_existente" 
+          required 
+          appNumbersOnly
+          (input)="validarCampoPapeleriaEnTiempoReal('cantidad_existente', $event)"
+          (blur)="validarCampoPapeleriaEnTiempoReal('cantidad_existente', $event)"
           [class.error]="papeleriaErrors['cantidad_existente']" 
-          placeholder="Ej: 10" min="0" />
+          placeholder="Ej: 10" 
+          min="0" />
         @if (papeleriaErrors['cantidad_existente']) {
           <small class="error-message">⚠️ {{ papeleriaErrors['cantidad_existente'] }}</small>
         }
@@ -241,7 +286,12 @@
       <!-- Presentación (OBLIGATORIO - select) -->
       <div class="form-field">
         <label for="presentacion">Presentación: *</label>
-        <select id="presentacion" [(ngModel)]="presentacion" name="presentacion" required
+        <select id="presentacion" 
+          [(ngModel)]="presentacion" 
+          name="presentacion" 
+          required
+          (change)="validarCampoPapeleriaEnTiempoReal('presentacion', $event)"
+          (blur)="validarCampoPapeleriaEnTiempoReal('presentacion', $event)"
           [class.error]="papeleriaErrors['presentacion']">
           <option value="">Seleccione</option>
           <option value="unidad">Unidad</option>
@@ -257,8 +307,13 @@
       <!-- Marca (OBLIGATORIO) -->
       <div class="form-field">
         <label for="marca">Marca: *</label>
-        <input id="marca" [(ngModel)]="marca" name="marca" required
+        <input id="marca" 
+          [(ngModel)]="marca" 
+          name="marca" 
+          required
           appAlphaNumeric
+          (input)="validarCampoPapeleriaEnTiempoReal('marca', $event)"
+          (blur)="validarCampoPapeleriaEnTiempoReal('marca', $event)"
           [class.error]="papeleriaErrors['marca']"
           placeholder="Ej: Norma" />
         @if (papeleriaErrors['marca']) {
@@ -269,8 +324,13 @@
       <!-- Ubicación (OBLIGATORIO) -->
       <div class="form-field">
         <label for="ubicacion">Ubicación: *</label>
-        <input id="ubicacion" [(ngModel)]="ubicacion" name="ubicacion" required
+        <input id="ubicacion" 
+          [(ngModel)]="ubicacion" 
+          name="ubicacion" 
+          required
           appAlphaNumeric
+          (input)="validarCampoPapeleriaEnTiempoReal('ubicacion', $event)"
+          (blur)="validarCampoPapeleriaEnTiempoReal('ubicacion', $event)"
           [class.error]="papeleriaErrors['ubicacion']"
           placeholder="Ej: Estantería B-2" />
         @if (papeleriaErrors['ubicacion']) {
@@ -281,8 +341,13 @@
       <!-- Fecha adquisición (OBLIGATORIO) -->
       <div class="form-field">
         <label for="fecha_adquisicion">Fecha de adquisición: *</label>
-        <input id="fecha_adquisicion" type="date" [(ngModel)]="fecha_adquisicion" 
-          name="fecha_adquisicion" required
+        <input id="fecha_adquisicion" 
+          type="date" 
+          [(ngModel)]="fecha_adquisicion" 
+          name="fecha_adquisicion" 
+          required
+          (input)="validarCampoPapeleriaEnTiempoReal('fecha_adquisicion', $event)"
+          (blur)="validarCampoPapeleriaEnTiempoReal('fecha_adquisicion', $event)"
           [class.error]="papeleriaErrors['fecha_adquisicion']" />
         @if (papeleriaErrors['fecha_adquisicion']) {
           <small class="error-message">⚠️ {{ papeleriaErrors['fecha_adquisicion'] }}</small>
@@ -292,8 +357,13 @@
       <!-- Descripción (NO obligatorio) -->
       <div class="full-row form-field">
         <label for="descripcion">Descripción:</label>
-        <textarea id="descripcion" [(ngModel)]="descripcion" name="descripcion" 
-          rows="2" placeholder="Descripción del material"
+        <textarea id="descripcion" 
+          [(ngModel)]="descripcion" 
+          name="descripcion" 
+          rows="2" 
+          placeholder="Descripción del material"
+          (input)="validarCampoPapeleriaEnTiempoReal('descripcion', $event)"
+          (blur)="validarCampoPapeleriaEnTiempoReal('descripcion', $event)"
           [class.error]="papeleriaErrors['descripcion']"></textarea>
         @if (papeleriaErrors['descripcion']) {
           <small class="error-message">⚠️ {{ papeleriaErrors['descripcion'] }}</small>
@@ -303,8 +373,13 @@
       <!-- Observaciones (NO obligatorio) -->
       <div class="full-row form-field">
         <label for="observaciones">Observaciones:</label>
-        <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" 
-          rows="2" placeholder="Observaciones adicionales"
+        <textarea id="observaciones" 
+          [(ngModel)]="observaciones" 
+          name="observaciones" 
+          rows="2" 
+          placeholder="Observaciones adicionales"
+          (input)="validarCampoPapeleriaEnTiempoReal('observaciones', $event)"
+          (blur)="validarCampoPapeleriaEnTiempoReal('observaciones', $event)"
           [class.error]="papeleriaErrors['observaciones']"></textarea>
         @if (papeleriaErrors['observaciones']) {
           <small class="error-message">⚠️ {{ papeleriaErrors['observaciones'] }}</small>

@@ -776,6 +776,176 @@ validarCatalogo(): boolean {
   return isValid;
 }
 
+// ===== VALIDACIÓN EN TIEMPO REAL PARA CATÁLOGO =====
+validarCampoCatalogoEnTiempoReal(campo: string, event?: Event): void {
+  const valor = this.getValorCatalogo(campo);
+  this.catalogoErrors[campo] = this.validarCampoCatalogoIndividual(campo, valor);
+}
+
+private getValorCatalogo(campo: string): any {
+  switch (campo) {
+    case 'item': return this.catItem;
+    case 'nombre': return this.catNombre;
+    case 'descripcion': return this.catDescripcion;
+    case 'imagen': return this.catImagen;
+    default: return '';
+  }
+}
+
+private validarCampoCatalogoIndividual(campo: string, valor: any): string {
+  switch (campo) {
+    case 'item':
+      const itemStr = (valor ?? '').toString().trim();
+      if (!itemStr) return 'El item es obligatorio';
+      if (isNaN(Number(itemStr))) return 'El item debe ser numérico';
+      if (Number(itemStr) <= 0) return 'El item debe ser mayor a 0';
+      if (Number(itemStr) > 999999) return 'El item no puede exceder 999,999';
+      return '';
+      
+    case 'nombre':
+      const nombreStr = (valor ?? '').toString().trim();
+      if (!nombreStr) return 'El nombre es obligatorio';
+      if (nombreStr.length > 200) return 'El nombre no puede exceder 200 caracteres';
+      if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s\-\.\,\/\(\)]{2,200}$/.test(nombreStr)) 
+        return 'El nombre contiene caracteres no permitidos';
+      return '';
+      
+    case 'descripcion':
+      if (valor && valor.trim() && valor.length > 500) 
+        return 'La descripción no puede exceder 500 caracteres';
+      return '';
+      
+    case 'imagen':
+      if (valor) {
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg'];
+        const maxSize = 5 * 1024 * 1024;
+        
+        if (!validTypes.includes(valor.type.toLowerCase())) 
+          return 'Formato de imagen no válido (JPEG, PNG, GIF, WebP)';
+        
+        if (valor.size > maxSize) 
+          return 'La imagen no puede exceder 5 MB';
+        
+        const fileName = valor.name.toLowerCase();
+        const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+        const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+        
+        if (!hasValidExtension) 
+          return 'Extensión de archivo no válida';
+      }
+      return '';
+      
+    default:
+      return '';
+  }
+}
+
+// ===== VALIDACIÓN EN TIEMPO REAL PARA INSUMO =====
+validarCampoInsumoEnTiempoReal(campo: string, event?: Event): void {
+  const valor = this.getValorInsumo(campo);
+  this.insumoErrors[campo] = this.validarCampoInsumoIndividual(campo, valor);
+}
+
+private getValorInsumo(campo: string): any {
+  switch (campo) {
+    case 'item_catalogo': return this.item_catalogo;
+    case 'nombre': return this.nombre;
+    case 'marca': return this.marca;
+    case 'presentacion': return this.presentacion;
+    case 'referencia': return this.referencia;
+    case 'cantidad_adquirida': return this.cantidad_adquirida;
+    case 'cantidad_existente': return this.cantidad_existente;
+    case 'fecha_adquisicion': return this.fecha_adquisicion;
+    case 'ubicacion': return this.ubicacion;
+    case 'descripcion': return this.descripcion;
+    case 'observaciones': return this.observaciones;
+    default: return '';
+  }
+}
+
+private validarCampoInsumoIndividual(campo: string, valor: any): string {
+  switch (campo) {
+    case 'item_catalogo':
+      if (!valor && valor !== 0) return 'El item de catálogo es obligatorio';
+      if (isNaN(Number(valor))) return 'El item debe ser numérico';
+      if (Number(valor) <= 0) return 'El item debe ser mayor a 0';
+      return '';
+      
+    case 'nombre':
+      const nombreStr = (valor ?? '').toString().trim();
+      if (!nombreStr) return 'El nombre es obligatorio';
+      if (nombreStr.length > 200) return 'El nombre no puede exceder 200 caracteres';
+      return '';
+      
+    case 'marca':
+      const marcaStr = (valor ?? '').toString().trim();
+      if (!marcaStr) return 'La marca es obligatoria';
+      if (marcaStr.length > 100) return 'La marca no puede exceder 100 caracteres';
+      return '';
+      
+    case 'presentacion':
+      const presentacionStr = (valor ?? '').toString().trim();
+      if (!presentacionStr) return 'La presentación es obligatoria';
+      if (presentacionStr.length > 100) return 'La presentación no puede exceder 100 caracteres';
+      return '';
+      
+    case 'referencia':
+      const referenciaStr = (valor ?? '').toString().trim();
+      if (!referenciaStr) return 'La referencia es obligatoria';
+      if (referenciaStr.length > 100) return 'La referencia no puede exceder 100 caracteres';
+      return '';
+      
+    case 'cantidad_adquirida':
+      if (valor === null || valor === undefined) return 'La cantidad adquirida es obligatoria';
+      if (valor < 0) return 'La cantidad no puede ser negativa';
+      return '';
+      
+    case 'cantidad_existente':
+      if (valor === null || valor === undefined) return 'La cantidad existente es obligatoria';
+      if (valor < 0) return 'La cantidad no puede ser negativa';
+      
+      // Validación cruzada solo si ambos campos tienen valor
+      const cantidadAdquirida = this.cantidad_adquirida;
+      if (cantidadAdquirida !== null && cantidadAdquirida !== undefined && 
+          Number(valor) > Number(cantidadAdquirida)) {
+        return 'La cantidad existente no puede ser mayor que la cantidad adquirida';
+      }
+      return '';
+      
+    case 'fecha_adquisicion':
+      const fechaStr = (valor ?? '').toString().trim();
+      if (!fechaStr) return 'La fecha de adquisición es obligatoria';
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return 'Formato de fecha inválido (AAAA-MM-DD)';
+      
+      const fecha = new Date(fechaStr);
+      if (isNaN(fecha.getTime())) return 'Fecha inválida';
+      
+      const hoy = new Date();
+      hoy.setHours(23, 59, 59, 999);
+      if (fecha > hoy) return 'La fecha no puede ser futura';
+      return '';
+      
+    case 'ubicacion':
+      const ubicacionStr = (valor ?? '').toString().trim();
+      if (!ubicacionStr) return 'La ubicación es obligatoria';
+      if (ubicacionStr.length > 200) return 'La ubicación no puede exceder 200 caracteres';
+      return '';
+      
+    case 'descripcion':
+      if (valor && valor.trim() && valor.length > 500) 
+        return 'La descripción no puede exceder 500 caracteres';
+      return '';
+      
+    case 'observaciones':
+      if (valor && valor.trim() && valor.length > 1000) 
+        return 'Las observaciones no pueden exceder 1000 caracteres';
+      return '';
+      
+    default:
+      return '';
+  }
+}
+
 async crearInsumo(e: Event) {
   e.preventDefault();
   this.insumoMsgSig.set('');

@@ -38,8 +38,15 @@
       <!-- Nombre -->
       <div class="form-field">
         <label for="clienteNombre">Nombre: *</label>
-        <input id="clienteNombre" [(ngModel)]="clienteNombre" name="clienteNombre" required appLettersOnly  
-          [class.error]="clienteErrors['nombre']" placeholder="Ej: Juan Pérez" />
+        <input id="clienteNombre" 
+          [(ngModel)]="clienteNombre" 
+          name="clienteNombre" 
+          required 
+          appLettersOnly
+          (input)="validarCampoClienteEnTiempoReal('nombre', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('nombre', $event)"
+          [class.error]="clienteErrors['nombre']" 
+          placeholder="Ej: Juan Pérez" />
         @if (clienteErrors['nombre']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['nombre'] }}
@@ -50,8 +57,19 @@
       <!-- Número (readonly pero obligatorio) -->
       <div class="form-field">
         <label for="clienteNumero">Consecutivo: *</label>
-        <input id="clienteNumero" type="number" [(ngModel)]="clienteNumero" name="clienteNumero" required appNumbersOnly  
-          [class.error]="clienteErrors['numero']" placeholder="Ej: 101" readonly aria-readonly="true" title="Asignado automáticamente" />
+        <input id="clienteNumero" 
+          type="number" 
+          [(ngModel)]="clienteNumero" 
+          name="clienteNumero" 
+          required 
+          appNumbersOnly
+          (input)="validarCampoClienteEnTiempoReal('numero', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('numero', $event)"
+          [class.error]="clienteErrors['numero']" 
+          placeholder="Ej: 101" 
+          readonly 
+          aria-readonly="true" 
+          title="Asignado automáticamente" />
         @if (clienteErrors['numero']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['numero'] }}
@@ -62,8 +80,15 @@
       <!-- Fecha vinculación -->
       <div class="form-field">
         <label for="clienteFechaVinc">Fecha vinculación: *</label>
-        <input id="clienteFechaVinc" type="date" [(ngModel)]="clienteFechaVinc" name="clienteFechaVinc" required
-          [class.error]="clienteErrors['fechaVinc']" placeholder="Ej: 2025-11-24" />
+        <input id="clienteFechaVinc" 
+          type="date" 
+          [(ngModel)]="clienteFechaVinc" 
+          name="clienteFechaVinc" 
+          required
+          (input)="validarCampoClienteEnTiempoReal('fechaVinc', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('fechaVinc', $event)"
+          [class.error]="clienteErrors['fechaVinc']" 
+          placeholder="Ej: 2025-11-24" />
         @if (clienteErrors['fechaVinc']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['fechaVinc'] }}
@@ -74,7 +99,12 @@
       <!-- Tipo usuario -->
       <div class="form-field">
         <label for="clienteTipoUsuario">Tipo cliente: *</label>
-        <select id="clienteTipoUsuario" [(ngModel)]="clienteTipoUsuario" name="clienteTipoUsuario" required
+        <select id="clienteTipoUsuario" 
+          [(ngModel)]="clienteTipoUsuario" 
+          name="clienteTipoUsuario" 
+          required
+          (change)="validarCampoClienteEnTiempoReal('tipoUsuario', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('tipoUsuario', $event)"
           [class.error]="clienteErrors['tipoUsuario']">
           <option value="">Seleccionar tipo de cliente</option>
           @for (tipo of tiposCliente; track tipo) {
@@ -91,8 +121,15 @@
       <!-- Razón social -->
       <div class="form-field">
         <label for="clienteRazonSocial">Razón social: *</label>
-        <input id="clienteRazonSocial" [(ngModel)]="clienteRazonSocial" name="clienteRazonSocial" required appAlphaNumeric  
-          [class.error]="clienteErrors['razonSocial']" placeholder="Ej: Industrias SENA S.A.S." />
+        <input id="clienteRazonSocial" 
+          [(ngModel)]="clienteRazonSocial" 
+          name="clienteRazonSocial" 
+          required 
+          appAlphaNumeric
+          (input)="validarCampoClienteEnTiempoReal('razonSocial', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('razonSocial', $event)"
+          [class.error]="clienteErrors['razonSocial']" 
+          placeholder="Ej: Industrias SENA S.A.S." />
         @if (clienteErrors['razonSocial']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['razonSocial'] }}
@@ -103,8 +140,14 @@
       <!-- NIT -->
       <div class="form-field">
         <label for="clienteNit">NIT: *</label>
-        <input id="clienteNit" [(ngModel)]="clienteNit" name="clienteNit" required
-          [class.error]="clienteErrors['nit']" placeholder="Ej: 900123456-7" />
+        <input id="clienteNit" 
+          [(ngModel)]="clienteNit" 
+          name="clienteNit" 
+          required
+          (input)="validarCampoClienteEnTiempoReal('nit', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('nit', $event)"
+          [class.error]="clienteErrors['nit']" 
+          placeholder="Ej: 900123456-7" />
         @if (clienteErrors['nit']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['nit'] }}
@@ -115,7 +158,12 @@
       <!-- Tipo identificación -->
       <div class="form-field">
         <label for="clienteTipoId">Tipo identificación: *</label>
-        <select id="clienteTipoId" [(ngModel)]="clienteTipoId" name="clienteTipoId" required
+        <select id="clienteTipoId" 
+          [(ngModel)]="clienteTipoId" 
+          name="clienteTipoId" 
+          required
+          (change)="validarCampoClienteEnTiempoReal('tipoId', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('tipoId', $event)"
           [class.error]="clienteErrors['tipoId']">
           <option value="">Seleccionar tipo de id</option>
           @for (tipo of tiposIdentificacion; track tipo.value) {
@@ -132,8 +180,15 @@
       <!-- Número identificación -->
       <div class="form-field">
         <label for="clienteIdNum">Número identificación: *</label>
-        <input id="clienteIdNum" [(ngModel)]="clienteIdNum" name="clienteIdNum" required appNumbersOnly  
-          [class.error]="clienteErrors['idNum']" placeholder="Ej: 12345678" />
+        <input id="clienteIdNum" 
+          [(ngModel)]="clienteIdNum" 
+          name="clienteIdNum" 
+          required 
+          appAlphaNumeric
+          (input)="validarCampoClienteEnTiempoReal('idNum', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('idNum', $event)"
+          [class.error]="clienteErrors['idNum']" 
+          placeholder="Ej: 12345678" />
         @if (clienteErrors['idNum']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['idNum'] }}
@@ -144,7 +199,12 @@
       <!-- Sexo -->
       <div class="form-field">
         <label for="clienteSexo">Sexo: *</label>
-        <select id="clienteSexo" [(ngModel)]="clienteSexo" name="clienteSexo" required
+        <select id="clienteSexo" 
+          [(ngModel)]="clienteSexo" 
+          name="clienteSexo" 
+          required
+          (change)="validarCampoClienteEnTiempoReal('sexo', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('sexo', $event)"
           [class.error]="clienteErrors['sexo']">
           <option value="">Seleccione el sexo</option>
           @for (sexo of opcionesSexo; track sexo.value) {
@@ -161,8 +221,13 @@
       <!-- Tipo de comunidad -->
       <div class="form-field">
         <label for="clienteTipoPobl">Tipo de comunidad: *</label>
-        <select id="clienteTipoPobl" [(ngModel)]="clienteTipoPobl" name="clienteTipoPobl" required
+        <select id="clienteTipoPobl" 
+          [(ngModel)]="clienteTipoPobl" 
+          name="clienteTipoPobl" 
+          required
           (ngModelChange)="handleTipoPoblChange($event)"
+          (change)="validarCampoClienteEnTiempoReal('tipoPobl', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('tipoPobl', $event)"
           [class.error]="clienteErrors['tipoPobl']">
           <option value="">Seleccionar tipo de comunidad</option>
           @for (comunidad of tiposComunidad; track comunidad) {
@@ -195,8 +260,15 @@
       <!-- Dirección -->
       <div class="form-field">
         <label for="clienteDireccion">Dirección: *</label>
-        <input id="clienteDireccion" [(ngModel)]="clienteDireccion" name="clienteDireccion" required appAlphaNumeric  
-          [class.error]="clienteErrors['direccion']" placeholder="Ej: Calle 123 #45-67" />
+        <input id="clienteDireccion" 
+          [(ngModel)]="clienteDireccion" 
+          name="clienteDireccion" 
+          required 
+          appAlphaNumeric
+          (input)="validarCampoClienteEnTiempoReal('direccion', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('direccion', $event)"
+          [class.error]="clienteErrors['direccion']" 
+          placeholder="Ej: Calle 123 #45-67" />
         @if (clienteErrors['direccion']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['direccion'] }}
@@ -207,8 +279,13 @@
       <!-- Departamento -->
       <div class="form-field">
         <label for="clienteDepartamento">Departamento: *</label>
-        <select id="clienteDepartamento" [(ngModel)]="clienteIdDepartamento" name="clienteIdDepartamento" required
-          (change)="onDepartamentoChange()" [class.error]="clienteErrors['departamento']">
+        <select id="clienteDepartamento" 
+          [(ngModel)]="clienteIdDepartamento" 
+          name="clienteIdDepartamento" 
+          required
+          (change)="onDepartamentoChange(); validarCampoClienteEnTiempoReal('departamento', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('departamento', $event)"
+          [class.error]="clienteErrors['departamento']">
           <option value="">Seleccionar departamento</option>
           @for (dep of departamentos(); track dep.codigo) {
             <option [value]="dep.codigo">{{ dep.nombre }}</option>
@@ -224,7 +301,12 @@
       <!-- Ciudad -->
       <div class="form-field">
         <label for="clienteCiudad">Ciudad: *</label>
-        <select id="clienteCiudad" [(ngModel)]="clienteIdCiudad" name="clienteIdCiudad" required
+        <select id="clienteCiudad" 
+          [(ngModel)]="clienteIdCiudad" 
+          name="clienteIdCiudad" 
+          required
+          (change)="validarCampoClienteEnTiempoReal('ciudad', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('ciudad', $event)"
           [class.error]="clienteErrors['ciudad']">
           <option value="">Seleccionar ciudad</option>
           @for (ciudad of ciudades(); track ciudad.codigo) {
@@ -241,8 +323,15 @@
       <!-- Celular -->
       <div class="form-field">
         <label for="clienteCelular">Celular: *</label>
-        <input id="clienteCelular" [(ngModel)]="clienteCelular" name="clienteCelular" required appNumbersOnly  
-          [class.error]="clienteErrors['celular']" placeholder="Ej: 3001234567" />
+        <input id="clienteCelular" 
+          [(ngModel)]="clienteCelular" 
+          name="clienteCelular" 
+          required 
+          appNumbersOnly
+          (input)="validarCampoClienteEnTiempoReal('celular', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('celular', $event)"
+          [class.error]="clienteErrors['celular']" 
+          placeholder="Ej: 3001234567" />
         @if (clienteErrors['celular']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['celular'] }}
@@ -253,8 +342,14 @@
       <!-- Teléfono (NO obligatorio) -->
       <div class="form-field">
         <label for="clienteTelefono">Teléfono:</label>
-        <input id="clienteTelefono" [(ngModel)]="clienteTelefono" name="clienteTelefono" appNumbersOnly  
-          [class.error]="clienteErrors['telefono']" placeholder="Ej: 6011234567" />
+        <input id="clienteTelefono" 
+          [(ngModel)]="clienteTelefono" 
+          name="clienteTelefono" 
+          appNumbersOnly
+          (input)="validarCampoClienteEnTiempoReal('telefono', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('telefono', $event)"
+          [class.error]="clienteErrors['telefono']" 
+          placeholder="Ej: 6011234567" />
         @if (clienteErrors['telefono']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['telefono'] }}
@@ -265,8 +360,14 @@
       <!-- Correo -->
       <div class="form-field">
         <label for="clienteEmail">Correo: *</label>
-        <input id="clienteEmail" [(ngModel)]="clienteEmail" name="clienteEmail" required
-          [class.error]="clienteErrors['email']" placeholder="Ej: correo@ejemplo.com" />
+        <input id="clienteEmail" 
+          [(ngModel)]="clienteEmail" 
+          name="clienteEmail" 
+          required
+          (input)="validarCampoClienteEnTiempoReal('email', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('email', $event)"
+          [class.error]="clienteErrors['email']" 
+          placeholder="Ej: correo@ejemplo.com" />
         @if (clienteErrors['email']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['email'] }}
@@ -277,8 +378,15 @@
       <!-- Tipo vinculación -->
       <div class="form-field">
         <label for="clienteTipoVinc">Tipo vinculación: *</label>
-        <input id="clienteTipoVinc" [(ngModel)]="clienteTipoVinc" name="clienteTipoVinc" required appLettersOnly  
-          [class.error]="clienteErrors['tipoVinc']" placeholder="Ej: Contrato, Convenio" />
+        <input id="clienteTipoVinc" 
+          [(ngModel)]="clienteTipoVinc" 
+          name="clienteTipoVinc" 
+          required 
+          appLettersOnly
+          (input)="validarCampoClienteEnTiempoReal('tipoVinc', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('tipoVinc', $event)"
+          [class.error]="clienteErrors['tipoVinc']" 
+          placeholder="Ej: Contrato, Convenio" />
         @if (clienteErrors['tipoVinc']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['tipoVinc'] }}
@@ -289,8 +397,15 @@
       <!-- Registro realizado por -->
       <div class="form-field">
         <label for="clienteRegistroPor">Registro realizado por: *</label>
-        <input id="clienteRegistroPor" [(ngModel)]="clienteRegistroPor" name="clienteRegistroPor" required appLettersOnly  
-          [class.error]="clienteErrors['registroPor']" placeholder="Ej: Nombre/Cargo" />
+        <input id="clienteRegistroPor" 
+          [(ngModel)]="clienteRegistroPor" 
+          name="clienteRegistroPor" 
+          required 
+          appLettersOnly
+          (input)="validarCampoClienteEnTiempoReal('registroPor', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('registroPor', $event)"
+          [class.error]="clienteErrors['registroPor']" 
+          placeholder="Ej: Nombre/Cargo" />
         @if (clienteErrors['registroPor']) {
           <small class="error-message">
             ⚠️ {{ clienteErrors['registroPor'] }}
@@ -304,8 +419,13 @@
     <div class="form-grid">
       <div class="form-field full">
         <label for="clienteObservaciones">Observaciones:</label>
-        <textarea id="clienteObservaciones" [(ngModel)]="clienteObservaciones" name="clienteObservaciones"
-          [class.error]="clienteErrors['observaciones']" placeholder="Observaciones adicionales"></textarea>
+        <textarea id="clienteObservaciones" 
+          [(ngModel)]="clienteObservaciones" 
+          name="clienteObservaciones"
+          (input)="validarCampoClienteEnTiempoReal('observaciones', $event)"
+          (blur)="validarCampoClienteEnTiempoReal('observaciones', $event)"
+          [class.error]="clienteErrors['observaciones']" 
+          placeholder="Observaciones adicionales"></textarea>
         @if (clienteErrors['observaciones']) {
           <small class="error-message">⚠️ {{ clienteErrors['observaciones'] }}</small>
         }
@@ -329,8 +449,18 @@
       <!-- Consecutivo (obligatorio pero readonly) -->
       <div class="form-field">
         <label for="solicitudConsecutivo">Consecutivo: *</label>
-        <input id="solicitudConsecutivo" type="number" [(ngModel)]="solicitudConsecutivo" name="solicitudConsecutivo" required
-          placeholder="Auto" readonly aria-readonly="true" title="Asignado automáticamente" />
+        <input id="solicitudConsecutivo" 
+          type="number" 
+          [(ngModel)]="solicitudConsecutivo" 
+          name="solicitudConsecutivo" 
+          required
+          (input)="validarCampoSolicitudEnTiempoReal('consecutivo', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('consecutivo', $event)"
+          [class.error]="solicitudErrors['consecutivo']"
+          placeholder="Auto" 
+          readonly 
+          aria-readonly="true" 
+          title="Asignado automáticamente" />
         @if (solicitudErrors['consecutivo']) {
           <small class="error-message">
             ⚠️ {{ solicitudErrors['consecutivo'] }}
@@ -341,8 +471,13 @@
       <!-- Cliente -->
       <div class="form-field">
         <label for="solicitudClienteId">Cliente: *</label>
-          <select id="solicitudClienteId" [(ngModel)]="solicitudClienteId" name="solicitudClienteId" required
+        <select id="solicitudClienteId" 
+          [(ngModel)]="solicitudClienteId" 
+          name="solicitudClienteId" 
+          required
           (ngModelChange)="onSelectSolicitudCliente($event)"
+          (change)="validarCampoSolicitudEnTiempoReal('clienteId', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('clienteId', $event)"
           [class.error]="solicitudErrors['clienteId']">
           <option value="">Seleccionar cliente</option>
           @for (u of clientes(); track u.id_cliente) {
@@ -361,8 +496,13 @@
       <!-- Tipo de solicitud -->
       <div class="form-field">
         <label for="solicitudTipo">Tipo de solicitud: *</label>
-        <select id="solicitudTipo" [(ngModel)]="solicitudTipo" name="solicitudTipo" required
-          [class.error]="solicitudErrors['tipo']" (ngModelChange)="computeNumeroFrontPreview()">
+        <select id="solicitudTipo" 
+          [(ngModel)]="solicitudTipo" 
+          name="solicitudTipo" 
+          required
+          (change)="validarCampoSolicitudEnTiempoReal('tipo', $event); computeNumeroFrontPreview()"
+          (blur)="validarCampoSolicitudEnTiempoReal('tipo', $event)"
+          [class.error]="solicitudErrors['tipo']">
           <option value="">Seleccionar tipo de solicitud</option>
           @for (tipo of tiposSolicitud; track tipo.value) {
             <option [value]="tipo.value">{{ tipo.label }}</option>
@@ -378,8 +518,15 @@
       <!-- Nombre de muestra/producto -->
       <div class="form-field">
         <label for="solicitudNombre">Nombre de la muestra: *</label>
-        <input id="solicitudNombre" [(ngModel)]="solicitudNombre" name="solicitudNombre" required appAlphaNumeric
-          [class.error]="solicitudErrors['nombre']" placeholder="Ej: Suero lácteo" />
+        <input id="solicitudNombre" 
+          [(ngModel)]="solicitudNombre" 
+          name="solicitudNombre" 
+          required 
+          appAlphaNumeric
+          (input)="validarCampoSolicitudEnTiempoReal('nombre', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('nombre', $event)"
+          [class.error]="solicitudErrors['nombre']" 
+          placeholder="Ej: Suero lácteo" />
         @if (solicitudErrors['nombre']) {
           <small class="error-message">
             ⚠️ {{ solicitudErrors['nombre'] }}
@@ -390,8 +537,15 @@
       <!-- Lote -->
       <div class="form-field">
         <label for="solicitudLote">Lote del producto: *</label>
-        <input id="solicitudLote" [(ngModel)]="solicitudLote" name="solicitudLote" required appAlphaNumeric
-          [class.error]="solicitudErrors['lote']" placeholder="Ej: L202501" />
+        <input id="solicitudLote" 
+          [(ngModel)]="solicitudLote" 
+          name="solicitudLote" 
+          required 
+          appAlphaNumeric
+          (input)="validarCampoSolicitudEnTiempoReal('lote', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('lote', $event)"
+          [class.error]="solicitudErrors['lote']" 
+          placeholder="Ej: L202501" />
         @if (solicitudErrors['lote']) {
           <small class="error-message">
             ⚠️ {{ solicitudErrors['lote'] }}
@@ -402,8 +556,14 @@
       <!-- Fecha de solicitud -->
       <div class="form-field">
         <label for="solicitudFechaSolicitud">Fecha de solicitud: *</label>
-        <input id="solicitudFechaSolicitud" type="date" [(ngModel)]="solicitudFechaSolicitud" name="solicitudFechaSolicitud" required
-          [class.error]="solicitudErrors['fechaSolicitud']" (ngModelChange)="computeNumeroFrontPreview()" />
+        <input id="solicitudFechaSolicitud" 
+          type="date" 
+          [(ngModel)]="solicitudFechaSolicitud" 
+          name="solicitudFechaSolicitud" 
+          required
+          (input)="validarCampoSolicitudEnTiempoReal('fechaSolicitud', $event); computeNumeroFrontPreview()"
+          (blur)="validarCampoSolicitudEnTiempoReal('fechaSolicitud', $event)"
+          [class.error]="solicitudErrors['fechaSolicitud']" />
         @if (solicitudErrors['fechaSolicitud']) {
           <small class="error-message">
             ⚠️ {{ solicitudErrors['fechaSolicitud'] }}
@@ -414,13 +574,23 @@
       <!-- Preview código -->
       <div class="form-field">
         <label for="solicitudNumeroFrontPreview">Código (preview):</label>
-        <input id="solicitudNumeroFrontPreview" [value]="solicitudNumeroFrontPreview" name="solicitudNumeroFrontPreview" readonly aria-readonly="true" />
+        <input id="solicitudNumeroFrontPreview" 
+          [value]="solicitudNumeroFrontPreview" 
+          name="solicitudNumeroFrontPreview" 
+          readonly 
+          aria-readonly="true" />
       </div>
 
       <!-- Fecha de vencimiento -->
       <div class="form-field">
         <label for="solicitudFechaVenc">Fecha de vencimiento: *</label>
-        <input id="solicitudFechaVenc" type="date" [(ngModel)]="solicitudFechaVenc" name="solicitudFechaVenc" required
+        <input id="solicitudFechaVenc" 
+          type="date" 
+          [(ngModel)]="solicitudFechaVenc" 
+          name="solicitudFechaVenc" 
+          required
+          (input)="validarCampoSolicitudEnTiempoReal('fechaVenc', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('fechaVenc', $event)"
           [class.error]="solicitudErrors['fechaVenc']" />
         @if (solicitudErrors['fechaVenc']) {
           <small class="error-message">
@@ -432,8 +602,15 @@
       <!-- Tipo de muestra -->
       <div class="form-field">
         <label for="solicitudTipoMuestra">Tipo de muestra: *</label>
-        <input id="solicitudTipoMuestra" [(ngModel)]="solicitudTipoMuestra" name="solicitudTipoMuestra" required appLettersOnly
-          [class.error]="solicitudErrors['tipoMuestra']" placeholder="Ej: Bebida Alcohólica, jugo de caña" />
+        <input id="solicitudTipoMuestra" 
+          [(ngModel)]="solicitudTipoMuestra" 
+          name="solicitudTipoMuestra" 
+          required 
+          appLettersOnly
+          (input)="validarCampoSolicitudEnTiempoReal('tipoMuestra', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('tipoMuestra', $event)"
+          [class.error]="solicitudErrors['tipoMuestra']" 
+          placeholder="Ej: Bebida Alcohólica, jugo de caña" />
         @if (solicitudErrors['tipoMuestra']) {
           <small class="error-message">
             ⚠️ {{ solicitudErrors['tipoMuestra'] }}
@@ -444,8 +621,14 @@
       <!-- Tipo de empaque -->
       <div class="form-field">
         <label for="solicitudCondEmpaque">Tipo de empaque: *</label>
-        <select id="solicitudCondEmpaque" [(ngModel)]="solicitudCondEmpaque" name="solicitudCondEmpaque" required
-          (ngModelChange)="handleTipoEmpaqueChange($event)" [class.error]="solicitudErrors['condEmpaque']">
+        <select id="solicitudCondEmpaque" 
+          [(ngModel)]="solicitudCondEmpaque" 
+          name="solicitudCondEmpaque" 
+          required
+          (ngModelChange)="handleTipoEmpaqueChange($event)"
+          (change)="validarCampoSolicitudEnTiempoReal('condEmpaque', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('condEmpaque', $event)"
+          [class.error]="solicitudErrors['condEmpaque']">
           <option value="">Seleccionar tipo de empaque</option>
           @for (empaque of tiposEmpaque; track empaque) {
             <option [value]="empaque">{{ empaque }}</option>
@@ -477,8 +660,14 @@
       <!-- Tipo de análisis -->
       <div class="form-field">
         <label for="solicitudTipoAnalisis">Tipo de análisis requerido: *</label>
-        <select id="solicitudTipoAnalisis" [(ngModel)]="solicitudTipoAnalisis" name="solicitudTipoAnalisis" required
-          (ngModelChange)="handleTipoAnalisisChange($event)" [class.error]="solicitudErrors['tipoAnalisis']">
+        <select id="solicitudTipoAnalisis" 
+          [(ngModel)]="solicitudTipoAnalisis" 
+          name="solicitudTipoAnalisis" 
+          required
+          (ngModelChange)="handleTipoAnalisisChange($event)"
+          (change)="validarCampoSolicitudEnTiempoReal('tipoAnalisis', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('tipoAnalisis', $event)"
+          [class.error]="solicitudErrors['tipoAnalisis']">
           <option value="">Seleccionar tipo de análisis</option>
           @for (analisis of tiposAnalisis; track analisis) {
             <option [value]="analisis">{{ analisis }}</option>
@@ -510,8 +699,18 @@
       <!-- Cantidad de muestras -->
       <div class="form-field">
         <label for="solicitudCantidad">Cantidad de muestras: *</label>
-        <input id="solicitudCantidad" type="number" [(ngModel)]="solicitudCantidad" name="solicitudCantidad" required appNumbersOnly
-          min="1" max="1000" [class.error]="solicitudErrors['cantidad']" placeholder="Ej: 3" />
+        <input id="solicitudCantidad" 
+          type="number" 
+          [(ngModel)]="solicitudCantidad" 
+          name="solicitudCantidad" 
+          required 
+          appNumbersOnly
+          min="1" 
+          max="1000"
+          (input)="validarCampoSolicitudEnTiempoReal('cantidad', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('cantidad', $event)"
+          [class.error]="solicitudErrors['cantidad']" 
+          placeholder="Ej: 3" />
         @if (solicitudErrors['cantidad']) {
           <small class="error-message">
             ⚠️ {{ solicitudErrors['cantidad'] }}
@@ -522,8 +721,14 @@
       <!-- Fecha estimada de entrega -->
       <div class="form-field">
         <label for="solicitudFechaEstimada">Fecha estimada entrega: *</label>
-        <input id="solicitudFechaEstimada" type="date" [(ngModel)]="solicitudFechaEstimada"
-          name="solicitudFechaEstimada" required [class.error]="solicitudErrors['fechaEstimada']" />
+        <input id="solicitudFechaEstimada" 
+          type="date" 
+          [(ngModel)]="solicitudFechaEstimada"
+          name="solicitudFechaEstimada" 
+          required
+          (input)="validarCampoSolicitudEnTiempoReal('fechaEstimada', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('fechaEstimada', $event)"
+          [class.error]="solicitudErrors['fechaEstimada']" />
         @if (solicitudErrors['fechaEstimada']) {
           <small class="error-message">
             ⚠️ {{ solicitudErrors['fechaEstimada'] }}
@@ -534,7 +739,12 @@
       <!-- Requiere varios análisis -->
       <div class="form-field">
         <label for="solicitudRequiereVarios">¿Requiere varios análisis? *</label>
-        <select id="solicitudRequiereVarios" [(ngModel)]="solicitudRequiereVarios" name="solicitudRequiereVarios" required
+        <select id="solicitudRequiereVarios" 
+          [(ngModel)]="solicitudRequiereVarios" 
+          name="solicitudRequiereVarios" 
+          required
+          (change)="validarCampoSolicitudEnTiempoReal('requiereVarios', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('requiereVarios', $event)"
           [class.error]="solicitudErrors['requiereVarios']">
           <option value="">Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
@@ -550,7 +760,15 @@
       <!-- Solicitud recibida -->
       <div class="form-field">
         <label for="solicitudRecibida">Solicitud recibida a través de: *</label>
-        <input id="solicitudRecibida" class="form-control" type="text" [(ngModel)]="solicitudRecibida" name="solicitudRecibida" required appLettersOnly
+        <input id="solicitudRecibida" 
+          class="form-control" 
+          type="text" 
+          [(ngModel)]="solicitudRecibida" 
+          name="solicitudRecibida" 
+          required 
+          appLettersOnly
+          (input)="validarCampoSolicitudEnTiempoReal('solicitudRecibida', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('solicitudRecibida', $event)"
           [class.error]="solicitudErrors['solicitudRecibida']"
           placeholder="Ej: Correo, Presencial" />
         @if (solicitudErrors['solicitudRecibida']) {
@@ -563,7 +781,13 @@
       <!-- Recibe personal -->
       <div class="form-field">
         <label for="solicitudRecibePersonal">Recibe personal: *</label>
-        <input id="solicitudRecibePersonal" [(ngModel)]="solicitudRecibePersonal" name="solicitudRecibePersonal" required appLettersOnly
+        <input id="solicitudRecibePersonal" 
+          [(ngModel)]="solicitudRecibePersonal" 
+          name="solicitudRecibePersonal" 
+          required 
+          appLettersOnly
+          (input)="validarCampoSolicitudEnTiempoReal('recibePersonal', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('recibePersonal', $event)"
           [class.error]="solicitudErrors['recibePersonal']"
           placeholder="Nombre de quien recibe" />
         @if (solicitudErrors['recibePersonal']) {
@@ -576,7 +800,13 @@
       <!-- Cargo personal -->
       <div class="form-field">
         <label for="solicitudCargoPersonal">Cargo del personal: *</label>
-        <input id="solicitudCargoPersonal" [(ngModel)]="solicitudCargoPersonal" name="solicitudCargoPersonal" required appLettersOnly
+        <input id="solicitudCargoPersonal" 
+          [(ngModel)]="solicitudCargoPersonal" 
+          name="solicitudCargoPersonal" 
+          required 
+          appLettersOnly
+          (input)="validarCampoSolicitudEnTiempoReal('cargoPersonal', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('cargoPersonal', $event)"
           [class.error]="solicitudErrors['cargoPersonal']"
           placeholder="Ej: Auxiliar de laboratorio" />
         @if (solicitudErrors['cargoPersonal']) {
@@ -592,7 +822,11 @@
     <div class="form-grid">
       <div class="form-field full">
         <label for="solicitudObservaciones">Observaciones:</label>
-        <textarea id="solicitudObservaciones" [(ngModel)]="solicitudObservaciones" name="solicitudObservaciones"
+        <textarea id="solicitudObservaciones" 
+          [(ngModel)]="solicitudObservaciones" 
+          name="solicitudObservaciones"
+          (input)="validarCampoSolicitudEnTiempoReal('observaciones', $event)"
+          (blur)="validarCampoSolicitudEnTiempoReal('observaciones', $event)"
           [class.error]="solicitudErrors['observaciones']"
           placeholder="Observaciones de la solicitud"></textarea>
         @if (solicitudErrors['observaciones']) {
@@ -618,8 +852,13 @@
       <!-- Solicitud -->
       <div class="form-field">
         <label for="ofertaSolicitudId">Solicitud: *</label>
-          <select id="ofertaSolicitudId" [(ngModel)]="ofertaSolicitudId" name="ofertaSolicitudId" required
+        <select id="ofertaSolicitudId" 
+          [(ngModel)]="ofertaSolicitudId" 
+          name="ofertaSolicitudId" 
+          required
           (ngModelChange)="onSelectSolicitudOferta($event)"
+          (change)="validarCampoOfertaEnTiempoReal('solicitudId', $event)"
+          (blur)="validarCampoOfertaEnTiempoReal('solicitudId', $event)"
           [class.error]="ofertaErrors['solicitudId']">
           <option value="">Seleccionar solicitud</option>
           @for (s of solicitudesFiltradas(); track s.solicitud_id) {
@@ -638,9 +877,18 @@
       <!-- Valor -->
       <div class="form-field">
         <label for="ofertaValor">Valor: *</label>
-        <input id="ofertaValor" type="text" [ngModel]="ofertaValorDisplay" (ngModelChange)="onOfertaValorInput($event)"
-          (focus)="onOfertaValorFocus()" (blur)="onOfertaValorBlur()" name="ofertaValor" required
-          [class.error]="ofertaErrors['valor']" placeholder="$ 0" />
+        <input id="ofertaValor" 
+          type="text" 
+          [ngModel]="ofertaValorDisplay" 
+          (ngModelChange)="onOfertaValorInput($event)"
+          (focus)="onOfertaValorFocus()" 
+          (blur)="onOfertaValorBlur()" 
+          name="ofertaValor" 
+          required
+          (input)="validarCampoOfertaEnTiempoReal('valor', $event)"
+          (blur)="validarCampoOfertaEnTiempoReal('valor', $event)"
+          [class.error]="ofertaErrors['valor']" 
+          placeholder="$ 0" />
         @if (ofertaValorError) {
           <small class="error-message">⚠️ {{ ofertaValorError }}</small>
         }
@@ -654,7 +902,13 @@
       <!-- Fecha de envío -->
       <div class="form-field">
         <label for="ofertaFechaEnvio">Fecha de envío de la oferta: *</label>
-        <input id="ofertaFechaEnvio" type="date" [(ngModel)]="ofertaFechaEnvio" name="ofertaFechaEnvio" required
+        <input id="ofertaFechaEnvio" 
+          type="date" 
+          [(ngModel)]="ofertaFechaEnvio" 
+          name="ofertaFechaEnvio" 
+          required
+          (input)="validarCampoOfertaEnTiempoReal('fechaEnvio', $event)"
+          (blur)="validarCampoOfertaEnTiempoReal('fechaEnvio', $event)"
           [class.error]="ofertaErrors['fechaEnvio']" />
         @if (ofertaErrors['fechaEnvio']) {
           <small class="error-message">
@@ -666,7 +920,12 @@
       <!-- ¿Se generó cotización? -->
       <div class="form-field">
         <label for="ofertaGeneroCotizacion">¿Se generó cotización? *</label>
-        <select id="ofertaGeneroCotizacion" [(ngModel)]="ofertaGeneroCotizacion" name="ofertaGeneroCotizacion" required
+        <select id="ofertaGeneroCotizacion" 
+          [(ngModel)]="ofertaGeneroCotizacion" 
+          name="ofertaGeneroCotizacion" 
+          required
+          (change)="validarCampoOfertaEnTiempoReal('generoCotizacion', $event)"
+          (blur)="validarCampoOfertaEnTiempoReal('generoCotizacion', $event)"
           [class.error]="ofertaErrors['generoCotizacion']">
           <option value="">Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
@@ -682,7 +941,12 @@
       <!-- ¿Se realizó seguimiento? -->
       <div class="form-field">
         <label for="ofertaRealizoSeguimiento">¿Se realizó seguimiento a la oferta? *</label>
-        <select id="ofertaRealizoSeguimiento" [(ngModel)]="ofertaRealizoSeguimiento" name="ofertaRealizoSeguimiento" required
+        <select id="ofertaRealizoSeguimiento" 
+          [(ngModel)]="ofertaRealizoSeguimiento" 
+          name="ofertaRealizoSeguimiento" 
+          required
+          (change)="validarCampoOfertaEnTiempoReal('realizoSeguimiento', $event)"
+          (blur)="validarCampoOfertaEnTiempoReal('realizoSeguimiento', $event)"
           [class.error]="ofertaErrors['realizoSeguimiento']">
           <option value="">Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
@@ -700,8 +964,13 @@
     <div class="form-grid">
       <div class="form-field full">
         <label for="ofertaObservacion">Observación:</label>
-        <textarea id="ofertaObservacion" [(ngModel)]="ofertaObservacion" name="ofertaObservacion"
-          [class.error]="ofertaErrors['observacion']" placeholder="Observaciones sobre la oferta"></textarea>
+        <textarea id="ofertaObservacion" 
+          [(ngModel)]="ofertaObservacion" 
+          name="ofertaObservacion"
+          (input)="validarCampoOfertaEnTiempoReal('observacion', $event)"
+          (blur)="validarCampoOfertaEnTiempoReal('observacion', $event)"
+          [class.error]="ofertaErrors['observacion']" 
+          placeholder="Observaciones sobre la oferta"></textarea>
         @if (ofertaErrors['observacion']) {
           <small class="error-message">⚠️ {{ ofertaErrors['observacion'] }}</small>
         }
@@ -725,7 +994,12 @@
       <!-- Solicitud -->
       <div class="form-field">
         <label for="resultadoSolicitudId">Solicitud: *</label>
-        <select id="resultadoSolicitudId" [(ngModel)]="resultadoSolicitudId" name="resultadoSolicitudId" required
+        <select id="resultadoSolicitudId" 
+          [(ngModel)]="resultadoSolicitudId" 
+          name="resultadoSolicitudId" 
+          required
+          (change)="validarCampoResultadoEnTiempoReal('solicitudId', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('solicitudId', $event)"
           [class.error]="resultadoErrors['solicitudId']">
           <option value="">Seleccionar solicitud</option>
           @for (s of solicitudesFiltradas(); track s.solicitud_id) {
@@ -744,7 +1018,13 @@
       <!-- Fecha límite -->
       <div class="form-field">
         <label for="resultadoFechaLimite">Fecha límite para la entrega: *</label>
-        <input id="resultadoFechaLimite" type="date" [(ngModel)]="resultadoFechaLimite" name="resultadoFechaLimite" required
+        <input id="resultadoFechaLimite" 
+          type="date" 
+          [(ngModel)]="resultadoFechaLimite" 
+          name="resultadoFechaLimite" 
+          required
+          (input)="validarCampoResultadoEnTiempoReal('fechaLimite', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('fechaLimite', $event)"
           [class.error]="resultadoErrors['fechaLimite']" />
         @if (resultadoErrors['fechaLimite']) {
           <small class="error-message">
@@ -756,7 +1036,13 @@
       <!-- Fecha de envío -->
       <div class="form-field">
         <label for="resultadoFechaEnvio">Fecha de envío de resultados: *</label>
-        <input id="resultadoFechaEnvio" type="date" [(ngModel)]="resultadoFechaEnvio" name="resultadoFechaEnvio" required
+        <input id="resultadoFechaEnvio" 
+          type="date" 
+          [(ngModel)]="resultadoFechaEnvio" 
+          name="resultadoFechaEnvio" 
+          required
+          (input)="validarCampoResultadoEnTiempoReal('fechaEnvio', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('fechaEnvio', $event)"
           [class.error]="resultadoErrors['fechaEnvio']" />
         @if (resultadoErrors['fechaEnvio']) {
           <small class="error-message">
@@ -768,7 +1054,12 @@
       <!-- Viabilidad del servicio -->
       <div class="form-field">
         <label for="resultadoServicioViable">¿El servicio es viable? *</label>
-        <select id="resultadoServicioViable" [(ngModel)]="resultadoServicioViable" name="resultadoServicioViable" required
+        <select id="resultadoServicioViable" 
+          [(ngModel)]="resultadoServicioViable" 
+          name="resultadoServicioViable" 
+          required
+          (change)="validarCampoResultadoEnTiempoReal('servicioViable', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('servicioViable', $event)"
           [class.error]="resultadoErrors['servicioViable']">
           <option value="">Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
@@ -799,7 +1090,12 @@
       <!-- Solicitud -->
       <div class="form-field">
         <label for="encuestaSolicitudId">Solicitud: *</label>
-        <select id="encuestaSolicitudId" [(ngModel)]="encuestaSolicitudId" name="encuestaSolicitudId" required
+        <select id="encuestaSolicitudId" 
+          [(ngModel)]="encuestaSolicitudId" 
+          name="encuestaSolicitudId" 
+          required
+          (change)="validarCampoEncuestaEnTiempoReal('solicitudId', $event)"
+          (blur)="validarCampoEncuestaEnTiempoReal('solicitudId', $event)"
           [class.error]="encuestaErrors['solicitudId']">
           <option value="">Seleccionar solicitud</option>
           @for (s of solicitudesFiltradas(); track s.solicitud_id) {
@@ -818,7 +1114,13 @@
       <!-- Fecha de encuesta -->
       <div class="form-field">
         <label for="encuestaFecha">Fecha de envio de la encuesta: *</label>
-        <input id="encuestaFecha" type="date" [(ngModel)]="encuestaFecha" name="encuestaFecha" required
+        <input id="encuestaFecha" 
+          type="date" 
+          [(ngModel)]="encuestaFecha" 
+          name="encuestaFecha" 
+          required
+          (input)="validarCampoEncuestaEnTiempoReal('fecha', $event)"
+          (blur)="validarCampoEncuestaEnTiempoReal('fecha', $event)"
           [class.error]="encuestaErrors['fecha']" />
         @if (encuestaErrors['fecha']) {
           <small class="error-message">
@@ -830,7 +1132,12 @@
       <!-- ¿Recomendaría el servicio? -->
       <div class="form-field">
         <label for="encuestaRecomendaria">Recomendaría el servicio *</label>
-        <select id="encuestaRecomendaria" [(ngModel)]="encuestaRecomendaria" name="encuestaRecomendaria" required
+        <select id="encuestaRecomendaria" 
+          [(ngModel)]="encuestaRecomendaria" 
+          name="encuestaRecomendaria" 
+          required
+          (change)="validarCampoEncuestaEnTiempoReal('recomendaria', $event)"
+          (blur)="validarCampoEncuestaEnTiempoReal('recomendaria', $event)"
           [class.error]="encuestaErrors['recomendaria']">
           <option value="">Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
@@ -846,7 +1153,12 @@
       <!-- ¿El cliente respondió? -->
       <div class="form-field">
         <label for="encuestaClienteRespondio">El cliente respondió la encuesta *</label>
-        <select id="encuestaClienteRespondio" [(ngModel)]="encuestaClienteRespondio" name="encuestaClienteRespondio" required
+        <select id="encuestaClienteRespondio" 
+          [(ngModel)]="encuestaClienteRespondio" 
+          name="encuestaClienteRespondio" 
+          required
+          (change)="validarCampoEncuestaEnTiempoReal('clienteRespondio', $event)"
+          (blur)="validarCampoEncuestaEnTiempoReal('clienteRespondio', $event)"
           [class.error]="encuestaErrors['clienteRespondio']">
           <option value="">Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
@@ -862,7 +1174,12 @@
       <!-- ¿Se solicitó nueva encuesta? -->
       <div class="form-field">
         <label for="encuestaSolicitoNueva">Se solicitó nueva encuesta *</label>
-        <select id="encuestaSolicitoNueva" [(ngModel)]="encuestaSolicitoNueva" name="encuestaSolicitoNueva" required
+        <select id="encuestaSolicitoNueva" 
+          [(ngModel)]="encuestaSolicitoNueva" 
+          name="encuestaSolicitoNueva" 
+          required
+          (change)="validarCampoEncuestaEnTiempoReal('solicitoNueva', $event)"
+          (blur)="validarCampoEncuestaEnTiempoReal('solicitoNueva', $event)"
           [class.error]="encuestaErrors['solicitoNueva']">
           <option value="">Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
@@ -880,8 +1197,13 @@
     <div class="form-grid">
       <div class="form-field full">
         <label for="encuestaComentarios">Comentarios:</label>
-        <textarea id="encuestaComentarios" [(ngModel)]="encuestaComentarios" name="encuestaComentarios"
-          [class.error]="encuestaErrors['comentarios']" placeholder="Comentarios del cliente"></textarea>
+        <textarea id="encuestaComentarios" 
+          [(ngModel)]="encuestaComentarios" 
+          name="encuestaComentarios"
+          (input)="validarCampoEncuestaEnTiempoReal('comentarios', $event)"
+          (blur)="validarCampoEncuestaEnTiempoReal('comentarios', $event)"
+          [class.error]="encuestaErrors['comentarios']" 
+          placeholder="Comentarios del cliente"></textarea>
         @if (encuestaErrors['comentarios']) {
           <small class="error-message">⚠️ {{ encuestaErrors['comentarios'] }}</small>
         }
@@ -895,6 +1217,7 @@
 </section>
 }
 
+  <!-- El resto del HTML permanece igual (listas de solicitudes, clientes, modales) -->
   <!-- SECCIÓN: Lista rápida de solicitudes -->
   <h2>Catalogo de Solicitudes</h2>
   <section>

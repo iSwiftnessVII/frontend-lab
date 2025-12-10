@@ -879,3 +879,13 @@ p[role="status"]:not(.error-message) {
         font-size: 1.2rem;
     }
 }
+
+/* ===== SOLO EL CAMPO EN ROJO CUANDO HAY ERROR ===== */
+
+/* Borde rojo para campos con error */
+.form-field input.error,
+.form-field select.error,
+.form-field textarea.error {
+  border-color: #dc2626 !important;
+  border-width: 2px;
+}

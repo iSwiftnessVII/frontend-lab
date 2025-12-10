@@ -31,6 +31,8 @@
       <div *ngIf="!esAuxiliar" class="form-field">
         <label for="catCodigo">Código: *</label>
         <select id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" required
+          (change)="validarCampoCatalogoEnTiempoReal('codigo', $event)"
+          (blur)="validarCampoCatalogoEnTiempoReal('codigo', $event)"
           [class.error]="catalogoErrors['codigo']">
           <option value="">Seleccionar código</option>
           <option [value]="nextCodigoS">{{ nextCodigoS }}</option>
@@ -46,7 +48,10 @@
       <div class="form-field">
         <label for="catNombre">Nombre: *</label>
         <input id="catNombre" [(ngModel)]="catNombre" name="catNombre" required appLettersOnly
-          [class.error]="catalogoErrors['nombre']" placeholder="Ej: Ácido acético" />
+          (input)="validarCampoCatalogoEnTiempoReal('nombre', $event)"
+          (blur)="validarCampoCatalogoEnTiempoReal('nombre', $event)"
+          [class.error]="catalogoErrors['nombre']" 
+          placeholder="Ej: Ácido acético" />
         @if (catalogoErrors['nombre']) {
           <small class="error-message">⚠️ {{ catalogoErrors['nombre'] }}</small>
         }
@@ -56,6 +61,8 @@
       <div class="form-field">
         <label for="catTipo">Tipo reactivo: *</label>
         <select id="catTipo" [(ngModel)]="catTipo" name="catTipo" required
+          (change)="validarCampoCatalogoEnTiempoReal('tipo', $event)"
+          (blur)="validarCampoCatalogoEnTiempoReal('tipo', $event)"
           [class.error]="catalogoErrors['tipo']">
           <option [ngValue]="''">Seleccione tipo</option>
           @for (t of tipos; track t) {
@@ -70,8 +77,10 @@
       <!-- Clasificación SGA -->
       <div class="form-field">
         <label for="catClasificacion">Clasificación SGA: *</label>
-        <select id="catClasificacion" [(ngModel)]="catClasificacion" name="catClasificacion"
-          required [class.error]="catalogoErrors['clasificacion']"
+        <select id="catClasificacion" [(ngModel)]="catClasificacion" name="catClasificacion" required
+          (change)="validarCampoCatalogoEnTiempoReal('clasificacion', $event)"
+          (blur)="validarCampoCatalogoEnTiempoReal('clasificacion', $event)"
+          [class.error]="catalogoErrors['clasificacion']"
           [ngStyle]="getSelectStyleForName(catClasificacion)">
           <option [ngValue]="''">Seleccione clasificación</option>
           @for (c of clasif; track c) {
@@ -84,6 +93,19 @@
         </select>
         @if (catalogoErrors['clasificacion']) {
           <small class="error-message">⚠️ {{ catalogoErrors['clasificacion'] }}</small>
+        }
+      </div>
+
+      <!-- Descripción (NO obligatorio) -->
+      <div class="full-row form-field">
+        <label for="catDescripcion">Descripción:</label>
+        <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"
+          (input)="validarCampoCatalogoEnTiempoReal('descripcion', $event)"
+          (blur)="validarCampoCatalogoEnTiempoReal('descripcion', $event)"
+          [class.error]="catalogoErrors['descripcion']"
+          placeholder="Descripción adicional"></textarea>
+        @if (catalogoErrors['descripcion']) {
+          <small class="error-message">⚠️ {{ catalogoErrors['descripcion'] }}</small>
         }
       </div>
 
@@ -173,7 +195,8 @@
   }
 
   <!-- Inventario de reactivos -->
-  @if (formularioActivo === 'crear-reactivo') {
+ <!-- Inventario de reactivos -->
+@if (formularioActivo === 'crear-reactivo') {
   <h2>Crear reactivo</h2>
   <section>
     <form class="form-grid" #reactivoForm="ngForm" (ngSubmit)="crearReactivo($event, reactivoForm)">
@@ -182,7 +205,10 @@
       <div class="field-sm field-autocomplete form-field">
         <label for="lote">Lote: *</label>
         <input id="lote" [(ngModel)]="lote" name="lote" required appAlphaNumeric
-          [class.error]="reactivoErrors['lote']" placeholder="Ej: L202501" />
+          (input)="validarCampoReactivoEnTiempoReal('lote', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('lote', $event)"
+          [class.error]="reactivoErrors['lote']" 
+          placeholder="Ej: L202501" />
         @if (reactivoErrors['lote']) {
           <small class="error-message">⚠️ {{ reactivoErrors['lote'] }}</small>
         }
@@ -192,10 +218,10 @@
       <div class="field-autocomplete form-field">
         <label for="codigo">Código (catálogo): *</label>
         <input id="codigo" [(ngModel)]="codigo" name="codigo" required appAlphaNumeric
+          (input)="onCodigoInput(); validarCampoReactivoEnTiempoReal('codigo', $event)"
+          (blur)="onCodigoBlur(); validarCampoReactivoEnTiempoReal('codigo', $event)"
+          (focus)="onCodigoFocus()"
           [class.error]="reactivoErrors['codigo']" 
-          (input)="onCodigoInput()"
-          (focus)="onCodigoFocus()" 
-          (blur)="onCodigoBlur()" 
           placeholder="Ej: R-001" />
         @if (reactivoErrors['codigo']) {
           <small class="error-message">⚠️ {{ reactivoErrors['codigo'] }}</small>
@@ -219,10 +245,10 @@
       <div class="field-autocomplete form-field">
         <label for="nombre">Nombre (catálogo): *</label>
         <input id="nombre" [(ngModel)]="nombre" name="nombre" required appAlphaNumeric
+          (input)="onNombreInput(); validarCampoReactivoEnTiempoReal('nombre', $event)"
+          (blur)="onNombreBlur(); validarCampoReactivoEnTiempoReal('nombre', $event)"
+          (focus)="onNombreFocus()"
           [class.error]="reactivoErrors['nombre']" 
-          (input)="onNombreInput()"
-          (focus)="onNombreFocus()" 
-          (blur)="onNombreBlur()" 
           placeholder="Ej: Ácido clorhídrico" />
         @if (reactivoErrors['nombre']) {
           <small class="error-message">⚠️ {{ reactivoErrors['nombre'] }}</small>
@@ -246,7 +272,10 @@
       <div class="form-field">
         <label for="marca">Marca: *</label>
         <input id="marca" [(ngModel)]="marca" name="marca" required appAlphaNumeric
-          [class.error]="reactivoErrors['marca']" placeholder="Ej: Merck" />
+          (input)="validarCampoReactivoEnTiempoReal('marca', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('marca', $event)"
+          [class.error]="reactivoErrors['marca']" 
+          placeholder="Ej: Merck" />
         @if (reactivoErrors['marca']) {
           <small class="error-message">⚠️ {{ reactivoErrors['marca'] }}</small>
         }
@@ -256,7 +285,10 @@
       <div class="form-field">
         <label for="referencia">Referencia: *</label>
         <input id="referencia" [(ngModel)]="referencia" name="referencia" required appNumbersOnly
-          [class.error]="reactivoErrors['referencia']" placeholder="Ej: 100512" />
+          (input)="validarCampoReactivoEnTiempoReal('referencia', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('referencia', $event)"
+          [class.error]="reactivoErrors['referencia']" 
+          placeholder="Ej: 100512" />
         @if (reactivoErrors['referencia']) {
           <small class="error-message">⚠️ {{ reactivoErrors['referencia'] }}</small>
         }
@@ -266,9 +298,10 @@
       <div class="form-field">
         <label for="cas">CAS: *</label>
         <input id="cas" [(ngModel)]="cas" name="cas" required
+          (input)="validarCampoReactivoEnTiempoReal('cas', $event)"
+          (blur)="onCasBlur(); validarCampoReactivoEnTiempoReal('cas', $event)"
           [class.error]="reactivoErrors['cas']" 
           title="Formato: 64-17-5"
-          (blur)="onCasBlur()" 
           placeholder="Ej: 64-17-5" />
         @if (reactivoErrors['cas']) {
           <small class="error-message">⚠️ {{ reactivoErrors['cas'] }}</small>
@@ -280,8 +313,9 @@
         <label for="presentacion">Presentación: *</label>
         <input id="presentacion" type="number" [(ngModel)]="presentacion" 
           name="presentacion" min="0" step="any" required appNumbersOnly
+          (input)="calcularCantidadTotal(); validarCampoReactivoEnTiempoReal('presentacion', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('presentacion', $event)"
           [class.error]="reactivoErrors['presentacion']" 
-          (input)="calcularCantidadTotal()" 
           placeholder="Ej: 500" />
         @if (reactivoErrors['presentacion']) {
           <small class="error-message">⚠️ {{ reactivoErrors['presentacion'] }}</small>
@@ -292,6 +326,8 @@
       <div class="form-field">
         <label for="unidad_id">Unidad: *</label>
         <select id="unidad_id" [(ngModel)]="unidad_id" name="unidad_id" required
+          (change)="validarCampoReactivoEnTiempoReal('unidad_id', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('unidad_id', $event)"
           [class.error]="reactivoErrors['unidad_id']">
           <option [ngValue]="''">Seleccione unidad</option>
           @for (u of unidades; track u) {
@@ -308,8 +344,9 @@
         <label for="presentacion_cant">Cantidad x presentación: *</label>
         <input id="presentacion_cant" type="number" [(ngModel)]="presentacion_cant" 
           name="presentacion_cant" min="0" step="any" required appNumbersOnly
+          (input)="calcularCantidadTotal(); validarCampoReactivoEnTiempoReal('presentacion_cant', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('presentacion_cant', $event)"
           [class.error]="reactivoErrors['presentacion_cant']" 
-          (input)="calcularCantidadTotal()" 
           placeholder="Ej: 1" />
         @if (reactivoErrors['presentacion_cant']) {
           <small class="error-message">⚠️ {{ reactivoErrors['presentacion_cant'] }}</small>
@@ -329,6 +366,8 @@
         <label for="fecha_adquisicion">Fecha de adquisición: *</label>
         <input id="fecha_adquisicion" type="date" [(ngModel)]="fecha_adquisicion" 
           name="fecha_adquisicion" required
+          (input)="validarCampoReactivoEnTiempoReal('fecha_adquisicion', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('fecha_adquisicion', $event)"
           [class.error]="reactivoErrors['fecha_adquisicion']" />
         @if (reactivoErrors['fecha_adquisicion']) {
           <small class="error-message">⚠️ {{ reactivoErrors['fecha_adquisicion'] }}</small>
@@ -340,6 +379,8 @@
         <label for="fecha_vencimiento">Fecha de vencimiento: *</label>
         <input id="fecha_vencimiento" type="date" [(ngModel)]="fecha_vencimiento" 
           name="fecha_vencimiento" required
+          (input)="validarCampoReactivoEnTiempoReal('fecha_vencimiento', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('fecha_vencimiento', $event)"
           [class.error]="reactivoErrors['fecha_vencimiento'] || fechasInconsistentes()" />
         @if (reactivoErrors['fecha_vencimiento']) {
           <small class="error-message">⚠️ {{ reactivoErrors['fecha_vencimiento'] }}</small>
@@ -353,6 +394,8 @@
       <div class="form-field">
         <label for="tipo_id">Tipo reactivo: *</label>
         <select id="tipo_id" [(ngModel)]="tipo_id" name="tipo_id" required
+          (change)="validarCampoReactivoEnTiempoReal('tipo_id', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('tipo_id', $event)"
           [class.error]="reactivoErrors['tipo_id']">
           <option [ngValue]="''">Seleccione tipo</option>
           @for (t of tipos; track t) {
@@ -367,8 +410,10 @@
       <!-- Clasificación SGA -->
       <div class="form-field">
         <label for="clasificacion_id">Clasificación SGA: *</label>
-        <select id="clasificacion_id" [(ngModel)]="clasificacion_id" name="clasificacion_id"
-          required [class.error]="reactivoErrors['clasificacion_id']"
+        <select id="clasificacion_id" [(ngModel)]="clasificacion_id" name="clasificacion_id" required
+          (change)="validarCampoReactivoEnTiempoReal('clasificacion_id', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('clasificacion_id', $event)"
+          [class.error]="reactivoErrors['clasificacion_id']"
           [ngStyle]="getSelectStyleForId(clasificacion_id)">
           <option [ngValue]="''">Seleccione clasificación</option>
           @for (c of clasif; track c) {
@@ -388,6 +433,8 @@
       <div class="form-field">
         <label for="estado_id">Estado: *</label>
         <select id="estado_id" [(ngModel)]="estado_id" name="estado_id" required
+          (change)="validarCampoReactivoEnTiempoReal('estado_id', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('estado_id', $event)"
           [class.error]="reactivoErrors['estado_id']">
           <option [ngValue]="''">Seleccione estado</option>
           @for (e of estado; track e) {
@@ -404,6 +451,8 @@
         <label for="tipo_recipiente_id">Tipo de recipiente: *</label>
         <select id="tipo_recipiente_id" [(ngModel)]="tipo_recipiente_id" 
           name="tipo_recipiente_id" required
+          (change)="validarCampoReactivoEnTiempoReal('tipo_recipiente_id', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('tipo_recipiente_id', $event)"
           [class.error]="reactivoErrors['tipo_recipiente_id']">
           <option [ngValue]="''">Seleccione recipiente</option>
           @for (r of recipiente; track r) {
@@ -420,6 +469,8 @@
         <label for="almacenamiento_id">Almacenamiento: *</label>
         <select id="almacenamiento_id" [(ngModel)]="almacenamiento_id" 
           name="almacenamiento_id" required
+          (change)="validarCampoReactivoEnTiempoReal('almacenamiento_id', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('almacenamiento_id', $event)"
           [class.error]="reactivoErrors['almacenamiento_id']">
           <option [ngValue]="''">Seleccione almacenamiento</option>
           @for (a of almacen; track a) {
@@ -435,7 +486,13 @@
       <div class="full-row form-field">
         <label for="observaciones">Observaciones:</label>
         <textarea id="observaciones" [(ngModel)]="observaciones" name="observaciones" 
-          rows="2" placeholder="Observaciones adicionales"></textarea>
+          rows="2" placeholder="Observaciones adicionales"
+          (input)="validarCampoReactivoEnTiempoReal('observaciones', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('observaciones', $event)"
+          [class.error]="reactivoErrors['observaciones']"></textarea>
+        @if (reactivoErrors['observaciones']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['observaciones'] }}</small>
+        }
       </div>
 
       <!-- PDF uploads (NO obligatorios) -->

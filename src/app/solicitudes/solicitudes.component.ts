@@ -615,491 +615,549 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   // ========== VALIDACIONES ==========
  validarCliente(): boolean {
-  this.clienteErrors = {};
-  let isValid = true;
-
-  // Validación de nombre (OBLIGATORIO)
-  if (!this.clienteNombre.trim()) {
-    this.clienteErrors['nombre'] = 'El nombre del solicitante es obligatorio';
-    isValid = false;
-  } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\.\-]{2,100}$/.test(this.clienteNombre)) {
-    this.clienteErrors['nombre'] = 'El nombre debe contener solo letras, espacios y puntos (2-100 caracteres)';
-    isValid = false;
-  }
-
-  // Validación de consecutivo (OBLIGATORIO)
-  if (!this.clienteNumero) {
-    this.clienteErrors['numero'] = 'El número consecutivo es obligatorio';
-    isValid = false;
-  } else if (this.clienteNumero < 1 || this.clienteNumero > 9999) {
-    this.clienteErrors['numero'] = 'El consecutivo debe estar entre 1 y 9999';
-    isValid = false;
-  }
-
-  // Validación de fecha de vinculación (OBLIGATORIO)
-  if (!this.clienteFechaVinc) {
-    this.clienteErrors['fechaVinc'] = 'La fecha de vinculación es obligatoria';
-    isValid = false;
-  } else {
-    const fecha = new Date(this.clienteFechaVinc);
-    const hoy = new Date();
-    hoy.setHours(23, 59, 59, 999);
-    
-    if (fecha > hoy) {
-      this.clienteErrors['fechaVinc'] = 'La fecha de vinculación no puede ser futura';
-      isValid = false;
-    }
-  }
-
-  // Validación de tipo de usuario (OBLIGATORIO)
-  if (!this.clienteTipoUsuario) {
-    this.clienteErrors['tipoUsuario'] = 'Debe seleccionar el tipo de cliente';
-    isValid = false;
-  }
-
-  // Validación de razón social (OBLIGATORIO) - YA EXISTE
-  if (!this.clienteRazonSocial.trim()) {
-    this.clienteErrors['razonSocial'] = 'La razón social es obligatoria';
-    isValid = false;
-  } else if (this.clienteRazonSocial.length > 200) {
-    this.clienteErrors['razonSocial'] = 'La razón social no puede exceder 200 caracteres';
-    isValid = false;
-  }
-
-  // Validación de NIT (OBLIGATORIO) - YA EXISTE
-  if (!this.clienteNit.trim()) {
-    this.clienteErrors['nit'] = 'El NIT es obligatorio';
-    isValid = false;
-  } else if (!/^[0-9]{9}-[0-9]$/.test(this.clienteNit)) {
-    this.clienteErrors['nit'] = 'Formato de NIT inválido (ej: 900123456-7)';
-    isValid = false;
-  }
-
-  // Validación de tipo de identificación (OBLIGATORIO)
-  if (!this.clienteTipoId) {
-    this.clienteErrors['tipoId'] = 'Debe seleccionar el tipo de identificación';
-    isValid = false;
-  }
-
-  // Validación de número de identificación (OBLIGATORIO)
-  if (!this.clienteIdNum.trim()) {
-    this.clienteErrors['idNum'] = 'El número de identificación es obligatorio';
-    isValid = false;
-  } else if (!/^[0-9A-Za-z]{5,20}$/.test(this.clienteIdNum)) {
-    this.clienteErrors['idNum'] = 'Número de identificación inválido (5-20 caracteres alfanuméricos)';
-    isValid = false;
-  }
-
-  // Validación de sexo (OBLIGATORIO) - YA EXISTE
-  if (!this.clienteSexo) {
-    this.clienteErrors['sexo'] = 'Debe seleccionar el sexo';
-    isValid = false;
-  } else if (!['M', 'F', 'Otro'].includes(this.clienteSexo)) {
-    this.clienteErrors['sexo'] = 'Seleccione una opción válida para sexo';
-    isValid = false;
-  }
-
-  // Validación de tipo población/comunidad (OBLIGATORIO) - NUEVA
-  if (!this.clienteTipoPobl.trim()) {
-    this.clienteErrors['tipoPobl'] = 'El tipo de comunidad es obligatorio';
-    isValid = false;
-  } else if (this.clienteTipoPobl.length > 50) {
-    this.clienteErrors['tipoPobl'] = 'El tipo de comunidad no puede exceder 50 caracteres';
-    isValid = false;
-  }
-
-  // Validación de dirección (OBLIGATORIO) - YA EXISTE
-  if (!this.clienteDireccion.trim()) {
-    this.clienteErrors['direccion'] = 'La dirección es obligatoria';
-    isValid = false;
-  } else if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#\-\.\,]{5,200}$/.test(this.clienteDireccion)) {
-    this.clienteErrors['direccion'] = 'La dirección contiene caracteres inválidos (máx 200 caracteres)';
-    isValid = false;
-  }
-
-  // Validación de departamento y ciudad (OBLIGATORIOS)
-  if (!this.clienteIdDepartamento) {
-    this.clienteErrors['departamento'] = 'Debe seleccionar un departamento';
-    isValid = false;
-  }
-  if (!this.clienteIdCiudad) {
-    this.clienteErrors['ciudad'] = 'Debe seleccionar una ciudad';
-    isValid = false;
-  }
-
-  //  Validación de celular (OBLIGATORIO) - YA EXISTE
-  if (!this.clienteCelular) {
-    this.clienteErrors['celular'] = 'El celular es obligatorio';
-    isValid = false;
-  } else if (!/^3[0-9]{9}$/.test(this.clienteCelular.replace(/\s/g, ''))) {
-    this.clienteErrors['celular'] = 'Formato de celular inválido (ej: 3001234567)';
-    isValid = false;
-  }
-
-  //  Validación de teléfono (NO obligatorio)
-  if (this.clienteTelefono && !/^[0-9]{7,15}$/.test(this.clienteTelefono.replace(/\s/g, ''))) {
-    this.clienteErrors['telefono'] = 'Formato de teléfono inválido (7-15 dígitos)';
-    isValid = false;
-  }
-
-  // Validación de correo (OBLIGATORIO) - YA EXISTE
-  if (!this.clienteEmail.trim()) {
-    this.clienteErrors['email'] = 'El correo electrónico es obligatorio';
-    isValid = false;
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.clienteEmail)) {
-    this.clienteErrors['email'] = 'Formato de correo electrónico inválido';
-    isValid = false;
-  }
-
-  // Validación de tipo vinculación (OBLIGATORIO) - YA EXISTE
-  if (!this.clienteTipoVinc.trim()) {
-    this.clienteErrors['tipoVinc'] = 'El tipo de vinculación es obligatorio';
-    isValid = false;
-  } else if (this.clienteTipoVinc.length > 50) {
-    this.clienteErrors['tipoVinc'] = 'El tipo de vinculación no puede exceder 50 caracteres';
-    isValid = false;
-  }
-
-  //  Validación de registro realizado por (OBLIGATORIO) - YA EXISTE
-  if (!this.clienteRegistroPor.trim()) {
-    this.clienteErrors['registroPor'] = 'El registro realizado por es obligatorio';
-    isValid = false;
-  } else if (this.clienteRegistroPor.length > 100) {
-    this.clienteErrors['registroPor'] = 'El registro realizado por no puede exceder 100 caracteres';
-    isValid = false;
-  }
-
-  // Validación de observaciones (NO obligatorio)
-  if (this.clienteObservaciones && !/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#\-\.\,\(\)]{0,500}$/.test(this.clienteObservaciones)) {
-    this.clienteErrors['observaciones'] = 'Las observaciones exceden el límite de 500 caracteres';
-    isValid = false;
-  }
-
-  return isValid;
+  // Validar todos los campos dinámicamente
+  this.validarCampoClienteEnTiempoReal('nombre');
+  this.validarCampoClienteEnTiempoReal('numero');
+  this.validarCampoClienteEnTiempoReal('fechaVinc');
+  this.validarCampoClienteEnTiempoReal('tipoUsuario');
+  this.validarCampoClienteEnTiempoReal('razonSocial');
+  this.validarCampoClienteEnTiempoReal('nit');
+  this.validarCampoClienteEnTiempoReal('tipoId');
+  this.validarCampoClienteEnTiempoReal('idNum');
+  this.validarCampoClienteEnTiempoReal('sexo');
+  this.validarCampoClienteEnTiempoReal('tipoPobl');
+  this.validarCampoClienteEnTiempoReal('direccion');
+  this.validarCampoClienteEnTiempoReal('departamento');
+  this.validarCampoClienteEnTiempoReal('ciudad');
+  this.validarCampoClienteEnTiempoReal('celular');
+  this.validarCampoClienteEnTiempoReal('telefono');
+  this.validarCampoClienteEnTiempoReal('email');
+  this.validarCampoClienteEnTiempoReal('tipoVinc');
+  this.validarCampoClienteEnTiempoReal('registroPor');
+  this.validarCampoClienteEnTiempoReal('observaciones');
+  
+  // Verificar si hay errores
+  return Object.values(this.clienteErrors).every(error => !error);
 }
 
   validarSolicitud(): boolean {
-  this.solicitudErrors = {};
-  let isValid = true;
+  // Validar todos los campos dinámicamente
+  this.validarCampoSolicitudEnTiempoReal('consecutivo');
+  this.validarCampoSolicitudEnTiempoReal('clienteId');
+  this.validarCampoSolicitudEnTiempoReal('tipo');
+  this.validarCampoSolicitudEnTiempoReal('nombre');
+  this.validarCampoSolicitudEnTiempoReal('lote');
+  this.validarCampoSolicitudEnTiempoReal('fechaSolicitud');
+  this.validarCampoSolicitudEnTiempoReal('fechaVenc');
+  this.validarCampoSolicitudEnTiempoReal('tipoMuestra');
+  this.validarCampoSolicitudEnTiempoReal('condEmpaque');
+  this.validarCampoSolicitudEnTiempoReal('tipoAnalisis');
+  this.validarCampoSolicitudEnTiempoReal('cantidad');
+  this.validarCampoSolicitudEnTiempoReal('fechaEstimada');
+  this.validarCampoSolicitudEnTiempoReal('requiereVarios');
+  this.validarCampoSolicitudEnTiempoReal('solicitudRecibida');
+  this.validarCampoSolicitudEnTiempoReal('recibePersonal');
+  this.validarCampoSolicitudEnTiempoReal('cargoPersonal');
+  this.validarCampoSolicitudEnTiempoReal('observaciones');
   
-  // Validación de consecutivo (OBLIGATORIO)
-  if (!this.solicitudConsecutivo) {
-    this.solicitudErrors['consecutivo'] = 'El consecutivo es obligatorio';
-    isValid = false;
-  }
-
-  // Validación de cliente (OBLIGATORIO)
-  if (!this.solicitudClienteId) {
-    this.solicitudErrors['clienteId'] = 'Debe seleccionar un cliente';
-    isValid = false;
-  }
-
-  // Validación de tipo de solicitud (OBLIGATORIO)
-  if (!this.solicitudTipo.trim()) {
-    this.solicitudErrors['tipo'] = 'Debe seleccionar el tipo de solicitud';
-    isValid = false;
-  }
-
-  // Validación de nombre de muestra (OBLIGATORIO)
-  if (!this.solicitudNombre.trim()) {
-    this.solicitudErrors['nombre'] = 'El nombre de la muestra es obligatorio';
-    isValid = false;
-  } else if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s\-\.]{2,100}$/.test(this.solicitudNombre)) {
-    this.solicitudErrors['nombre'] = 'Nombre de muestra inválido (2-100 caracteres alfanuméricos)';
-    isValid = false;
-  }
-
-  // Validación de lote (OBLIGATORIO)
-  if (!this.solicitudLote.trim()) {
-    this.solicitudErrors['lote'] = 'El lote del producto es obligatorio';
-    isValid = false;
-  } else if (!/^[A-Z0-9\-]{3,20}$/.test(this.solicitudLote)) {
-    this.solicitudErrors['lote'] = 'Formato de lote inválido (3-20 caracteres alfanuméricos)';
-    isValid = false;
-  }
-
-  // Validación de fecha de solicitud (OBLIGATORIO)
-  if (!this.solicitudFechaSolicitud) {
-    this.solicitudErrors['fechaSolicitud'] = 'La fecha de solicitud es obligatoria';
-    isValid = false;
-  } else {
-    const f = new Date(this.solicitudFechaSolicitud);
-    if (isNaN(f.getTime())) {
-      this.solicitudErrors['fechaSolicitud'] = 'Fecha de solicitud inválida';
-      isValid = false;
-    } else {
-      const hoy = new Date();
-      hoy.setHours(23, 59, 59, 999);
-      if (f > hoy) {
-        this.solicitudErrors['fechaSolicitud'] = 'La fecha de solicitud no puede ser futura';
-        isValid = false;
-      }
-    }
-  }
-
-  // Validación de fecha de vencimiento (OBLIGATORIO)
-  if (!this.solicitudFechaVenc) {
-    this.solicitudErrors['fechaVenc'] = 'La fecha de vencimiento es obligatoria';
-    isValid = false;
-  } else {
-    const fechaVenc = new Date(this.solicitudFechaVenc);
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    fechaVenc.setHours(0, 0, 0, 0);
-    
-    if (fechaVenc < hoy) {
-      this.solicitudErrors['fechaVenc'] = 'La fecha de vencimiento no puede ser una fecha pasada';
-      isValid = false;
-    }
-  }
-
-  // Validación de tipo de muestra (OBLIGATORIO)
-  if (!this.solicitudTipoMuestra.trim()) {
-    this.solicitudErrors['tipoMuestra'] = 'El tipo de muestra es obligatorio';
-    isValid = false;
-  } else if (this.solicitudTipoMuestra.length > 50) {
-    this.solicitudErrors['tipoMuestra'] = 'El tipo de muestra no puede exceder 50 caracteres';
-    isValid = false;
-  }
-
-  // Validación de tipo de empaque (OBLIGATORIO)
-  if (!this.solicitudCondEmpaque.trim()) {
-    this.solicitudErrors['condEmpaque'] = 'El tipo de empaque es obligatorio';
-    isValid = false;
-  } else if (this.solicitudCondEmpaque.length > 100) {
-    this.solicitudErrors['condEmpaque'] = 'El tipo de empaque no puede exceder 100 caracteres';
-    isValid = false;
-  }
-
-  // Validación de tipo de análisis (OBLIGATORIO)
-  if (!this.solicitudTipoAnalisis.trim()) {
-    this.solicitudErrors['tipoAnalisis'] = 'El tipo de análisis requerido es obligatorio';
-    isValid = false;
-  } else if (this.solicitudTipoAnalisis.length > 100) {
-    this.solicitudErrors['tipoAnalisis'] = 'El tipo de análisis no puede exceder 100 caracteres';
-    isValid = false;
-  }
-
-  // Validación de cantidad de muestras (OBLIGATORIO)
-  if (!this.solicitudCantidad) {
-    this.solicitudErrors['cantidad'] = 'La cantidad de muestras es obligatoria';
-    isValid = false;
-  } else if (this.solicitudCantidad < 1 || this.solicitudCantidad > 1000) {
-    this.solicitudErrors['cantidad'] = 'La cantidad debe estar entre 1 y 1000 muestras';
-    isValid = false;
-  }
-
-  // Validación de fecha estimada de entrega (OBLIGATORIO)
-  if (!this.solicitudFechaEstimada) {
-    this.solicitudErrors['fechaEstimada'] = 'La fecha estimada de entrega es obligatoria';
-    isValid = false;
-  } else {
-    const fechaEstimada = new Date(this.solicitudFechaEstimada);
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    
-    if (fechaEstimada < hoy) {
-      this.solicitudErrors['fechaEstimada'] = 'La fecha estimada no puede ser anterior a hoy';
-      isValid = false;
-    }
-
-    // Validar que la fecha estimada no sea mayor a 1 año
-    const maxFecha = new Date();
-    maxFecha.setFullYear(maxFecha.getFullYear() + 1);
-    if (fechaEstimada > maxFecha) {
-      this.solicitudErrors['fechaEstimada'] = 'La fecha estimada no puede ser mayor a 1 año';
-      isValid = false;
-    }
-  }
-
-  // Validación de "Requiere varios análisis" (OBLIGATORIO)
-  if (this.solicitudRequiereVarios === '' || this.solicitudRequiereVarios === null || this.solicitudRequiereVarios === undefined) {
-    this.solicitudErrors['requiereVarios'] = 'Debe indicar si requiere varios análisis';
-    isValid = false;
-  }
-
-  // Validación de solicitud recibida (OBLIGATORIO)
-  if (!this.solicitudRecibida.trim()) {
-    this.solicitudErrors['solicitudRecibida'] = 'Debe indicar cómo se recibió la solicitud';
-    isValid = false;
-  } else if (this.solicitudRecibida.length > 255) {
-    this.solicitudErrors['solicitudRecibida'] = 'Máximo 255 caracteres';
-    isValid = false;
-  }
-
-  // Validación de recibe personal (OBLIGATORIO)
-  if (!this.solicitudRecibePersonal.trim()) {
-    this.solicitudErrors['recibePersonal'] = 'Debe indicar quién recibe la solicitud';
-    isValid = false;
-  } else if (this.solicitudRecibePersonal.length > 255) {
-    this.solicitudErrors['recibePersonal'] = 'Máximo 255 caracteres';
-    isValid = false;
-  }
-
-  // Validación de cargo personal (OBLIGATORIO)
-  if (!this.solicitudCargoPersonal.trim()) {
-    this.solicitudErrors['cargoPersonal'] = 'Debe indicar el cargo del personal';
-    isValid = false;
-  } else if (this.solicitudCargoPersonal.length > 100) {
-    this.solicitudErrors['cargoPersonal'] = 'Máximo 100 caracteres';
-    isValid = false;
-  }
-
-  // Validación de observaciones (NO obligatorio)
-  if (this.solicitudObservaciones && this.solicitudObservaciones.length > 5000) {
-    this.solicitudErrors['observaciones'] = 'Observaciones demasiado largas';
-    isValid = false;
-  }
-
-  return isValid;
+  // Verificar si hay errores
+  return Object.values(this.solicitudErrors).every(error => !error);
 }
 
  validarOferta(): boolean {
-  this.ofertaErrors = {};
-  let isValid = true;
-
-  // Validación de solicitud (OBLIGATORIO)
-  if (!this.ofertaSolicitudId) {
-    this.ofertaErrors['solicitudId'] = 'Debe seleccionar una solicitud';
-    isValid = false;
-  }
-
-  // Validación de valor (OBLIGATORIO)
-  if (!this.ofertaValor) {
-    this.ofertaErrors['valor'] = 'El valor de la oferta es obligatorio';
-    isValid = false;
-  } else if (this.ofertaValor <= 0) {
-    this.ofertaErrors['valor'] = 'El valor debe ser mayor a 0';
-    isValid = false;
-  } else if (this.ofertaValor > 1000000000) {
-    this.ofertaErrors['valor'] = 'El valor no puede exceder $1.000.000.000';
-    isValid = false;
-  }
-
-  // Validación de fecha de envío (OBLIGATORIO)
-  if (!this.ofertaFechaEnvio) {
-    this.ofertaErrors['fechaEnvio'] = 'La fecha de envío es obligatoria';
-    isValid = false;
-  } else {
-    const fechaEnvio = new Date(this.ofertaFechaEnvio);
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    
-    if (fechaEnvio > hoy) {
-      this.ofertaErrors['fechaEnvio'] = 'La fecha de envío no puede ser futura';
-      isValid = false;
-    }
-  }
-
-  // Validación de "¿Se generó cotización?" (OBLIGATORIO)
-  if (this.ofertaGeneroCotizacion === '' || this.ofertaGeneroCotizacion === null || this.ofertaGeneroCotizacion === undefined) {
-    this.ofertaErrors['generoCotizacion'] = 'Debe indicar si se generó cotización';
-    isValid = false;
-  }
-
-  // Validación de "¿Se realizó seguimiento?" (OBLIGATORIO)
-  if (this.ofertaRealizoSeguimiento === '' || this.ofertaRealizoSeguimiento === null || this.ofertaRealizoSeguimiento === undefined) {
-    this.ofertaErrors['realizoSeguimiento'] = 'Debe indicar si se realizó seguimiento';
-    isValid = false;
-  }
-
-  // Validación de observación (NO obligatorio)
-  if (this.ofertaObservacion && this.ofertaObservacion.length > 200) {
-    this.ofertaErrors['observacion'] = 'La observación no puede exceder 200 caracteres';
-    isValid = false;
-  }
-
-  return isValid;
+  // Validar todos los campos dinámicamente
+  this.validarCampoOfertaEnTiempoReal('solicitudId');
+  this.validarCampoOfertaEnTiempoReal('valor');
+  this.validarCampoOfertaEnTiempoReal('fechaEnvio');
+  this.validarCampoOfertaEnTiempoReal('generoCotizacion');
+  this.validarCampoOfertaEnTiempoReal('realizoSeguimiento');
+  this.validarCampoOfertaEnTiempoReal('observacion');
+  
+  // Verificar si hay errores
+  return Object.values(this.ofertaErrors).every(error => !error);
 }
 
-  validarResultado(): boolean {
-  this.resultadoErrors = {};
-  let isValid = true;
-
-  if (!this.resultadoSolicitudId) {
-    this.resultadoErrors['solicitudId'] = 'Debe seleccionar una solicitud';
-    isValid = false;
-  }
-
-  if (!this.resultadoFechaLimite) {
-    this.resultadoErrors['fechaLimite'] = 'La fecha límite es obligatoria';
-    isValid = false;
-  } else {
-    const fechaLimite = new Date(this.resultadoFechaLimite);
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    
-    if (fechaLimite < hoy) {
-      this.resultadoErrors['fechaLimite'] = 'La fecha límite no puede ser anterior a hoy';
-      isValid = false;
-    }
-  }
-
-  if (!this.resultadoFechaEnvio) {
-    this.resultadoErrors['fechaEnvio'] = 'La fecha de envío es obligatoria';
-    isValid = false;
-  } else {
-    const fechaEnvio = new Date(this.resultadoFechaEnvio);
-    const fechaLimite = this.resultadoFechaLimite ? new Date(this.resultadoFechaLimite) : null;
-    
-    if (fechaLimite && fechaEnvio > fechaLimite) {
-      this.resultadoErrors['fechaEnvio'] = 'La fecha de envío no puede ser posterior a la fecha límite';
-      isValid = false;
-    }
-  }
-
-  if (this.resultadoServicioViable === '' || this.resultadoServicioViable === null || this.resultadoServicioViable === undefined) {
-    this.resultadoErrors['servicioViable'] = 'Debe indicar si el servicio es viable';
-    isValid = false;
-  }
-
-  return isValid;
+ validarResultado(): boolean {
+  // Validar todos los campos dinámicamente
+  this.validarCampoResultadoEnTiempoReal('solicitudId');
+  this.validarCampoResultadoEnTiempoReal('fechaLimite');
+  this.validarCampoResultadoEnTiempoReal('fechaEnvio');
+  this.validarCampoResultadoEnTiempoReal('servicioViable');
+  
+  // Verificar si hay errores
+  return Object.values(this.resultadoErrors).every(error => !error);
 }
 
   validarEncuesta(): boolean {
-  this.encuestaErrors = {};
-  let isValid = true;
+  // Validar todos los campos dinámicamente
+  this.validarCampoEncuestaEnTiempoReal('solicitudId');
+  this.validarCampoEncuestaEnTiempoReal('fecha');
+  this.validarCampoEncuestaEnTiempoReal('recomendaria');
+  this.validarCampoEncuestaEnTiempoReal('clienteRespondio');
+  this.validarCampoEncuestaEnTiempoReal('solicitoNueva');
+  this.validarCampoEncuestaEnTiempoReal('comentarios');
+  
+  // Verificar si hay errores
+  return Object.values(this.encuestaErrors).every(error => !error);
+}
 
-  if (!this.encuestaSolicitudId) {
-    this.encuestaErrors['solicitudId'] = 'Debe seleccionar una solicitud';
-    isValid = false;
+// ===== VALIDACIÓN DINÁMICA PARA CLIENTE =====
+validarCampoClienteEnTiempoReal(campo: string, event?: Event): void {
+  const valor = this.getValorCliente(campo);
+  this.clienteErrors[campo] = this.validarCampoClienteIndividual(campo, valor);
+}
+
+private getValorCliente(campo: string): any {
+  switch (campo) {
+    case 'nombre': return this.clienteNombre;
+    case 'numero': return this.clienteNumero;
+    case 'fechaVinc': return this.clienteFechaVinc;
+    case 'tipoUsuario': return this.clienteTipoUsuario;
+    case 'razonSocial': return this.clienteRazonSocial;
+    case 'nit': return this.clienteNit;
+    case 'tipoId': return this.clienteTipoId;
+    case 'idNum': return this.clienteIdNum;
+    case 'sexo': return this.clienteSexo;
+    case 'tipoPobl': return this.clienteTipoPobl;
+    case 'direccion': return this.clienteDireccion;
+    case 'departamento': return this.clienteIdDepartamento;
+    case 'ciudad': return this.clienteIdCiudad;
+    case 'celular': return this.clienteCelular;
+    case 'telefono': return this.clienteTelefono;
+    case 'email': return this.clienteEmail;
+    case 'tipoVinc': return this.clienteTipoVinc;
+    case 'registroPor': return this.clienteRegistroPor;
+    case 'observaciones': return this.clienteObservaciones;
+    default: return '';
   }
+}
 
-  if (!this.encuestaFecha) {
-    this.encuestaErrors['fecha'] = 'La fecha de la encuesta es obligatoria';
-    isValid = false;
-  } else {
-    const fechaEncuesta = new Date(this.encuestaFecha);
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    
-    if (fechaEncuesta > hoy) {
-      this.encuestaErrors['fecha'] = 'La fecha de encuesta no puede ser futura';
-      isValid = false;
-    }
+private validarCampoClienteIndividual(campo: string, valor: any): string {
+  switch (campo) {
+    case 'nombre':
+      const nombreStr = (valor ?? '').toString().trim();
+      if (!nombreStr) return 'El nombre del solicitante es obligatorio';
+      if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\.\-]{2,100}$/.test(nombreStr))
+        return 'El nombre debe contener solo letras, espacios y puntos (2-100 caracteres)';
+      return '';
+      
+    case 'numero':
+      if (!valor) return 'El número consecutivo es obligatorio';
+      if (Number(valor) < 1 || Number(valor) > 9999)
+        return 'El consecutivo debe estar entre 1 y 9999';
+      return '';
+      
+    case 'fechaVinc':
+      if (!valor) return 'La fecha de vinculación es obligatoria';
+      const fecha = new Date(valor);
+      const hoy = new Date();
+      hoy.setHours(23, 59, 59, 999);
+      if (fecha > hoy) return 'La fecha de vinculación no puede ser futura';
+      return '';
+      
+    case 'tipoUsuario':
+      if (!valor) return 'Debe seleccionar el tipo de cliente';
+      return '';
+      
+    case 'razonSocial':
+      const razonSocialStr = (valor ?? '').toString().trim();
+      if (!razonSocialStr) return 'La razón social es obligatoria';
+      if (razonSocialStr.length > 200) return 'La razón social no puede exceder 200 caracteres';
+      return '';
+      
+    case 'nit':
+      const nitStr = (valor ?? '').toString().trim();
+      if (!nitStr) return 'El NIT es obligatorio';
+      if (!/^[0-9]{9}-[0-9]$/.test(nitStr))
+        return 'Formato de NIT inválido (ej: 900123456-7)';
+      return '';
+      
+    case 'tipoId':
+      if (!valor) return 'Debe seleccionar el tipo de identificación';
+      return '';
+      
+    case 'idNum':
+      const idNumStr = (valor ?? '').toString().trim();
+      if (!idNumStr) return 'El número de identificación es obligatorio';
+      if (!/^[0-9A-Za-z]{5,20}$/.test(idNumStr))
+        return 'Número de identificación inválido (5-20 caracteres alfanuméricos)';
+      return '';
+      
+    case 'sexo':
+      if (!valor) return 'Debe seleccionar el sexo';
+      if (!['M', 'F', 'Otro'].includes(valor))
+        return 'Seleccione una opción válida para sexo';
+      return '';
+      
+    case 'tipoPobl':
+      const tipoPoblStr = (valor ?? '').toString().trim();
+      if (!tipoPoblStr) return 'El tipo de comunidad es obligatorio';
+      if (tipoPoblStr.length > 50) return 'El tipo de comunidad no puede exceder 50 caracteres';
+      return '';
+      
+    case 'direccion':
+      const direccionStr = (valor ?? '').toString().trim();
+      if (!direccionStr) return 'La dirección es obligatoria';
+      if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#\-\.\,]{5,200}$/.test(direccionStr))
+        return 'La dirección contiene caracteres inválidos (máx 200 caracteres)';
+      return '';
+      
+    case 'departamento':
+      if (!valor) return 'Debe seleccionar un departamento';
+      return '';
+      
+    case 'ciudad':
+      if (!valor) return 'Debe seleccionar una ciudad';
+      return '';
+      
+    case 'celular':
+      const celularStr = (valor ?? '').toString().trim();
+      if (!celularStr) return 'El celular es obligatorio';
+      if (!/^3[0-9]{9}$/.test(celularStr.replace(/\s/g, '')))
+        return 'Formato de celular inválido (ej: 3001234567)';
+      return '';
+      
+    case 'telefono':
+      if (valor && !/^[0-9]{7,15}$/.test(valor.toString().replace(/\s/g, '')))
+        return 'Formato de teléfono inválido (7-15 dígitos)';
+      return '';
+      
+    case 'email':
+      const emailStr = (valor ?? '').toString().trim();
+      if (!emailStr) return 'El correo electrónico es obligatorio';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr))
+        return 'Formato de correo electrónico inválido';
+      return '';
+      
+    case 'tipoVinc':
+      const tipoVincStr = (valor ?? '').toString().trim();
+      if (!tipoVincStr) return 'El tipo de vinculación es obligatorio';
+      if (tipoVincStr.length > 50) return 'El tipo de vinculación no puede exceder 50 caracteres';
+      return '';
+      
+    case 'registroPor':
+      const registroPorStr = (valor ?? '').toString().trim();
+      if (!registroPorStr) return 'El registro realizado por es obligatorio';
+      if (registroPorStr.length > 100) return 'El registro realizado por no puede exceder 100 caracteres';
+      return '';
+      
+    case 'observaciones':
+      if (valor && !/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#\-\.\,\(\)]{0,500}$/.test(valor.toString()))
+        return 'Las observaciones exceden el límite de 500 caracteres';
+      return '';
+      
+    default:
+      return '';
   }
+}
 
-  if (this.encuestaRecomendaria === '' || this.encuestaRecomendaria === null || this.encuestaRecomendaria === undefined) {
-    this.encuestaErrors['recomendaria'] = 'Debe indicar si recomendaría el servicio';
-    isValid = false;
+// ===== VALIDACIÓN DINÁMICA PARA SOLICITUD =====
+validarCampoSolicitudEnTiempoReal(campo: string, event?: Event): void {
+  const valor = this.getValorSolicitud(campo);
+  this.solicitudErrors[campo] = this.validarCampoSolicitudIndividual(campo, valor);
+}
+
+private getValorSolicitud(campo: string): any {
+  switch (campo) {
+    case 'consecutivo': return this.solicitudConsecutivo;
+    case 'clienteId': return this.solicitudClienteId;
+    case 'tipo': return this.solicitudTipo;
+    case 'nombre': return this.solicitudNombre;
+    case 'lote': return this.solicitudLote;
+    case 'fechaSolicitud': return this.solicitudFechaSolicitud;
+    case 'fechaVenc': return this.solicitudFechaVenc;
+    case 'tipoMuestra': return this.solicitudTipoMuestra;
+    case 'condEmpaque': return this.solicitudCondEmpaque;
+    case 'tipoAnalisis': return this.solicitudTipoAnalisis;
+    case 'cantidad': return this.solicitudCantidad;
+    case 'fechaEstimada': return this.solicitudFechaEstimada;
+    case 'requiereVarios': return this.solicitudRequiereVarios;
+    case 'solicitudRecibida': return this.solicitudRecibida;
+    case 'recibePersonal': return this.solicitudRecibePersonal;
+    case 'cargoPersonal': return this.solicitudCargoPersonal;
+    case 'observaciones': return this.solicitudObservaciones;
+    default: return '';
   }
+}
 
-  if (this.encuestaClienteRespondio === '' || this.encuestaClienteRespondio === null || this.encuestaClienteRespondio === undefined) {
-    this.encuestaErrors['clienteRespondio'] = 'Debe indicar si el cliente respondió';
-    isValid = false;
+private validarCampoSolicitudIndividual(campo: string, valor: any): string {
+  switch (campo) {
+    case 'consecutivo':
+      if (!valor) return 'El consecutivo es obligatorio';
+      return '';
+      
+    case 'clienteId':
+      if (!valor) return 'Debe seleccionar un cliente';
+      return '';
+      
+    case 'tipo':
+      if (!valor) return 'Debe seleccionar el tipo de solicitud';
+      return '';
+      
+    case 'nombre':
+      const nombreStr = (valor ?? '').toString().trim();
+      if (!nombreStr) return 'El nombre de la muestra es obligatorio';
+      if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s\-\.]{2,100}$/.test(nombreStr))
+        return 'Nombre de muestra inválido (2-100 caracteres alfanuméricos)';
+      return '';
+      
+    case 'lote':
+      const loteStr = (valor ?? '').toString().trim();
+      if (!loteStr) return 'El lote del producto es obligatorio';
+      if (!/^[A-Z0-9\-]{3,20}$/.test(loteStr))
+        return 'Formato de lote inválido (3-20 caracteres alfanuméricos)';
+      return '';
+      
+    case 'fechaSolicitud':
+      if (!valor) return 'La fecha de solicitud es obligatoria';
+      const fechaSolicitud = new Date(valor);
+      if (isNaN(fechaSolicitud.getTime())) return 'Fecha de solicitud inválida';
+      const hoySolicitud = new Date();
+      hoySolicitud.setHours(23, 59, 59, 999);
+      if (fechaSolicitud > hoySolicitud) return 'La fecha de solicitud no puede ser futura';
+      return '';
+      
+    case 'fechaVenc':
+      if (!valor) return 'La fecha de vencimiento es obligatoria';
+      const fechaVenc = new Date(valor);
+      const hoyVenc = new Date();
+      hoyVenc.setHours(0, 0, 0, 0);
+      fechaVenc.setHours(0, 0, 0, 0);
+      if (fechaVenc < hoyVenc) return 'La fecha de vencimiento no puede ser una fecha pasada';
+      return '';
+      
+    case 'tipoMuestra':
+      const tipoMuestraStr = (valor ?? '').toString().trim();
+      if (!tipoMuestraStr) return 'El tipo de muestra es obligatorio';
+      if (tipoMuestraStr.length > 50) return 'El tipo de muestra no puede exceder 50 caracteres';
+      return '';
+      
+    case 'condEmpaque':
+      const condEmpaqueStr = (valor ?? '').toString().trim();
+      if (!condEmpaqueStr) return 'El tipo de empaque es obligatorio';
+      if (condEmpaqueStr.length > 100) return 'El tipo de empaque no puede exceder 100 caracteres';
+      return '';
+      
+    case 'tipoAnalisis':
+      const tipoAnalisisStr = (valor ?? '').toString().trim();
+      if (!tipoAnalisisStr) return 'El tipo de análisis requerido es obligatorio';
+      if (tipoAnalisisStr.length > 100) return 'El tipo de análisis no puede exceder 100 caracteres';
+      return '';
+      
+    case 'cantidad':
+      if (!valor && valor !== 0) return 'La cantidad de muestras es obligatoria';
+      if (Number(valor) < 1 || Number(valor) > 1000)
+        return 'La cantidad debe estar entre 1 y 1000 muestras';
+      return '';
+      
+    case 'fechaEstimada':
+      if (!valor) return 'La fecha estimada de entrega es obligatoria';
+      const fechaEstimada = new Date(valor);
+      const hoyEstimada = new Date();
+      hoyEstimada.setHours(0, 0, 0, 0);
+      if (fechaEstimada < hoyEstimada) return 'La fecha estimada no puede ser anterior a hoy';
+      
+      // Validar que la fecha estimada no sea mayor a 1 año
+      const maxFecha = new Date();
+      maxFecha.setFullYear(maxFecha.getFullYear() + 1);
+      if (fechaEstimada > maxFecha) return 'La fecha estimada no puede ser mayor a 1 año';
+      return '';
+      
+    case 'requiereVarios':
+      if (valor === '' || valor === null || valor === undefined)
+        return 'Debe indicar si requiere varios análisis';
+      return '';
+      
+    case 'solicitudRecibida':
+      const solicitudRecibidaStr = (valor ?? '').toString().trim();
+      if (!solicitudRecibidaStr) return 'Debe indicar cómo se recibió la solicitud';
+      if (solicitudRecibidaStr.length > 255) return 'Máximo 255 caracteres';
+      return '';
+      
+    case 'recibePersonal':
+      const recibePersonalStr = (valor ?? '').toString().trim();
+      if (!recibePersonalStr) return 'Debe indicar quién recibe la solicitud';
+      if (recibePersonalStr.length > 255) return 'Máximo 255 caracteres';
+      return '';
+      
+    case 'cargoPersonal':
+      const cargoPersonalStr = (valor ?? '').toString().trim();
+      if (!cargoPersonalStr) return 'Debe indicar el cargo del personal';
+      if (cargoPersonalStr.length > 100) return 'Máximo 100 caracteres';
+      return '';
+      
+    case 'observaciones':
+      if (valor && valor.toString().length > 5000)
+        return 'Observaciones demasiado largas';
+      return '';
+      
+    default:
+      return '';
   }
+}
 
-  if (this.encuestaSolicitoNueva === '' || this.encuestaSolicitoNueva === null || this.encuestaSolicitoNueva === undefined) {
-    this.encuestaErrors['solicitoNueva'] = 'Debe indicar si se solicitó nueva encuesta';
-    isValid = false;
+// ===== VALIDACIÓN DINÁMICA PARA OFERTA =====
+validarCampoOfertaEnTiempoReal(campo: string, event?: Event): void {
+  const valor = this.getValorOferta(campo);
+  this.ofertaErrors[campo] = this.validarCampoOfertaIndividual(campo, valor);
+}
+
+private getValorOferta(campo: string): any {
+  switch (campo) {
+    case 'solicitudId': return this.ofertaSolicitudId;
+    case 'valor': return this.ofertaValor;
+    case 'fechaEnvio': return this.ofertaFechaEnvio;
+    case 'generoCotizacion': return this.ofertaGeneroCotizacion;
+    case 'realizoSeguimiento': return this.ofertaRealizoSeguimiento;
+    case 'observacion': return this.ofertaObservacion;
+    default: return '';
   }
+}
 
-  if (this.encuestaComentarios && this.encuestaComentarios.length > 1000) {
-    this.encuestaErrors['comentarios'] = 'Los comentarios no pueden exceder 1000 caracteres';
-    isValid = false;
+private validarCampoOfertaIndividual(campo: string, valor: any): string {
+  switch (campo) {
+    case 'solicitudId':
+      if (!valor) return 'Debe seleccionar una solicitud';
+      return '';
+      
+    case 'valor':
+      if (!valor && valor !== 0) return 'El valor de la oferta es obligatorio';
+      if (Number(valor) <= 0) return 'El valor debe ser mayor a 0';
+      if (Number(valor) > 1000000000) return 'El valor no puede exceder $1.000.000.000';
+      return '';
+      
+    case 'fechaEnvio':
+      if (!valor) return 'La fecha de envío es obligatoria';
+      const fechaEnvio = new Date(valor);
+      const hoyEnvio = new Date();
+      hoyEnvio.setHours(0, 0, 0, 0);
+      if (fechaEnvio > hoyEnvio) return 'La fecha de envío no puede ser futura';
+      return '';
+      
+    case 'generoCotizacion':
+      if (valor === '' || valor === null || valor === undefined)
+        return 'Debe indicar si se generó cotización';
+      return '';
+      
+    case 'realizoSeguimiento':
+      if (valor === '' || valor === null || valor === undefined)
+        return 'Debe indicar si se realizó seguimiento';
+      return '';
+      
+    case 'observacion':
+      if (valor && valor.toString().length > 200)
+        return 'La observación no puede exceder 200 caracteres';
+      return '';
+      
+    default:
+      return '';
   }
+}
 
-  return isValid;
+// ===== VALIDACIÓN DINÁMICA PARA RESULTADO/REVISIÓN =====
+validarCampoResultadoEnTiempoReal(campo: string, event?: Event): void {
+  const valor = this.getValorResultado(campo);
+  this.resultadoErrors[campo] = this.validarCampoResultadoIndividual(campo, valor);
+}
+
+private getValorResultado(campo: string): any {
+  switch (campo) {
+    case 'solicitudId': return this.resultadoSolicitudId;
+    case 'fechaLimite': return this.resultadoFechaLimite;
+    case 'fechaEnvio': return this.resultadoFechaEnvio;
+    case 'servicioViable': return this.resultadoServicioViable;
+    default: return '';
+  }
+}
+
+private validarCampoResultadoIndividual(campo: string, valor: any): string {
+  switch (campo) {
+    case 'solicitudId':
+      if (!valor) return 'Debe seleccionar una solicitud';
+      return '';
+      
+    case 'fechaLimite':
+      if (!valor) return 'La fecha límite es obligatoria';
+      const fechaLimite = new Date(valor);
+      const hoyLimite = new Date();
+      hoyLimite.setHours(0, 0, 0, 0);
+      if (fechaLimite < hoyLimite) return 'La fecha límite no puede ser anterior a hoy';
+      return '';
+      
+    case 'fechaEnvio':
+      if (!valor) return 'La fecha de envío es obligatoria';
+      const fechaEnvio = new Date(valor);
+      // CORREGIDO: Usar this.resultadoFechaLimite directamente, no redeclarar fechaLimite
+      const fechaLimiteExistente = this.resultadoFechaLimite ? new Date(this.resultadoFechaLimite) : null;
+      if (fechaLimiteExistente && fechaEnvio > fechaLimiteExistente)
+        return 'La fecha de envío no puede ser posterior a la fecha límite';
+      return '';
+      
+    case 'servicioViable':
+      if (valor === '' || valor === null || valor === undefined)
+        return 'Debe indicar si el servicio es viable';
+      return '';
+      
+    default:
+      return '';
+  }
+}
+
+// ===== VALIDACIÓN DINÁMICA PARA ENCUESTA =====
+validarCampoEncuestaEnTiempoReal(campo: string, event?: Event): void {
+  const valor = this.getValorEncuesta(campo);
+  this.encuestaErrors[campo] = this.validarCampoEncuestaIndividual(campo, valor);
+}
+
+private getValorEncuesta(campo: string): any {
+  switch (campo) {
+    case 'solicitudId': return this.encuestaSolicitudId;
+    case 'fecha': return this.encuestaFecha;
+    case 'recomendaria': return this.encuestaRecomendaria;
+    case 'clienteRespondio': return this.encuestaClienteRespondio;
+    case 'solicitoNueva': return this.encuestaSolicitoNueva;
+    case 'comentarios': return this.encuestaComentarios;
+    default: return '';
+  }
+}
+
+private validarCampoEncuestaIndividual(campo: string, valor: any): string {
+  switch (campo) {
+    case 'solicitudId':
+      if (!valor) return 'Debe seleccionar una solicitud';
+      return '';
+      
+    case 'fecha':
+      if (!valor) return 'La fecha de la encuesta es obligatoria';
+      const fechaEncuesta = new Date(valor);
+      const hoyEncuesta = new Date();
+      hoyEncuesta.setHours(0, 0, 0, 0);
+      if (fechaEncuesta > hoyEncuesta) return 'La fecha de encuesta no puede ser futura';
+      return '';
+      
+    case 'recomendaria':
+      if (valor === '' || valor === null || valor === undefined)
+        return 'Debe indicar si recomendaría el servicio';
+      return '';
+      
+    case 'clienteRespondio':
+      if (valor === '' || valor === null || valor === undefined)
+        return 'Debe indicar si el cliente respondió';
+      return '';
+      
+    case 'solicitoNueva':
+      if (valor === '' || valor === null || valor === undefined)
+        return 'Debe indicar si se solicitó nueva encuesta';
+      return '';
+      
+    case 'comentarios':
+      if (valor && valor.toString().length > 1000)
+        return 'Los comentarios no pueden exceder 1000 caracteres';
+      return '';
+      
+    default:
+      return '';
+  }
 }
 
   // ========== OPERACIONES CRUD ==========

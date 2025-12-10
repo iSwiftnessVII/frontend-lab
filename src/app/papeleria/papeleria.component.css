@@ -12,7 +12,7 @@
   margin: 2rem 0 1rem 0; 
 }
 
-/* ===== ESTILOS DE ERROR IDÉNTICOS A INSUMOS ===== */
+/* ===== ESTILOS DE ERROR ===== */
 
 /* Clase base para todos los campos del formulario */
 .form-field {
@@ -31,6 +31,13 @@
   min-height: 1.5em;
   display: block;
   border-radius: 4px;
+}
+
+.form-field input.error,
+.form-field select.error,
+.form-field textarea.error {
+  border-color: #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.02) !important;
 }
 
 /* Para full-row */
