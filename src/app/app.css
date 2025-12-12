@@ -638,10 +638,6 @@ body.auth-page .app-header {
 	color: var(--primary-white);
 }
 
-.inventory-icon.referencia {
-	background: linear-gradient(135deg, #a166ab 0%, #5073b8 100%);
-	color: var(--primary-white);
-}
 
 /* Content */
 .inventory-content {

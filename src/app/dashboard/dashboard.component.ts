@@ -17,6 +17,8 @@ const API_SOLICITUDES = (window as any).__env?.API_SOLICITUDES || 'http://localh
 export class DashboardComponent implements OnInit {
   // Estado de carga
   cargando = signal(true);
+  proximosVencerExpanded = false;
+  vencidosExpanded = false;
   
   // Métricas principales - SIN equipos ni materiales volumétricos
   metricas = signal({
@@ -180,5 +182,14 @@ export class DashboardComponent implements OnInit {
 
   formatearNumero(num: number): string {
     return num.toLocaleString('es-CO');
+  }
+
+    // Métodos para alternar expansión
+  toggleProximosVencer() {
+    this.proximosVencerExpanded = !this.proximosVencerExpanded;
+  }
+
+  toggleVencidos() {
+    this.vencidosExpanded = !this.vencidosExpanded;
   }
 }

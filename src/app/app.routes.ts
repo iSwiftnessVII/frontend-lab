@@ -21,12 +21,7 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
   },
-  { 
-    path: 'materiales-referencia', 
-    loadComponent: () => import('./referencia/referencia.component').then(m => m.ReferenciaComponent), 
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
-  },
+  // materiales-referencia route removed
   { 
     path: 'reactivos', 
     loadComponent: () => import('./reactivos/reactivos.component').then(m => m.ReactivosComponent), 

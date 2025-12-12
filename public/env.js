@@ -3,7 +3,7 @@
   
   // API URL (Cloudflare Tunnel or local dev)
   // Update this URL if your backend tunnel changes
-  const RENDER_URL = 'https://provisions-theta-prospects-specialists.trycloudflare.com'
+  const RENDER_URL = 'https://chances-directed-desired-affiliated.trycloudflare.com'
  
 
   
@@ -20,7 +20,7 @@
   window.__env.API_DASHBOARD = window.__env.API_BASE + '/dashboard';
   window.__env.API_SOLICITUDES = window.__env.API_BASE + '/solicitudes';
   window.__env.API_VOLUMETRICOS = window.__env.API_BASE + '/volumetricos';
-  window.__env.API_REFERENCIA = window.__env.API_BASE + '/material-referencia';
+  // API_REFERENCIA removed
   // Joined endpoints for solicitudes
   window.__env.API_SOLICITUDES_DETALLE = window.__env.API_SOLICITUDES + '/detalle';
   window.__env.API_SOLICITUDES_DETALLE_LISTA = window.__env.API_SOLICITUDES_DETALLE + '/lista';
