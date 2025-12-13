@@ -184,6 +184,22 @@
               </div>
               <i class="fas fa-arrow-right inventory-arrow"></i>
             </a>
+
+            <a 
+              routerLink="/materiales-referencia" 
+              class="inventory-card" 
+              role="menuitem"
+              (click)="setSelectedInventory('referencia'); $event.stopPropagation()"
+            >
+              <div class="inventory-icon referencia">
+                <i class="fas fa-vial" aria-hidden="true"></i>
+              </div>
+              <div class="inventory-content">
+                <div class="inventory-title">Materiales de Referencia</div>
+                <div class="inventory-subtitle">Material de referencia</div>
+              </div>
+              <i class="fas fa-arrow-right inventory-arrow"></i>
+            </a>
           </div>
         </div>
       </div>

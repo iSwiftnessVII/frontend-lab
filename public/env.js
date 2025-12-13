@@ -20,7 +20,7 @@
   window.__env.API_DASHBOARD = window.__env.API_BASE + '/dashboard';
   window.__env.API_SOLICITUDES = window.__env.API_BASE + '/solicitudes';
   window.__env.API_VOLUMETRICOS = window.__env.API_BASE + '/volumetricos';
-  // API_REFERENCIA removed
+  window.__env.API_REFERENCIA = window.__env.API_BASE + '/referencia';
   // Joined endpoints for solicitudes
   window.__env.API_SOLICITUDES_DETALLE = window.__env.API_SOLICITUDES + '/detalle';
   window.__env.API_SOLICITUDES_DETALLE_LISTA = window.__env.API_SOLICITUDES_DETALLE + '/lista';

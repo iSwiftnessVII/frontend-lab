@@ -80,7 +80,8 @@ export class App implements OnDestroy {
       '/insumos': 'insumos',
       '/papeleria': 'papeleria',
       '/equipos': 'equipos',
-      '/materiales-volumetricos': 'volumetricos'
+      '/materiales-volumetricos': 'volumetricos',
+      '/materiales-referencia': 'referencia'
     };
 
     const analysisRoutes: { [key: string]: string } = {
@@ -127,7 +128,8 @@ export class App implements OnDestroy {
       'insumos': 'fa-boxes',
       'papeleria': 'fa-paperclip',
       'equipos': 'fa-microscope',
-      'volumetricos': 'fa-vial'
+      'volumetricos': 'fa-vial',
+      'referencia': 'fa-vial'
     };
     return icons[inventory] || 'fa-warehouse';
   }
@@ -138,7 +140,8 @@ export class App implements OnDestroy {
       'insumos': 'Insumos',
       'papeleria': 'Papelería',
       'equipos': 'Equipos',
-      'volumetricos': 'Volumétricos'
+      'volumetricos': 'Volumétricos',
+      'referencia': 'Referencia'
     };
     return names[inventory] || 'Inventario';
   }
