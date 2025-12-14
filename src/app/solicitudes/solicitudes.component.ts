@@ -115,9 +115,10 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   encuestaSolicitudId: any = '';
   encuestaFecha = '';
+  encuestaFechaRealizacion = ''; 
   encuestaPuntuacion: number | null = null;
   encuestaComentarios = '';
-  encuestaRecomendaria: any = '';
+  // encuestaRecomendaria: any = '';
   encuestaClienteRespondio: any = '';
   encuestaSolicitoNueva: any = '';
 
@@ -322,6 +323,26 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       try { this.cargando.set(false); } catch { }
     }
   }
+
+  // Método para obtener fecha actual en formato YYYY-MM-DD
+getTodayDate(): string {
+  const hoy = new Date();
+  const año = hoy.getFullYear();
+  const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+  const dia = String(hoy.getDate()).padStart(2, '0');
+  return `${año}-${mes}-${dia}`;
+}
+
+// Método para obtener fecha de mañana en formato YYYY-MM-DD
+getTomorrowDate(): string {
+  const mañana = new Date();
+  mañana.setDate(mañana.getDate() + 1); // Sumar 1 día
+  
+  const año = mañana.getFullYear();
+  const mes = String(mañana.getMonth() + 1).padStart(2, '0');
+  const dia = String(mañana.getDate()).padStart(2, '0');
+  return `${año}-${mes}-${dia}`;
+}
 
   // Calcula el siguiente consecutivo para solicitud
   computeNextSolicitudConsecutivo(): void {
@@ -688,12 +709,17 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   return Object.values(this.resultadoErrors).every(error => !error);
 }
 
-  validarEncuesta(): boolean {
+validarEncuesta(): boolean {
   // Validar todos los campos dinámicamente
   this.validarCampoEncuestaEnTiempoReal('solicitudId');
   this.validarCampoEncuestaEnTiempoReal('fecha');
-  this.validarCampoEncuestaEnTiempoReal('recomendaria');
   this.validarCampoEncuestaEnTiempoReal('clienteRespondio');
+  
+  // Validar fechaRealizacion solo si clienteRespondio es true
+  if (this.encuestaClienteRespondio === true) {
+    this.validarCampoEncuestaEnTiempoReal('fechaRealizacion');
+  }
+  
   this.validarCampoEncuestaEnTiempoReal('solicitoNueva');
   this.validarCampoEncuestaEnTiempoReal('comentarios');
   
@@ -893,21 +919,23 @@ private validarCampoSolicitudIndividual(campo: string, valor: any): string {
     case 'tipo':
       if (!valor) return 'Debe seleccionar el tipo de solicitud';
       return '';
-      
+
     case 'nombre':
       const nombreStr = (valor ?? '').toString().trim();
       if (!nombreStr) return 'El nombre de la muestra es obligatorio';
       if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s\-\.]{2,100}$/.test(nombreStr))
         return 'Nombre de muestra inválido (2-100 caracteres alfanuméricos)';
       return '';
-      
+
     case 'lote':
       const loteStr = (valor ?? '').toString().trim();
       if (!loteStr) return 'El lote del producto es obligatorio';
-      if (!/^[A-Z0-9\-]{3,20}$/.test(loteStr))
-        return 'Formato de lote inválido (3-20 caracteres alfanuméricos)';
+
+      // Mismo patrón que la directiva (solo letras básicas, números, guiones)
+      if (!/^[A-Za-z0-9\-]{3,20}$/.test(loteStr))
+        return 'Formato de lote inválido (3-20 caracteres: solo letras, números y guiones)';
       return '';
-      
+
     case 'fechaSolicitud':
       if (!valor) return 'La fecha de solicitud es obligatoria';
       const fechaSolicitud = new Date(valor);
@@ -916,7 +944,7 @@ private validarCampoSolicitudIndividual(campo: string, valor: any): string {
       hoySolicitud.setHours(23, 59, 59, 999);
       if (fechaSolicitud > hoySolicitud) return 'La fecha de solicitud no puede ser futura';
       return '';
-      
+
     case 'fechaVenc':
       if (!valor) return 'La fecha de vencimiento es obligatoria';
       const fechaVenc = new Date(valor);
@@ -925,13 +953,13 @@ private validarCampoSolicitudIndividual(campo: string, valor: any): string {
       fechaVenc.setHours(0, 0, 0, 0);
       if (fechaVenc < hoyVenc) return 'La fecha de vencimiento no puede ser una fecha pasada';
       return '';
-      
+
     case 'tipoMuestra':
       const tipoMuestraStr = (valor ?? '').toString().trim();
       if (!tipoMuestraStr) return 'El tipo de muestra es obligatorio';
       if (tipoMuestraStr.length > 50) return 'El tipo de muestra no puede exceder 50 caracteres';
       return '';
-      
+
     case 'condEmpaque':
       const condEmpaqueStr = (valor ?? '').toString().trim();
       if (!condEmpaqueStr) return 'El tipo de empaque es obligatorio';
@@ -949,19 +977,43 @@ private validarCampoSolicitudIndividual(campo: string, valor: any): string {
       if (Number(valor) < 1 || Number(valor) > 1000)
         return 'La cantidad debe estar entre 1 y 1000 muestras';
       return '';
-      
+
     case 'fechaEstimada':
-      if (!valor) return 'La fecha estimada de entrega es obligatoria';
-      const fechaEstimada = new Date(valor);
-      const hoyEstimada = new Date();
-      hoyEstimada.setHours(0, 0, 0, 0);
-      if (fechaEstimada < hoyEstimada) return 'La fecha estimada no puede ser anterior a hoy';
-      
-      // Validar que la fecha estimada no sea mayor a 1 año
-      const maxFecha = new Date();
-      maxFecha.setFullYear(maxFecha.getFullYear() + 1);
-      if (fechaEstimada > maxFecha) return 'La fecha estimada no puede ser mayor a 1 año';
-      return '';
+  if (!valor) return 'La fecha estimada de entrega es obligatoria';
+  
+  // Validar formato YYYY-MM-DD
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+    return 'Formato de fecha inválido (AAAA-MM-DD)';
+  }
+  
+  // PARSEAR MANUALMENTE - igual que en getTodayDate()
+  const partes = valor.split('-');
+  const añoEstimado = parseInt(partes[0], 10);
+  const mesEstimado = parseInt(partes[1], 10) - 1; // meses 0-indexed
+  const diaEstimado = parseInt(partes[2], 10);
+  
+  const fechaEstimada = new Date(añoEstimado, mesEstimado, diaEstimado);
+  
+  // Fecha actual (medianoche)
+  const hoy = new Date();
+  const añoHoy = hoy.getFullYear();
+  const mesHoy = hoy.getMonth();
+  const diaHoy = hoy.getDate();
+  const hoyMedianoche = new Date(añoHoy, mesHoy, diaHoy);
+  
+  // Comparar
+  if (fechaEstimada.getTime() < hoyMedianoche.getTime()) {
+    return 'La fecha estimada no puede ser anterior a hoy';
+  }
+  
+  // Validar máximo 1 año
+  const maxFecha = new Date(añoHoy + 1, mesHoy, diaHoy);
+  
+  if (fechaEstimada.getTime() > maxFecha.getTime()) {
+    return 'La fecha estimada no puede ser mayor a 1 año';
+  }
+  
+  return '';
       
     case 'requiereVarios':
       if (valor === '' || valor === null || valor === undefined)
@@ -1110,35 +1162,78 @@ validarCampoEncuestaEnTiempoReal(campo: string, event?: Event): void {
 }
 
 private getValorEncuesta(campo: string): any {
-  switch (campo) {
-    case 'solicitudId': return this.encuestaSolicitudId;
-    case 'fecha': return this.encuestaFecha;
-    case 'recomendaria': return this.encuestaRecomendaria;
-    case 'clienteRespondio': return this.encuestaClienteRespondio;
-    case 'solicitoNueva': return this.encuestaSolicitoNueva;
-    case 'comentarios': return this.encuestaComentarios;
-    default: return '';
+    switch (campo) {
+      case 'solicitudId': return this.encuestaSolicitudId;
+      case 'fecha': return this.encuestaFecha;
+      // case 'recomendaria': return this.encuestaRecomendaria;
+      case 'fechaRealizacion': return this.encuestaFechaRealizacion;
+      case 'clienteRespondio': return this.encuestaClienteRespondio;
+      case 'solicitoNueva': return this.encuestaSolicitoNueva;
+      case 'comentarios': return this.encuestaComentarios;
+      default: return '';
+    }
   }
-}
 
-private validarCampoEncuestaIndividual(campo: string, valor: any): string {
-  switch (campo) {
-    case 'solicitudId':
-      if (!valor) return 'Debe seleccionar una solicitud';
-      return '';
-      
-    case 'fecha':
-      if (!valor) return 'La fecha de la encuesta es obligatoria';
-      const fechaEncuesta = new Date(valor);
-      const hoyEncuesta = new Date();
-      hoyEncuesta.setHours(0, 0, 0, 0);
-      if (fechaEncuesta > hoyEncuesta) return 'La fecha de encuesta no puede ser futura';
-      return '';
-      
-    case 'recomendaria':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si recomendaría el servicio';
-      return '';
+  private validarCampoEncuestaIndividual(campo: string, valor: any): string {
+    switch (campo) {
+
+      case 'fechaRealizacion':
+        // Solo obligatorio si clienteRespondio es true
+        if (this.encuestaClienteRespondio !== true) {
+          return ''; // No es obligatorio si el cliente no respondió
+        }
+
+        if (!valor) {
+          return 'La fecha de realización es obligatoria cuando el cliente respondió';
+        }
+
+        // Validar formato básico
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+          return 'Formato de fecha inválido (AAAA-MM-DD)';
+        }
+
+        // Validar que sea una fecha válida
+        const fechaRealizacion = new Date(valor);
+        if (isNaN(fechaRealizacion.getTime())) {
+          return 'Fecha inválida';
+        }
+
+        return '';
+
+
+      case 'solicitudId':
+        if (!valor) return 'Debe seleccionar una solicitud';
+        return '';
+
+      case 'fecha':
+        if (!valor) return 'La fecha de la encuesta es obligatoria';
+
+  // Validar formato
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(valor))
+          return 'Formato de fecha inválido (AAAA-MM-DD)';
+
+        const fechaEncuesta = new Date(valor);
+        const mañana = new Date();
+        mañana.setDate(mañana.getDate() + 1);
+        mañana.setHours(0, 0, 0, 0);
+
+        fechaEncuesta.setHours(0, 0, 0, 0);
+
+        if (isNaN(fechaEncuesta.getTime())) {
+          return 'Fecha inválida';
+        }
+
+        // DEBE SER FUTURA: fecha >= mañana (no hoy, no pasadas)
+        if (fechaEncuesta < mañana) {
+          return 'La fecha de envío debe ser futura (mañana en adelante)';
+        }
+
+        return '';
+
+    // case 'recomendaria':
+    //   if (valor === '' || valor === null || valor === undefined)
+    //     return 'Debe indicar si recomendaría el servicio';
+    //   return '';
       
     case 'clienteRespondio':
       if (valor === '' || valor === null || valor === undefined)
@@ -1406,7 +1501,8 @@ private validarCampoEncuestaIndividual(campo: string, valor: any): string {
       const body = {
         fecha_encuesta: this.encuestaFecha,
         comentarios: this.encuestaComentarios || null,
-        recomendaria_servicio: this.encuestaRecomendaria,
+        // recomendaria_servicio: this.encuestaRecomendaria,
+        fecha_realizacion_encuesta: this.encuestaFechaRealizacion || null,
         cliente_respondio: this.encuestaClienteRespondio,
         solicito_nueva_encuesta: this.encuestaSolicitoNueva
       };
@@ -1597,7 +1693,8 @@ private validarCampoEncuestaIndividual(campo: string, valor: any): string {
     this.encuestaFecha = '';
     this.encuestaPuntuacion = null;
     this.encuestaComentarios = '';
-    this.encuestaRecomendaria = false;
+    // this.encuestaRecomendaria = false;
+    this.encuestaFechaRealizacion = '';
     this.encuestaClienteRespondio = false;
     this.encuestaSolicitoNueva = false;
   }
@@ -1838,7 +1935,8 @@ private validarCampoEncuestaIndividual(campo: string, valor: any): string {
   // Encuesta fields
   editEncuestaFecha: string = '';
   editEncuestaComentarios: string = '';
-  editEncuestaRecomendaria: any = null;
+  // editEncuestaRecomendaria: any = null;
+  editEncuestaFechaRealizacion: string = '';
   editEncuestaClienteRespondio: any = null;
   editEncuestaSolicitoNueva: any = null;
 
@@ -1883,7 +1981,8 @@ private validarCampoEncuestaIndividual(campo: string, valor: any): string {
     // Prefill encuesta
     this.editEncuestaFecha = this.toDateInput(s?.fecha_encuesta);
     this.editEncuestaComentarios = s?.comentarios || '';
-    this.editEncuestaRecomendaria = s?.recomendaria_servicio === null ? null : (s?.recomendaria_servicio ? true : false);
+    // this.editEncuestaRecomendaria = s?.recomendaria_servicio === null ? null : (s?.recomendaria_servicio ? true : false);
+    this.editEncuestaFechaRealizacion = this.toDateInput(s?.fecha_realizacion_encuesta);
     this.editEncuestaClienteRespondio = s?.cliente_respondio === null ? null : (s?.cliente_respondio ? true : false);
     this.editEncuestaSolicitoNueva = s?.solicito_nueva_encuesta === null ? null : (s?.solicito_nueva_encuesta ? true : false);
     // set reactive selected solicitud
@@ -2002,7 +2101,8 @@ private validarCampoEncuestaIndividual(campo: string, valor: any): string {
     const body: any = {
       fecha_encuesta: this.editEncuestaFecha || null,
       comentarios: this.editEncuestaComentarios || null,
-      recomendaria_servicio: this.editEncuestaRecomendaria === null ? null : (this.editEncuestaRecomendaria ? 1 : 0),
+      // recomendaria_servicio: this.editEncuestaRecomendaria === null ? null : (this.editEncuestaRecomendaria ? 1 : 0),
+      fecha_realizacion_encuesta: this.editEncuestaFechaRealizacion || null,
       cliente_respondio: this.editEncuestaClienteRespondio === null ? null : (this.editEncuestaClienteRespondio ? 1 : 0),
       solicito_nueva_encuesta: this.editEncuestaSolicitoNueva === null ? null : (this.editEncuestaSolicitoNueva ? 1 : 0)
     };
@@ -2061,7 +2161,8 @@ private validarCampoEncuestaIndividual(campo: string, valor: any): string {
       await this.solicitudesService.upsertSeguimientoEncuesta(Number(this.editSolicitudId), {
         fecha_encuesta: this.editEncuestaFecha || null,
         comentarios: this.editEncuestaComentarios || null,
-        recomendaria_servicio: this.editEncuestaRecomendaria === null ? null : (this.editEncuestaRecomendaria ? 1 : 0),
+        // recomendaria_servicio: this.editEncuestaRecomendaria === null ? null : (this.editEncuestaRecomendaria ? 1 : 0),
+        fecha_realizacion_encuesta: this.editEncuestaFechaRealizacion || null,
         cliente_respondio: this.editEncuestaClienteRespondio === null ? null : (this.editEncuestaClienteRespondio ? 1 : 0),
         solicito_nueva_encuesta: this.editEncuestaSolicitoNueva === null ? null : (this.editEncuestaSolicitoNueva ? 1 : 0)
       });

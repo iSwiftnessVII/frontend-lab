@@ -536,22 +536,23 @@
 
       <!-- Lote -->
       <div class="form-field">
-        <label for="solicitudLote">Lote del producto: *</label>
-        <input id="solicitudLote" 
-          [(ngModel)]="solicitudLote" 
-          name="solicitudLote" 
-          required 
-          appAlphaNumeric
-          (input)="validarCampoSolicitudEnTiempoReal('lote', $event)"
-          (blur)="validarCampoSolicitudEnTiempoReal('lote', $event)"
-          [class.error]="solicitudErrors['lote']" 
-          placeholder="Ej: L202501" />
-        @if (solicitudErrors['lote']) {
-          <small class="error-message">
-            ⚠️ {{ solicitudErrors['lote'] }}
-          </small>
-        }
-      </div>
+  <label for="solicitudLote">Lote del producto: *</label>
+  <input id="solicitudLote" 
+    [(ngModel)]="solicitudLote" 
+    name="solicitudLote" 
+    required 
+    appAlphaNumeric
+    (input)="validarCampoSolicitudEnTiempoReal('lote', $event)"
+    (blur)="validarCampoSolicitudEnTiempoReal('lote', $event)"
+    [class.error]="solicitudErrors['lote']" 
+    placeholder="Ej: L202501" 
+    title="3-20 caracteres: solo letras (A-Z, a-z), números y guiones" />
+  @if (solicitudErrors['lote']) {
+    <small class="error-message">
+      ⚠️ {{ solicitudErrors['lote'] }}
+    </small>
+  }
+</div>
 
       <!-- Fecha de solicitud -->
       <div class="form-field">
@@ -717,26 +718,21 @@
           </small>
         }
       </div>
+<!-- Fecha estimada de entrega -->
 
-      <!-- Fecha estimada de entrega -->
-      <div class="form-field">
-        <label for="solicitudFechaEstimada">Fecha estimada entrega: *</label>
-        <input id="solicitudFechaEstimada" 
-          type="date" 
-          [(ngModel)]="solicitudFechaEstimada"
-          name="solicitudFechaEstimada" 
-          required
-          (input)="validarCampoSolicitudEnTiempoReal('fechaEstimada', $event)"
-          (blur)="validarCampoSolicitudEnTiempoReal('fechaEstimada', $event)"
-          [class.error]="solicitudErrors['fechaEstimada']" />
-        @if (solicitudErrors['fechaEstimada']) {
-          <small class="error-message">
-            ⚠️ {{ solicitudErrors['fechaEstimada'] }}
-          </small>
-        }
-      </div>
-
-      <!-- Requiere varios análisis -->
+<div class="form-field">
+  <label for="solicitudFechaEstimada">Fecha estimada de entrega: *</label>
+  <input id="solicitudFechaEstimada" type="date" [(ngModel)]="solicitudFechaEstimada" name="solicitudFechaEstimada"
+    required (input)="validarCampoSolicitudEnTiempoReal('fechaEstimada', $event)"
+    (blur)="validarCampoSolicitudEnTiempoReal('fechaEstimada', $event)"
+    [class.error]="solicitudErrors['fechaEstimada']" />
+  @if (solicitudErrors['fechaEstimada']) {
+  <small class="error-message">
+    ⚠️ {{ solicitudErrors['fechaEstimada'] }}
+  </small>
+  }
+</div>
+<!-- Requiere varios análisis -->
       <div class="form-field">
         <label for="solicitudRequiereVarios">¿Requiere varios análisis? *</label>
         <select id="solicitudRequiereVarios" 
@@ -1129,7 +1125,7 @@
         }
       </div>
 
-      <!-- ¿Recomendaría el servicio? -->
+      <!-- ¿Recomendaría el servicio?
       <div class="form-field">
         <label for="encuestaRecomendaria">Recomendaría el servicio *</label>
         <select id="encuestaRecomendaria" 
@@ -1148,7 +1144,7 @@
             ⚠️ {{ encuestaErrors['recomendaria'] }}
           </small>
         }
-      </div>
+      </div> -->
 
       <!-- ¿El cliente respondió? -->
       <div class="form-field">
@@ -1170,6 +1166,22 @@
           </small>
         }
       </div>
+
+      <!-- NUEVO CAMPO: Fecha realización (solo visible si clienteRespondio = true) -->
+      @if (encuestaClienteRespondio === true) {
+      <div class="form-field">
+        <label for="encuestaFechaRealizacion">Fecha en que se realizó la encuesta: *</label>
+        <input id="encuestaFechaRealizacion" type="date" [(ngModel)]="encuestaFechaRealizacion"
+          name="encuestaFechaRealizacion" required (input)="validarCampoEncuestaEnTiempoReal('fechaRealizacion', $event)"
+          (blur)="validarCampoEncuestaEnTiempoReal('fechaRealizacion', $event)"
+          [class.error]="encuestaErrors['fechaRealizacion']" />
+        @if (encuestaErrors['fechaRealizacion']) {
+        <small class="error-message">
+          ⚠️ {{ encuestaErrors['fechaRealizacion'] }}
+        </small>
+        }
+      </div>
+      }
 
       <!-- ¿Se solicitó nueva encuesta? -->
       <div class="form-field">
@@ -1421,20 +1433,28 @@
                           <div class="detalle-label">Fecha encuesta</div>
                           <span>{{ formatValue(s.fecha_encuesta) }}</span>
                         </div>
-                        <div class="detalle-item">
+                        <!-- <div class="detalle-item">
                           <div class="detalle-label">Recomendaría servicio</div>
                           <span>{{ s.recomendaria_servicio === null || s.recomendaria_servicio === undefined ? '—' : (s.recomendaria_servicio ? 'Sí' : 'No') }}</span>
-                        </div>
+                        </div> -->
                         <div class="detalle-item">
                           <div class="detalle-label">Cliente respondió</div>
-                          <span>{{ s.cliente_respondio === null || s.cliente_respondio === undefined ? '—' : (s.cliente_respondio ? 'Sí' : 'No') }}</span>
-                        </div>
-                        <div class="detalle-item">
-                          <div class="detalle-label">Solicitó nueva encuesta</div>
-                          <span>{{ s.solicito_nueva_encuesta === null || s.solicito_nueva_encuesta === undefined ? '—' : (s.solicito_nueva_encuesta ? 'Sí' : 'No') }}</span>
-                        </div>
-                        <div class="detalle-item detalle-item-full">
-                          <div class="detalle-label">Comentarios</div>
+                          <span>{{ s.cliente_respondio === null || s.cliente_respondio === undefined ? '—' : (s.cliente_respondio ? 'Sí' : 'No')
+                            }}</span>
+                          </div>
+                          <!-- NUEVO EN TARJETA: Fecha realización -->
+                          @if (s.cliente_respondio === 1 || s.cliente_respondio === true) {
+                          <div class="detalle-item">
+                            <div class="detalle-label">Fecha realización</div>
+                            <span>{{ formatValue(s.fecha_realizacion_encuesta) || '—' }}</span>
+                          </div>
+                          }
+                          <div class="detalle-item">
+                            <div class="detalle-label">Solicitó nueva encuesta</div>
+                            <span>{{ s.solicito_nueva_encuesta === null || s.solicito_nueva_encuesta === undefined ? '—' :
+                              (s.solicito_nueva_encuesta ? 'Sí' : 'No') }}</span>
+                          </div>
+                          <div class="detalle-item detalle-item-full">        <div class="detalle-label">Comentarios</div>
                           <span>{{ s.comentarios || '—' }}</span>
                         </div>
                       </div>
@@ -1635,13 +1655,13 @@
             @if (editSolicitudActiveTab === 'encuesta') {
               <div class="form-grid">
                 <div class="form-field"><label>Fecha encuesta</label><input type="date" [(ngModel)]="editEncuestaFecha" /></div>
-                <div class="form-field"><label>Recomendaría servicio</label>
+                <!-- <div class="form-field"><label>Recomendaría servicio</label>
                   <select [(ngModel)]="editEncuestaRecomendaria">
                     <option [ngValue]="null">—</option>
                     <option [ngValue]="true">Sí</option>
                     <option [ngValue]="false">No</option>
                   </select>
-                </div>
+                </div> -->
                 <div class="form-field"><label>Cliente respondió</label>
                   <select [(ngModel)]="editEncuestaClienteRespondio">
                     <option [ngValue]="null">—</option>
@@ -1649,8 +1669,15 @@
                     <option [ngValue]="false">No</option>
                   </select>
                 </div>
-                <div class="form-field"><label>Solicitó nueva encuesta</label>
-                  <select [(ngModel)]="editEncuestaSolicitoNueva">
+                
+                <!-- NUEVO CAMPO EN MODAL: Fecha realización -->
+                @if (editEncuestaClienteRespondio === true) {
+                <div class="form-field"><label>Fecha realización encuesta</label>
+                  <input type="date" [(ngModel)]="editEncuestaFechaRealizacion" />
+                </div>
+                }
+                
+                <div class="form-field"><label>Solicitó nueva encuesta</label>      <select [(ngModel)]="editEncuestaSolicitoNueva">
                     <option [ngValue]="null">—</option>
                     <option [ngValue]="true">Sí</option>
                     <option [ngValue]="false">No</option>

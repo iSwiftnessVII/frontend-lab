@@ -1,8 +1,10 @@
 (function(window) {
   window.__env = window.__env || {};
   
+
 // API URL Tunnel de cloudflared para poder compartir la aplicacion 
-  const RENDER_URL = 'https://supporters-productions-breeds-demand.trycloudflare.com'
+  const RENDER_URL = 'https://oasis-margaret-lang-intended.trycloudflare.com'
+
  
   window.__env.API_BASE = RENDER_URL + '/api';
   // Core modules
