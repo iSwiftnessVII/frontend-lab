@@ -715,9 +715,9 @@
           <div class="card-name" [title]="equipo.nombre">
             <div class="name-line">{{ equipo.nombre }}</div>
             <div class="meta-line">
-              <span class="chip">{{ equipo.tipo || 'Sin tipo' }}</span>
+              <span class="chip">Tipo: {{ equipo.tipo || 'Sin tipo' }}</span>
               <span class="chip">Ubicación: {{ equipo.ubicacion || '—' }}</span>
-              <span class="chip">{{ equipo.acreditacion || 'Sin acreditación' }}</span>
+              <span class="chip">Acreditación: {{ equipo.acreditacion || 'Sin acreditación' }}</span>
             </div>
             <div class="card-right-controls" (click)="$event.stopPropagation()">
               <div class="card-controls-inner">

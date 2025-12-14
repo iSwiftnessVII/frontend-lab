@@ -1,12 +1,9 @@
 (function(window) {
   window.__env = window.__env || {};
   
-  // API URL (Cloudflare Tunnel or local dev)
-  // Update this URL if your backend tunnel changes
-  const RENDER_URL = 'https://com-printer-dean-ordering.trycloudflare.com'
+// API URL Tunnel de cloudflared para poder compartir la aplicacion 
+  const RENDER_URL = 'https://supporters-productions-breeds-demand.trycloudflare.com'
  
-
-  
   window.__env.API_BASE = RENDER_URL + '/api';
   // Core modules
   window.__env.API_AUTH = window.__env.API_BASE + '/auth';
