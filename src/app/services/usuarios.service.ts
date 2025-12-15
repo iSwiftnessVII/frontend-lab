@@ -132,5 +132,27 @@ export const usuariosService = {
   }
 
   return data;
-}
+},
+
+  async cambiarContrasena(id: number, contrasena: string): Promise<any> {
+    const token = localStorage.getItem('token');
+    const headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    if (token) {
+      headers.append('Authorization', `Bearer ${token}`);
+    }
+    const res = await fetch(`${API_BASE}/contrasena/${id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ contrasena })
+    });
+    let data: any = null;
+    try {
+      data = await res.json();
+    } catch {}
+    if (!res.ok) {
+      throw new Error((data && data.message) || 'Error cambiando contraseña');
+    }
+    return data;
+  }
 };

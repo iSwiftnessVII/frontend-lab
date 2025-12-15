@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService, authUser } from '../services/auth.service';
 import { SnackbarService } from '../shared/snackbar.service';
@@ -50,6 +50,13 @@ export class UsuariosComponent implements OnInit {
     this.loadRoles();
     this.loadUsuarios();
   }
+
+  editUserModalOpen = false;
+  editUserId: number | null = null;
+  editUserEmail: string = '';
+  editNuevaContrasena: string = '';
+  editNuevaContrasena2: string = '';
+  editSubmitted = false;
 
   // ========== CARGAR DATOS ==========
 
@@ -144,6 +151,52 @@ export class UsuariosComponent implements OnInit {
       await this.loadUsuarios();
     } catch (err: any) {
       this.snack.error(err?.message || 'Error eliminando usuario');
+    }
+  }
+
+  abrirModalEditar(usuario: any) {
+    this.editUserId = usuario.id_usuario;
+    this.editUserEmail = usuario.email;
+    this.editNuevaContrasena = '';
+    this.editNuevaContrasena2 = '';
+    this.editSubmitted = false;
+    this.editUserModalOpen = true;
+  }
+
+  cerrarModalEditar() {
+    this.editUserModalOpen = false;
+    this.editSubmitted = false;
+    this.editUserId = null;
+    this.editUserEmail = '';
+    this.editNuevaContrasena = '';
+    this.editNuevaContrasena2 = '';
+  }
+
+  async guardarNuevaContrasena(form?: NgForm) {
+    this.editSubmitted = true;
+    if (form && form.invalid) {
+      try { form.control.markAllAsTouched(); } catch {}
+      return;
+    }
+    const p1 = (this.editNuevaContrasena || '').trim();
+    const p2 = (this.editNuevaContrasena2 || '').trim();
+    if (!p1 || !p2) return;
+    if (p1.length < 6) {
+      this.snack.warn('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+    if (p1 !== p2) {
+      this.snack.warn('Las contraseñas no coinciden');
+      return;
+    }
+    if (this.editUserId == null) return;
+    try {
+      await usuariosService.cambiarContrasena(this.editUserId, p1);
+      this.snack.success('Contraseña actualizada correctamente');
+      this.cerrarModalEditar();
+      await this.loadUsuarios();
+    } catch (err: any) {
+      this.snack.error(err?.message || 'Error actualizando contraseña');
     }
   }
 

@@ -174,6 +174,10 @@
                                             <i class="fas fa-user-check"></i>
                                         </button>
                                     }
+                                    <button type="button" class="btn-editar"
+                                        (click)="abrirModalEditar(usuario)" title="Editar usuario">
+                                        <i class="fas fa-user-edit"></i>
+                                    </button>
                                     <button type="button" class="btn-delete" 
                                         (click)="eliminarUsuario(usuario.id_usuario)" title="Eliminar usuario">
                                         <i class="fas fa-trash"></i>
@@ -193,5 +197,51 @@
             }
         </div>
     </section>
+
+    @if (editUserModalOpen) {
+    <div class="modal-backdrop" (click)="cerrarModalEditar()"></div>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Editar usuario" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Cambiar contraseña</h3>
+        <button type="button" class="close-btn" (click)="cerrarModalEditar()" aria-label="Cerrar">×</button>
+      </div>
+      <form class="form-grid" #editForm="ngForm" (ngSubmit)="guardarNuevaContrasena(editForm)">
+        <div>
+          <label for="edit_email">Usuario</label>
+          <input id="edit_email" [value]="editUserEmail" name="edit_email" readonly />
+        </div>
+        <div>
+          <label for="edit_pass1">Nueva contraseña</label>
+          <input id="edit_pass1" type="password" [(ngModel)]="editNuevaContrasena" name="edit_pass1" #editP1Ctrl="ngModel" required minlength="6"
+            [class.invalid]="editP1Ctrl.invalid && (editP1Ctrl.touched || editSubmitted)" />
+          @if (editP1Ctrl.errors?.['required'] && (editP1Ctrl.touched || editSubmitted)) {
+            <span class="field-error">Requerido</span>
+          }
+          @if (editP1Ctrl.errors?.['minlength'] && (editP1Ctrl.touched || editSubmitted)) {
+            <span class="field-error">Mínimo 6 caracteres</span>
+          }
+        </div>
+        <div>
+          <label for="edit_pass2">Confirmar contraseña</label>
+          <input id="edit_pass2" type="password" [(ngModel)]="editNuevaContrasena2" name="edit_pass2" #editP2Ctrl="ngModel" required
+            [class.invalid]="(editP2Ctrl.invalid || editNuevaContrasena2 !== editNuevaContrasena) && (editP2Ctrl.touched || editSubmitted)" />
+          @if (editP2Ctrl.errors?.['required'] && (editP2Ctrl.touched || editSubmitted)) {
+            <span class="field-error">Requerido</span>
+          }
+          @if ((editNuevaContrasena2 || '') && editNuevaContrasena2 !== editNuevaContrasena && (editP2Ctrl.touched || editSubmitted)) {
+            <span class="field-error">No coincide</span>
+          }
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+          <button type="button" class="btn-secondary" (click)="cerrarModalEditar()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+    }
 
 </div>
