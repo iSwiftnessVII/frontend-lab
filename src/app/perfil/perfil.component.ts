@@ -46,9 +46,6 @@ export class PerfilComponent implements OnInit {
       if (u?.email) {
         const r = await reactivosService.estadoSuscripcion(u.email);
         this.suscritoSig.set(!!r?.suscrito);
-        if (this.suscritoSig()) {
-          this.snack.info('Estás suscrito a Reactivos');
-        }
         try {
           const rr = await this.solicitudesService.estadoSuscripcionRevision(u.email);
           this.suscritoRevisionSig.set(!!rr?.suscrito);

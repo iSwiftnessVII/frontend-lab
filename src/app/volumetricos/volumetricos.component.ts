@@ -178,6 +178,7 @@ export class VolumetricosComponent implements OnInit {
           ]);
           this.historialPorMaterial[codigo] = historial;
           this.intervaloPorMaterial[codigo] = intervalo;
+          await this.listarPdfs(String(codigo));
         } catch (error) {
           console.warn(`Error al precargar datos para material ${codigo}:`, error);
           this.historialPorMaterial[codigo] = [];

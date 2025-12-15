@@ -110,17 +110,29 @@ export class VolumetricosService {
 
   // Métodos para PDFs (si es necesario)
   async listarPdfsPorMaterial(codigo: string): Promise<any[]> {
-    const response = await fetch(`${this.API_URL}/materiales/${codigo}/pdfs`);
+    const response = await fetch(`${this.API_URL}/pdfs/${codigo}`);
     if (!response.ok) return [];
-    return response.json();
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      return data.map((p: any) => {
+        try {
+          const base = this.API_URL;
+          p.url_archivo = `${String(base).replace(/\/$/, '')}/pdfs/download/${p.id}`;
+        } catch {
+          // ignore
+        }
+        return p;
+      });
+    }
+    return data;
   }
 
   async subirPdfMaterial(codigo: string, categoria: string, file: File): Promise<any> {
     const formData = new FormData();
-    formData.append('pdf', file);
+    formData.append('file', file);
     formData.append('categoria', categoria);
 
-    const response = await fetch(`${this.API_URL}/materiales/${codigo}/pdfs`, {
+    const response = await fetch(`${this.API_URL}/pdfs/${codigo}`, {
       method: 'POST',
       body: formData
     });

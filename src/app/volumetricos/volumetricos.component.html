@@ -296,7 +296,35 @@
                 </div>
                 <!-- Controles de PDF (similar a equipos) -->
                 <div class="card-right-controls" (click)="$event.stopPropagation()">
-                  <!-- Implementar controles de PDF similares a equipos si es necesario -->
+                  <div class="card-controls-inner">
+                    <div class="pdf-field">
+                      <svg class="pdf-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="3" y="2" width="18" height="20" rx="5" fill="#fff" stroke="#e5e7eb" stroke-width="1.6" />
+                        <rect x="7" y="13.5" width="10" height="6" rx="3" fill="#ff3b30"/>
+                        <text x="9" y="17.2" font-size="5.5" fill="#fff" font-weight="600">PDF</text>
+                      </svg>
+
+                      <select class="pdf-select" [(ngModel)]="selectedPdfByMaterial[material.codigo_id.toString()]" [class.placeholder]="!selectedPdfByMaterial[material.codigo_id.toString()]">
+                        <option [ngValue]="null" disabled>Seleccionar PDF...</option>
+                        <option *ngFor="let pdf of (pdfListByMaterial[material.codigo_id.toString()] || [])" [value]="pdf.url" [title]="pdf.name">{{ pdf.displayName || pdf.name }}</option>
+                        <option *ngIf="!(pdfListByMaterial[material.codigo_id.toString()] || []).length" [ngValue]="null" disabled>Sin archivos</option>
+                      </select>
+
+                      <button class="btn view pdf-action" (click)="openPdf(material.codigo_id.toString(), $event)">Ver</button>
+                      <button class="btn delete pdf-action eliminar" (click)="deletePdf(material.codigo_id.toString(), $event)">Eliminar</button>
+                      <button class="btn add pdf-action" (click)="mostrarMenuCategoriaPdf(material.codigo_id.toString(), $event)">Añadir</button>
+                    </div>
+
+                    <!-- Menú de categorías de PDF -->
+                    <ul *ngIf="menuCategoriaPdfVisible[material.codigo_id.toString()]" class="categoria-pdf-menu" (click)="$event.stopPropagation()">
+                      <li (click)="iniciarUpload(material.codigo_id.toString(), 'Manual de usuario', $event)">Manual de usuario</li>
+                      <li (click)="iniciarUpload(material.codigo_id.toString(), 'Certificados de calificación', $event)">Certificados de calificación</li>
+                      <li (click)="iniciarUpload(material.codigo_id.toString(), 'Certificados de verificación', $event)">Certificados de verificación</li>
+                      <li (click)="iniciarUpload(material.codigo_id.toString(), 'Certificados de calibración', $event)">Certificados de calibración</li>
+                      <li (click)="iniciarUpload(material.codigo_id.toString(), 'Certificados de mantenimiento', $event)">Certificados de mantenimiento</li>
+                      <li (click)="iniciarUpload(material.codigo_id.toString(), 'Ficha técnica de especificaciones', $event)">Ficha técnica de especificaciones</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
