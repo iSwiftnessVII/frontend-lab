@@ -8,6 +8,25 @@
                 <label for="email">Email *</label>
                 <input id="email" type="email" [(ngModel)]="email" name="email" required
                     placeholder="usuario@ejemplo.com" />
+                <div class="form-inline-actions">
+                    <button type="button" class="btn-secondary" (click)="enviarCodigo()" [disabled]="enviandoCodigo || !validarEmail(email)">
+                        <i class="fas fa-envelope-open-text"></i>
+                        {{ enviandoCodigo ? 'Enviando…' : 'Enviar código' }}
+                    </button>
+                    @if (codigoEnviado) {
+                      <span class="email-status ok">Revisa tu correo para el código</span>
+                    }
+                    <input id="codigoVerificacion" type="text" maxlength="5" [(ngModel)]="codigoVerificacion" name="codigoVerificacion"
+                        placeholder="Código 4–5 dígitos" />
+                    <button type="button" class="btn-secondary" (click)="validarCodigo()"
+                        [disabled]="validandoCodigo || !codigoVerificacion">
+                        <i class="fas fa-check"></i>
+                        {{ validandoCodigo ? 'Validando…' : 'Validar código' }}
+                    </button>
+                    <span class="email-status" [class.ok]="emailVerificado" [class.fail]="!emailVerificado">
+                        {{ emailVerificado ? 'Verificado' : 'No verificado' }}
+                    </span>
+                </div>
             </div>
 
             <div>

@@ -247,6 +247,11 @@ export class App implements OnDestroy {
     this.analysisMenuOpen.set(false);
   }
 
+  goToPerfil() {
+    try { this.menuOpen.set(false); } catch {}
+    void this.router.navigate(['/perfil']);
+  }
+
   userShortName(): string {
     try {
       const email = this.user()?.email ?? '';

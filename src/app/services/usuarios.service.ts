@@ -1,5 +1,29 @@
 const API_BASE = (window as any).__env?.API_USUARIOS || 'http://localhost:4000/api/usuarios';
 
+async function tryPost(paths: string[], body: any, headers: Headers): Promise<any> {
+  let lastErr: any = null;
+  for (const p of paths) {
+    try {
+      const res = await fetch(`${API_BASE}${p}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body)
+      });
+      let data: any = null;
+      try { data = await res.json(); } catch {}
+      if (!res.ok) {
+        lastErr = new Error((data && data.message) || `Error ${res.status} ${res.statusText}`);
+        continue;
+      }
+      return data;
+    } catch (err) {
+      lastErr = err;
+      continue;
+    }
+  }
+  throw lastErr || new Error('No se pudo completar la solicitud');
+}
+
 export const usuariosService = {
   /**
    * Listar todos los usuarios
@@ -59,6 +83,36 @@ export const usuariosService = {
     }
 
     return data;
+  },
+  
+  /**
+   * Enviar código de verificación al email
+   */
+  async enviarCodigo(email: string): Promise<any> {
+    const token = localStorage.getItem('token');
+    const headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    if (token) headers.append('Authorization', `Bearer ${token}`);
+    return await tryPost(
+      ['/verificacion/enviar-codigo', '/enviar-codigo', '/enviar-confirmacion'],
+      { email },
+      headers
+    );
+  },
+
+  /**
+   * Verificar código ingresado
+   */
+  async verificarCodigo(email: string, codigo: string): Promise<any> {
+    const token = localStorage.getItem('token');
+    const headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    if (token) headers.append('Authorization', `Bearer ${token}`);
+    return await tryPost(
+      ['/verificacion/verificar-codigo', '/verificar-codigo', '/confirmar'],
+      { email, codigo },
+      headers
+    );
   },
 
   /**

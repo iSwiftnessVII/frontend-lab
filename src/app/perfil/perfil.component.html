@@ -1,0 +1,72 @@
+<div class="liba-theme container perfil-page">
+  <h1 class="perfil-title">
+    <i class="fas fa-user" aria-hidden="true"></i> Perfil
+  </h1>
+
+  <section class="perfil-section">
+    <h2 class="section-title">
+      <i class="fas fa-id-card"></i>
+      Datos de usuario
+    </h2>
+    @if (user()) {
+      <div class="perfil-card">
+        <div class="perfil-header">
+          <div class="perfil-avatar">{{ (user()?.email || '')[0] | uppercase }}</div>
+          <div class="perfil-meta">
+            <div class="perfil-name">{{ userShortName() }}</div>
+            <div class="perfil-email">{{ user()?.email }}</div>
+            @if (suscritoSig()) {
+              <span class="perfil-badge">Suscrito a Reactivos</span>
+            }
+          </div>
+        </div>
+  
+        <div class="perfil-row">
+          <span class="label">ID Usuario</span>
+          <span class="value">{{ user()?.id }}</span>
+        </div>
+        <div class="perfil-row">
+          <span class="label">Rol</span>
+          <span class="value">{{ user()?.rol }}</span>
+        </div>
+        <div class="perfil-row">
+          <span class="label">ID Rol</span>
+          <span class="value">{{ user()?.id_rol }}</span>
+        </div>
+      </div>
+    } @else {
+      <div class="perfil-card">
+        <p>No hay sesión activa.</p>
+        <div class="perfil-actions">
+          <a routerLink="/login" class="btn btn-back">Ir a Login</a>
+        </div>
+      </div>
+    }
+  </section>
+
+  <section class="perfil-section">
+    <h2 class="section-title">
+      <i class="fas fa-envelope"></i>
+      Suscripción a alertas de reactivos
+    </h2>
+    <div class="perfil-card">
+      <p class="section-help">
+        Recibirás correos cuando un reactivo esté próximo a vencer (6, 3, 2 y 1 meses).
+      </p>
+      <form (submit)="onSuscribirse(); $event.preventDefault();" class="form-grid">
+        <div class="form-field">
+          <label for="subEmail">Correo:</label>
+          <input id="subEmail" type="email" [(ngModel)]="suscripcionEmail" name="suscripcionEmail" placeholder="tucorreo@dominio.com" />
+        </div>
+        <div class="perfil-actions">
+          <button class="btn btn-back" type="submit" [disabled]="suscripcionLoading">
+            <i class="fas fa-bell"></i> Suscribirse
+          </button>
+        </div>
+        @if (suscripcionMsg) {
+          <small [style.color]="suscripcionMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">{{ suscripcionMsg }}</small>
+        }
+      </form>
+    </div>
+  </section>
+</div>

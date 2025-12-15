@@ -7,7 +7,8 @@
     "build": "ng build",
     "build:prod": "node scripts/copy-env-prod.js && ng build --configuration=production",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "server": "node server/index.js"
   },
   "prettier": {
     "printWidth": 100,

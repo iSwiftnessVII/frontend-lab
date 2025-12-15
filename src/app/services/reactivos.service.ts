@@ -250,4 +250,22 @@ export const reactivosService = {
     const blob = await res.blob();
     return blob;
   },
+  async suscribirse(email: string) {
+    const res = await fetch(`${API_BASE}/suscripciones`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ email })
+    });
+    let data: any = null; try { data = await res.json(); } catch {}
+    if (!res.ok) throw new Error((data && data.error) || 'Error al suscribirse');
+    return data;
+  },
+  async estadoSuscripcion(email: string) {
+    const res = await fetch(`${API_BASE}/suscripciones/${encodeURIComponent(email)}`, {
+      headers: { ...authHeaders() }
+    });
+    let data: any = null; try { data = await res.json(); } catch {}
+    if (!res.ok) throw new Error((data && data.error) || 'Error consultando suscripción');
+    return data as { suscrito: boolean };
+  }
 };
