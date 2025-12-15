@@ -97,19 +97,28 @@
   text-decoration: none;
 }
 /* Contenedor estándar como el de otros apartados */
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
-}
+/* El contenedor global se maneja en estilos compartidos; evitar sobrescribir aquí */
 
 .suscripciones-flex {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
   gap: 12px;
   align-items: stretch;
 }
 .suscripciones-flex .perfil-card {
-  flex: 1 1 320px;
+  max-width: none;
+  width: 100%;
   padding: 0.75rem;
+}
+
+@media (max-width: 1024px) {
+  .suscripciones-flex {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .suscripciones-flex {
+    grid-template-columns: 1fr;
+  }
 }

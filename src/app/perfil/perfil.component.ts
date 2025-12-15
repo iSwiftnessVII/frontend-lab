@@ -54,29 +54,30 @@ export class PerfilComponent implements OnInit {
         }
       }
     } catch {}
-    effect(() => {
-      const u = this.user();
-      if (u?.email) {
-        (async () => {
-          try {
-            const r = await reactivosService.estadoSuscripcion(u.email);
-            this.suscritoSig.set(!!r?.suscrito);
-          } catch {
-            this.suscritoSig.set(false);
-          }
-          try {
-            const rr = await this.solicitudesService.estadoSuscripcionRevision(u.email);
-            this.suscritoRevisionSig.set(!!rr?.suscrito);
-          } catch {
-            this.suscritoRevisionSig.set(false);
-          }
-        })();
-      } else {
-        this.suscritoSig.set(false);
-        this.suscritoRevisionSig.set(false);
-      }
-    });
   }
+
+  private subscriptionsEffectStop = effect(() => {
+    const u = this.user();
+    if (u?.email) {
+      (async () => {
+        try {
+          const r = await reactivosService.estadoSuscripcion(u.email);
+          this.suscritoSig.set(!!r?.suscrito);
+        } catch {
+          this.suscritoSig.set(false);
+        }
+        try {
+          const rr = await this.solicitudesService.estadoSuscripcionRevision(u.email);
+          this.suscritoRevisionSig.set(!!rr?.suscrito);
+        } catch {
+          this.suscritoRevisionSig.set(false);
+        }
+      })();
+    } else {
+      this.suscritoSig.set(false);
+      this.suscritoRevisionSig.set(false);
+    }
+  });
 
   async onSuscribirse() {
     const email = String(this.suscripcionEmail || '').trim();
@@ -121,6 +122,50 @@ export class PerfilComponent implements OnInit {
     } catch (err: any) {
       this.revisionMsg = err?.message || 'No se pudo suscribir a revisión';
       this.snack.error(this.revisionMsg);
+    } finally {
+      this.revisionLoading = false;
+    }
+  }
+
+  async onCancelarSuscripcion() {
+    const email = this.user()?.email || '';
+    if (!email) {
+      this.snack.warn('No hay usuario autenticado');
+      return;
+    }
+    if (!window.confirm('¿Cancelar la suscripción a vencimiento de reactivos?')) return;
+    this.suscripcionLoading = true;
+    try {
+      await reactivosService.cancelarSuscripcion(email);
+      this.snack.success('Suscripción cancelada');
+      this.suscritoSig.set(false);
+      this.suscripcionMsg = 'Suscripción cancelada';
+    } catch (err: any) {
+      const msg = err?.message || 'No se pudo cancelar la suscripción';
+      this.snack.error(msg);
+      this.suscripcionMsg = msg;
+    } finally {
+      this.suscripcionLoading = false;
+    }
+  }
+
+  async onCancelarSuscripcionRevision() {
+    const email = this.user()?.email || '';
+    if (!email) {
+      this.snack.warn('No hay usuario autenticado');
+      return;
+    }
+    if (!window.confirm('¿Cancelar la suscripción a revisión de oferta?')) return;
+    this.revisionLoading = true;
+    try {
+      await this.solicitudesService.cancelarSuscripcionRevision(email);
+      this.snack.success('Suscripción de revisión cancelada');
+      this.suscritoRevisionSig.set(false);
+      this.revisionMsg = 'Suscripción de revisión cancelada';
+    } catch (err: any) {
+      const msg = err?.message || 'No se pudo cancelar la suscripción de revisión';
+      this.snack.error(msg);
+      this.revisionMsg = msg;
     } finally {
       this.revisionLoading = false;
     }

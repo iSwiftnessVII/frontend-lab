@@ -63,7 +63,17 @@ export class ReferenciaService {
 
   // PDFs (si aplica)
   async listarPdfsPorMaterial(codigo_material: string) {
-    return firstValueFrom(this.http.get<any[]>(`${this.API_REFERENCIA}/pdf/${codigo_material}`));
+    const data = await firstValueFrom(this.http.get<any[]>(`${this.API_REFERENCIA}/pdf/${codigo_material}`));
+    if (Array.isArray(data)) {
+      return data.map(p => {
+        try {
+          const base = this.API_REFERENCIA;
+          (p as any).url = `${String(base).replace(/\/$/, '')}/pdf/download/${p.id}`;
+        } catch {}
+        return p;
+      });
+    }
+    return data;
   }
 
   async subirPdfMaterial(codigo_material: string, categoria: string, file: File) {

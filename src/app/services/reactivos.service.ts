@@ -267,5 +267,14 @@ export const reactivosService = {
     let data: any = null; try { data = await res.json(); } catch {}
     if (!res.ok) throw new Error((data && data.error) || 'Error consultando suscripción');
     return data as { suscrito: boolean };
+  },
+  async cancelarSuscripcion(email: string) {
+    const res = await fetch(`${API_BASE}/suscripciones/${encodeURIComponent(email)}`, {
+      method: 'DELETE',
+      headers: { ...authHeaders() }
+    });
+    let data: any = null; try { data = await res.json(); } catch {}
+    if (!res.ok) throw new Error((data && data.error) || 'Error al cancelar suscripción');
+    return data;
   }
 };

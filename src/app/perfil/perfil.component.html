@@ -46,7 +46,6 @@
       </div>
     }
   </section>
-
   <section class="perfil-section">
     <h2 class="section-title">
       <i class="fas fa-envelope"></i>
@@ -54,6 +53,9 @@
     </h2>
     <div class="suscripciones-flex">
       <div class="perfil-card">
+        <h3 class="section-title">
+          Suscripción a Reactivos
+        </h3>
       <p class="section-help">
         Recibirás correos cuando un reactivo esté próximo a vencer (6, 3, 2 y 1 meses).
       </p>
@@ -66,6 +68,9 @@
           <button class="btn btn-back" type="submit" [disabled]="suscripcionLoading">
             <i class="fas fa-bell"></i> Suscribirse
           </button>
+          <button class="btn btn-back" type="button" [disabled]="suscripcionLoading || !suscritoSig()" (click)="onCancelarSuscripcion()">
+            <i class="fas fa-ban"></i> Cancelar suscripción
+          </button>
         </div>
         @if (suscripcionMsg) {
           <small [style.color]="suscripcionMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">{{ suscripcionMsg }}</small>
@@ -74,6 +79,9 @@
       </div>
 
       <div class="perfil-card">
+        <h3 class="section-title">
+          Suscripción a Revisión de Oferta
+        </h3>
       <p class="section-help">
         Recibirás correos cuando se registre una revisión de oferta en Solicitudes.
       </p>
@@ -86,11 +94,28 @@
           <button class="btn btn-back" type="submit" [disabled]="revisionLoading">
             <i class="fas fa-bell"></i> Suscribirse
           </button>
+          <button class="btn btn-back" type="button" [disabled]="revisionLoading || !suscritoRevisionSig()" (click)="onCancelarSuscripcionRevision()">
+            <i class="fas fa-ban"></i> Cancelar suscripción
+          </button>
         </div>
         @if (revisionMsg) {
           <small [style.color]="revisionMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">{{ revisionMsg }}</small>
         }
       </form>
+      </div>
+      
+      <div class="perfil-card">
+        <h3 class="section-title">
+          Suscripción de prueba
+        </h3>
+        <p class="section-help">
+          Tarjeta de prueba para validar el layout de tres columnas.
+        </p>
+        <div class="perfil-actions">
+          <button class="btn btn-back" type="button">
+            <i class="fas fa-check"></i> Probar
+          </button>
+        </div>
       </div>
     </div>
   </section>

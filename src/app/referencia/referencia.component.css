@@ -154,6 +154,150 @@
   gap: 10px;
 }
 
+.card-name .card-right-controls {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 3;
+}
+
+.referencia-card .card-right-controls {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+/* PDF field styles */
+.pdf-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 500px;
+  margin-right: 10px;
+}
+
+.pdf-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+}
+
+.pdf-select {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 15px;
+  border: none;
+  background: transparent;
+  outline: none;
+}
+
+.btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn.view {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.btn.view:hover {
+  background: #d1d5db;
+}
+
+.btn.delete {
+  background: #ff3b30;
+  color: white;
+}
+
+.btn.delete:hover {
+  background: #dc2626;
+}
+
+.btn.add {
+  background: #00b8b5;
+  color: white;
+}
+
+.btn.add:hover {
+  background: #009996;
+}
+
+/* Menú de categorías de PDF */
+.categoria-pdf-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #d0d6dd);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 100001;
+  min-width: 200px;
+  padding: 6px;
+  list-style: none;
+  margin: 0;
+}
+
+.categoria-pdf-menu li {
+  padding: 6px 8px;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--text-color, #1f2937);
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.categoria-pdf-menu li:hover {
+  background: var(--hover-bg, #f3f4f6);
+}
+
+.card-controls-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.card-right-controls .pdf-field,
+.card-right-controls .compact-group {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.card-right-controls .pdf-field {
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.card-right-controls .pdf-select {
+  font-size: 0.92rem;
+}
+
+.pdf-select.placeholder {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.pdf-select option[disabled] {
+  color: #6b7280;
+}
 .referencia-card .card-header-row .card-name {
   flex: 1 1 auto;
 }
@@ -583,7 +727,7 @@ input[step="0.000001"] {
 
 .referencia-card .card-name .name-line {
   font-weight: 600;
-  padding-right: 100px; /* space for pdf-actions */
+  padding-right: 280px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

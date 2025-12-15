@@ -378,4 +378,19 @@ export class SolicitudesService {
     }
     return data as { suscrito: boolean };
   }
+
+  async cancelarSuscripcionRevision(email: string): Promise<any> {
+    const res = await fetch(API + '/suscripciones-revision/' + encodeURIComponent(email), {
+      method: 'DELETE',
+      headers: this.getAuthHeaders()
+    });
+    let data: any = null; try { data = await res.json(); } catch {}
+    if (res.status === 401) {
+      throw new Error('No autorizado - Token inválido o expirado');
+    }
+    if (!res.ok) {
+      throw new Error((data && data.error) || 'Error al cancelar suscripción de revisión');
+    }
+    return data;
+  }
 }
