@@ -489,10 +489,6 @@
         <div class="volumetrico-tabs-menu">
           <button type="button" class="tab-btn" [class.active]="editModalActiveTab === 'general'" 
                   (click)="editModalActiveTab = 'general'">General</button>
-          <button type="button" class="tab-btn" [class.active]="editModalActiveTab === 'historial'" 
-                  (click)="editModalActiveTab = 'historial'">Historial</button>
-          <button type="button" class="tab-btn" [class.active]="editModalActiveTab === 'intervalo'" 
-                  (click)="editModalActiveTab = 'intervalo'">Intervalo</button>
           <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
             <button type="button" class="tab-btn" (click)="saveAllEditMaterial()">Guardar</button>
             <button type="button" class="tab-btn" (click)="closeEditMaterialModal()">Cancelar</button>
@@ -500,8 +496,42 @@
         </div>
         
         <div style="margin-top:12px" class="edit-modal-body">
-          <!-- Contenido similar al modal de edición de equipos, adaptado para materiales volumétricos -->
-          <!-- Implementar según sea necesario -->
+          @if (editModalActiveTab === 'general') {
+            <form class="form-grid" (submit)="$event.preventDefault()">
+              <div>
+                <label for="edit_codigo_id">Código ID</label>
+                <input id="edit_codigo_id" name="edit_codigo_id" type="number" [value]="codigoIdSig()" readonly />
+              </div>
+              <div>
+                <label for="edit_nombre_material">Nombre del Material</label>
+                <input id="edit_nombre_material" name="edit_nombre_material" [(ngModel)]="nombre_material" placeholder="Ej: Pipeta volumétrica 10 mL" />
+              </div>
+              <div>
+                <label for="edit_volumen_nominal">Volumen Nominal (mL)</label>
+                <input id="edit_volumen_nominal" name="edit_volumen_nominal" type="number" step="0.001" [(ngModel)]="volumen_nominal" placeholder="Ej: 10.000" />
+              </div>
+              <div>
+                <label for="edit_rango_volumen">Rango de Volumen</label>
+                <input id="edit_rango_volumen" name="edit_rango_volumen" [(ngModel)]="rango_volumen" placeholder="Ej: 10-100 mL" />
+              </div>
+              <div>
+                <label for="edit_marca">Marca</label>
+                <input id="edit_marca" name="edit_marca" [(ngModel)]="marca" placeholder="Ej: Brand" />
+              </div>
+              <div>
+                <label for="edit_resolucion">Resolución</label>
+                <input id="edit_resolucion" name="edit_resolucion" type="number" step="0.0001" [(ngModel)]="resolucion" placeholder="Ej: 0.0010" />
+              </div>
+              <div>
+                <label for="edit_error_max_permitido">Error Máximo Permitido</label>
+                <input id="edit_error_max_permitido" name="edit_error_max_permitido" type="number" step="0.0001" [(ngModel)]="error_max_permitido" placeholder="Ej: 0.0020" />
+              </div>
+              <div>
+                <label for="edit_modelo">Modelo</label>
+                <input id="edit_modelo" name="edit_modelo" [(ngModel)]="modelo" placeholder="Ej: PV-10" />
+              </div>
+            </form>
+          }
         </div>
       </div>
     </div>

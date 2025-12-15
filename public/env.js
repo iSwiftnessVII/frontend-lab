@@ -4,7 +4,7 @@
 
 // API URL Tunnel de cloudflared para poder compartir la aplicacion 
 
-  const RENDER_URL = 'https://monday-artists-hear-trivia.trycloudflare.com'
+  const RENDER_URL = 'https://carroll-flag-governing-limit.trycloudflare.com'
 
  
   window.__env.API_BASE = RENDER_URL + '/api';

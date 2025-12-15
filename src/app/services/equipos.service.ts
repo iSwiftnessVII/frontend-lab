@@ -75,6 +75,34 @@ export const equiposService = {
     }
     return await res.json();
   },
+  
+  async actualizarFichaTecnica(codigo: string, payload: any) {
+    const API_FICHA_TECNICA = (window as any).__env?.API_FICHA_TECNICA || 'http://localhost:4000/api/equipos/ficha-tecnica';
+    const isFormData = typeof FormData !== 'undefined' && payload instanceof FormData;
+    const headers: any = {
+      ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+    };
+    const code = encodeURIComponent(codigo);
+    const tries = [
+      { url: `${API_FICHA_TECNICA}/${code}`, method: 'PUT' },
+      { url: `${API}/ficha-tecnica/${code}`, method: 'PUT' },
+      { url: `${API_FICHA_TECNICA}/${code}`, method: 'PATCH' },
+      { url: `${API}/ficha-tecnica/${code}`, method: 'PATCH' }
+    ];
+    let lastError: any = null;
+    for (const t of tries) {
+      try {
+        const res = await fetch(t.url, { method: t.method, headers: isFormData ? headers : { 'Content-Type': 'application/json', ...headers }, body: isFormData ? payload : JSON.stringify(payload) });
+        let data: any = null; try { data = await res.json(); } catch { }
+        if (res.ok) return data;
+        if (res.status === 404) { lastError = (data && data.message) || '404'; continue; }
+        throw new Error((data && data.message) || `Error ${res.status}`);
+      } catch (e: any) {
+        lastError = e;
+      }
+    }
+    throw new Error((lastError && lastError.message) || 'Error al actualizar ficha técnica');
+  },
 
   // Listar equipos registrados
   async listarEquipos() {
@@ -296,17 +324,38 @@ export const equiposService = {
 
   // Actualizar equipo por código (PUT)
   async actualizarEquipo(codigo: string, payload: any) {
-    const res = await fetch(`${API}/${encodeURIComponent(codigo)}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
-      },
-      body: JSON.stringify(payload)
-    });
-    let data: any = null; try { data = await res.json(); } catch { }
-    if (!res.ok) throw new Error((data && data.message) || 'Error al actualizar equipo');
-    return data;
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+    } as any;
+    const code = encodeURIComponent(codigo);
+    let exists = false;
+    try {
+      const chk = await fetch(`${API}/completo/${code}`, { method: 'GET', headers });
+      exists = chk.ok;
+    } catch {}
+    const tries = [
+      { url: `${API}/${code}`, method: 'PUT', body: JSON.stringify(payload) },
+      { url: `${API}/completo/${code}`, method: 'PUT', body: JSON.stringify(payload) },
+      { url: `${API}/update/${code}`, method: 'PUT', body: JSON.stringify(payload) },
+      { url: `${API}/${code}`, method: 'PATCH', body: JSON.stringify(payload) },
+      { url: `${API}/completo/${code}`, method: 'PATCH', body: JSON.stringify(payload) },
+      { url: `${API}`, method: 'PUT', body: JSON.stringify({ codigo_identificacion: codigo, ...payload }) },
+      ...(!exists ? [{ url: `${API}`, method: 'POST', body: JSON.stringify({ codigo_identificacion: codigo, ...payload }) }] : [])
+    ];
+    let lastError: any = null;
+    for (const t of tries) {
+      try {
+        const res = await fetch(t.url, { method: t.method, headers, body: t.body });
+        let data: any = null; try { data = await res.json(); } catch { }
+        if (res.ok) return data;
+        if (res.status === 404) { lastError = (data && data.message) || '404'; continue; }
+        throw new Error((data && data.message) || `Error ${res.status}`);
+      } catch (e: any) {
+        lastError = e;
+      }
+    }
+    throw new Error((lastError && lastError.message) || 'Error al actualizar equipo');
   },
 
 // Obtener el siguiente consecutivo para historial_hv por equipo específico

@@ -18,6 +18,9 @@
             @if (suscritoSig()) {
               <span class="perfil-badge">Suscrito a Reactivos</span>
             }
+            @if (suscritoRevisionSig()) {
+              <span class="perfil-badge">Suscrito a Revisión de Oferta</span>
+            }
           </div>
         </div>
   
@@ -47,9 +50,10 @@
   <section class="perfil-section">
     <h2 class="section-title">
       <i class="fas fa-envelope"></i>
-      Suscripción a alertas de reactivos
+      Suscripciones de correo
     </h2>
-    <div class="perfil-card">
+    <div class="suscripciones-flex">
+      <div class="perfil-card">
       <p class="section-help">
         Recibirás correos cuando un reactivo esté próximo a vencer (6, 3, 2 y 1 meses).
       </p>
@@ -67,6 +71,28 @@
           <small [style.color]="suscripcionMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">{{ suscripcionMsg }}</small>
         }
       </form>
+      </div>
+
+      <div class="perfil-card">
+      <p class="section-help">
+        Recibirás correos cuando se registre una revisión de oferta en Solicitudes.
+      </p>
+      <form (submit)="onSuscribirseRevision(); $event.preventDefault();" class="form-grid">
+        <div class="form-field">
+          <label for="revSubEmail">Correo:</label>
+          <input id="revSubEmail" type="email" [(ngModel)]="revisionEmail" name="revisionEmail" placeholder="tucorreo@dominio.com" />
+        </div>
+        <div class="perfil-actions">
+          <button class="btn btn-back" type="submit" [disabled]="revisionLoading">
+            <i class="fas fa-bell"></i> Suscribirse
+          </button>
+        </div>
+        @if (revisionMsg) {
+          <small [style.color]="revisionMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">{{ revisionMsg }}</small>
+        }
+      </form>
+      </div>
     </div>
   </section>
+
 </div>

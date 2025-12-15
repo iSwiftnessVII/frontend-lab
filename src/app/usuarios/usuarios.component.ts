@@ -23,13 +23,6 @@ export class UsuariosComponent implements OnInit {
   rol_id: any = '';
   mensaje: string = '';
 
-  emailVerificado: boolean = false;
-  verificandoEmail: boolean = false;
-  codigoVerificacion: string = '';
-  enviandoCodigo: boolean = false;
-  validandoCodigo: boolean = false;
-  codigoEnviado: boolean = false;
-
   // Roles disponibles
   roles: Array<any> = [];
 
@@ -220,45 +213,6 @@ export class UsuariosComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
-  }
-
-  async enviarCodigo() {
-    if (!this.validarEmail(this.email)) {
-      this.snack.warn('Email no válido');
-      return;
-    }
-    this.enviandoCodigo = true;
-    try {
-      await usuariosService.enviarCodigo(this.email.trim());
-      this.codigoEnviado = true;
-      this.snack.success('Código enviado al correo');
-    } catch (err: any) {
-      this.snack.error(err?.message || 'Error enviando código');
-    } finally {
-      this.enviandoCodigo = false;
-    }
-  }
-
-  async validarCodigo() {
-    if (!this.codigoVerificacion || !/^\d{4,5}$/.test(this.codigoVerificacion)) {
-      this.snack.warn('Ingresa un código de 4 o 5 dígitos');
-      return;
-    }
-    this.validandoCodigo = true;
-    try {
-      const res = await usuariosService.verificarCodigo(this.email.trim(), this.codigoVerificacion.trim());
-      const ok = !!(res && (res.valido ?? res.valid) !== false);
-      this.emailVerificado = ok;
-      if (ok) {
-        this.snack.success('Email verificado por código');
-      } else {
-        this.snack.warn('Código incorrecto');
-      }
-    } catch (err: any) {
-      this.snack.error(err?.message || 'Error validando código');
-    } finally {
-      this.validandoCodigo = false;
-    }
   }
 
   contarPorEstado(estado: string): number {

@@ -1,10 +1,11 @@
-import { Component, OnInit, signal, effect } from '@angular/core';
+import { Component, OnInit, signal, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { authUser } from '../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { reactivosService } from '../services/reactivos.service';
 import { SnackbarService } from '../shared/snackbar.service';
+import { SolicitudesService } from '../services/clientes/solicitudes.service';
 
 @Component({
   standalone: true,
@@ -19,6 +20,12 @@ export class PerfilComponent implements OnInit {
   suscripcionMsg = '';
   suscripcionLoading = false;
   suscritoSig = signal(false);
+  revisionEmail = '';
+  revisionMsg = '';
+  revisionLoading = false;
+  suscritoRevisionSig = signal(false);
+  private solicitudesService = inject(SolicitudesService);
+  
   
   constructor(public snack: SnackbarService) {}
 
@@ -42,6 +49,12 @@ export class PerfilComponent implements OnInit {
         if (this.suscritoSig()) {
           this.snack.info('Estás suscrito a Reactivos');
         }
+        try {
+          const rr = await this.solicitudesService.estadoSuscripcionRevision(u.email);
+          this.suscritoRevisionSig.set(!!rr?.suscrito);
+        } catch {
+          this.suscritoRevisionSig.set(false);
+        }
       }
     } catch {}
     effect(() => {
@@ -54,9 +67,16 @@ export class PerfilComponent implements OnInit {
           } catch {
             this.suscritoSig.set(false);
           }
+          try {
+            const rr = await this.solicitudesService.estadoSuscripcionRevision(u.email);
+            this.suscritoRevisionSig.set(!!rr?.suscrito);
+          } catch {
+            this.suscritoRevisionSig.set(false);
+          }
         })();
       } else {
         this.suscritoSig.set(false);
+        this.suscritoRevisionSig.set(false);
       }
     });
   }
@@ -82,6 +102,30 @@ export class PerfilComponent implements OnInit {
       this.snack.error(this.suscripcionMsg);
     } finally {
       this.suscripcionLoading = false;
+    }
+  }
+
+  async onSuscribirseRevision() {
+    const email = String(this.revisionEmail || '').trim();
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !re.test(email)) {
+      this.revisionMsg = 'Ingresa un correo válido';
+      this.snack.warn('Ingresa un correo válido');
+      return;
+    }
+    this.revisionLoading = true;
+    this.revisionMsg = '';
+    try {
+      await this.solicitudesService.suscribirseRevision(email);
+      this.revisionMsg = 'Suscripción a revisión confirmada. Revisa tu correo.';
+      this.revisionEmail = '';
+      this.snack.success('Suscripción a revisión confirmada');
+      this.suscritoRevisionSig.set(true);
+    } catch (err: any) {
+      this.revisionMsg = err?.message || 'No se pudo suscribir a revisión';
+      this.snack.error(this.revisionMsg);
+    } finally {
+      this.revisionLoading = false;
     }
   }
 }

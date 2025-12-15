@@ -75,7 +75,7 @@ export class EquiposComponent implements OnInit {
         this.newIntervaloFecha = '';
       }
 
-      async saveAllEditEquipo() {
+  async saveAllEditEquipo() {
         // Build payload from current form fields
         if (!this.editingEquipoCodigo) {
           this.snack.error('No se ha seleccionado equipo para editar');
@@ -140,6 +140,8 @@ export class EquiposComponent implements OnInit {
             }
           }
 
+          // No actualizar ficha técnica desde el guardado global; cada pestaña guarda por separado
+
           this.snack.success('Cambios guardados');
           await this.obtenerEquiposRegistrados();
           this.closeEditEquipoModal();
@@ -186,6 +188,43 @@ export class EquiposComponent implements OnInit {
         this.resolucion_division = equipo.resolucion_division || '';
         this.sujeto_calificacion = equipo.sujeto_calificacion || '';
         this.accesorios = equipo.accesorios || '';
+        // Campos de ficha técnica
+        this.fabricante = equipo.fabricante || '';
+        this.fecha_adq = equipo.fecha_adq ? this.formatearFecha(equipo.fecha_adq) : '';
+        this.uso = equipo.uso || '';
+        this.fecha_func = equipo.fecha_func ? this.formatearFecha(equipo.fecha_func) : '';
+        this.precio = equipo.precio ?? null;
+        this.manual_ope = equipo.manual_ope || '';
+        this.idioma_manual = equipo.idioma_manual || '';
+        this.magnitud = equipo.magnitud || '';
+        this.resolucion = equipo.resolucion || '';
+        this.precision_med = equipo.precision_med || '';
+        this.exactitud_ficha = equipo.exactitud_ficha || '';
+        this.rango_de_medicion = equipo.rango_de_medicion || '';
+        this.rango_de_uso = equipo.rango_de_uso || '';
+        this.voltaje_ficha = equipo.voltaje_ficha || '';
+        this.potencia = equipo.potencia || '';
+        this.amperaje = equipo.amperaje || '';
+        this.frecuencia_ficha = equipo.frecuencia_ficha || '';
+        this.ancho = equipo.ancho ?? null;
+        this.alto = equipo.alto ?? null;
+        this.peso_kg = equipo.peso_kg ?? null;
+        this.profundidad = equipo.profundidad ?? null;
+        this.temperatura_c = equipo.temperatura_c ?? null;
+        this.humedad_porcentaje = equipo.humedad_porcentaje ?? null;
+        this.limitaciones_e_interferencias = equipo.limitaciones_e_interferencias || '';
+        this.otros = equipo.otros || '';
+        this.especificaciones_software = equipo.especificaciones_software || '';
+        this.proveedor = equipo.proveedor || '';
+        this.email = equipo.email || '';
+        this.telefono = equipo.telefono || '';
+        this.fecha_de_instalacion = equipo.fecha_de_instalacion ? this.formatearFecha(equipo.fecha_de_instalacion) : '';
+        this.alcance_del_servicio = equipo.alcance_del_servicio || '';
+        this.garantia = equipo.garantia || '';
+        this.accesorios_ficha = equipo.accesorios_ficha || '';
+        this.observaciones_ficha = equipo.observaciones_ficha || '';
+        this.recibido_por = equipo.recibido_por || '';
+        this.fecha_ficha = equipo.fecha_ficha ? this.formatearFecha(equipo.fecha_ficha) : '';
 
         this.editEquipoMode = true;
         this.editingEquipoCodigo = equipo.codigo_identificacion || null;
@@ -651,6 +690,149 @@ export class EquiposComponent implements OnInit {
         this.consecutivoIntervaloSig.set(null);
       }
     });
+  }
+
+  async saveHojaVidaEditEquipo() {
+    if (!this.editingEquipoCodigo) {
+      this.snack.error('No se ha seleccionado equipo para editar');
+      return;
+    }
+    const payload: any = {
+      codigo_identificacion: this.codigo_identificacion,
+      nombre: this.nombre,
+      modelo: this.modelo,
+      marca: this.marca,
+      inventario_sena: this.inventario_sena,
+      ubicacion: this.ubicacion,
+      acreditacion: this.acreditacion,
+      tipo_manual: this.tipo_manual,
+      numero_serie: this.numero_serie,
+      tipo: this.tipo,
+      clasificacion: this.clasificacion,
+      manual_usuario: this.manual_usuario,
+      puesta_en_servicio: this.puesta_en_servicio,
+      fecha_adquisicion: this.fecha_adquisicion,
+      requerimientos_equipo: this.requerimientos_equipo,
+      elementos_electricos: this.elementos_electricos,
+      voltaje: this.voltaje,
+      elementos_mecanicos: this.elementos_mecanicos,
+      frecuencia: this.frecuencia,
+      campo_medicion: this.campo_medicion,
+      exactitud: this.exactitud,
+      sujeto_verificar: this.sujeto_verificar,
+      sujeto_calibracion: this.sujeto_calibracion,
+      resolucion_division: this.resolucion_division,
+      sujeto_calificacion: this.sujeto_calificacion,
+      accesorios: this.accesorios
+    };
+    try {
+      await equiposService.actualizarEquipo(this.editingEquipoCodigo, payload);
+      this.snack.success('Hoja de vida actualizada');
+      await this.obtenerEquiposRegistrados();
+    } catch (err: any) {
+      this.snack.error(err?.message || 'Error al guardar hoja de vida');
+    }
+  }
+
+  async saveFichaTecnicaEditEquipo() {
+    if (!this.codigo_identificacion) {
+      this.snack.error('Código del equipo requerido');
+      return;
+    }
+    try {
+      const form = new FormData();
+      form.append('codigo_identificador', this.codigo_identificacion);
+      form.append('nombre', this.nombre || '');
+      form.append('marca', this.marca || '');
+      form.append('modelo', this.modelo || '');
+      form.append('serie', this.numero_serie || '');
+      form.append('fabricante', this.fabricante || '');
+      form.append('fecha_adq', this.fecha_adq || '');
+      form.append('uso', this.uso || '');
+      form.append('fecha_func', this.fecha_func || '');
+      if (this.precio !== null && this.precio !== undefined) form.append('precio', String(this.precio));
+      form.append('accesorios', (this.accesorios_ficha || this.accesorios || ''));
+      form.append('manual_ope', this.manual_ope || '');
+      form.append('idioma_manual', this.idioma_manual || '');
+      form.append('magnitud', this.magnitud || '');
+      form.append('resolucion', this.resolucion || '');
+      form.append('precision_med', this.precision_med || '');
+      form.append('exactitud', this.exactitud_ficha || '');
+      form.append('rango_de_medicion', this.rango_de_medicion || '');
+      form.append('rango_de_uso', this.rango_de_uso || '');
+      form.append('voltaje', (this.voltaje_ficha || this.voltaje || ''));
+      form.append('potencia', this.potencia || '');
+      form.append('amperaje', this.amperaje || '');
+      form.append('frecuencia', (this.frecuencia_ficha || this.frecuencia || ''));
+      if (this.ancho !== null && this.ancho !== undefined) form.append('ancho', String(this.ancho));
+      if (this.alto !== null && this.alto !== undefined) form.append('alto', String(this.alto));
+      if (this.peso_kg !== null && this.peso_kg !== undefined) form.append('peso_kg', String(this.peso_kg));
+      if (this.profundidad !== null && this.profundidad !== undefined) form.append('profundidad', String(this.profundidad));
+      if (this.temperatura_c !== null && this.temperatura_c !== undefined) form.append('temperatura_c', String(this.temperatura_c));
+      if (this.humedad_porcentaje !== null && this.humedad_porcentaje !== undefined) form.append('humedad_porcentaje', String(this.humedad_porcentaje));
+      form.append('limitaciones_e_interferencias', this.limitaciones_e_interferencias || '');
+      form.append('otros', this.otros || '');
+      form.append('especificaciones_software', this.especificaciones_software || '');
+      form.append('proveedor', this.proveedor || '');
+      form.append('email', this.email || '');
+      form.append('telefono', this.telefono || '');
+      form.append('fecha_de_instalacion', this.fecha_de_instalacion || '');
+      form.append('alcance_del_servicio', this.alcance_del_servicio || '');
+      form.append('garantia', this.garantia || '');
+      form.append('observaciones', this.observaciones_ficha || '');
+      form.append('recibido_por', this.recibido_por || '');
+      if (this.firmaArchivo) form.append('firma', this.firmaArchivo);
+      form.append('fecha', this.fecha_ficha || '');
+      await equiposService.actualizarFichaTecnica(this.codigo_identificacion, form);
+      this.snack.success('Ficha técnica actualizada');
+      await this.obtenerEquiposRegistrados();
+    } catch (err: any) {
+      this.snack.error(err?.message || 'Error al guardar ficha técnica');
+    }
+  }
+
+  async saveAllHistorialEdits(equipoCodigo: string) {
+    try {
+      const arr = this.historialPorEquipo[equipoCodigo] || [];
+      for (const registro of arr) {
+        if (registro && registro._edit) {
+          await this.saveHistorialEdits(equipoCodigo, registro);
+        }
+      }
+      this.snack.success('Historial actualizado');
+      await this.obtenerEquiposRegistrados();
+    } catch (err: any) {
+      this.snack.error(err?.message || 'Error al guardar historial');
+    }
+  }
+
+  async saveAllIntervaloEdits(equipoCodigo: string) {
+    try {
+      const arr = this.intervaloPorEquipo[equipoCodigo] || [];
+      for (const registro of arr) {
+        if (registro && registro._edit) {
+          await this.saveIntervaloEdits(equipoCodigo, registro);
+        }
+      }
+      if (this.newIntervaloDescripcion || this.newIntervaloFecha) {
+        try {
+          await equiposService.crearIntervalo({
+            codigo_registro: equipoCodigo,
+            fecha: this.newIntervaloFecha || undefined,
+            descripcion: this.newIntervaloDescripcion || undefined
+          });
+          this.newIntervaloDescripcion = '';
+          this.newIntervaloFecha = '';
+        } catch (iErr) {
+          console.warn('No se pudo crear intervalo desde pestaña:', iErr);
+          throw iErr;
+        }
+      }
+      this.snack.success('Intervalo actualizado');
+      await this.obtenerEquiposRegistrados();
+    } catch (err: any) {
+      this.snack.error(err?.message || 'Error al guardar intervalo');
+    }
   }
 
   ngOnInit() {
@@ -1306,6 +1488,15 @@ export class EquiposComponent implements OnInit {
     }
     
     try {
+      // Pre-chequeo: evitar duplicados por código
+      try {
+        const existentes = await equiposService.listarEquipos();
+        if (Array.isArray(existentes) && existentes.some(e => e.codigo_identificacion === this.codigo_identificacion)) {
+          this.snack.error('Ya existe un equipo con este código. Use la opción Editar.');
+          return;
+        }
+      } catch {}
+
       const payload = {
         codigo_identificacion: this.codigo_identificacion,
         nombre: this.nombre,
@@ -1332,7 +1523,44 @@ export class EquiposComponent implements OnInit {
         sujeto_calibracion: this.sujeto_calibracion,
         resolucion_division: this.resolucion_division,
         sujeto_calificacion: this.sujeto_calificacion,
-        accesorios: this.accesorios
+        accesorios: this.accesorios,
+        // Ficha técnica
+        fabricante: this.fabricante,
+        fecha_adq: this.fecha_adq,
+        uso: this.uso,
+        fecha_func: this.fecha_func,
+        precio: this.precio,
+        manual_ope: this.manual_ope,
+        idioma_manual: this.idioma_manual,
+        magnitud: this.magnitud,
+        resolucion: this.resolucion,
+        precision_med: this.precision_med,
+        exactitud_ficha: this.exactitud_ficha,
+        rango_de_medicion: this.rango_de_medicion,
+        rango_de_uso: this.rango_de_uso,
+        voltaje_ficha: this.voltaje_ficha,
+        potencia: this.potencia,
+        amperaje: this.amperaje,
+        frecuencia_ficha: this.frecuencia_ficha,
+        ancho: this.ancho,
+        alto: this.alto,
+        peso_kg: this.peso_kg,
+        profundidad: this.profundidad,
+        temperatura_c: this.temperatura_c,
+        humedad_porcentaje: this.humedad_porcentaje,
+        limitaciones_e_interferencias: this.limitaciones_e_interferencias,
+        otros: this.otros,
+        especificaciones_software: this.especificaciones_software,
+        proveedor: this.proveedor,
+        email: this.email,
+        telefono: this.telefono,
+        fecha_de_instalacion: this.fecha_de_instalacion,
+        alcance_del_servicio: this.alcance_del_servicio,
+        garantia: this.garantia,
+        accesorios_ficha: this.accesorios_ficha,
+        observaciones_ficha: this.observaciones_ficha,
+        recibido_por: this.recibido_por,
+        fecha_ficha: this.fecha_ficha
       };
 
       if (this.editEquipoMode && this.editingEquipoCodigo) {

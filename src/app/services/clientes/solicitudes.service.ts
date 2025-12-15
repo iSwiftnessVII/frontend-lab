@@ -348,4 +348,34 @@ export class SolicitudesService {
     
     await this.loadSolicitudes();
   }
+
+  async suscribirseRevision(email: string): Promise<any> {
+    const res = await fetch(API + '/suscripciones-revision', {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ email })
+    });
+    let data: any = null; try { data = await res.json(); } catch {}
+    if (res.status === 401) {
+      throw new Error('No autorizado - Token inválido o expirado');
+    }
+    if (!res.ok) {
+      throw new Error((data && data.error) || 'Error al suscribirse a revisión');
+    }
+    return data;
+  }
+
+  async estadoSuscripcionRevision(email: string): Promise<{ suscrito: boolean }> {
+    const res = await fetch(API + '/suscripciones-revision/' + encodeURIComponent(email), {
+      headers: this.getAuthHeaders()
+    });
+    let data: any = null; try { data = await res.json(); } catch {}
+    if (res.status === 401) {
+      throw new Error('No autorizado - Token inválido o expirado');
+    }
+    if (!res.ok) {
+      throw new Error((data && data.error) || 'Error consultando suscripción de revisión');
+    }
+    return data as { suscrito: boolean };
+  }
 }

@@ -806,7 +806,7 @@
                   <div class="seccion-titulo">Información de Ficha Técnica</div>
                   <div class="detalle-grid-compacto">
                     <div class="detalle-item"><span class="detalle-label">Fabricante</span><span>{{ equipo.fabricante || 'N/A' }}</span></div>
-                    <div class="detalle-item"><span class="detalle-label">Fecha Adquisición FT</span><span>{{ equipo.fecha_adq ? (equipo.fecha_adq | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
+                    <div class="detalle-item"><span class="detalle-label">Fecha Adquisición</span><span>{{ equipo.fecha_adq ? (equipo.fecha_adq | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Uso</span><span>{{ equipo.uso || 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Fecha Funcionamiento</span><span>{{ equipo.fecha_func ? (equipo.fecha_func | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
                     <div class="detalle-item"><span class="detalle-label">Precio</span><span>{{ equipo.precio || 'N/A' }}</span></div>
@@ -969,9 +969,7 @@
           <button type="button" class="tab-btn" [class.active]="editModalActiveTab === 'fichaTecnica'" (click)="editModalActiveTab = 'fichaTecnica'">Ficha técnica</button>
           <button type="button" class="tab-btn" [class.active]="editModalActiveTab === 'historial'" (click)="editModalActiveTab = 'historial'">Historial</button>
           <button type="button" class="tab-btn" [class.active]="editModalActiveTab === 'intervalo'" (click)="editModalActiveTab = 'intervalo'">Intervalo</button>
-          <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-            <button type="button" class="tab-btn" (click)="saveAllEditEquipo()">Guardar</button>
-          </div>
+          <div style="margin-left:auto;display:flex;gap:8px;align-items:center"></div>
         </div>
 
         <div style="margin-top:12px" class="edit-modal-body">
@@ -1008,15 +1006,20 @@
               <div>
                 <label>Acreditación</label>
                 <select [(ngModel)]="acreditacion">
-                  <option value="">Ninguna</option>
+                  <option value="">Seleccione</option>
+                  <option value="Si">Si</option>
+                  <option value="No aplica">No aplica</option>
                   <option value="Acreditado">Acreditado</option>
                   <option value="No acreditado">No acreditado</option>
+                  <option value="Ninguna">Ninguna</option>
                 </select>
               </div>
               <div>
                 <label>Tipo de manual</label>
                 <select [(ngModel)]="tipo_manual">
                   <option value="">Seleccione</option>
+                  <option value="Fisico">Fisico</option>
+                  <option value="Digital">Digital</option>
                   <option value="Manual de usuario">Manual de usuario</option>
                   <option value="Ficha técnica">Ficha técnica</option>
                 </select>
@@ -1024,8 +1027,11 @@
               <div>
                 <label>Manual de usuario</label>
                 <select [(ngModel)]="manual_usuario">
-                  <option value="">Sin manual</option>
+                  <option value="">Seleccione</option>
+                  <option value="Si">Si</option>
                   <option value="Sí">Sí</option>
+                  <option value="No">No</option>
+                  <option value="Sin manual">Sin manual</option>
                 </select>
               </div>
               <div>
@@ -1044,11 +1050,6 @@
                 <label>Accesorios</label>
                 <textarea [(ngModel)]="accesorios"></textarea>
               </div>
-            </div>
-          </div>
-
-          <div *ngIf="editModalActiveTab === 'fichaTecnica'">
-            <div class="form-grid">
               <div>
                 <label>Clasificación</label>
                 <input [(ngModel)]="clasificacion" />
@@ -1073,6 +1074,190 @@
                 <label>Exactitud</label>
                 <input [(ngModel)]="exactitud" />
               </div>
+              <div>
+                <label>Elementos eléctricos</label>
+                <select [(ngModel)]="elementos_electricos">
+                  <option value="">Seleccione</option>
+                  <option value="Si">Si</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div>
+                <label>Elementos mecánicos</label>
+                <select [(ngModel)]="elementos_mecanicos">
+                  <option value="">Seleccione</option>
+                  <option value="Si">Si</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div>
+                <label>Sujeto a verificar</label>
+                <select [(ngModel)]="sujeto_verificar">
+                  <option value="">Seleccione</option>
+                  <option value="Si">Si</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div>
+                <label>Sujeto a calibración</label>
+                <select [(ngModel)]="sujeto_calibracion">
+                  <option value="">Seleccione</option>
+                  <option value="Si">Si</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div>
+                <label>Resolución/división</label>
+                <input [(ngModel)]="resolucion_division" />
+              </div>
+              <div>
+                <label>Sujeto a calificación</label>
+                <select [(ngModel)]="sujeto_calificacion">
+                  <option value="">Seleccione</option>
+                  <option value="Si">Si</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:12px">
+              <button type="button" class="tab-btn" (click)="saveHojaVidaEditEquipo()">Guardar cambios</button>
+            </div>
+          </div>
+
+          <div *ngIf="editModalActiveTab === 'fichaTecnica'">
+            <div class="form-grid">
+              <div>
+                <label>Fabricante</label>
+                <input [(ngModel)]="fabricante" />
+              </div>
+              <div>
+                <label>Fecha adquisición</label>
+                <input type="date" [(ngModel)]="fecha_adq" />
+              </div>
+              <div>
+                <label>Uso</label>
+                <input [(ngModel)]="uso" />
+              </div>
+              <div>
+                <label>Fecha funcionamiento</label>
+                <input type="date" [(ngModel)]="fecha_func" />
+              </div>
+              <div>
+                <label>Precio</label>
+                <input type="number" step="0.01" [(ngModel)]="precio" />
+              </div>
+              <div>
+                <label>Manual de operación</label>
+                <select [(ngModel)]="manual_ope">
+                  <option value="">Seleccione</option>
+                  <option value="digital">Digital</option>
+                  <option value="Fisico">Físico</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div>
+                <label>Idioma del manual</label>
+                <input [(ngModel)]="idioma_manual" />
+              </div>
+              <div>
+                <label>Magnitud</label>
+                <input [(ngModel)]="magnitud" />
+              </div>
+              <div>
+                <label>Resolución</label>
+                <input [(ngModel)]="resolucion" />
+              </div>
+              <div>
+                <label>Precisión</label>
+                <input [(ngModel)]="precision_med" />
+              </div>
+              <div>
+                <label>Rango de medición</label>
+                <input [(ngModel)]="rango_de_medicion" />
+              </div>
+              <div>
+                <label>Rango de uso</label>
+                <input [(ngModel)]="rango_de_uso" />
+              </div>
+              <div>
+                <label>Potencia</label>
+                <input [(ngModel)]="potencia" />
+              </div>
+              <div>
+                <label>Amperaje</label>
+                <input [(ngModel)]="amperaje" />
+              </div>
+              <div>
+                <label>Ancho (cm)</label>
+                <input type="number" step="0.01" [(ngModel)]="ancho" />
+              </div>
+              <div>
+                <label>Alto (cm)</label>
+                <input type="number" step="0.01" [(ngModel)]="alto" />
+              </div>
+              <div>
+                <label>Profundidad (cm)</label>
+                <input type="number" step="0.01" [(ngModel)]="profundidad" />
+              </div>
+              <div>
+                <label>Peso (kg)</label>
+                <input type="number" step="0.01" [(ngModel)]="peso_kg" />
+              </div>
+              <div>
+                <label>Temperatura (°C)</label>
+                <input type="number" step="0.01" [(ngModel)]="temperatura_c" />
+              </div>
+              <div>
+                <label>Humedad (%)</label>
+                <input type="number" step="0.01" [(ngModel)]="humedad_porcentaje" />
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <label>Limitaciones e interferencias</label>
+                <textarea [(ngModel)]="limitaciones_e_interferencias"></textarea>
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <label>Otros</label>
+                <textarea [(ngModel)]="otros"></textarea>
+              </div>
+              <div>
+                <label>Proveedor</label>
+                <input [(ngModel)]="proveedor" />
+              </div>
+              <div>
+                <label>Email</label>
+                <input type="email" [(ngModel)]="email" />
+              </div>
+              <div>
+                <label>Teléfono</label>
+                <input [(ngModel)]="telefono" />
+              </div>
+              <div>
+                <label>Fecha de instalación</label>
+                <input type="date" [(ngModel)]="fecha_de_instalacion" />
+              </div>
+              <div>
+                <label>Garantía</label>
+                <input [(ngModel)]="garantia" />
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <label>Alcance del servicio</label>
+                <textarea [(ngModel)]="alcance_del_servicio"></textarea>
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <label>Especificaciones de software</label>
+                <textarea [(ngModel)]="especificaciones_software"></textarea>
+              </div>
+              <div>
+                <label>Recibido por</label>
+                <input [(ngModel)]="recibido_por" />
+              </div>
+              <div>
+                <label>Firma (imagen)</label>
+                <input type="file" accept="image/*" (change)="onFirmaChange($event)" />
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:12px">
+              <button type="button" class="tab-btn" (click)="saveFichaTecnicaEditEquipo()">Guardar cambios</button>
             </div>
           </div>
 
@@ -1125,7 +1310,6 @@
                 <p>No hay registros de historial para este equipo</p>
               </div>
             </ng-template>
-
           </div>
 
           <div *ngIf="editModalActiveTab === 'intervalo'">
@@ -1192,25 +1376,9 @@
                 <p>No hay registros de intervalo para este equipo</p>
               </div>
             </ng-template>
-
-            <!-- Small quick-add inputs (kept for convenience) -->
-            <div style="margin-top:12px" class="form-grid">
-              <div>
-                <label>Descripción</label>
-                <input [(ngModel)]="newIntervaloDescripcion" />
-              </div>
-              <div>
-                <label>Fecha</label>
-                <input type="date" [(ngModel)]="newIntervaloFecha" />
-              </div>
-            </div>
           </div>
-        </div>
-
         </div>
 
       </div>
     </div>
-
-  </div>
     
