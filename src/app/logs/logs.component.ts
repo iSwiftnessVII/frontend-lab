@@ -68,10 +68,14 @@ export class LogsComponent implements OnInit {
   get paginacionMovimientos() { return this.paginacionMovimientosSig(); }
 
   // Opciones para filtros
-  modulos = ['INSUMOS', 'REACTIVOS', 'SOLICITUDES', 'CLIENTES', 'CATALOGO_INSUMOS', 'CATALOGO_REACTIVOS'];
+  modulos = ['INSUMOS', 'REACTIVOS', 'SOLICITUDES', 'CLIENTES', 'CATALOGO_INSUMOS', 'CATALOGO_REACTIVOS', 'EQUIPOS', 'MAT_REFERENCIA', 'MAT_VOLUMETRICOS'];
   acciones = ['CREAR', 'ACTUALIZAR', 'ELIMINAR', 'SUBIR_PDF', 'ELIMINAR_PDF', 'CREAR_ENCUESTA', 'AJUSTAR_EXISTENCIAS'];
   tiposProducto = ['INSUMO', 'REACTIVO', 'EQUIPO', 'PAPELERIA'];
   tiposMovimiento = ['ENTRADA', 'SALIDA', 'AJUSTE'];
+
+  // Estado para el modal de detalles
+  logSeleccionadoSig = signal<any>(null);
+  get logSeleccionado() { return this.logSeleccionadoSig(); }
 
   ngOnInit() {
     this.cargarAcciones();
@@ -91,43 +95,65 @@ export class LogsComponent implements OnInit {
 
   // Cargar datos
   async cargarAcciones() {
-  this.cargandoAccionesSig.set(true);
-  try {
-    // Preparar filtros para el servicio
-    const filtrosParaServicio: any = { ...this.filtrosAcciones };
-    
-    // Convertir usuario_id a number si no está vacío
-    if (filtrosParaServicio.usuario_id && filtrosParaServicio.usuario_id !== '') {
-      filtrosParaServicio.usuario_id = Number(filtrosParaServicio.usuario_id);
-    } else {
-      delete filtrosParaServicio.usuario_id;
-    }
-    
-    // Eliminar campos vacíos
-    Object.keys(filtrosParaServicio).forEach(key => {
-      if (filtrosParaServicio[key] === '' || filtrosParaServicio[key] === null) {
-        delete filtrosParaServicio[key];
+    this.cargandoAccionesSig.set(true);
+    try {
+      // Preparar filtros para el servicio
+      const filtrosParaServicio: any = { ...this.filtrosAcciones };
+      
+      // Convertir usuario_id a number si no está vacío
+      if (filtrosParaServicio.usuario_id && filtrosParaServicio.usuario_id !== '') {
+        filtrosParaServicio.usuario_id = Number(filtrosParaServicio.usuario_id);
+      } else {
+        delete filtrosParaServicio.usuario_id;
       }
-    });
+      
+      // Eliminar campos vacíos
+      Object.keys(filtrosParaServicio).forEach(key => {
+        if (filtrosParaServicio[key] === '' || filtrosParaServicio[key] === null) {
+          delete filtrosParaServicio[key];
+        }
+      });
 
-    const response = await logsService.getLogsAcciones(filtrosParaServicio);
-    this.logsAccionesSig.set(response.data || []);
-    
-    // ✅ CORREGIR: ACTUALIZAR LOS FILTROS CON LA PAGINACIÓN REAL DEL BACKEND
-    if (response.pagination) {
-      this.filtrosAccionesSig.update(filtros => ({
-        ...filtros,
-        page: response.pagination.page // ← USAR LA PÁGINA REAL DEL BACKEND
-      }));
+      console.log('Cargando logs con filtros:', filtrosParaServicio);
+      const response = await logsService.getLogsAcciones(filtrosParaServicio);
+      console.log('Logs recibidos:', response.data);
+      this.logsAccionesSig.set(response.data || []);
+      
+      if (response.pagination) {
+        this.filtrosAccionesSig.update(filtros => ({
+          ...filtros,
+          page: response.pagination.page
+        }));
+      }
+      
+      this.paginacionAccionesSig.set(response.pagination || { page: 1, limit: 50, total: 0, pages: 0 });
+    } catch (error) {
+      console.error('Error cargando logs de acciones:', error);
+    } finally {
+      this.cargandoAccionesSig.set(false);
     }
-    
-    this.paginacionAccionesSig.set(response.pagination || { page: 1, limit: 50, total: 0, pages: 0 });
-  } catch (error) {
-    console.error('Error cargando logs de acciones:', error);
-  } finally {
-    this.cargandoAccionesSig.set(false);
   }
-}
+
+  // Modal de detalles
+  verDetallesLog(log: any) {
+    this.logSeleccionadoSig.set(log);
+  }
+
+  async testVolumetricos() {
+    try {
+      console.log('Testing MAT_VOLUMETRICOS fetch...');
+      const response = await logsService.getLogsAcciones({ modulo: 'MAT_VOLUMETRICOS' });
+      console.log('Test result:', response);
+      alert(`Test: Encontrados ${response.data?.length || 0} logs de MAT_VOLUMETRICOS. Revisar consola.`);
+    } catch (e: any) {
+      console.error('Test failed:', e);
+      alert(`Test failed: ${e.message}`);
+    }
+  }
+
+  cerrarModalDetalles() {
+    this.logSeleccionadoSig.set(null);
+  }
 
  async cargarMovimientos() {
   this.cargandoMovimientosSig.set(true);
@@ -252,22 +278,22 @@ cambiarPaginaMovimientos(pagina: number) {
   }
 
   // Formatear fecha para display
-formatearFecha(fecha: string): string {
-  if (!fecha) return '';
-  
-  const date = new Date(fecha);
-  
-  // SUMAR 7 horas (420 minutos) - ajuste exacto para Colombia
-  date.setMinutes(date.getMinutes() + 420);
-  
-  const dia = date.getDate();
-  const mes = date.getMonth() + 1;
-  const año = date.getFullYear();
-  const horas = date.getHours();
-  const minutos = date.getMinutes();
-  
-  return `${dia}/${mes}/${año} ${horas}:${minutos.toString().padStart(2, '0')}`;
-}
+  formatearFecha(fecha: string): string {
+    if (!fecha) return '';
+    
+    const date = new Date(fecha);
+    
+    // Formatear a hora colombiana (UTC-5)
+    return new Intl.DateTimeFormat('es-CO', {
+      timeZone: 'America/Bogota',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(date).replace(',', '');
+  }
 
   // Obtener clase CSS para tipo de acción
   getClaseAccion(accion: string): string {

@@ -2003,12 +2003,102 @@ private getValorEncuesta(campo: string): any {
     } catch (err) { /* ignore */ }
   }
 
+  // Estado de bloqueo de formularios (si ya existen datos)
+  ofertaLocked = false;
+  revisionLocked = false;
+  encuestaLocked = false;
+
   // When user chooses a solicitud in oferta/result/encuesta selects, update selectedSolicitud signal
   onSelectSolicitudOferta(value: any): void {
     try {
       const id = Number(value);
       const found = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === id || Number(s.id_solicitud) === id);
-      if (found) this.selectedSolicitud.set(found);
+      
+      if (found) {
+        this.selectedSolicitud.set(found);
+        
+        // Verificar si ya tiene oferta registrada
+        // Si genero_cotizacion tiene valor (0 o 1), asumimos que existe
+        this.ofertaLocked = (found.genero_cotizacion !== null && found.genero_cotizacion !== undefined);
+        
+        if (this.ofertaLocked) {
+          this.ofertaValor = found.valor_cotizacion;
+          this.ofertaValorDisplay = this.formatCurrency(this.ofertaValor);
+          this.ofertaGeneroCotizacion = found.genero_cotizacion === 1 || found.genero_cotizacion === true;
+          this.ofertaRealizoSeguimiento = found.realizo_seguimiento_oferta === 1 || found.realizo_seguimiento_oferta === true;
+          this.ofertaFechaEnvio = this.toDateInput(found.fecha_envio_oferta);
+          this.ofertaObservacion = found.observacion_oferta || '';
+        } else {
+          // Limpiar campos excepto ID
+          this.ofertaValor = null;
+          this.ofertaValorDisplay = '';
+          this.ofertaGeneroCotizacion = null;
+          this.ofertaRealizoSeguimiento = null;
+          this.ofertaFechaEnvio = '';
+          this.ofertaObservacion = '';
+          this.ofertaLocked = false;
+        }
+      } else {
+        this.ofertaLocked = false;
+      }
+    } catch (err) { /* ignore */ }
+  }
+
+  onSelectSolicitudRevision(value: any): void {
+    try {
+      const id = Number(value);
+      const found = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === id || Number(s.id_solicitud) === id);
+      
+      if (found) {
+        this.selectedSolicitud.set(found);
+        
+        // Verificar si ya tiene revisión (servicio_es_viable no nulo)
+        this.revisionLocked = (found.servicio_es_viable !== null && found.servicio_es_viable !== undefined);
+        
+        if (this.revisionLocked) {
+          this.resultadoFechaLimite = this.toDateInput(found.fecha_limite_entrega);
+          this.resultadoFechaEnvio = this.toDateInput(found.fecha_envio_resultados);
+          this.resultadoServicioViable = found.servicio_es_viable === 1 || found.servicio_es_viable === true;
+        } else {
+          this.resultadoFechaLimite = '';
+          this.resultadoFechaEnvio = '';
+          this.resultadoServicioViable = null;
+          this.revisionLocked = false;
+        }
+      } else {
+        this.revisionLocked = false;
+      }
+    } catch (err) { /* ignore */ }
+  }
+
+  onSelectSolicitudEncuesta(value: any): void {
+    try {
+      const id = Number(value);
+      const found = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === id || Number(s.id_solicitud) === id);
+      
+      if (found) {
+        this.selectedSolicitud.set(found);
+        
+        // Verificar si ya tiene encuesta (cliente_respondio no nulo)
+        this.encuestaLocked = (found.cliente_respondio !== null && found.cliente_respondio !== undefined);
+        
+        if (this.encuestaLocked) {
+          this.encuestaFecha = this.toDateInput(found.fecha_encuesta);
+          this.encuestaComentarios = found.comentarios || '';
+          this.encuestaClienteRespondio = found.cliente_respondio === 1 || found.cliente_respondio === true;
+          this.encuestaSolicitoNueva = found.solicito_nueva_encuesta === 1 || found.solicito_nueva_encuesta === true;
+          this.encuestaFechaRealizacion = this.toDateInput(found.fecha_realizacion_encuesta);
+        } else {
+          this.encuestaFecha = '';
+          this.encuestaComentarios = '';
+          this.encuestaClienteRespondio = null;
+          this.encuestaSolicitoNueva = null;
+          this.encuestaFechaRealizacion = '';
+          this.encuestaLocked = false;
+        }
+      } else {
+        this.encuestaLocked = false;
+      }
     } catch (err) { /* ignore */ }
   }
 
@@ -2264,6 +2354,36 @@ private getValorEncuesta(campo: string): any {
 
   formatCurrency(val: any): string {
     return this.utilsService.formatCurrency(val);
+  }
+
+  limpiarFecha(val: any): string {
+    if (val === null || val === undefined || val === '') return '—';
+    const s = String(val);
+    const m = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if (m) {
+      const y = m[1];
+      const mo = m[2].padStart(2, '0');
+      const d = m[3].padStart(2, '0');
+      return `${y}-${mo}-${d}`;
+    }
+    const m2 = s.match(/(\d{4})(\d{2})(\d{2})/);
+    if (m2) {
+      return `${m2[1]}-${m2[2]}-${m2[3]}`;
+    }
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${d.getFullYear()}-${month}-${day}`;
+    }
+    const digits = s.replace(/[^0-9]/g, '');
+    if (digits.length >= 8) {
+      const y = digits.slice(0, 4);
+      const mo = digits.slice(4, 6);
+      const da = digits.slice(6, 8);
+      return `${y}-${mo}-${da}`;
+    }
+    return '—';
   }
 
   // Indica si la pestaña para una solicitud ya tiene datos completados

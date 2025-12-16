@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -39,16 +39,29 @@ export class UsuariosComponent implements OnInit {
   get usuariosList() { return this.usuariosSig(); }
   get usuariosFiltradosList() { return this.usuariosFiltradosSig(); }
 
-  // Filtros
-  emailQ: string = '';
-  rolQ: any = '';
-  estadoQ: string = '';
+  // Filtros (signals con accessors para respuesta instantánea)
+  private emailQSig = signal<string>('');
+  get emailQ() { return this.emailQSig(); }
+  set emailQ(v: string) { this.emailQSig.set((v ?? '').toString()); }
+  private rolQSig = signal<any>('');
+  get rolQ() { return this.rolQSig(); }
+  set rolQ(v: any) { this.rolQSig.set(v ?? ''); }
+  private estadoQSig = signal<string>('');
+  get estadoQ() { return this.estadoQSig(); }
+  set estadoQ(v: string) { this.estadoQSig.set((v ?? '').toString()); }
 
   constructor(public snack: SnackbarService) {}
 
   ngOnInit() {
-    this.loadRoles();
-    this.loadUsuarios();
+    this.preloadAll();
+    effect(() => {
+      // Recalcular filtros en tiempo real cuando cambian usuarios o filtros
+      const _ = this.usuariosSig();
+      const __e = this.emailQSig();
+      const __r = this.rolQSig();
+      const __s = this.estadoQSig();
+      this.aplicarFiltros();
+    });
   }
 
   editUserModalOpen = false;
@@ -59,6 +72,28 @@ export class UsuariosComponent implements OnInit {
   editSubmitted = false;
 
   // ========== CARGAR DATOS ==========
+
+  // Precarga concurrente para mostrar todo al toque
+  async preloadAll() {
+    this.cargando = true;
+    try {
+      const [roles, rows] = await Promise.all([
+        usuariosService.listarRoles(),
+        usuariosService.listarUsuarios()
+      ]);
+      this.roles = roles || [];
+      this.usuarios = rows || [];
+      this.usuariosSig.set(this.usuarios);
+      this.usuariosFiltrados = this.usuarios.slice();
+      this.usuariosFiltradosSig.set(this.usuariosFiltrados);
+      this.aplicarFiltros();
+    } catch (err) {
+      console.error('Error en precarga de usuarios/roles:', err);
+      this.snack.error('Error cargando datos de usuarios');
+    } finally {
+      this.cargando = false;
+    }
+  }
 
   async loadRoles() {
     try {

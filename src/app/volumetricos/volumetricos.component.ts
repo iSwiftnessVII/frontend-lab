@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { SnackbarService } from '../shared/snackbar.service';
 // Suponiendo que hay un servicio similar para volumetricos
 import { VolumetricosService } from '../services/volumetricos.service';
+import { logsService } from '../services/logs.service';
 import { authUser } from '../services/auth.service';
 
 @Component({
@@ -333,6 +334,19 @@ export class VolumetricosComponent implements OnInit {
       };
       await this.volumetricosService.crearMaterial(payload);
       this.snack.success('Material registrado exitosamente');
+      
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'MAT_VOLUMETRICOS',
+        accion: 'CREAR',
+        descripcion: `Creación de material volumétrico: ${payload.codigo_id}`,
+        detalle: payload
+      }).then(() => console.log('Log de auditoría creado'))
+        .catch(err => {
+          console.error('Error creando log:', err);
+          this.snack.warn('Error al crear registro de auditoría');
+        });
+
       this.resetFormMaterial();
       await this.obtenerMaterialesRegistrados();
     } catch (error: any) {
@@ -364,6 +378,15 @@ export class VolumetricosComponent implements OnInit {
       });
       
       this.snack.success('Historial registrado exitosamente');
+
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'MAT_VOLUMETRICOS',
+        accion: 'CREAR',
+        descripcion: `Creación de historial para volumétrico: ${codigo_material}`,
+        detalle: { codigo_material, consecutivo, tipo: this.tipo_historial_instrumento }
+      }).catch(console.error);
+
       this.resetFormHistorial();
       
       // Actualizar lista local
@@ -451,6 +474,15 @@ export class VolumetricosComponent implements OnInit {
       });
       
       this.snack.success('Intervalo registrado exitosamente');
+
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'MAT_VOLUMETRICOS',
+        accion: 'CREAR',
+        descripcion: `Creación de intervalo para volumétrico: ${codigo_material}`,
+        detalle: { codigo_material, consecutivo }
+      }).catch(console.error);
+
       this.resetFormIntervalo();
       
       // Actualizar lista local
@@ -679,6 +711,15 @@ export class VolumetricosComponent implements OnInit {
     try {
       await this.volumetricosService.eliminarPdf(item.id);
       this.snack.success('PDF eliminado');
+
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'MAT_VOLUMETRICOS',
+        accion: 'ELIMINAR_PDF',
+        descripcion: `Eliminación de PDF para material volumétrico: ${codigo}`,
+        detalle: { codigo, pdfId: item.id, pdfName: item.name }
+      }).catch(console.error);
+
       await this.listarPdfs(codigo);
     } catch (err: any) {
       console.error('Error eliminando PDF', err);
@@ -709,6 +750,15 @@ export class VolumetricosComponent implements OnInit {
       try {
         await this.volumetricosService.subirPdfMaterial(codigo, categoria, file);
         this.snack.success('PDF subido correctamente');
+
+        // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'MAT_VOLUMETRICOS',
+        accion: 'SUBIR_PDF',
+        descripcion: `Subida de PDF para material volumétrico: ${codigo}`,
+        detalle: { codigo, categoria, fileName: file.name }
+      }).catch(console.error);
+
         await this.listarPdfs(codigo);
       } catch (err: any) {
         console.error('Error subiendo PDF', err);
@@ -730,6 +780,15 @@ export class VolumetricosComponent implements OnInit {
     try {
       await this.volumetricosService.eliminarMaterial(codigo);
       this.snack.success('Material eliminado');
+
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'MAT_VOLUMETRICOS',
+        accion: 'ELIMINAR',
+        descripcion: `Eliminación de material volumétrico: ${codigo}`,
+        detalle: { codigo, nombre: material.nombre_material }
+      }).catch(console.error);
+
       this.materialesRegistrados = this.materialesRegistrados.filter(m => m.codigo_id !== codigo);
       
       // Limpiar estados asociados
@@ -784,6 +843,19 @@ export class VolumetricosComponent implements OnInit {
     try {
       await this.volumetricosService.actualizarMaterial(this.editingMaterialCodigo, payload);
       this.snack.success('Cambios guardados');
+
+      // Log auditoría
+      try {
+        await logsService.crearLogAccion({
+          modulo: 'MAT_VOLUMETRICOS',
+          accion: 'ACTUALIZAR',
+          descripcion: `Actualización de material volumétrico: ${this.editingMaterialCodigo}`,
+          detalle: payload
+        });
+      } catch (error) {
+        console.error('Error al registrar log de auditoría:', error);
+      }
+
       await this.obtenerMaterialesRegistrados();
       this.closeEditMaterialModal();
     } catch (err: any) {
@@ -820,6 +892,15 @@ export class VolumetricosComponent implements OnInit {
         superviso: registro.superviso
       });
       this.snack.success('Historial actualizado');
+
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'MAT_VOLUMETRICOS',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de historial para volumétrico: ${codigo_material}`,
+        detalle: { codigo_material, consecutivo: registro.consecutivo, ...registro }
+      }).catch(console.error);
+
       registro.editando = false;
       delete registro._backup;
       // Refrescar lista
@@ -859,6 +940,15 @@ export class VolumetricosComponent implements OnInit {
         incertidumbre_exp: registro.incertidumbre_exp
       });
       this.snack.success('Intervalo actualizado');
+
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'MAT_VOLUMETRICOS',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de intervalo para volumétrico: ${codigo_material}`,
+        detalle: { codigo_material, consecutivo: registro.consecutivo, ...registro }
+      }).catch(console.error);
+
       registro.editando = false;
       delete registro._backup;
       // Refrescar lista

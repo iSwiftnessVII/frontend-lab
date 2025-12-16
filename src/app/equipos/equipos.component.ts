@@ -1,5 +1,6 @@
 import { Component, signal, effect, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { equiposService } from '../services/equipos.service';
+import { logsService } from '../services/logs.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -148,6 +149,15 @@ export class EquiposComponent implements OnInit {
           // No actualizar ficha técnica desde el guardado global; cada pestaña guarda por separado
 
           this.snack.success('Cambios guardados');
+          
+          // Log auditoría
+          logsService.crearLogAccion({
+            modulo: 'EQUIPOS',
+            accion: 'ACTUALIZAR',
+            descripcion: `Actualización de equipo: ${this.editingEquipoCodigo}`,
+            detalle: { codigo: this.editingEquipoCodigo, ...payload }
+          }).catch(console.error);
+
           await this.obtenerEquiposRegistrados();
           this.closeEditEquipoModal();
           this.editEquipoMode = false;
@@ -287,6 +297,15 @@ export class EquiposComponent implements OnInit {
           Object.assign(registro, updated);
           delete registro._edit;
           this.snack.success('Registro de historial actualizado');
+
+          // Log auditoría
+          logsService.crearLogAccion({
+            modulo: 'EQUIPOS',
+            accion: 'ACTUALIZAR',
+            descripcion: `Actualización de historial para equipo: ${equipoCodigo}`,
+            detalle: { equipoCodigo, consecutivo: registro.consecutivo, ...payload }
+          }).catch(console.error);
+
           // refresh local list if needed
           if (this.historialPorEquipo[equipoCodigo]) {
             const arr = this.historialPorEquipo[equipoCodigo];
@@ -341,6 +360,15 @@ export class EquiposComponent implements OnInit {
             Object.assign(registro, updated);
             delete registro._edit;
             this.snack.success('Registro de intervalo actualizado');
+            
+            // Log auditoría
+            logsService.crearLogAccion({
+              modulo: 'EQUIPOS',
+              accion: 'ACTUALIZAR',
+              descripcion: `Actualización de intervalo para equipo: ${equipoCodigo}`,
+              detalle: { equipoCodigo, consecutivo: registro.consecutivo, ...payload }
+            }).catch(console.error);
+
             // refresh list for equipo
             try {
               const data = await equiposService.listarIntervaloPorEquipo(equipoCodigo);
@@ -492,6 +520,15 @@ export class EquiposComponent implements OnInit {
       try {
         await equiposService.eliminarPdf(item.id);
         this.snack.success('PDF eliminado');
+
+        // Log auditoría
+        logsService.crearLogAccion({
+          modulo: 'EQUIPOS',
+          accion: 'ELIMINAR_PDF',
+          descripcion: `Eliminación de PDF para equipo: ${codigo}`,
+          detalle: { codigo, pdfId: item.id, pdfName: item.name }
+        }).catch(console.error);
+
         await this.listarPdfs(codigo);
       } catch (err: any) {
         console.error('Error eliminando PDF', err);
@@ -514,6 +551,15 @@ export class EquiposComponent implements OnInit {
         try {
           await equiposService.subirPdfEquipo(codigo, categoria, file);
           this.snack.success('PDF subido correctamente');
+
+          // Log auditoría
+          logsService.crearLogAccion({
+            modulo: 'EQUIPOS',
+            accion: 'SUBIR_PDF',
+            descripcion: `Subida de PDF para equipo: ${codigo}`,
+            detalle: { codigo, categoria, fileName: file.name }
+          }).catch(console.error);
+
           await this.listarPdfs(codigo);
         } catch (err: any) {
           console.error('Error subiendo PDF', err);
@@ -733,6 +779,15 @@ export class EquiposComponent implements OnInit {
     try {
       await equiposService.actualizarEquipo(this.editingEquipoCodigo, payload);
       this.snack.success('Hoja de vida actualizada');
+
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'EQUIPOS',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de hoja de vida: ${this.editingEquipoCodigo}`,
+        detalle: { codigo: this.editingEquipoCodigo, ...payload }
+      }).catch(console.error);
+
       await this.obtenerEquiposRegistrados();
     } catch (err: any) {
       this.snack.error(err?.message || 'Error al guardar hoja de vida');
@@ -790,6 +845,15 @@ export class EquiposComponent implements OnInit {
       form.append('fecha', this.fecha_ficha || '');
       await equiposService.actualizarFichaTecnica(this.codigo_identificacion, form);
       this.snack.success('Ficha técnica actualizada');
+
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'EQUIPOS',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de ficha técnica: ${this.codigo_identificacion}`,
+        detalle: { codigo: this.codigo_identificacion }
+      }).catch(console.error);
+
       await this.obtenerEquiposRegistrados();
     } catch (err: any) {
       this.snack.error(err?.message || 'Error al guardar ficha técnica');
@@ -1424,6 +1488,15 @@ export class EquiposComponent implements OnInit {
         intervalo_calibraciones_anios: this.intervalo_calibraciones_anios
       });
       this.snack.success('Intervalo registrado exitosamente');
+      
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'EQUIPOS',
+        accion: 'CREAR',
+        descripcion: `Creación de intervalo para equipo: ${equipo_id}`,
+        detalle: { equipo_id, consecutivo }
+      }).catch(console.error);
+
       this.resetFormIntervalo();
       // Recargar lista si está en la pestaña intervalo
       if (this.intervaloPorEquipo[equipo_id]) {
@@ -1461,6 +1534,15 @@ export class EquiposComponent implements OnInit {
         observaciones: this.observaciones
       });
       this.snack.success('Historial registrado exitosamente');
+
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'EQUIPOS',
+        accion: 'CREAR',
+        descripcion: `Creación de historial para equipo: ${equipo_id}`,
+        detalle: { equipo_id, consecutivo, tipo: this.tipo_historial }
+      }).catch(console.error);
+
       this.resetFormHistorial();
       // Recargar lista si está en la pestaña historial
       if (this.historialPorEquipo[equipo_id]) {
@@ -1572,6 +1654,15 @@ export class EquiposComponent implements OnInit {
         // Update existing equipo
         await equiposService.actualizarEquipo(this.editingEquipoCodigo, payload);
         this.snack.success('Equipo actualizado exitosamente');
+        
+        // Log auditoría
+        logsService.crearLogAccion({
+          modulo: 'EQUIPOS',
+          accion: 'ACTUALIZAR',
+          descripcion: `Actualización de equipo (Formulario): ${this.editingEquipoCodigo}`,
+          detalle: { codigo: this.editingEquipoCodigo, ...payload }
+        }).catch(console.error);
+
         this.editEquipoMode = false;
         this.editingEquipoCodigo = null;
         this.resetForm();
@@ -1579,6 +1670,15 @@ export class EquiposComponent implements OnInit {
       } else {
         await equiposService.crearEquipo(payload);
         this.snack.success('Equipo registrado exitosamente');
+
+        // Log auditoría
+        logsService.crearLogAccion({
+          modulo: 'EQUIPOS',
+          accion: 'CREAR',
+          descripcion: `Creación de equipo: ${this.codigo_identificacion}`,
+          detalle: payload
+        }).catch(console.error);
+
         this.resetForm();
         this.obtenerEquiposRegistrados(); // Actualizar lista
       }
@@ -1611,6 +1711,15 @@ export class EquiposComponent implements OnInit {
     try {
       await equiposService.eliminarEquipo(codigo);
       this.snack.success('Equipo eliminado');
+      
+      // Log auditoría
+      logsService.crearLogAccion({
+        modulo: 'EQUIPOS',
+        accion: 'ELIMINAR',
+        descripcion: `Eliminación de equipo: ${codigo}`,
+        detalle: { codigo, nombre: equipo.nombre }
+      }).catch(console.error);
+
       // Actualizar lista local
       this.equiposRegistrados = this.equiposRegistrados.filter(e => e.codigo_identificacion !== codigo);
       // Limpiar estados asociados

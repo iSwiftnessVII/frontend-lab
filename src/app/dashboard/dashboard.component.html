@@ -19,80 +19,230 @@
   @if (!cargando()) {
     <div class="metrics-grid">
       <!-- Tarjeta Insumos -->
-      <div class="metric-card" routerLink="/insumos" [class.disabled]="esAuxiliar">
-        <div class="metric-icon insumos">
-          <i class="fas fa-boxes"></i>
+      @if (!esAuxiliar) {
+        <div class="metric-card" (click)="navigate('/insumos')">
+          <div class="metric-icon insumos">
+            <i class="fas fa-boxes"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalInsumos) }}</div>
+            <div class="metric-label">Total Insumos</div>
+            <div class="metric-subtitle">Inventario actual</div>
+          </div>
         </div>
-        <div class="metric-content">
-          <div class="metric-value">{{ formatearNumero(metricas().totalInsumos) }}</div>
-          <div class="metric-label">Total Insumos</div>
-          <div class="metric-subtitle">Inventario actual</div>
+      } @else {
+        <div class="metric-card">
+          <div class="metric-icon insumos">
+            <i class="fas fa-boxes"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalInsumos) }}</div>
+            <div class="metric-label">Total Insumos</div>
+            <div class="metric-subtitle">Inventario actual</div>
+          </div>
         </div>
-      </div>
+      }
 
       <!-- Tarjeta Reactivos -->
-      <div class="metric-card" routerLink="/reactivos" [class.disabled]="esAuxiliar">
-        <div class="metric-icon reactivos">
-          <i class="fas fa-flask"></i>
-        </div>
-        <div class="metric-content">
-          <div class="metric-value">{{ formatearNumero(metricas().totalReactivos) }}</div>
-          <div class="metric-label">Total Reactivos</div>
-          <div class="metric-subtitle">
-            @if (reactivosProximosVencer().length > 0) {
-              <span class="warning-badge">
-                <i class="fas fa-clock"></i>
-                {{ reactivosProximosVencer().length }} por vencer
-              </span>
-            } @else {
-              <span class="success-badge">
-                <i class="fas fa-check-circle"></i>
-                Al día
-              </span>
-            }
+      @if (!esAuxiliar) {
+        <div class="metric-card" (click)="navigate('/reactivos')">
+          <div class="metric-icon reactivos">
+            <i class="fas fa-flask"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalReactivos) }}</div>
+            <div class="metric-label">Total Reactivos</div>
+            <div class="metric-subtitle">
+              @if (reactivosProximosVencer().length > 0) {
+                <span class="warning-badge">
+                  <i class="fas fa-clock"></i>
+                  {{ reactivosProximosVencer().length }} por vencer
+                </span>
+              } @else {
+                <span class="success-badge">
+                  <i class="fas fa-check-circle"></i>
+                  Al día
+                </span>
+              }
+            </div>
           </div>
         </div>
-      </div>
+      } @else {
+        <div class="metric-card">
+          <div class="metric-icon reactivos">
+            <i class="fas fa-flask"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalReactivos) }}</div>
+            <div class="metric-label">Total Reactivos</div>
+            <div class="metric-subtitle">
+              @if (reactivosProximosVencer().length > 0) {
+                <span class="warning-badge">
+                  <i class="fas fa-clock"></i>
+                  {{ reactivosProximosVencer().length }} por vencer
+                </span>
+              } @else {
+                <span class="success-badge">
+                  <i class="fas fa-check-circle"></i>
+                  Al día
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+      }
 
       <!-- Tarjeta Solicitudes -->
-      <div class="metric-card" routerLink="/solicitudes" [class.disabled]="esAuxiliar">
-        <div class="metric-icon solicitudes">
-          <i class="fas fa-clipboard-list"></i>
-        </div>
-        <div class="metric-content">
-          <div class="metric-value">{{ formatearNumero(metricas().totalSolicitudes) }}</div>
-          <div class="metric-label">Total Solicitudes</div>
-          <div class="metric-subtitle">
-            {{ contarSolicitudesViable() }} viables • {{ contarSolicitudesConOferta() }} con oferta
+      @if (!esAuxiliar) {
+        <div class="metric-card" (click)="navigate('/solicitudes')">
+          <div class="metric-icon solicitudes">
+            <i class="fas fa-clipboard-list"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalSolicitudes) }}</div>
+            <div class="metric-label">Total Solicitudes</div>
+            <div class="metric-subtitle">
+              {{ contarSolicitudesViable() }} viables • {{ contarSolicitudesConOferta() }} con oferta
+            </div>
           </div>
         </div>
-      </div>
+      } @else {
+        <div class="metric-card">
+          <div class="metric-icon solicitudes">
+            <i class="fas fa-clipboard-list"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalSolicitudes) }}</div>
+            <div class="metric-label">Total Solicitudes</div>
+            <div class="metric-subtitle">
+              {{ contarSolicitudesViable() }} viables • {{ contarSolicitudesConOferta() }} con oferta
+            </div>
+          </div>
+        </div>
+      }
 
       <!-- Tarjeta Clientes -->
-      <div class="metric-card" [class.disabled]="esAuxiliar">
-        <div class="metric-icon clientes">
-          <i class="fas fa-users"></i>
-        </div>
-        <div class="metric-content">
-          <div class="metric-value">{{ formatearNumero(metricas().totalClientes) }}</div>
-          <div class="metric-label">Total Clientes</div>
-          <div class="metric-subtitle">
-            {{ contarClientesPorTipo('Persona Natural') }} naturales
+      @if (!esAuxiliar) {
+        <div class="metric-card">
+          <div class="metric-icon clientes">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalClientes) }}</div>
+            <div class="metric-label">Total Clientes</div>
           </div>
         </div>
-      </div>
+      } @else {
+        <div class="metric-card">
+          <div class="metric-icon clientes">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalClientes) }}</div>
+            <div class="metric-label">Total Clientes</div>
+          </div>
+        </div>
+      }
 
       <!-- Tarjeta Papelería -->
-      <div class="metric-card" routerLink="/papeleria" [class.disabled]="esAuxiliar">
-        <div class="metric-icon papeleria">
-          <i class="fas fa-file-alt"></i>
+      @if (!esAuxiliar) {
+        <div class="metric-card" (click)="navigate('/papeleria')">
+          <div class="metric-icon papeleria">
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalPapeleria) }}</div>
+            <div class="metric-label">Total Papelería</div>
+            <div class="metric-subtitle">Ítems de catálogo</div>
+          </div>
         </div>
-        <div class="metric-content">
-          <div class="metric-value">{{ formatearNumero(metricas().totalPapeleria) }}</div>
-          <div class="metric-label">Total Papelería</div>
-          <div class="metric-subtitle">Ítems de catálogo</div>
+      } @else {
+        <div class="metric-card">
+          <div class="metric-icon papeleria">
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalPapeleria) }}</div>
+            <div class="metric-label">Total Papelería</div>
+            <div class="metric-subtitle">Ítems de catálogo</div>
+          </div>
         </div>
-      </div>
+      }
+
+      <!-- Tarjeta Equipos -->
+      @if (!esAuxiliar) {
+        <div class="metric-card" (click)="navigate('/equipos')">
+          <div class="metric-icon equipos">
+            <i class="fas fa-microscope"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalEquipos) }}</div>
+            <div class="metric-label">Total Equipos</div>
+            <div class="metric-subtitle">Instrumentos registrados</div>
+          </div>
+        </div>
+      } @else {
+        <div class="metric-card">
+          <div class="metric-icon equipos">
+            <i class="fas fa-microscope"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalEquipos) }}</div>
+            <div class="metric-label">Total Equipos</div>
+            <div class="metric-subtitle">Instrumentos registrados</div>
+          </div>
+        </div>
+      }
+
+      <!-- Tarjeta Materiales Volumétricos -->
+      @if (!esAuxiliar) {
+        <div class="metric-card" (click)="navigate('/materiales-volumetricos')">
+          <div class="metric-icon volumetricos">
+            <i class="fas fa-vial"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalVolumetricos) }}</div>
+            <div class="metric-label">Materiales Volumétricos</div>
+            <div class="metric-subtitle">Unidades registradas</div>
+          </div>
+        </div>
+      } @else {
+        <div class="metric-card">
+          <div class="metric-icon volumetricos">
+            <i class="fas fa-vial"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalVolumetricos) }}</div>
+            <div class="metric-label">Materiales Volumétricos</div>
+            <div class="metric-subtitle">Unidades registradas</div>
+          </div>
+        </div>
+      }
+
+      <!-- Tarjeta Materiales Referencia -->
+      @if (!esAuxiliar) {
+        <div class="metric-card" (click)="navigate('/materiales-referencia')">
+          <div class="metric-icon referencia">
+            <i class="fas fa-weight"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalReferencia) }}</div>
+            <div class="metric-label">Materiales Referencia</div>
+            <div class="metric-subtitle">Unidades registradas</div>
+          </div>
+        </div>
+      } @else {
+        <div class="metric-card">
+          <div class="metric-icon referencia">
+            <i class="fas fa-weight"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-value">{{ formatearNumero(metricas().totalReferencia) }}</div>
+            <div class="metric-label">Materiales Referencia</div>
+            <div class="metric-subtitle">Unidades registradas</div>
+          </div>
+        </div>
+      }
     </div>
   }
 
@@ -195,32 +345,6 @@
     </div>
   }
 
-  @if (!cargando() && !esAuxiliar) {
-    <div class="detailed-grid">
-      <div class="detail-card">
-        <h3>
-          <i class="fas fa-chart-bar"></i>
-          Estado de Solicitudes
-        </h3>
-        <div class="status-grid">
-          <div class="status-item">
-            <i class="fas fa-check-double status-icon"></i>
-            <div class="status-value">{{ contarSolicitudesViable() }}</div>
-            <div class="status-label">Servicios Viables</div>
-          </div>
-          <div class="status-item">
-            <i class="fas fa-file-invoice-dollar status-icon"></i>
-            <div class="status-value">{{ contarSolicitudesConOferta() }}</div>
-            <div class="status-label">Con Oferta</div>
-          </div>
-          <div class="status-item">
-            <i class="fas fa-clipboard-check status-icon"></i>
-            <div class="status-value">{{ contarSolicitudesConResultados() }}</div>
-            <div class="status-label">Con Resultados</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  }
+
 
 </div>

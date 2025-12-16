@@ -888,6 +888,7 @@
           (blur)="onOfertaValorBlur()" 
           name="ofertaValor" 
           required
+          [disabled]="ofertaLocked"
           (input)="validarCampoOfertaEnTiempoReal('valor', $event)"
           (blur)="validarCampoOfertaEnTiempoReal('valor', $event)"
           [class.error]="ofertaErrors['valor']" 
@@ -910,6 +911,7 @@
           [(ngModel)]="ofertaFechaEnvio" 
           name="ofertaFechaEnvio" 
           required
+          [disabled]="ofertaLocked"
           (input)="validarCampoOfertaEnTiempoReal('fechaEnvio', $event)"
           (blur)="validarCampoOfertaEnTiempoReal('fechaEnvio', $event)"
           [class.error]="ofertaErrors['fechaEnvio']" />
@@ -927,6 +929,7 @@
           [(ngModel)]="ofertaGeneroCotizacion" 
           name="ofertaGeneroCotizacion" 
           required
+          [disabled]="ofertaLocked"
           (change)="validarCampoOfertaEnTiempoReal('generoCotizacion', $event)"
           (blur)="validarCampoOfertaEnTiempoReal('generoCotizacion', $event)"
           [class.error]="ofertaErrors['generoCotizacion']">
@@ -948,6 +951,7 @@
           [(ngModel)]="ofertaRealizoSeguimiento" 
           name="ofertaRealizoSeguimiento" 
           required
+          [disabled]="ofertaLocked"
           (change)="validarCampoOfertaEnTiempoReal('realizoSeguimiento', $event)"
           (blur)="validarCampoOfertaEnTiempoReal('realizoSeguimiento', $event)"
           [class.error]="ofertaErrors['realizoSeguimiento']">
@@ -970,6 +974,7 @@
         <textarea id="ofertaObservacion" 
           [(ngModel)]="ofertaObservacion" 
           name="ofertaObservacion"
+          [disabled]="ofertaLocked"
           (input)="validarCampoOfertaEnTiempoReal('observacion', $event)"
           (blur)="validarCampoOfertaEnTiempoReal('observacion', $event)"
           [class.error]="ofertaErrors['observacion']" 
@@ -981,7 +986,13 @@
     </div>
     
     <div class="form-actions">
-      <button type="submit">Agregar oferta</button>
+      @if (ofertaLocked) {
+        <div class="locked-message">
+          <i class="fas fa-lock"></i> Información ya registrada. Use el botón editar en la lista.
+        </div>
+      } @else {
+        <button type="submit">Agregar oferta</button>
+      }
     </div>
   </form>
 </section>
@@ -1001,6 +1012,7 @@
           [(ngModel)]="resultadoSolicitudId" 
           name="resultadoSolicitudId" 
           required
+          (ngModelChange)="onSelectSolicitudRevision($event)"
           (change)="validarCampoResultadoEnTiempoReal('solicitudId', $event)"
           (blur)="validarCampoResultadoEnTiempoReal('solicitudId', $event)"
           [class.error]="resultadoErrors['solicitudId']">
@@ -1026,6 +1038,7 @@
           [(ngModel)]="resultadoFechaLimite" 
           name="resultadoFechaLimite" 
           required
+          [disabled]="revisionLocked"
           (input)="validarCampoResultadoEnTiempoReal('fechaLimite', $event)"
           (blur)="validarCampoResultadoEnTiempoReal('fechaLimite', $event)"
           [class.error]="resultadoErrors['fechaLimite']" />
@@ -1044,6 +1057,7 @@
           [(ngModel)]="resultadoFechaEnvio" 
           name="resultadoFechaEnvio" 
           required
+          [disabled]="revisionLocked"
           (input)="validarCampoResultadoEnTiempoReal('fechaEnvio', $event)"
           (blur)="validarCampoResultadoEnTiempoReal('fechaEnvio', $event)"
           [class.error]="resultadoErrors['fechaEnvio']" />
@@ -1061,6 +1075,7 @@
           [(ngModel)]="resultadoServicioViable" 
           name="resultadoServicioViable" 
           required
+          [disabled]="revisionLocked"
           (change)="validarCampoResultadoEnTiempoReal('servicioViable', $event)"
           (blur)="validarCampoResultadoEnTiempoReal('servicioViable', $event)"
           [class.error]="resultadoErrors['servicioViable']">
@@ -1077,7 +1092,13 @@
     </div>
     
     <div class="form-actions">
-      <button type="submit">Completado</button>
+      @if (revisionLocked) {
+        <div class="locked-message">
+          <i class="fas fa-lock"></i> Información ya registrada. Use el botón editar en la lista.
+        </div>
+      } @else {
+        <button type="submit">Completado</button>
+      }
     </div>
   </form>
 </section>
@@ -1122,6 +1143,7 @@
           [(ngModel)]="encuestaFecha" 
           name="encuestaFecha" 
           required
+          [disabled]="encuestaLocked"
           (input)="validarCampoEncuestaEnTiempoReal('fecha', $event)"
           (blur)="validarCampoEncuestaEnTiempoReal('fecha', $event)"
           [class.error]="encuestaErrors['fecha']" />
@@ -1160,6 +1182,7 @@
           [(ngModel)]="encuestaClienteRespondio" 
           name="encuestaClienteRespondio" 
           required
+          [disabled]="encuestaLocked"
           (change)="validarCampoEncuestaEnTiempoReal('clienteRespondio', $event)"
           (blur)="validarCampoEncuestaEnTiempoReal('clienteRespondio', $event)"
           [class.error]="encuestaErrors['clienteRespondio']">
@@ -1179,7 +1202,9 @@
       <div class="form-field">
         <label for="encuestaFechaRealizacion">Fecha en que se realizó la encuesta: *</label>
         <input id="encuestaFechaRealizacion" type="date" [(ngModel)]="encuestaFechaRealizacion"
-          name="encuestaFechaRealizacion" required (input)="validarCampoEncuestaEnTiempoReal('fechaRealizacion', $event)"
+          name="encuestaFechaRealizacion" required 
+          [disabled]="encuestaLocked"
+          (input)="validarCampoEncuestaEnTiempoReal('fechaRealizacion', $event)"
           (blur)="validarCampoEncuestaEnTiempoReal('fechaRealizacion', $event)"
           [class.error]="encuestaErrors['fechaRealizacion']" />
         @if (encuestaErrors['fechaRealizacion']) {
@@ -1197,6 +1222,7 @@
           [(ngModel)]="encuestaSolicitoNueva" 
           name="encuestaSolicitoNueva" 
           required
+          [disabled]="encuestaLocked"
           (change)="validarCampoEncuestaEnTiempoReal('solicitoNueva', $event)"
           (blur)="validarCampoEncuestaEnTiempoReal('solicitoNueva', $event)"
           [class.error]="encuestaErrors['solicitoNueva']">
@@ -1219,6 +1245,7 @@
         <textarea id="encuestaComentarios" 
           [(ngModel)]="encuestaComentarios" 
           name="encuestaComentarios"
+          [disabled]="encuestaLocked"
           (input)="validarCampoEncuestaEnTiempoReal('comentarios', $event)"
           (blur)="validarCampoEncuestaEnTiempoReal('comentarios', $event)"
           [class.error]="encuestaErrors['comentarios']" 
@@ -1230,7 +1257,13 @@
     </div>
     
     <div class="form-actions">
-      <button type="submit">Agregar encuesta</button>
+      @if (encuestaLocked) {
+        <div class="locked-message">
+          <i class="fas fa-lock"></i> Información ya registrada. Use el botón editar en la lista.
+        </div>
+      } @else {
+        <button type="submit">Agregar encuesta</button>
+      }
     </div>
   </form>
 </section>
@@ -1829,7 +1862,7 @@
                 </div>
                 <div class="detalle-item">
                   <div class="detalle-label">Fecha vinculación</div>
-                  <span>{{ u.fecha_vinculacion || '—' }}</span>
+                  <span>{{ limpiarFecha(u.fecha_vinculacion) }}</span>
                 </div>
                 <div class="detalle-item detalle-item-full">
                   <div class="detalle-label">Observaciones</div>

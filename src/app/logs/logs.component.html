@@ -81,6 +81,16 @@
                 <p>Cargando logs...</p>
             </div>
         } @else {
+            <div style="padding: 1rem; background-color: #f0f4f8; border-radius: 8px; margin-bottom: 1rem;">
+                <p><strong>Debug Info:</strong> Logs encontrados: {{ logsAcciones.length }} | Total paginación: {{ paginacionAcciones.total }}</p>
+                <button (click)="testVolumetricos()" style="margin-top: 5px; background: #333; color: white; padding: 5px 10px; border-radius: 4px;">
+                    Test MAT_VOLUMETRICOS
+                </button>
+                @if (logsAcciones.length === 0) {
+                    <p style="color: red;">No se encontraron logs con los filtros actuales.</p>
+                }
+            </div>
+
             <div class="table-container">
                 <table class="logs-table">
                     <thead>
@@ -89,6 +99,7 @@
                             <th>Usuario</th>
                             <th>Módulo</th>
                             <th>Acción</th>
+                            <th>Detalles</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -101,6 +112,11 @@
                                 <span class="status-badge" [ngClass]="getClaseAccion(log.accion)">
                                     {{ log.accion }}
                                 </span>
+                            </td>
+                            <td>
+                                <button class="btn-ver-detalles" (click)="verDetallesLog(log)" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
                             </td>
                         </tr>
                         }
@@ -122,6 +138,37 @@
                 </button>
             </div>
             }
+        }
+
+        <!-- Modal de Detalles -->
+        @if (logSeleccionado) {
+        <div class="modal-overlay" (click)="cerrarModalDetalles()">
+            <div class="modal-content" (click)="$event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>Detalle de Acción</h3>
+                    <button class="close-btn" (click)="cerrarModalDetalles()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Módulo:</strong> {{ logSeleccionado.modulo }}</p>
+                    <p><strong>Acción:</strong> {{ logSeleccionado.accion }}</p>
+                    <p><strong>Fecha:</strong> {{ formatearFecha(logSeleccionado.fecha) }}</p>
+                    <p><strong>Usuario:</strong> {{ logSeleccionado.usuario_nombre || logSeleccionado.usuario_email || 'N/A' }}</p>
+                    <hr>
+                    <p><strong>Descripción:</strong></p>
+                    <p>{{ logSeleccionado.descripcion || 'Sin descripción' }}</p>
+                    
+                    @if (logSeleccionado.detalle) {
+                    <div class="json-viewer">
+                        <strong>Detalles técnicos:</strong>
+                        <pre>{{ logSeleccionado.detalle | json }}</pre>
+                    </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" (click)="cerrarModalDetalles()">Cerrar</button>
+                </div>
+            </div>
+        </div>
         }
     </section>
     }

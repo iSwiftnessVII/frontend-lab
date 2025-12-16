@@ -33,6 +33,25 @@ export const logsService = {
         return res.json();
     },
 
+    // Registrar una nueva acción
+    async crearLogAccion(payload: {
+        modulo: string;
+        accion: string;
+        descripcion?: string;
+        detalle?: any;
+    }) {
+        const res = await fetch(`${API_BASE}/acciones`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...authHeaders() as any
+            },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+    },
+
     // Obtener movimientos de inventario
     async getMovimientosInventario(filtros?: {
         page?: number;

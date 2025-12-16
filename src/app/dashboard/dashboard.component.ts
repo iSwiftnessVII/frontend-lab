@@ -1,9 +1,14 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { insumosService } from '../services/insumos.service';
 import { reactivosService } from '../services/reactivos.service';
 import { authService } from '../services/auth.service';
+import { equiposService } from '../services/equipos.service';
+import { PapeleriaService } from '../services/papeleria.service';
+import { VolumetricosService } from '../services/volumetricos.service';
+import { ReferenciaService } from '../services/referencia.service';
+import { HttpClientModule } from '@angular/common/http';
 
 const API_SOLICITUDES = (window as any).__env?.API_SOLICITUDES || 'http://localhost:42420/api/solicitudes';
 
@@ -12,7 +17,7 @@ const API_SOLICITUDES = (window as any).__env?.API_SOLICITUDES || 'http://localh
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
-  imports: [CommonModule, RouterModule]
+  imports: [CommonModule, RouterModule, HttpClientModule]
 })
 export class DashboardComponent implements OnInit {
   // Estado de carga
@@ -20,13 +25,16 @@ export class DashboardComponent implements OnInit {
   proximosVencerExpanded = false;
   vencidosExpanded = false;
   
-  // Métricas principales - SIN equipos ni materiales volumétricos
+  // Métricas principales - extendidas
   metricas = signal({
     totalInsumos: 0,
     totalReactivos: 0,
     totalSolicitudes: 0,
     totalClientes: 0,
-    totalPapeleria: 0
+    totalPapeleria: 0,
+    totalEquipos: 0,
+    totalVolumetricos: 0,
+    totalReferencia: 0
   });
 
   // Datos para gráficos
@@ -46,11 +54,21 @@ export class DashboardComponent implements OnInit {
     return user && user.rol === 'Auxiliar';
   }
 
-  constructor() {}
+  constructor(
+    private referenciaService: ReferenciaService,
+    private papeleriaService: PapeleriaService,
+    private volumetricosService: VolumetricosService,
+    private router: Router
+  ) {}
 
   async ngOnInit() {
     await this.cargarDashboard();
     this.cargando.set(false);
+  }
+
+  navigate(path: string) {
+    if (this.esAuxiliar) return;
+    this.router.navigateByUrl(path);
   }
 
   async cargarDashboard() {
@@ -61,7 +79,10 @@ export class DashboardComponent implements OnInit {
         this.cargarReactivos(),
         this.cargarSolicitudes(),
         this.cargarClientes(),
-        this.cargarPapeleria() // Nueva función específica para papelería
+        this.cargarPapeleria(),
+        this.cargarEquipos(),
+        this.cargarVolumetricos(),
+        this.cargarReferencia()
       ]);
     } catch (error) {
       console.error('Error cargando dashboard:', error);
@@ -70,15 +91,45 @@ export class DashboardComponent implements OnInit {
 
   async cargarPapeleria() {
     try {
-      // Aquí puedes implementar la carga de datos de papelería
-      // Por ahora, establecemos un valor por defecto o podrías hacer una llamada API
-      this.metricas.update(m => ({ 
-        ...m, 
-        totalPapeleria: 0 // Valor temporal, puedes cambiarlo por una llamada real
-      }));
+      const pap = await this.papeleriaService.listar('', 1000);
+      const total = Array.isArray(pap) ? pap.length : (pap as any)?.total ?? ((pap as any)?.rows?.length ?? 0);
+      this.metricas.update(m => ({ ...m, totalPapeleria: total }));
     } catch (error) {
       console.error('Error cargando papelería:', error);
       this.metricas.update(m => ({ ...m, totalPapeleria: 0 }));
+    }
+  }
+
+  async cargarEquipos() {
+    try {
+      const equipos = await equiposService.listarEquipos();
+      const total = Array.isArray(equipos) ? equipos.length : (equipos as any)?.total ?? ((equipos as any)?.rows?.length ?? 0);
+      this.metricas.update(m => ({ ...m, totalEquipos: total }));
+    } catch (error) {
+      console.error('Error cargando equipos:', error);
+      this.metricas.update(m => ({ ...m, totalEquipos: 0 }));
+    }
+  }
+
+  async cargarVolumetricos() {
+    try {
+      const mats = await this.volumetricosService.listarMateriales();
+      const total = Array.isArray(mats) ? mats.length : (mats as any)?.total ?? ((mats as any)?.rows?.length ?? 0);
+      this.metricas.update(m => ({ ...m, totalVolumetricos: total }));
+    } catch (error) {
+      console.error('Error cargando materiales volumétricos:', error);
+      this.metricas.update(m => ({ ...m, totalVolumetricos: 0 }));
+    }
+  }
+
+  async cargarReferencia() {
+    try {
+      const mats = await this.referenciaService.listarMateriales();
+      const total = Array.isArray(mats) ? mats.length : (mats as any)?.total ?? ((mats as any)?.rows?.length ?? 0);
+      this.metricas.update(m => ({ ...m, totalReferencia: total }));
+    } catch (error) {
+      console.error('Error cargando materiales de referencia:', error);
+      this.metricas.update(m => ({ ...m, totalReferencia: 0 }));
     }
   }
 
@@ -165,16 +216,19 @@ export class DashboardComponent implements OnInit {
 
   // Métodos para cálculos
   contarSolicitudesViable(): number {
-    return this.solicitudesData().filter(s => s.servicio_viable).length;
+    return this.solicitudesData().filter(s => {
+      const val = s.servicio_es_viable;
+      return val === true || val === 1 || val === '1' || val === 'true';
+    }).length;
   }
 
   contarSolicitudesConOferta(): number {
-    return this.solicitudesData().filter(s => s.genero_cotizacion).length;
+    return this.solicitudesData().filter(s => {
+      const val = s.genero_cotizacion;
+      return val === true || val === 1 || val === '1' || val === 'true';
+    }).length;
   }
 
-  contarSolicitudesConResultados(): number {
-    return this.solicitudesData().filter((s: any) => s.numero_informe_resultados).length;
-  }
 
   contarClientesPorTipo(tipo: string): number {
     return this.clientesData().filter(c => c.tipo_usuario === tipo).length;

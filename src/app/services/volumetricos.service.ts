@@ -8,9 +8,24 @@ export class VolumetricosService {
 
   constructor() {}
 
+  private getHeaders(): HeadersInit {
+    const token = localStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    };
+  }
+
+  private getAuthHeader(): HeadersInit {
+    const token = localStorage.getItem('token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
   // Métodos para material_volumetrico
   async listarMateriales(): Promise<any[]> {
-    const response = await fetch(`${this.API_URL}/materiales`);
+    const response = await fetch(`${this.API_URL}/materiales`, {
+      headers: this.getHeaders()
+    });
     if (!response.ok) throw new Error('Error al listar materiales');
     return response.json();
   }
@@ -18,7 +33,7 @@ export class VolumetricosService {
   async crearMaterial(payload: any): Promise<any> {
     const response = await fetch(`${this.API_URL}/materiales`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getHeaders(),
       body: JSON.stringify(payload)
     });
     if (!response.ok) throw new Error('Error al crear material');
@@ -28,7 +43,7 @@ export class VolumetricosService {
   async actualizarMaterial(codigo: number, payload: any): Promise<any> {
     const response = await fetch(`${this.API_URL}/materiales/${codigo}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getHeaders(),
       body: JSON.stringify(payload)
     });
     if (!response.ok) throw new Error('Error al actualizar material');
@@ -37,14 +52,17 @@ export class VolumetricosService {
 
   async eliminarMaterial(codigo: number): Promise<void> {
     const response = await fetch(`${this.API_URL}/materiales/${codigo}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: this.getHeaders()
     });
     if (!response.ok) throw new Error('Error al eliminar material');
   }
 
   // Métodos para historial_volumetrico
   async listarHistorialPorMaterial(codigo: number): Promise<any[]> {
-    const response = await fetch(`${this.API_URL}/materiales/${codigo}/historial`);
+    const response = await fetch(`${this.API_URL}/materiales/${codigo}/historial`, {
+      headers: this.getHeaders()
+    });
     if (!response.ok) throw new Error('Error al listar historial');
     return response.json();
   }
@@ -52,7 +70,7 @@ export class VolumetricosService {
   async crearHistorial(payload: any): Promise<any> {
     const response = await fetch(`${this.API_URL}/historial`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getHeaders(),
       body: JSON.stringify(payload)
     });
     if (!response.ok) throw new Error('Error al crear historial');
@@ -60,7 +78,9 @@ export class VolumetricosService {
   }
 
   async obtenerNextHistorial(codigo: number): Promise<{ next: number }> {
-    const response = await fetch(`${this.API_URL}/materiales/${codigo}/historial/next`);
+    const response = await fetch(`${this.API_URL}/materiales/${codigo}/historial/next`, {
+      headers: this.getHeaders()
+    });
     if (!response.ok) throw new Error('Error al obtener siguiente consecutivo');
     return response.json();
   }
@@ -68,7 +88,7 @@ export class VolumetricosService {
   async actualizarHistorial(codigo_material: number, consecutivo: number, payload: any): Promise<any> {
     const response = await fetch(`${this.API_URL}/historial/${codigo_material}/${consecutivo}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getHeaders(),
       body: JSON.stringify(payload)
     });
     if (!response.ok) throw new Error('Error al actualizar historial');
@@ -77,7 +97,9 @@ export class VolumetricosService {
 
   // Métodos para intervalo_volumetrico
   async listarIntervaloPorMaterial(codigo: number): Promise<any[]> {
-    const response = await fetch(`${this.API_URL}/materiales/${codigo}/intervalo`);
+    const response = await fetch(`${this.API_URL}/materiales/${codigo}/intervalo`, {
+      headers: this.getHeaders()
+    });
     if (!response.ok) throw new Error('Error al listar intervalo');
     return response.json();
   }
@@ -85,7 +107,7 @@ export class VolumetricosService {
   async crearIntervalo(payload: any): Promise<any> {
     const response = await fetch(`${this.API_URL}/intervalo`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getHeaders(),
       body: JSON.stringify(payload)
     });
     if (!response.ok) throw new Error('Error al crear intervalo');
@@ -93,7 +115,9 @@ export class VolumetricosService {
   }
 
   async obtenerNextIntervalo(codigo: number): Promise<{ next: number }> {
-    const response = await fetch(`${this.API_URL}/materiales/${codigo}/intervalo/next`);
+    const response = await fetch(`${this.API_URL}/materiales/${codigo}/intervalo/next`, {
+      headers: this.getHeaders()
+    });
     if (!response.ok) throw new Error('Error al obtener siguiente consecutivo');
     return response.json();
   }
@@ -101,7 +125,7 @@ export class VolumetricosService {
   async actualizarIntervalo(codigo_material: number, consecutivo: number, payload: any): Promise<any> {
     const response = await fetch(`${this.API_URL}/intervalo/${codigo_material}/${consecutivo}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getHeaders(),
       body: JSON.stringify(payload)
     });
     if (!response.ok) throw new Error('Error al actualizar intervalo');
@@ -110,7 +134,9 @@ export class VolumetricosService {
 
   // Métodos para PDFs (si es necesario)
   async listarPdfsPorMaterial(codigo: string): Promise<any[]> {
-    const response = await fetch(`${this.API_URL}/pdfs/${codigo}`);
+    const response = await fetch(`${this.API_URL}/pdfs/${codigo}`, {
+      headers: this.getHeaders()
+    });
     if (!response.ok) return [];
     const data = await response.json();
     if (Array.isArray(data)) {
@@ -134,6 +160,7 @@ export class VolumetricosService {
 
     const response = await fetch(`${this.API_URL}/pdfs/${codigo}`, {
       method: 'POST',
+      headers: this.getAuthHeader(),
       body: formData
     });
     if (!response.ok) throw new Error('Error al subir PDF');
@@ -142,7 +169,8 @@ export class VolumetricosService {
 
   async eliminarPdf(id: number): Promise<void> {
     const response = await fetch(`${this.API_URL}/pdfs/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: this.getHeaders()
     });
     if (!response.ok) throw new Error('Error al eliminar PDF');
   }

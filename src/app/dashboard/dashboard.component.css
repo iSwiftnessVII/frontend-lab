@@ -229,6 +229,16 @@
     color: var(--primary-white);
 }
 
+.metric-icon.volumetricos {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: var(--primary-white);
+}
+
+.metric-icon.referencia {
+    background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+    color: var(--primary-white);
+}
+
 .metric-content {
     flex: 1;
 }
@@ -704,130 +714,7 @@
     color: #92400e;
 }
 
-/* ===== Grid Detallado ===== */
-.detailed-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
-    animation: fadeInUp 1.2s ease-out;
-}
 
-.detail-card {
-    background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%);
-    border-radius: 20px;
-    padding: 1.5rem;
-    box-shadow: var(--shadow-md);
-    border: 2px solid var(--border-gray);
-    transition: all 0.4s ease;
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(10px);
-}
-
-.detail-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--primary-turquoise);
-}
-
-.detail-card h3 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--primary-blue);
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 3px solid var(--border-gray);
-    position: relative;
-}
-
-.detail-card h3::after {
-    content: '';
-    position: absolute;
-    bottom: -3px;
-    left: 0;
-    width: 60px;
-    height: 3px;
-    background: var(--primary-turquoise);
-    border-radius: 3px;
-}
-
-.detail-card h3 i {
-    color: var(--primary-turquoise);
-    font-size: 1.2rem;
-    filter: drop-shadow(0 2px 6px rgba(0, 184, 181, 0.3));
-}
-
-/* Estado de Solicitudes */
-.status-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-}
-
-.status-item {
-    text-align: center;
-    padding: 1rem;
-    background: linear-gradient(135deg, var(--light-gray) 0%, var(--primary-white) 100%);
-    border-radius: 15px;
-    border: 2px solid var(--border-gray);
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow-sm);
-    position: relative;
-    overflow: hidden;
-}
-
-.status-item::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 0;
-    background: linear-gradient(180deg, rgba(0, 184, 181, 0.1) 0%, transparent 100%);
-    transition: height 0.3s ease;
-}
-
-.status-item:hover::before {
-    height: 100%;
-}
-
-.status-item:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary-turquoise);
-}
-
-.status-icon {
-    font-size: 1.5rem;
-    color: var(--primary-turquoise);
-    margin-bottom: 0.5rem;
-    display: block;
-    filter: drop-shadow(0 4px 8px rgba(0, 184, 181, 0.3));
-}
-
-.status-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary-blue);
-    margin-bottom: 0.25rem;
-    text-shadow: 0 2px 8px rgba(0, 31, 91, 0.15);
-    background: linear-gradient(135deg, var(--primary-blue) 0%, #003080 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.status-label {
-    font-size: 0.8rem;
-    color: var(--text-gray);
-    font-weight: 500;
-    line-height: 1.5;
-    letter-spacing: 0.3px;
-}
 
 /* ===== Scrollbar personalizado ===== */
 .reactivos-list::-webkit-scrollbar {
@@ -881,15 +768,7 @@
         font-size: 1.5rem;
     }
     
-    .detailed-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .status-grid {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-    }
+
     
     .expandible-alerts-container {
         gap: 0.75rem;
@@ -948,9 +827,7 @@
         margin: 1rem;
     }
     
-    .detail-card {
-        padding: 1.5rem;
-    }
+
 }
 
 @media (max-width: 480px) {

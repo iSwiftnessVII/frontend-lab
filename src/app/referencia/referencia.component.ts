@@ -333,6 +333,7 @@ export class ReferenciaComponent implements OnInit {
       };
       await this.referenciaService.crearMaterial(payload);
       this.snack.success('Material de referencia registrado exitosamente');
+      
       this.resetFormMaterial();
       await this.obtenerMaterialesRegistrados();
     } catch (error: any) {
@@ -364,6 +365,7 @@ export class ReferenciaComponent implements OnInit {
       });
       
       this.snack.success('Historial registrado exitosamente');
+
       this.resetFormHistorial();
       
       // Actualizar lista local
@@ -451,6 +453,7 @@ export class ReferenciaComponent implements OnInit {
       });
       
       this.snack.success('Intervalo registrado exitosamente');
+
       this.resetFormIntervalo();
       
       // Actualizar lista local
@@ -677,6 +680,7 @@ export class ReferenciaComponent implements OnInit {
     try {
       await this.referenciaService.eliminarPdf(item.id);
       this.snack.success('PDF eliminado');
+
       await this.listarPdfs(codigo);
     } catch (err: any) {
       console.error('Error eliminando PDF', err);
@@ -707,6 +711,7 @@ export class ReferenciaComponent implements OnInit {
       try {
         await this.referenciaService.subirPdfMaterial(codigo, categoria, file);
         this.snack.success('PDF subido correctamente');
+        
         await this.listarPdfs(codigo);
       } catch (err: any) {
         console.error('Error subiendo PDF', err);
@@ -728,6 +733,7 @@ export class ReferenciaComponent implements OnInit {
     try {
       await this.referenciaService.eliminarMaterial(codigo);
       this.snack.success('Material eliminado');
+
       this.materialesRegistrados = this.materialesRegistrados.filter(m => m.codigo_id !== codigo);
       
       // Limpiar estados asociados
@@ -780,6 +786,7 @@ export class ReferenciaComponent implements OnInit {
     try {
       await this.referenciaService.actualizarMaterial(this.editingMaterialCodigo, payload);
       this.snack.success('Cambios guardados');
+
       await this.obtenerMaterialesRegistrados();
       this.closeEditMaterialModal();
     } catch (err: any) {
@@ -816,6 +823,7 @@ export class ReferenciaComponent implements OnInit {
         superviso: registro.superviso
       });
       this.snack.success('Historial actualizado');
+
       registro.editando = false;
       delete registro._backup;
       // Refrescar lista
@@ -855,6 +863,7 @@ export class ReferenciaComponent implements OnInit {
         incertidumbre_exp: registro.incertidumbre_exp
       });
       this.snack.success('Intervalo actualizado');
+
       registro.editando = false;
       delete registro._backup;
       // Refrescar lista
