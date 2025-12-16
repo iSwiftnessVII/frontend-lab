@@ -66,13 +66,15 @@
       <i class="fas fa-tachometer-alt"></i> Dashboard
     </a>
 
-    <a 
-      routerLink="/solicitudes" 
-      routerLinkActive="active" 
-      class="nav-item"
-    >
-      <i class="fas fa-clipboard-list"></i> Solicitudes
-    </a>
+    @if (user()?.rol === 'Administrador' || user()?.rol === 'Superadmin') {
+      <a 
+        routerLink="/solicitudes" 
+        routerLinkActive="active" 
+        class="nav-item"
+      >
+        <i class="fas fa-clipboard-list"></i> Solicitudes
+      </a>
+    }
 
     <!-- Inventario dropdown - CON ESTADO ACTIVO -->
     <div 
@@ -206,7 +208,7 @@
     </div>
 
 <!-- Menú Análisis actualizado con clase específica -->
-@if (user()?.rol === 'Administrador' || user()?.rol === 'Superadmin') {
+@if (user()?.rol === 'Superadmin') {
   <div 
     class="nav-item dropdown analysis-dropdown" 
     [class.is-open]="analysisMenuOpen()" 

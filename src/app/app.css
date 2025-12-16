@@ -317,6 +317,7 @@ body.auth-page .app-header {
 	max-width: 1400px;
 	margin: 0 auto;
 	flex-wrap: wrap;
+	position: relative;
 }
 
 .nav-item {
@@ -351,6 +352,13 @@ body.auth-page .app-header {
 /* Dropdown inside navigation */
 .dropdown { 
 	position: relative; 
+}
+
+/* Prevent transform on full-width inventory dropdown trigger to avoid
+   creating a new containing block that re-anchors the menu */
+.full-width-dropdown.nav-item:hover,
+.full-width-dropdown.nav-item.active {
+	transform: none !important;
 }
 
 .dropdown > .dropdown-toggle {
@@ -473,7 +481,7 @@ body.auth-page .app-header {
    FULL WIDTH DROPDOWN STYLES - 6 APARTADOS
    ===================================================== */
 .full-width-dropdown {
-	position: relative !important;
+	position: static !important;
 }
 
 .dropdown-menu.inventory-menu.full-width-menu {
@@ -484,7 +492,7 @@ body.auth-page .app-header {
 	top: calc(100% + 0.5rem) !important;
 	padding: 1.2rem !important;
 	border-radius: 16px !important;
-	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0,  0, 0, 0.04) !important;
 	border: 2px solid var(--border-gray) !important;
 	background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%) !important;
 	z-index: 1050 !important;

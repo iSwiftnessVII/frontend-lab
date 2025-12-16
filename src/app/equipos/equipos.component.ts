@@ -4,6 +4,7 @@ import { SnackbarService } from '../shared/snackbar.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { authUser } from '../services/auth.service';
 
 @Component({
   standalone: true,
@@ -13,6 +14,10 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class EquiposComponent implements OnInit {
+  public get esAuxiliar(): boolean {
+    const user = authUser();
+    return user?.rol === 'Auxiliar';
+  }
   // Map to keep references to event handlers for cleanup
   private _dropdownToggleHandler: EventListener | null = null;
   private _resizeHandler: EventListener | null = null;

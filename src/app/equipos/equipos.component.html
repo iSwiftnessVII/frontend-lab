@@ -28,7 +28,7 @@
   </div>
 
   <!-- Formulario de Hoja de Vida -->
-  <div *ngIf="formularioActivo === 'hojaVida'" class="form-section">
+  <div *ngIf="formularioActivo === 'hojaVida' && !esAuxiliar" class="form-section">
     <h2>
       <i class="fas fa-file-medical"></i>
       | Registrar Equipo (Hoja de Vida)
@@ -197,7 +197,7 @@
   </div>
 
   <!-- Formulario de Ficha Técnica -->
-  <div *ngIf="formularioActivo === 'fichaTecnica'" class="form-section">
+  <div *ngIf="formularioActivo === 'fichaTecnica' && !esAuxiliar" class="form-section">
     <h2>Registrar Ficha Técnica de Equipo</h2>
     <section>
       <form class="form-grid" (submit)="crearFichaTecnica($event)">
@@ -522,7 +522,7 @@
   </div>
 
   <!-- Formulario de Historial -->
-  <div *ngIf="formularioActivo === 'historial'" class="form-section">
+  <div *ngIf="formularioActivo === 'historial' && !esAuxiliar" class="form-section">
     <h2>Registrar historial de equipo</h2>
     <section>
       <form class="form-grid" (submit)="crearHistorial($event)">
@@ -587,7 +587,7 @@
   </div>
 
   <!-- Formulario de Intervalo -->
-  <div *ngIf="formularioActivo === 'intervalo'" class="form-section">
+  <div *ngIf="formularioActivo === 'intervalo' && !esAuxiliar" class="form-section">
     <h2>Registrar intervalo de equipo</h2>
     <section>
       <form class="form-grid" (submit)="crearIntervalo($event)">
@@ -682,7 +682,7 @@
     <div *ngIf="!cargandoEquipos && equiposRegistrados.length === 0" class="sin-equipos">
       <i class="fas fa-inbox"></i>
       <p>No hay equipos registrados</p>
-      <button class="btn-compact" (click)="toggleFormulario('hojaVida'); $event.stopPropagation()">
+      <button class="btn-compact" *ngIf="!esAuxiliar" (click)="toggleFormulario('hojaVida'); $event.stopPropagation()">
         <i class="fas fa-plus"></i> Registrar primer equipo
       </button>
     </div>
@@ -698,13 +698,13 @@
             <span class="tag"><strong>Clasificación:</strong> {{ equipo.clasificacion || '—' }}</span>
           </div>
           <div class="pdf-actions" (click)="$event.stopPropagation()">
-            <button type="button" class="pdf-btn edit" title="Editar equipo" (click)="abrirEditarEquipo(equipo, $event)">
+            <button *ngIf="!esAuxiliar" type="button" class="pdf-btn edit" title="Editar equipo" (click)="abrirEditarEquipo(equipo, $event)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor" />
                 <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor" />
               </svg>
             </button>
-            <button type="button" class="pdf-btn delete" title="Eliminar equipo" (click)="eliminarEquipo(equipo, $event)">
+            <button *ngIf="!esAuxiliar" type="button" class="pdf-btn delete" title="Eliminar equipo" (click)="eliminarEquipo(equipo, $event)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
               </svg>
@@ -735,12 +735,12 @@
                   </select>
 
                   <button class="btn view pdf-action" (click)="openPdf(equipo.codigo_identificacion, $event)">Ver</button>
-                  <button class="btn delete pdf-action eliminar" (click)="deletePdf(equipo.codigo_identificacion, $event)">Eliminar</button>
-                  <button class="btn add pdf-action" (click)="mostrarMenuCategoriaPdf(equipo.codigo_identificacion, $event)">Añadir</button>
+                  <button *ngIf="!esAuxiliar" class="btn delete pdf-action eliminar" (click)="deletePdf(equipo.codigo_identificacion, $event)">Eliminar</button>
+                  <button *ngIf="!esAuxiliar" class="btn add pdf-action" (click)="mostrarMenuCategoriaPdf(equipo.codigo_identificacion, $event)">Añadir</button>
                 </div>
 
                 <!-- Menú de categorías de PDF (se muestra al hacer clic en Añadir) -->
-                <ul *ngIf="menuCategoriaPdfVisible[equipo.codigo_identificacion]" class="categoria-pdf-menu" (click)="$event.stopPropagation()">
+                <ul *ngIf="menuCategoriaPdfVisible[equipo.codigo_identificacion] && !esAuxiliar" class="categoria-pdf-menu" (click)="$event.stopPropagation()">
                   <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Manual de usuario', $event)">Manual de usuario</li>
                   <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de calificación', $event)">Certificados de calificación</li>
                   <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de verificación', $event)">Certificados de verificación</li>

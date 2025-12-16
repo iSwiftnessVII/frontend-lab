@@ -19,7 +19,7 @@ export const routes: Routes = [
     path: 'solicitudes', 
     loadComponent: () => import('./solicitudes/solicitudes.component').then(m => m.SolicitudesComponent), 
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
+    data: { roles: ['Administrador', 'Superadmin'] }
   },
   // materiales-referencia route removed
   { 

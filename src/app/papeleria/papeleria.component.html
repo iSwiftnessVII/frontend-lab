@@ -198,7 +198,7 @@
   }
 
   <!-- Menú contextual -->
-  @if (contextMenuVisible()) {
+  @if (contextMenuVisible() && !esAuxiliar()) {
     <div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" 
          (click)="$event.stopPropagation()" (contextmenu)="$event.preventDefault()">
       <button type="button" class="ctx-item delete" (click)="onContextMenuEliminar()">Eliminar</button>

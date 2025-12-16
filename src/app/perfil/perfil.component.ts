@@ -16,6 +16,10 @@ import { SolicitudesService } from '../services/clientes/solicitudes.service';
 })
 export class PerfilComponent implements OnInit {
   readonly user = authUser;
+  public get esAuxiliar(): boolean {
+    const u = this.user();
+    return u?.rol === 'Auxiliar';
+  }
   suscripcionEmail = '';
   suscripcionMsg = '';
   suscripcionLoading = false;

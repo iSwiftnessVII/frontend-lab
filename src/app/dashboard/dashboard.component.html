@@ -195,10 +195,8 @@
     </div>
   }
 
-  <!-- Sección de Resumen Detallado -->
-  @if (!cargando()) {
+  @if (!cargando() && !esAuxiliar) {
     <div class="detailed-grid">
-      <!-- Resumen de Solicitudes -->
       <div class="detail-card">
         <h3>
           <i class="fas fa-chart-bar"></i>
@@ -224,4 +222,5 @@
       </div>
     </div>
   }
+
 </div>

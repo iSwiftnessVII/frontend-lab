@@ -5,26 +5,33 @@
   </h1>
   
   <div class="dashboard-cards">
-    <div class="action-card" (click)="toggleFormulario('cliente')" [class.active]="formularioActivo === 'cliente'">
-      <i class="fas fa-user-plus"></i>
-      <span>Agregar Cliente</span>
-    </div>
-    <div class="action-card" (click)="toggleFormulario('solicitud')" [class.active]="formularioActivo === 'solicitud'">
-      <i class="fas fa-clipboard-list"></i>
-      <span>Agregar Solicitud</span>
-    </div>
-    <div class="action-card" (click)="toggleFormulario('oferta')" [class.active]="formularioActivo === 'oferta'">
-      <i class="fas fa-hand-holding-dollar"></i>
-      <span>Registrar Oferta</span>
-    </div>
-    <div class="action-card" (click)="toggleFormulario('revision')" [class.active]="formularioActivo === 'revision'">
-      <i class="fas fa-check-double"></i>
-      <span>Registrar Revisión</span>
-    </div>
-    <div class="action-card" (click)="toggleFormulario('encuesta')" [class.active]="formularioActivo === 'encuesta'">
-      <i class="fas fa-star"></i>
-      <span>Seguimiento Encuesta</span>
-    </div>
+    @if (user()?.rol === 'Administrador') {
+      <div class="action-card" (click)="toggleFormulario('revision')" [class.active]="formularioActivo === 'revision'">
+        <i class="fas fa-check-double"></i>
+        <span>Registrar Revisión</span>
+      </div>
+    } @else {
+      <div class="action-card" (click)="toggleFormulario('cliente')" [class.active]="formularioActivo === 'cliente'">
+        <i class="fas fa-user-plus"></i>
+        <span>Agregar Cliente</span>
+      </div>
+      <div class="action-card" (click)="toggleFormulario('solicitud')" [class.active]="formularioActivo === 'solicitud'">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Agregar Solicitud</span>
+      </div>
+      <div class="action-card" (click)="toggleFormulario('oferta')" [class.active]="formularioActivo === 'oferta'">
+        <i class="fas fa-hand-holding-dollar"></i>
+        <span>Registrar Oferta</span>
+      </div>
+      <div class="action-card" (click)="toggleFormulario('revision')" [class.active]="formularioActivo === 'revision'">
+        <i class="fas fa-check-double"></i>
+        <span>Registrar Revisión</span>
+      </div>
+      <div class="action-card" (click)="toggleFormulario('encuesta')" [class.active]="formularioActivo === 'encuesta'">
+        <i class="fas fa-star"></i>
+        <span>Seguimiento Encuesta</span>
+      </div>
+    }
   </div>
 
   @if (formularioActivo === 'cliente') {
@@ -1231,6 +1238,7 @@
 
   <!-- El resto del HTML permanece igual (listas de solicitudes, clientes, modales) -->
   <!-- SECCIÓN: Lista rápida de solicitudes -->
+  @if (user()?.rol !== 'Administrador') {
   <h2>Catalogo de Solicitudes</h2>
   <section>
     <div class="search-container">
@@ -1474,6 +1482,7 @@
       }
     </div>
   </section>
+  }
 
   <!-- Modal editar Cliente -->
   @if (editClienteModalOpen) {
@@ -1693,6 +1702,7 @@
   }
 
   <!-- SECCIÓN: Lista de clientes -->
+  @if (user()?.rol !== 'Administrador') {
   <h2>Catalogo de Clientes</h2>
   <section>
     <div class="search-container">
@@ -1838,6 +1848,7 @@
       }
     </div>
   </section>
+  }
 </div>
 
 <!-- Global toast -->

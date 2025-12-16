@@ -23,7 +23,7 @@
         </div>
     </div>
     <!-- Catálogo de insumos -->
-  @if (formularioActivo === 'catalogo') {
+  @if (formularioActivo === 'catalogo' && !esAuxiliar) {
   <h2>Crear nuevo insumo en catálogo</h2>
   <section>
     <form class="form-grid" (submit)="crearCatalogo($event)">
@@ -174,7 +174,7 @@
     }
 
     <!-- Inventario de insumos -->
-      @if (formularioActivo === 'crear-insumo' || item_catalogo != null) {
+      @if ((formularioActivo === 'crear-insumo' || item_catalogo != null) && !esAuxiliar) {
   <h2>Crear nuevo insumo</h2>
   <section #insumoFormSection>
     <form class="form-grid" (submit)="crearInsumo($event)">
@@ -383,15 +383,17 @@
                                             <span class="meta">Cantidad disponible: <strong>{{ ins.cantidad_existente }}</strong></span>
                                         </div>
                                         <!-- Fila con número y botón Quitar -->
-                                                        <div class="insumo-actions-row" (click)="$event.stopPropagation()">
-                                            <input type="number" min="1" step="1"
-                                                         [ngModel]="getRemoveQty(ins.id)"
-                                                         (ngModelChange)="setRemoveQty(ins.id, $event)"
-                                                         placeholder="Cantidad" />
-                                                            <button type="button" class="btn-compact btn-remove"
-                                                            [disabled]="isBusy(ins.id) || !isValidQty(getRemoveQty(ins.id))"
-                                                                            (click)="$event.stopPropagation(); quitar(ins)">Quitar</button>
-                                        </div>
+                                                        @if (!esAuxiliar) {
+                                                            <div class="insumo-actions-row" (click)="$event.stopPropagation()">
+                                                                <input type="number" min="1" step="1"
+                                                                        [ngModel]="getRemoveQty(ins.id)"
+                                                                        (ngModelChange)="setRemoveQty(ins.id, $event)"
+                                                                        placeholder="Cantidad" />
+                                                                <button type="button" class="btn-compact btn-remove"
+                                                                        [disabled]="isBusy(ins.id) || !isValidQty(getRemoveQty(ins.id))"
+                                                                        (click)="$event.stopPropagation(); quitar(ins)">Quitar</button>
+                                                            </div>
+                                                        }
                                                                         @if (isOpen(ins)) {
                                                             <div class="insumo-details-panel">
                                                                 <div class="detail-row"><strong>Adquirida:</strong> {{ ins.cantidad_adquirida }}</div>
@@ -402,13 +404,15 @@
                                                                   @if (ins.fecha_adquisicion) { <div class="detail-row"><strong>Fecha adquisición:</strong> {{ ins.fecha_adquisicion | date:'yyyy-MM-dd' }}</div> }
                                                                 @if (ins.descripcion) { <div class="detail-row"><strong>Descripción:</strong> {{ ins.descripcion }}</div> }
                                                                 @if (ins.observaciones) { <div class="detail-row"><strong>Observaciones:</strong> {{ ins.observaciones }}</div> }
-                                                                                                <div class="panel-actions">
-                                                                                                    <button type="button" class="btn-delete"
-                                                                                                                    [disabled]="isBusy(ins.id)"
-                                                                                                                    (click)="$event.stopPropagation(); eliminar(ins)">
-                                                                                                        Eliminar
-                                                                                                    </button>
-                                                                                                </div>
+                                                                                                @if (!esAuxiliar) {
+                                                                                                    <div class="panel-actions">
+                                                                                                        <button type="button" class="btn-delete"
+                                                                                                                        [disabled]="isBusy(ins.id)"
+                                                                                                                        (click)="$event.stopPropagation(); eliminar(ins)">
+                                                                                                            Eliminar
+                                                                                                        </button>
+                                                                                                    </div>
+                                                                                                }
                                                             </div>
                                                         }
                             </article>
@@ -424,7 +428,7 @@
     }
 
     <!-- Menú contextual (click derecho) para catálogo de insumos -->
-    @if (contextMenuVisible) {
+    @if (contextMenuVisible && !esAuxiliar) {
         <div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" (click)="$event.stopPropagation()" (contextmenu)="$event.preventDefault()">
             <button type="button" class="ctx-item delete" (click)="onContextMenuEliminar()">Eliminar</button>
         </div>

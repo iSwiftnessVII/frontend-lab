@@ -196,7 +196,7 @@
 
   <!-- Inventario de reactivos -->
  <!-- Inventario de reactivos -->
-@if (formularioActivo === 'crear-reactivo') {
+@if (formularioActivo === 'crear-reactivo' && !esAuxiliar) {
   <h2>Crear reactivo</h2>
   <section>
     <form class="form-grid" #reactivoForm="ngForm" (ngSubmit)="crearReactivo($event, reactivoForm)">
@@ -568,15 +568,17 @@
         @if (reactivos && reactivos.length) {
         <div class="catalogo-stats">
           <span>🧪 Mostrando {{ reactivosFiltrados.length }} de {{ reactivosTotal }} reactivos</span>
-            <button type="button"
-                    class="btn-export"
-                    (click)="descargarReactivosExcel()"
-                    [disabled]="exportandoExcel"
-                    [attr.aria-busy]="exportandoExcel ? 'true' : null"
-                    title="Descargar Excel con todos los reactivos">
-              <i class="fas fa-file-excel"></i>
-              {{ exportandoExcel ? 'Generando...' : 'Exportar Excel' }}
-            </button>
+            @if (!esAuxiliar) {
+              <button type="button"
+                      class="btn-export"
+                      (click)="descargarReactivosExcel()"
+                      [disabled]="exportandoExcel"
+                      [attr.aria-busy]="exportandoExcel ? 'true' : null"
+                      title="Descargar Excel con todos los reactivos">
+                <i class="fas fa-file-excel"></i>
+                {{ exportandoExcel ? 'Generando...' : 'Exportar Excel' }}
+              </button>
+            }
         </div>
         }
 
@@ -602,7 +604,7 @@
 
               <div class="pdf-actions" aria-label="Acciones del reactivo" (click)="$event.stopPropagation()">
                 <div class="pdf-group">
-                  <button type="button" class="pdf-btn view" title="Editar reactivo" aria-label="Editar reactivo"
+                  <button *ngIf="!esAuxiliar" type="button" class="pdf-btn view" title="Editar reactivo" aria-label="Editar reactivo"
                     (click)="openEditModal(r)">
                     <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
                       <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z" fill="currentColor" />
@@ -649,17 +651,19 @@
                       <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                     </svg>
                   </button>
-                  <input type="file" accept="application/pdf" (change)="onSubirHojaReactivo($event, r.lote)" #sdsInput
-                    style="display:none" />
-                  <button type="button" class="pdf-btn upload" title="Subir hoja de seguridad"
-                    aria-label="Subir hoja de seguridad" (click)="$event.stopPropagation(); sdsInput.click()">
-                    <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                      <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                      <path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                    </svg>
-                  </button>
+                  <ng-container *ngIf="!esAuxiliar">
+                    <input type="file" accept="application/pdf" (change)="onSubirHojaReactivo($event, r.lote)" #sdsInput
+                      style="display:none" />
+                    <button type="button" class="pdf-btn upload" title="Subir hoja de seguridad"
+                      aria-label="Subir hoja de seguridad" (click)="$event.stopPropagation(); sdsInput.click()">
+                      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                        <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                          stroke-linejoin="round" />
+                        <path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                          stroke-linejoin="round" />
+                      </svg>
+                    </button>
+                  </ng-container>
                 </div>
 
                 <div class="pdf-box pdf-coa" role="group" aria-label="CoA controls">
@@ -686,17 +690,19 @@
                       <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                     </svg>
                   </button>
-                  <input type="file" accept="application/pdf" (change)="onSubirCertReactivo($event, r.lote)" #coaInput
-                    style="display:none" />
-                  <button type="button" class="pdf-btn upload" title="Subir certificado de análisis"
-                    aria-label="Subir certificado de análisis" (click)="$event.stopPropagation(); coaInput.click()">
-                    <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                      <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                      <path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                    </svg>
-                  </button>
+                  <ng-container *ngIf="!esAuxiliar">
+                    <input type="file" accept="application/pdf" (change)="onSubirCertReactivo($event, r.lote)" #coaInput
+                      style="display:none" />
+                    <button type="button" class="pdf-btn upload" title="Subir certificado de análisis"
+                      aria-label="Subir certificado de análisis" (click)="$event.stopPropagation(); coaInput.click()">
+                      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                        <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                          stroke-linejoin="round" />
+                        <path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                          stroke-linejoin="round" />
+                      </svg>
+                    </button>
+                  </ng-container>
                 </div>
               </div>
 
@@ -782,7 +788,7 @@
   }
 
   <!-- Modal de edición de reactivo -->
-  @if (editModalOpen) {
+  @if (editModalOpen && !esAuxiliar) {
   <div class="modal-backdrop" (click)="closeEditModal()"></div>
   <div class="modal" role="dialog" aria-modal="true" aria-label="Editar reactivo" (click)="$event.stopPropagation()">
     <div class="modal-header">

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SnackbarService } from '../shared/snackbar.service';
 import { ReferenciaService } from '../services/referencia.service';
+import { authUser } from '../services/auth.service';
 
 @Component({
   standalone: true,
@@ -14,6 +15,10 @@ import { ReferenciaService } from '../services/referencia.service';
   providers: [ReferenciaService]
 })
 export class ReferenciaComponent implements OnInit {
+  public get esAuxiliar(): boolean {
+    const user = authUser();
+    return user?.rol === 'Auxiliar';
+  }
   // Tabs para la información del material de referencia
   referenciaTabs = [
     { key: 'general', label: 'General' },

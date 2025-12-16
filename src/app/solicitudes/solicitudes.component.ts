@@ -7,7 +7,7 @@ import { SolicitudesService } from '../services/clientes/solicitudes.service';
 import { LocationsService } from '../services/clientes/locations.service';
 import { UtilsService } from '../services/clientes/utils.service';
 import { SnackbarService } from '../shared/snackbar.service';
-import { authService } from '../services/auth.service';
+import { authService, authUser } from '../services/auth.service';
 import { NumbersOnlyDirective } from '../directives/numbers-only.directive';
 import { LettersOnlyDirective } from '../directives/letters-only.directive';
 import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
@@ -33,6 +33,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   solicitudes = this.solicitudesService.solicitudes;
   departamentos = this.locationsService.departamentos;
   ciudades = this.locationsService.ciudades;
+  readonly user = authUser;
 
   // Signals locales
   clientesFiltrados = signal<Array<any>>([]);
@@ -265,6 +266,10 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     this.loadInitialData();
     this.filtrarClientes();
     this.filtrarSolicitudes();
+    const u = this.user();
+    if (u?.rol === 'Administrador') {
+      this.formularioActivo = 'revision';
+    }
   }
 
   ngOnDestroy() {

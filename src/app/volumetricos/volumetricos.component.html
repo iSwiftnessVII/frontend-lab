@@ -23,7 +23,7 @@
   </div>
 
   <!-- Formulario de Material Volumétrico -->
-  @if (formularioActivo === 'material') {
+  @if (formularioActivo === 'material' && !esAuxiliar) {
     <div class="form-section">
       <h2>
         <i class="fas fa-vial"></i>
@@ -78,7 +78,7 @@
   }
 
   <!-- Formulario de Historial -->
-  @if (formularioActivo === 'historial') {
+  @if (formularioActivo === 'historial' && !esAuxiliar) {
     <div class="form-section">
       <h2>Registrar Historial de Material Volumétrico</h2>
       <section>
@@ -135,7 +135,7 @@
   }
 
   <!-- Formulario de Intervalo -->
-  @if (formularioActivo === 'intervalo') {
+  @if (formularioActivo === 'intervalo' && !esAuxiliar) {
     <div class="form-section">
       <h2>Registrar Intervalo de Calibración</h2>
       <section>
@@ -252,7 +252,7 @@
       <div class="sin-volumetricos">
         <i class="fas fa-inbox"></i>
         <p>No hay materiales volumétricos registrados</p>
-        <button class="btn-compact" (click)="toggleFormulario('material'); $event.stopPropagation()">
+        <button class="btn-compact" *ngIf="!esAuxiliar" (click)="toggleFormulario('material'); $event.stopPropagation()">
           <i class="fas fa-plus"></i> Registrar primer material
         </button>
       </div>
@@ -271,14 +271,14 @@
                 <span class="tag"><strong>Resolución:</strong> {{ material.resolucion || '—' }}</span>
               </div>
               <div class="pdf-actions" (click)="$event.stopPropagation()">
-                <button type="button" class="pdf-btn edit" title="Editar material" 
+                <button *ngIf="!esAuxiliar" type="button" class="pdf-btn edit" title="Editar material" 
                         (click)="abrirEditarMaterial(material, $event)">
                   <svg viewBox="0 0 24 24" class="icon">
                     <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor" />
                     <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor" />
                   </svg>
                 </button>
-                <button type="button" class="pdf-btn delete" title="Eliminar material" 
+                <button *ngIf="!esAuxiliar" type="button" class="pdf-btn delete" title="Eliminar material" 
                         (click)="eliminarMaterial(material, $event)">
                   <svg viewBox="0 0 24 24" class="icon">
                     <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
@@ -311,12 +311,12 @@
                       </select>
 
                       <button class="btn view pdf-action" (click)="openPdf(material.codigo_id.toString(), $event)">Ver</button>
-                      <button class="btn delete pdf-action eliminar" (click)="deletePdf(material.codigo_id.toString(), $event)">Eliminar</button>
-                      <button class="btn add pdf-action" (click)="mostrarMenuCategoriaPdf(material.codigo_id.toString(), $event)">Añadir</button>
+                      <button *ngIf="!esAuxiliar" class="btn delete pdf-action eliminar" (click)="deletePdf(material.codigo_id.toString(), $event)">Eliminar</button>
+                      <button *ngIf="!esAuxiliar" class="btn add pdf-action" (click)="mostrarMenuCategoriaPdf(material.codigo_id.toString(), $event)">Añadir</button>
                     </div>
 
                     <!-- Menú de categorías de PDF -->
-                    <ul *ngIf="menuCategoriaPdfVisible[material.codigo_id.toString()]" class="categoria-pdf-menu" (click)="$event.stopPropagation()">
+                    <ul *ngIf="menuCategoriaPdfVisible[material.codigo_id.toString()] && !esAuxiliar" class="categoria-pdf-menu" (click)="$event.stopPropagation()">
                       <li (click)="iniciarUpload(material.codigo_id.toString(), 'Manual de usuario', $event)">Manual de usuario</li>
                       <li (click)="iniciarUpload(material.codigo_id.toString(), 'Certificados de calificación', $event)">Certificados de calificación</li>
                       <li (click)="iniciarUpload(material.codigo_id.toString(), 'Certificados de verificación', $event)">Certificados de verificación</li>
@@ -390,7 +390,7 @@
                                   @if (historialExpandido[material.codigo_id.toString() + '_' + registro.consecutivo]) {
                                     <div class="historial-body">
                                       <div class="historial-grid">
-                                        @if (registro.editando) {
+                                        @if (registro.editando && !esAuxiliar) {
                                           <div class="historial-item"><span class="historial-label">Tipo de Historial:</span><input [(ngModel)]="registro.tipo_historial_instrumento" /></div>
                                           <div class="historial-item"><span class="historial-label">Código de Registro:</span><input [(ngModel)]="registro.codigo_registro" /></div>
                                           <div class="historial-item"><span class="historial-label">Realizó:</span><input [(ngModel)]="registro.realizo" /></div>
@@ -405,7 +405,9 @@
                                           <div class="historial-item"><span class="historial-label">Realizó:</span><span>{{ registro.realizo || 'N/A' }}</span></div>
                                           <div class="historial-item"><span class="historial-label">Supervisó:</span><span>{{ registro.superviso || 'N/A' }}</span></div>
                                           <div class="historial-actions">
-                                            <button (click)="editarRegistroHistorial(registro)" class="btn-compact">Editar</button>
+                                            @if (!esAuxiliar) {
+                                              <button (click)="editarRegistroHistorial(registro)" class="btn-compact">Editar</button>
+                                            }
                                           </div>
                                         }
                                       </div>
@@ -442,7 +444,7 @@
                                   @if (intervaloExpandido[material.codigo_id.toString() + '_' + registro.consecutivo]) {
                                     <div class="historial-body">
                                       <div class="historial-grid">
-                                        @if (registro.editando) {
+                                        @if (registro.editando && !esAuxiliar) {
                                           <div class="historial-item"><span class="historial-label">Valor Nominal (mL):</span><input type="number" [(ngModel)]="registro.valor_nominal" /></div>
                                           <div class="historial-item"><span class="historial-label">Fecha Cal. 1:</span><input type="date" [(ngModel)]="registro.fecha_c1" /></div>
                                           <div class="historial-item"><span class="historial-label">Error Cal. 1:</span><input type="number" [(ngModel)]="registro.error_c1" /></div>
@@ -473,7 +475,9 @@
                                           <div class="historial-item"><span class="historial-label">Intervalo Cal. (años):</span><span>{{ registro.intervalo_calibracion_anos || 'N/A' }}</span></div>
                                           <div class="historial-item"><span class="historial-label">Incertidumbre Expandida:</span><span>{{ registro.incertidumbre_exp || 'N/A' }}</span></div>
                                           <div class="historial-actions">
-                                            <button (click)="editarRegistroIntervalo(registro)" class="btn-compact">Editar</button>
+                                            @if (!esAuxiliar) {
+                                              <button (click)="editarRegistroIntervalo(registro)" class="btn-compact">Editar</button>
+                                            }
                                           </div>
                                         }
                                       </div>
@@ -508,7 +512,7 @@
   </div>
 
   <!-- Modal de edición (similar a equipos) -->
-  @if (editModalVisible || editModalClosing) {
+  @if ((editModalVisible || editModalClosing) && !esAuxiliar) {
     <div class="modal-overlay" 
          [class.closing]="editModalClosing" (click)="closeEditMaterialModal()">
       <div class="edit-modal" [class.closing]="editModalClosing" (click)="$event.stopPropagation()">

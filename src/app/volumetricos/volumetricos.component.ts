@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { SnackbarService } from '../shared/snackbar.service';
 // Suponiendo que hay un servicio similar para volumetricos
 import { VolumetricosService } from '../services/volumetricos.service';
+import { authUser } from '../services/auth.service';
 
 @Component({
   standalone: true,
@@ -14,6 +15,10 @@ import { VolumetricosService } from '../services/volumetricos.service';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class VolumetricosComponent implements OnInit {
+  public get esAuxiliar(): boolean {
+    const user = authUser();
+    return user?.rol === 'Auxiliar';
+  }
   // API base URL
   API_VOLUMETRICOS = (window as any).__env?.API_VOLUMETRICOS || 'http://localhost:4000/api/volumetricos';
 
