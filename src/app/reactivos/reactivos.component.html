@@ -1,4 +1,4 @@
-<div class="liba-theme container reactivos-page">
+﻿<div class="liba-theme container reactivos-page">
   <h1>
     <i class="fas fa-flask"></i>
     | Reactivos
@@ -15,6 +15,10 @@
     <div class="action-card" (click)="toggleFormulario('crear-reactivo')" [class.active]="formularioActivo === 'crear-reactivo'">
       <i class="fas fa-plus-circle"></i>
       <span>Crear Reactivo</span>
+    </div>
+    <div class="action-card" (click)="toggleFormulario('consumo')" [class.active]="formularioActivo === 'consumo'">
+      <i class="fas fa-syringe"></i>
+      <span>Registrar Consumo</span>
     </div>
     <div class="action-card" (click)="toggleFormulario('inventario')" [class.active]="formularioActivo === 'inventario'">
       <i class="fas fa-boxes"></i>
@@ -35,6 +39,7 @@
           (blur)="validarCampoCatalogoEnTiempoReal('codigo', $event)"
           [class.error]="catalogoErrors['codigo']">
           <option value="">Seleccionar código</option>
+          <option value="C-001">C-001</option>
           <option [value]="nextCodigoS">{{ nextCodigoS }}</option>
           <option [value]="nextCodigoR">{{ nextCodigoR }}</option>
           <option [value]="nextCodigoM">{{ nextCodigoM }}</option>
@@ -93,19 +98,6 @@
         </select>
         @if (catalogoErrors['clasificacion']) {
           <small class="error-message">⚠️ {{ catalogoErrors['clasificacion'] }}</small>
-        }
-      </div>
-
-      <!-- Descripción (NO obligatorio) -->
-      <div class="full-row form-field">
-        <label for="catDescripcion">Descripción:</label>
-        <textarea id="catDescripcion" [(ngModel)]="catDescripcion" name="catDescripcion" rows="2"
-          (input)="validarCampoCatalogoEnTiempoReal('descripcion', $event)"
-          (blur)="validarCampoCatalogoEnTiempoReal('descripcion', $event)"
-          [class.error]="catalogoErrors['descripcion']"
-          placeholder="Descripción adicional"></textarea>
-        @if (catalogoErrors['descripcion']) {
-          <small class="error-message">⚠️ {{ catalogoErrors['descripcion'] }}</small>
         }
       </div>
 
@@ -312,7 +304,7 @@
       <div class="field-sm form-field">
         <label for="presentacion">Presentación: *</label>
         <input id="presentacion" type="number" [(ngModel)]="presentacion" 
-          name="presentacion" min="0" step="any" required appNumbersOnly
+          name="presentacion" min="0" step="0.0001" required appNumbersOnly
           (input)="calcularCantidadTotal(); validarCampoReactivoEnTiempoReal('presentacion', $event)"
           (blur)="validarCampoReactivoEnTiempoReal('presentacion', $event)"
           [class.error]="reactivoErrors['presentacion']" 
@@ -343,7 +335,7 @@
       <div class="field-sm form-field">
         <label for="presentacion_cant">Cantidad x presentación: *</label>
         <input id="presentacion_cant" type="number" [(ngModel)]="presentacion_cant" 
-          name="presentacion_cant" min="0" step="any" required appNumbersOnly
+          name="presentacion_cant" min="0" step="0.0001" required appNumbersOnly
           (input)="calcularCantidadTotal(); validarCampoReactivoEnTiempoReal('presentacion_cant', $event)"
           (blur)="validarCampoReactivoEnTiempoReal('presentacion_cant', $event)"
           [class.error]="reactivoErrors['presentacion_cant']" 
@@ -520,6 +512,123 @@
           </button>
         }
       </div>
+    </form>
+  </section>
+}
+
+@if (formularioActivo === 'consumo') {
+  <h2>Registrar Consumo de Reactivo</h2>
+  <section>
+    <form class="form-grid" #formConsumo="ngForm" (ngSubmit)="registrarConsumo($event, formConsumo)">
+      
+      <!-- Lote Selection (Búsqueda combinada) -->
+      <div class="form-field full-row" style="position: relative; z-index: 1001;">
+        <label>Buscar y Seleccionar Reactivo: *</label>
+
+        @if (!consumoReactivoSeleccionado) {
+          <div class="campo-combinado">
+            <select name="consumoFiltroTipo" [(ngModel)]="consumoFiltroTipo" (change)="filtrarReactivosConsumo()" class="select-filtro">
+              <option value="todos">Todos los campos</option>
+              <option value="codigo">Código</option>
+              <option value="nombre">Nombre</option>
+              <option value="lote">Lote</option>
+              <option value="cas">CAS</option>
+            </select>
+            <input 
+              type="text" 
+              name="consumoBusqueda" 
+              [(ngModel)]="consumoBusqueda" 
+              (input)="filtrarReactivosConsumo()"
+              class="input-combinado" 
+              placeholder="Buscar reactivo..." 
+              autocomplete="off"
+            />
+          </div>
+
+          @if (consumoBusqueda && consumoResultados.length > 0) {
+            <div class="lista-resultados">
+              @for (r of consumoResultados; track r.lote) {
+                <div class="resultado-item" (click)="seleccionarReactivoConsumo(r)">
+                  <div class="resultado-header">
+                    <span class="codigo">{{ r.codigo }}</span>
+                    <span class="nombre">{{ r.nombre }}</span>
+                  </div>
+                  <div class="info-adicional">
+                    <span><i class="fas fa-barcode"></i> Lote: {{ r.lote }}</span>
+                    <span><i class="fas fa-flask"></i> Disp: {{ r.cantidad_total }} {{ getUnidadNombre(r.unidad_id) }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (consumoBusqueda && consumoResultados.length === 0) {
+            <div class="lista-resultados">
+              <div class="sin-resultados">
+                <i class="fas fa-search"></i>
+                <span>No se encontraron resultados</span>
+              </div>
+            </div>
+          }
+        } @else {
+          <!-- Item seleccionado -->
+          <div class="reactivo-seleccionado">
+            <div class="seleccionado-info">
+              <div class="seleccionado-content">
+                <div class="seleccionado-header">
+                  <i class="fas fa-check-circle"></i>
+                  <strong>Reactivo Seleccionado</strong>
+                </div>
+                <span class="codigo-nombre">
+                   {{ consumoReactivoSeleccionado.codigo }} - {{ consumoReactivoSeleccionado.nombre }}
+                </span>
+                <div class="detalles-seleccionado">
+                  <span><i class="fas fa-barcode"></i> Lote: {{ consumoReactivoSeleccionado.lote }}</span>
+                  <span><i class="fas fa-flask"></i> Disponible: {{ consumoReactivoSeleccionado.cantidad_total }} {{ getUnidadNombre(consumoReactivoSeleccionado.unidad_id) }}</span>
+                </div>
+              </div>
+              <button type="button" class="btn-limpiar" (click)="limpiarSeleccionConsumo()" title="Cambiar reactivo">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (submittedConsumo && !consumoForm.lote) {
+          <small class="error-message">⚠️ Debe seleccionar un reactivo</small>
+        }
+      </div>
+
+      <!-- Cantidad -->
+      <div class="form-field">
+        <label for="consumoCantidad">Cantidad a consumir: *</label>
+        <input id="consumoCantidad" type="number" [(ngModel)]="consumoForm.cantidad" 
+               name="consumoCantidad" required min="0.0001" step="0.0001" appNumbersOnly 
+               placeholder="Ej: 10" />
+        @if (submittedConsumo && (!consumoForm.cantidad || consumoForm.cantidad <= 0)) {
+           <small class="error-message">⚠️ Cantidad inválida</small>
+        }
+      </div>
+
+      <div class="form-field full-row">
+         <label for="consumoUso">Uso:</label>
+         <textarea id="consumoUso" [(ngModel)]="consumoForm.uso" name="consumoUso" rows="2" placeholder="Describa el uso del reactivo..." required></textarea>
+         @if (submittedConsumo && (!consumoForm.uso || !consumoForm.uso.trim())) {
+            <small class="error-message">⚠️ El uso es requerido</small>
+         }
+       </div>
+
+      <!-- Error message -->
+      @if (consumoError) {
+        <div class="full-row error-message">
+          {{ consumoError }}
+        </div>
+      }
+
+      <div class="actions">
+        <button class="btn-compact" type="submit">Registrar Consumo</button>
+      </div>
+
     </form>
   </section>
 }
@@ -845,13 +954,13 @@
       <div class="field-sm">
         <label for="edit_presentacion">Presentación</label>
         <input id="edit_presentacion" type="number" [(ngModel)]="editFormData.presentacion" name="edit_presentacion"
-          min="0" step="any" />
+          min="0" step="0.0001" />
       </div>
 
       <div class="field-sm">
         <label for="edit_presentacion_cant">Cantidad x presentación</label>
         <input id="edit_presentacion_cant" type="number" [(ngModel)]="editFormData.presentacion_cant"
-          name="edit_presentacion_cant" min="0" step="any" />
+          name="edit_presentacion_cant" min="0" step="0.0001" />
       </div>
 
       <div class="field-sm">

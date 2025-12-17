@@ -75,6 +75,17 @@ export const reactivosService = {
     if (!res.ok) throw new Error(await res.text());
     return res.json(); // { total }
   },
+  async registrarConsumo(item: { lote: string, cantidad: number, usuario?: string, uso: string }) {
+    const res = await fetch(`${API_BASE}/consumo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(item)
+    });
+    let data: any = null; try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.message) || 'Error registrando consumo');
+    return data;
+  },
+
   async obtenerReactivo(lote: string) {
     const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}`);
     if (!res.ok) throw new Error(await res.text());

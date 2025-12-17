@@ -2,7 +2,263 @@
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
 @import '../shared/dashboard-cards.css';
 
-/* ===== Variables CSS ===== */
+/* Estilos para el campo combinado de búsqueda (Ported from Equipos) */
+.campo-combinado {
+  position: relative;
+  display: flex;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.campo-combinado:focus-within {
+  border-color: #001f5b;
+  box-shadow: 0 0 0 2px rgba(0, 31, 91, 0.1);
+}
+
+.select-filtro {
+  width: 160px;
+  border: none;
+  border-right: 1px solid #ccc;
+  background: #f8f9fa;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  color: #495057;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s ease;
+}
+
+.select-filtro:focus {
+  background: #e9ecef;
+}
+
+.input-combinado {
+  flex: 1;
+  border: none;
+  padding: 0.5rem;
+  font-size: 1rem;
+  outline: none;
+  min-width: 0;
+}
+
+.input-combinado::placeholder {
+  color: #6c757d;
+  opacity: 0.7;
+}
+
+/* Mejorar el estilo de la lista de resultados */
+.lista-resultados {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.sin-resultados {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.sin-resultados i {
+  font-size: 1.5rem;
+  color: #adb5bd;
+}
+
+.sin-resultados small {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.resultado-item {
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.resultado-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(2px);
+}
+
+.resultado-item:last-child {
+  border-bottom: none;
+}
+
+.resultado-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.codigo {
+  color: #001f5b;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.nombre {
+  color: #495057;
+  font-size: 0.95rem;
+}
+
+.info-adicional {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.info-adicional span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.info-adicional i {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* Estilo para item seleccionado */
+.reactivo-seleccionado {
+  margin-top: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+  border: 1px solid #c3e6cb;
+  border-radius: 6px;
+}
+
+.seleccionado-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.seleccionado-content {
+  flex: 1;
+}
+
+.seleccionado-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.seleccionado-header i {
+  color: #28a745;
+  font-size: 0.9rem;
+}
+
+.seleccionado-header strong {
+  color: #155724;
+  font-size: 0.9rem;
+}
+
+.codigo-nombre {
+  color: #155724;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.detalles-seleccionado {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #155724;
+}
+
+.detalles-seleccionado span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-limpiar {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.3s ease;
+}
+
+.btn-limpiar:hover {
+  background: #c82333;
+}
+
+.info-ayuda {
+  margin-top: 6px;
+  padding: 8px;
+  background: #e7f3ff;
+  border-radius: 4px;
+  border-left: 3px solid #001f5b;
+}
+
+.info-ayuda small {
+  color: #001f5b;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info-ayuda i {
+  font-size: 0.7rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .campo-combinado {
+    flex-direction: column;
+  }
+  
+  .select-filtro {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .seleccionado-info {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn-limpiar {
+    align-self: flex-end;
+  }
+}
+
 :root {
   --primary-blue: #001f5b;
   --primary-turquoise: #00b8b5;

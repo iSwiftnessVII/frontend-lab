@@ -89,7 +89,6 @@ export class ReactivosComponent implements OnInit {
   catNombre = '';
   catTipo = '';
   catClasificacion = '';
-  catDescripcion = '';
   catalogoMsg = '';
   submittedCatalogo = false;
 
@@ -221,11 +220,127 @@ reactivoErrors: { [key: string]: string } = {};
     }, duration);
   }
 
+  // Consumo
+  consumoForm = { lote: '', cantidad: null as number | null, uso: '' };
+  consumoMsg = '';
+  consumoError = '';
+  submittedConsumo = false;
+  reactivosConsumo: any[] = [];
+
+  // Filtro de consumo
+  consumoFiltroTipo: string = 'todos';
+  consumoBusqueda: string = '';
+  consumoResultados: any[] = [];
+  consumoReactivoSeleccionado: any = null;
+
   constructor(private sanitizer: DomSanitizer, private cdr: ChangeDetectorRef, public snack: SnackbarService) {}
 
-  toggleFormulario(tipo: string) {
+  async toggleFormulario(tipo: string) {
     this.formularioActivo = this.formularioActivo === tipo ? null : tipo;
+    if (this.formularioActivo === 'consumo') {
+      this.consumoForm = { lote: '', cantidad: null, uso: '' };
+      this.consumoMsg = '';
+      this.consumoError = '';
+      this.submittedConsumo = false;
+      
+      this.consumoFiltroTipo = 'todos';
+      this.consumoBusqueda = '';
+      this.consumoResultados = [];
+      this.consumoReactivoSeleccionado = null;
+
+      await this.cargarReactivosConsumo();
+    }
     try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
+  }
+
+  async cargarReactivosConsumo() {
+    try {
+      const resp = await reactivosService.listarReactivos('', 0, 0);
+      this.reactivosConsumo = Array.isArray(resp) ? resp : resp.rows;
+    } catch (e) {
+      console.error('Error cargando reactivos para consumo', e);
+    }
+  }
+
+  filtrarReactivosConsumo() {
+    const q = (this.consumoBusqueda || '').toLowerCase().trim();
+    if (!q) {
+      this.consumoResultados = [];
+      return;
+    }
+    
+    this.consumoResultados = this.reactivosConsumo.filter(r => {
+      const lote = (r.lote || '').toLowerCase();
+      const codigo = (r.codigo || '').toLowerCase();
+      const nombre = (r.nombre || '').toLowerCase();
+      const cas = (r.cas || '').toLowerCase();
+
+      if (this.consumoFiltroTipo === 'todos') {
+         return lote.includes(q) || codigo.includes(q) || nombre.includes(q) || cas.includes(q);
+      } else if (this.consumoFiltroTipo === 'codigo') {
+        return codigo.includes(q);
+      } else if (this.consumoFiltroTipo === 'nombre') {
+        return nombre.includes(q);
+      } else if (this.consumoFiltroTipo === 'lote') {
+        return lote.includes(q);
+      } else if (this.consumoFiltroTipo === 'cas') {
+        return cas.includes(q);
+      }
+      return false;
+    });
+  }
+
+  seleccionarReactivoConsumo(item: any) {
+    this.consumoReactivoSeleccionado = item;
+    this.consumoForm.lote = item.lote;
+    this.consumoResultados = []; 
+    this.consumoBusqueda = ''; 
+  }
+
+  limpiarSeleccionConsumo() {
+    this.consumoReactivoSeleccionado = null;
+    this.consumoForm.lote = '';
+    this.consumoBusqueda = '';
+    this.consumoResultados = [];
+  }
+
+  async registrarConsumo(event: Event, form: NgForm) {
+    event.preventDefault();
+    this.submittedConsumo = true;
+    this.consumoError = '';
+    this.consumoMsg = '';
+
+    if (!this.consumoForm.lote || !this.consumoForm.cantidad || this.consumoForm.cantidad <= 0 || !this.consumoForm.uso || !this.consumoForm.uso.trim()) {
+      return;
+    }
+    
+    // Validar stock disponible
+    const reactivo = this.reactivosConsumo.find(r => r.lote === this.consumoForm.lote);
+    if (reactivo && reactivo.cantidad_total < this.consumoForm.cantidad) {
+        this.consumoError = `Cantidad insuficiente. Disponible: ${reactivo.cantidad_total}`;
+        return;
+    }
+
+    try {
+      const res = await reactivosService.registrarConsumo({
+        lote: this.consumoForm.lote,
+        cantidad: this.consumoForm.cantidad,
+        uso: this.consumoForm.uso
+      });
+      
+      this.snack.success('Consumo registrado exitosamente');
+      this.toggleFormulario('consumo'); // Cierra el formulario
+      
+      // Actualizar listas
+      this.loadReactivos(this.reactivosPageSize, 0); 
+    } catch (err: any) {
+      this.consumoError = err.message || 'Error al registrar consumo';
+    }
+  }
+
+  getUnidadNombre(id: number): string {
+    const u = this.unidades.find(x => x.id == id);
+    return u ? u.nombre : '';
   }
 
   async init() {
@@ -636,7 +751,6 @@ private getValorCatalogo(campo: string): any {
     case 'nombre': return this.catNombre;
     case 'tipo': return this.catTipo;
     case 'clasificacion': return this.catClasificacion;
-    case 'descripcion': return this.catDescripcion;
     default: return '';
   }
 }
@@ -1412,7 +1526,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
 
   calcularCantidadTotal() {
     if (this.presentacion != null && this.presentacion_cant != null) {
-      this.cantidad_total = Number(this.presentacion) * Number(this.presentacion_cant);
+      this.cantidad_total = Number((Number(this.presentacion) * Number(this.presentacion_cant)).toFixed(4));
     }
   }
 
@@ -1433,8 +1547,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       codigo: safeTrim(this.catCodigo),
       nombre: safeTrim(this.catNombre),
       tipo_reactivo: safeTrim(this.catTipo),
-      clasificacion_sga: safeTrim(this.catClasificacion),
-      descripcion: (() => { const d = safeTrim(this.catDescripcion); return d ? d : null; })()
+      clasificacion_sga: safeTrim(this.catClasificacion)
     });
     this.snack.success('Catálogo creado correctamente');
     
@@ -1442,9 +1555,9 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     this.catalogoErrors = {};
     
     // limpiar
-    this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = this.catDescripcion = '';
+    this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = '';
     // Resetear estado del formulario para limpiar touched/dirty y evitar resaltar en rojo
-    try { if (form) form.resetForm({ catCodigo:'', catNombre:'', catTipo:'', catClasificacion:'', catDescripcion:'' }); } catch {}
+    try { if (form) form.resetForm({ catCodigo:'', catNombre:'', catTipo:'', catClasificacion:'' }); } catch {}
     this.submittedCatalogo = false;
     // Recargar base y re-aplicar filtros/búsqueda para que el nuevo elemento aparezca
     await this.cargarCatalogoBase();
@@ -1699,7 +1812,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     };
     // Recalcular cantidad total si aplica
     const cantidad_total = (this.editFormData.presentacion != null && this.editFormData.presentacion_cant != null)
-      ? Number(this.editFormData.presentacion) * Number(this.editFormData.presentacion_cant)
+      ? Number((Number(this.editFormData.presentacion) * Number(this.editFormData.presentacion_cant)).toFixed(4))
       : this.editFormData.cantidad_total;
     const payload = {
       lote: String(this.editFormData.lote || '').trim(),
