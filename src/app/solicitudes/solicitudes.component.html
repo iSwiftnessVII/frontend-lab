@@ -1030,44 +1030,6 @@
         }
       </div>
 
-      <!-- Fecha límite -->
-      <div class="form-field">
-        <label for="resultadoFechaLimite">Fecha límite para la entrega: *</label>
-        <input id="resultadoFechaLimite" 
-          type="date" 
-          [(ngModel)]="resultadoFechaLimite" 
-          name="resultadoFechaLimite" 
-          required
-          [disabled]="revisionLocked"
-          (input)="validarCampoResultadoEnTiempoReal('fechaLimite', $event)"
-          (blur)="validarCampoResultadoEnTiempoReal('fechaLimite', $event)"
-          [class.error]="resultadoErrors['fechaLimite']" />
-        @if (resultadoErrors['fechaLimite']) {
-          <small class="error-message">
-            ⚠️ {{ resultadoErrors['fechaLimite'] }}
-          </small>
-        }
-      </div>
-
-      <!-- Fecha de envío -->
-      <div class="form-field">
-        <label for="resultadoFechaEnvio">Fecha de envío de resultados: *</label>
-        <input id="resultadoFechaEnvio" 
-          type="date" 
-          [(ngModel)]="resultadoFechaEnvio" 
-          name="resultadoFechaEnvio" 
-          required
-          [disabled]="revisionLocked"
-          (input)="validarCampoResultadoEnTiempoReal('fechaEnvio', $event)"
-          (blur)="validarCampoResultadoEnTiempoReal('fechaEnvio', $event)"
-          [class.error]="resultadoErrors['fechaEnvio']" />
-        @if (resultadoErrors['fechaEnvio']) {
-          <small class="error-message">
-            ⚠️ {{ resultadoErrors['fechaEnvio'] }}
-          </small>
-        }
-      </div>
-
       <!-- Viabilidad del servicio -->
       <div class="form-field">
         <label for="resultadoServicioViable">¿El servicio es viable? *</label>
@@ -1089,6 +1051,27 @@
           </small>
         }
       </div>
+
+      <!-- Fecha límite (Solo si es viable) -->
+      @if (resultadoServicioViable === true) {
+        <div class="form-field">
+          <label for="resultadoFechaLimite">Fecha estimada inicio de análisis: *</label>
+          <input id="resultadoFechaLimite" 
+            type="date" 
+            [(ngModel)]="resultadoFechaLimite" 
+            name="resultadoFechaLimite" 
+            required
+            [disabled]="revisionLocked"
+            (input)="validarCampoResultadoEnTiempoReal('fechaLimite', $event)"
+            (blur)="validarCampoResultadoEnTiempoReal('fechaLimite', $event)"
+            [class.error]="resultadoErrors['fechaLimite']" />
+          @if (resultadoErrors['fechaLimite']) {
+            <small class="error-message">
+              ⚠️ {{ resultadoErrors['fechaLimite'] }}
+            </small>
+          }
+        </div>
+      }
     </div>
     
     <div class="form-actions">
@@ -1451,12 +1434,8 @@
                       <div class="seccion-titulo">Revisión</div>
                       <div class="detalle-grid-compacto">
                         <div class="detalle-item">
-                          <div class="detalle-label">Fecha límite entrega</div>
+                          <div class="detalle-label">Fecha estimada inicio de análisis:</div>
                           <span>{{ formatValue(s.fecha_limite_entrega) }}</span>
-                        </div>
-                        <div class="detalle-item">
-                          <div class="detalle-label">Fecha envío resultados</div>
-                          <span>{{ formatValue(s.fecha_envio_resultados) }}</span>
                         </div>
                         <div class="detalle-item">
                           <div class="detalle-label">Servicio viable</div>
@@ -1681,9 +1660,8 @@
 
             @if (editSolicitudActiveTab === 'revision') {
               <div class="form-grid">
-                <div class="form-field"><label>Fecha límite entrega</label><input type="date" [(ngModel)]="editRevisionFechaLimite" /></div>
+                <div class="form-field"><label>Fecha estimada inicio de análisis:</label><input type="date" [(ngModel)]="editRevisionFechaLimite" /></div>
                 <!-- Código informe resultados removed per request -->
-                <div class="form-field"><label>Fecha envío resultados</label><input type="date" [(ngModel)]="editRevisionFechaEnvio" /></div>
                 <div class="form-field"><label>Servicio viable</label>
                   <select [(ngModel)]="editRevisionServicioViable">
                     <option [ngValue]="null">—</option>

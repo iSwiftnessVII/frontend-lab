@@ -120,7 +120,6 @@ export class SolicitudesService {
 
       // Revisión - nombres exactos del JOIN
       fecha_limite_entrega: s?.fecha_limite_entrega ?? null,
-      fecha_envio_resultados: s?.fecha_envio_resultados ?? null,
       servicio_es_viable: s?.servicio_es_viable === null ? null : (Number(s.servicio_es_viable) === 1 || s.servicio_es_viable === true),
 
       // Encuesta - nombres exactos del JOIN
@@ -160,7 +159,6 @@ export class SolicitudesService {
         realizo_seguimiento_oferta: null,
         observacion_oferta: null,
         fecha_limite_entrega: null,
-        fecha_envio_resultados: null,
         servicio_es_viable: null,
         fecha_encuesta: null,
         comentarios: null,
@@ -247,7 +245,6 @@ export class SolicitudesService {
         const merged = {
           ...s,
           fecha_limite_entrega: body?.fecha_limite_entrega ?? s?.fecha_limite_entrega ?? null,
-          fecha_envio_resultados: body?.fecha_envio_resultados ?? s?.fecha_envio_resultados ?? null,
           servicio_es_viable: body?.servicio_es_viable ?? s?.servicio_es_viable ?? null
         };
         return this.normalizeSolicitud(merged);

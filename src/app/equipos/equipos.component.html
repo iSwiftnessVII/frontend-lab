@@ -862,16 +862,16 @@
                     <div class="detalle-item">
                       <span class="detalle-label">Cargo y Firma</span>
                       <span class="firma-actions firma-center">
-                        <a 
+                        <button 
                           *ngIf="(equipo.codigo_identificador || equipo.codigo_identificacion)"
-                          [href]="API_EQUIPOS + '/firma/' + (equipo.codigo_identificador || equipo.codigo_identificacion)"
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          class="icon-eye-link"
-                          title="Abrir firma en nueva pestaña"
+                          type="button"
+                          class="icon-eye-btn"
+                          style="background:none; border:none; padding:0; cursor: pointer;"
+                          (click)="abrirFirmaModal(API_EQUIPOS + '/firma/' + (equipo.codigo_identificador || equipo.codigo_identificacion))"
+                          title="Ver firma"
                         >
                           <i class="fas fa-eye icon-eye"></i>
-                        </a>
+                        </button>
                         <span *ngIf="!(equipo.codigo_identificador || equipo.codigo_identificacion)">N/A</span>
                       </span>
                     </div>
@@ -1307,4 +1307,18 @@
 
       </div>
     </div>
+
+  <!-- Modal de imagen de firma (Global) -->
+  <div *ngIf="firmaModalVisible" class="modal-backdrop" (click)="cerrarFirmaModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span>Firma</span>
+        <button type="button" class="modal-close" (click)="cerrarFirmaModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <img *ngIf="firmaModalSrc" [src]="firmaModalSrc" alt="Firma" class="firma-full" oncontextmenu="return false;" style="pointer-events: auto; -webkit-user-drag: none; user-select: none;"/>
+      </div>
+    </div>
+  </div>
+
     

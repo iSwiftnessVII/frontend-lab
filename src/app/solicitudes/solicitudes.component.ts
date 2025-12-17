@@ -111,7 +111,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   resultadoSolicitudId: any = '';
   resultadoFechaLimite = '';
-  resultadoFechaEnvio = '';
   resultadoServicioViable: any = '';
 
   encuestaSolicitudId: any = '';
@@ -706,9 +705,8 @@ getTomorrowDate(): string {
  validarResultado(): boolean {
   // Validar todos los campos dinámicamente
   this.validarCampoResultadoEnTiempoReal('solicitudId');
-  this.validarCampoResultadoEnTiempoReal('fechaLimite');
-  this.validarCampoResultadoEnTiempoReal('fechaEnvio');
-  this.validarCampoResultadoEnTiempoReal('servicioViable');
+    this.validarCampoResultadoEnTiempoReal('fechaLimite');
+    this.validarCampoResultadoEnTiempoReal('servicioViable');
   
   // Verificar si hay errores
   return Object.values(this.resultadoErrors).every(error => !error);
@@ -1112,16 +1110,21 @@ private validarCampoOfertaIndividual(campo: string, valor: any): string {
 }
 
 // ===== VALIDACIÓN DINÁMICA PARA RESULTADO/REVISIÓN =====
-validarCampoResultadoEnTiempoReal(campo: string, event?: Event): void {
-  const valor = this.getValorResultado(campo);
-  this.resultadoErrors[campo] = this.validarCampoResultadoIndividual(campo, valor);
-}
+  validarCampoResultadoEnTiempoReal(campo: string, event?: Event): void {
+    const valor = this.getValorResultado(campo);
+    this.resultadoErrors[campo] = this.validarCampoResultadoIndividual(campo, valor);
+
+    // Si cambia la viabilidad, revalidar la fecha límite para limpiar errores si ahora es no viable
+    if (campo === 'servicioViable') {
+      const valorFecha = this.getValorResultado('fechaLimite');
+      this.resultadoErrors['fechaLimite'] = this.validarCampoResultadoIndividual('fechaLimite', valorFecha);
+    }
+  }
 
 private getValorResultado(campo: string): any {
   switch (campo) {
     case 'solicitudId': return this.resultadoSolicitudId;
     case 'fechaLimite': return this.resultadoFechaLimite;
-    case 'fechaEnvio': return this.resultadoFechaEnvio;
     case 'servicioViable': return this.resultadoServicioViable;
     default: return '';
   }
@@ -1134,20 +1137,14 @@ private validarCampoResultadoIndividual(campo: string, valor: any): string {
       return '';
       
     case 'fechaLimite':
+      // Solo es obligatoria si el servicio es viable
+      if (this.resultadoServicioViable !== true) return '';
+      
       if (!valor) return 'La fecha límite es obligatoria';
       const fechaLimite = new Date(valor);
       const hoyLimite = new Date();
       hoyLimite.setHours(0, 0, 0, 0);
       if (fechaLimite < hoyLimite) return 'La fecha límite no puede ser anterior a hoy';
-      return '';
-      
-    case 'fechaEnvio':
-      if (!valor) return 'La fecha de envío es obligatoria';
-      const fechaEnvio = new Date(valor);
-      // CORREGIDO: Usar this.resultadoFechaLimite directamente, no redeclarar fechaLimite
-      const fechaLimiteExistente = this.resultadoFechaLimite ? new Date(this.resultadoFechaLimite) : null;
-      if (fechaLimiteExistente && fechaEnvio > fechaLimiteExistente)
-        return 'La fecha de envío no puede ser posterior a la fecha límite';
       return '';
       
     case 'servicioViable':
@@ -1463,7 +1460,6 @@ private getValorEncuesta(campo: string): any {
     try {
       const body = {
         fecha_limite_entrega: this.resultadoFechaLimite,
-        fecha_envio_resultados: this.resultadoFechaEnvio,
         servicio_es_viable: this.resultadoServicioViable ? 1 : 0
       };
 
@@ -1689,7 +1685,6 @@ private getValorEncuesta(campo: string): any {
     // Reset to empty string so the select shows its placeholder option
     this.resultadoSolicitudId = '';
     this.resultadoFechaLimite = '';
-    this.resultadoFechaEnvio = '';
     this.resultadoServicioViable = false;
   }
 
@@ -1740,7 +1735,6 @@ private getValorEncuesta(campo: string): any {
     });
     console.log('Campos de revisión:', {
       fecha_limite_entrega: s?.fecha_limite_entrega,
-      fecha_envio_resultados: s?.fecha_envio_resultados,
       servicio_es_viable: s?.servicio_es_viable
     });
     console.log('Campos de encuesta:', {
@@ -1934,7 +1928,6 @@ private getValorEncuesta(campo: string): any {
 
   // Revision fields
   editRevisionFechaLimite: string = '';
-  editRevisionFechaEnvio: string = '';
   editRevisionServicioViable: any = null;
 
   // Encuesta fields
@@ -1980,7 +1973,6 @@ private getValorEncuesta(campo: string): any {
 
     // Prefill revision
     this.editRevisionFechaLimite = this.toDateInput(s?.fecha_limite_entrega);
-    this.editRevisionFechaEnvio = this.toDateInput(s?.fecha_envio_resultados);
     this.editRevisionServicioViable = s?.servicio_es_viable === null ? null : (s?.servicio_es_viable ? true : false);
 
     // Prefill encuesta
@@ -2057,11 +2049,9 @@ private getValorEncuesta(campo: string): any {
         
         if (this.revisionLocked) {
           this.resultadoFechaLimite = this.toDateInput(found.fecha_limite_entrega);
-          this.resultadoFechaEnvio = this.toDateInput(found.fecha_envio_resultados);
           this.resultadoServicioViable = found.servicio_es_viable === 1 || found.servicio_es_viable === true;
         } else {
           this.resultadoFechaLimite = '';
-          this.resultadoFechaEnvio = '';
           this.resultadoServicioViable = null;
           this.revisionLocked = false;
         }
@@ -2175,7 +2165,6 @@ private getValorEncuesta(campo: string): any {
     if (!this.editSolicitudId) return;
     const body: any = {
       fecha_limite_entrega: this.editRevisionFechaLimite || null,
-      fecha_envio_resultados: this.editRevisionFechaEnvio || null,
       servicio_es_viable: this.editRevisionServicioViable === null ? null : (this.editRevisionServicioViable ? 1 : 0)
     };
     try {
@@ -2248,7 +2237,6 @@ private getValorEncuesta(campo: string): any {
       // 3) Revision
       await this.solicitudesService.upsertRevision(Number(this.editSolicitudId), {
         fecha_limite_entrega: this.editRevisionFechaLimite || null,
-        fecha_envio_resultados: this.editRevisionFechaEnvio || null,
         servicio_es_viable: this.editRevisionServicioViable === null ? null : (this.editRevisionServicioViable ? 1 : 0)
       });
 
