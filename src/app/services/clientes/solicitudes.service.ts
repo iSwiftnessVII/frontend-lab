@@ -346,6 +346,51 @@ export class SolicitudesService {
     await this.loadSolicitudes();
   }
 
+  async suscribirseSolicitudes(email: string): Promise<any> {
+    const res = await fetch(API + '/suscripciones-solicitudes', {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ email })
+    });
+    let data: any = null; try { data = await res.json(); } catch {}
+    if (res.status === 401) {
+      throw new Error('No autorizado - Token inválido o expirado');
+    }
+    if (!res.ok) {
+      throw new Error((data && data.error) || 'Error al suscribirse a solicitudes');
+    }
+    return data;
+  }
+
+  async estadoSuscripcionSolicitudes(email: string): Promise<{ suscrito: boolean }> {
+    const res = await fetch(API + '/suscripciones-solicitudes/' + encodeURIComponent(email), {
+      headers: this.getAuthHeaders()
+    });
+    let data: any = null; try { data = await res.json(); } catch {}
+    if (res.status === 401) {
+      throw new Error('No autorizado - Token inválido o expirado');
+    }
+    if (!res.ok) {
+      throw new Error((data && data.error) || 'Error consultando suscripción de solicitudes');
+    }
+    return data as { suscrito: boolean };
+  }
+
+  async cancelarSuscripcionSolicitudes(email: string): Promise<any> {
+    const res = await fetch(API + '/suscripciones-solicitudes/' + encodeURIComponent(email), {
+      method: 'DELETE',
+      headers: this.getAuthHeaders()
+    });
+    let data: any = null; try { data = await res.json(); } catch {}
+    if (res.status === 401) {
+      throw new Error('No autorizado - Token inválido o expirado');
+    }
+    if (!res.ok) {
+      throw new Error((data && data.error) || 'Error al cancelar suscripción de solicitudes');
+    }
+    return data;
+  }
+
   async suscribirseRevision(email: string): Promise<any> {
     const res = await fetch(API + '/suscripciones-revision', {
       method: 'POST',

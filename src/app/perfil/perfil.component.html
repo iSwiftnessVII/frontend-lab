@@ -18,6 +18,9 @@
             @if (suscritoSig()) {
               <span class="perfil-badge">Suscrito a Reactivos</span>
             }
+            @if (suscritoSolicitudSig()) {
+              <span class="perfil-badge">Suscrito a Nuevas Solicitudes</span>
+            }
             @if (suscritoRevisionSig()) {
               <span class="perfil-badge">Suscrito a Revisión de Oferta</span>
             }
@@ -80,44 +83,58 @@
         </div>
 
         <div class="perfil-card">
-          <h3 class="section-title">
-            Suscripción a Revisión de Oferta
-          </h3>
+        <h3 class="section-title">
+          Suscripción a Nuevas Solicitudes
+        </h3>
         <p class="section-help">
-          Recibirás correos cuando se registre una revisión de oferta en Solicitudes.
+          Recibirás correos cuando se registre una nueva solicitud.
         </p>
-        <form (submit)="onSuscribirseRevision(); $event.preventDefault();" class="form-grid">
+        <form (submit)="onSuscribirseSolicitudes(); $event.preventDefault();" class="form-grid">
           <div class="form-field">
             <label for="revSubEmail">Correo:</label>
-            <input id="revSubEmail" type="email" [(ngModel)]="revisionEmail" name="revisionEmail" placeholder="tucorreo@dominio.com" />
+            <input id="revSubEmail" type="email" [(ngModel)]="solicitudEmail" name="solicitudEmail" placeholder="tucorreo@dominio.com" />
           </div>
           <div class="perfil-actions">
-            <button class="btn btn-back" type="submit" [disabled]="revisionLoading">
+            <button class="btn btn-back" type="submit" [disabled]="solicitudLoading">
               <i class="fas fa-bell"></i> Suscribirse
             </button>
-            <button class="btn btn-back" type="button" [disabled]="revisionLoading || !suscritoRevisionSig()" (click)="onCancelarSuscripcionRevision()">
+            <button class="btn btn-back" type="button" [disabled]="solicitudLoading || !suscritoSolicitudSig()" (click)="onCancelarSuscripcionSolicitudes()">
               <i class="fas fa-ban"></i> Cancelar suscripción
             </button>
           </div>
-          @if (revisionMsg) {
-            <small [style.color]="revisionMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">{{ revisionMsg }}</small>
+          @if (solicitudMsg) {
+            <small [style.color]="solicitudMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">{{ solicitudMsg }}</small>
           }
         </form>
         </div>
-        
+
         <div class="perfil-card">
           <h3 class="section-title">
-            Suscripción de prueba
+            Suscripción a Revisión de Oferta
           </h3>
           <p class="section-help">
-            Tarjeta de prueba para validar el layout de tres columnas.
+            Recibirás correos cuando se registre una revisión de oferta.
           </p>
-          <div class="perfil-actions">
-            <button class="btn btn-back" type="button">
-              <i class="fas fa-check"></i> Probar
-            </button>
-          </div>
+          <form (submit)="onSuscribirseRevision(); $event.preventDefault();" class="form-grid">
+            <div class="form-field">
+              <label for="revSubEmail2">Correo:</label>
+              <input id="revSubEmail2" type="email" [(ngModel)]="revisionEmail" name="revisionEmail" placeholder="tucorreo@dominio.com" />
+            </div>
+            <div class="perfil-actions">
+              <button class="btn btn-back" type="submit" [disabled]="revisionLoading">
+                <i class="fas fa-bell"></i> Suscribirse
+              </button>
+              <button class="btn btn-back" type="button" [disabled]="revisionLoading || !suscritoRevisionSig()" (click)="onCancelarSuscripcionRevision()">
+                <i class="fas fa-ban"></i> Cancelar suscripción
+              </button>
+            </div>
+            @if (revisionMsg) {
+              <small [style.color]="revisionMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">{{ revisionMsg }}</small>
+            }
+          </form>
         </div>
+        
+
       </div>
     </section>
   }

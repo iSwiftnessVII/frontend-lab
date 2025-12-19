@@ -134,8 +134,8 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   // Tabs para tarjetas de solicitudes
   solicitudTabs = [
     { key: 'detalle', label: 'Detalle' },
-    { key: 'oferta', label: 'Oferta' },
     { key: 'revision', label: 'Revisión' },
+    { key: 'oferta', label: 'Oferta' },
     { key: 'encuesta', label: 'Encuesta' }
   ];
   activeSolicitudTab: { [id: number]: string } = {};

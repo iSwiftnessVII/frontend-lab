@@ -1,4 +1,11 @@
+import { authService } from './auth.service';
+
 const API_BASE = (window as any).__env?.API_USUARIOS || 'http://localhost:4000/api/usuarios';
+
+function authHeaders(): Record<string, string> {
+  const token = authService.getToken();
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
 
 export const usuariosService = {
   /**
@@ -7,7 +14,7 @@ export const usuariosService = {
   async listarUsuarios(): Promise<any[]> {
     const res = await fetch(`${API_BASE}`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...authHeaders() } as HeadersInit
     });
 
     if (!res.ok) {
@@ -24,7 +31,7 @@ export const usuariosService = {
   async listarRoles(): Promise<any[]> {
     const res = await fetch(`${API_BASE}/roles`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...authHeaders() } as HeadersInit
     });
 
     if (!res.ok) {
@@ -45,7 +52,7 @@ export const usuariosService = {
   }): Promise<any> {
     const res = await fetch(`${API_BASE}/crear`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() } as HeadersInit,
       body: JSON.stringify(usuario)
     });
 
@@ -67,7 +74,7 @@ export const usuariosService = {
   async cambiarEstado(id: number, estado: 'ACTIVO' | 'INACTIVO'): Promise<any> {
     const res = await fetch(`${API_BASE}/estado/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() } as HeadersInit,
       body: JSON.stringify({ estado })
     });
 
@@ -89,7 +96,7 @@ export const usuariosService = {
   async eliminarUsuario(id: number): Promise<any> {
     const res = await fetch(`${API_BASE}/eliminar/${id}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...authHeaders() } as HeadersInit
     });
 
     let data: any = null;

@@ -24,6 +24,10 @@ export class PerfilComponent implements OnInit {
   suscripcionMsg = '';
   suscripcionLoading = false;
   suscritoSig = signal(false);
+  solicitudEmail = '';
+  solicitudMsg = '';
+  solicitudLoading = false;
+  suscritoSolicitudSig = signal(false);
   revisionEmail = '';
   revisionMsg = '';
   revisionLoading = false;
@@ -51,8 +55,14 @@ export class PerfilComponent implements OnInit {
         const r = await reactivosService.estadoSuscripcion(u.email);
         this.suscritoSig.set(!!r?.suscrito);
         try {
-          const rr = await this.solicitudesService.estadoSuscripcionRevision(u.email);
-          this.suscritoRevisionSig.set(!!rr?.suscrito);
+          const rr = await this.solicitudesService.estadoSuscripcionSolicitudes(u.email);
+          this.suscritoSolicitudSig.set(!!rr?.suscrito);
+        } catch {
+          this.suscritoSolicitudSig.set(false);
+        }
+        try {
+          const rrr = await this.solicitudesService.estadoSuscripcionRevision(u.email);
+          this.suscritoRevisionSig.set(!!rrr?.suscrito);
         } catch {
           this.suscritoRevisionSig.set(false);
         }
@@ -71,14 +81,21 @@ export class PerfilComponent implements OnInit {
           this.suscritoSig.set(false);
         }
         try {
-          const rr = await this.solicitudesService.estadoSuscripcionRevision(u.email);
-          this.suscritoRevisionSig.set(!!rr?.suscrito);
+          const rr = await this.solicitudesService.estadoSuscripcionSolicitudes(u.email);
+          this.suscritoSolicitudSig.set(!!rr?.suscrito);
+        } catch {
+          this.suscritoSolicitudSig.set(false);
+        }
+        try {
+          const rrr = await this.solicitudesService.estadoSuscripcionRevision(u.email);
+          this.suscritoRevisionSig.set(!!rrr?.suscrito);
         } catch {
           this.suscritoRevisionSig.set(false);
         }
       })();
     } else {
       this.suscritoSig.set(false);
+      this.suscritoSolicitudSig.set(false);
       this.suscritoRevisionSig.set(false);
     }
   });
@@ -104,6 +121,30 @@ export class PerfilComponent implements OnInit {
       this.snack.error(this.suscripcionMsg);
     } finally {
       this.suscripcionLoading = false;
+    }
+  }
+
+  async onSuscribirseSolicitudes() {
+    const email = String(this.solicitudEmail || '').trim();
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !re.test(email)) {
+      this.solicitudMsg = 'Ingresa un correo válido';
+      this.snack.warn('Ingresa un correo válido');
+      return;
+    }
+    this.solicitudLoading = true;
+    this.solicitudMsg = '';
+    try {
+      await this.solicitudesService.suscribirseSolicitudes(email);
+      this.solicitudMsg = 'Suscripción a solicitudes confirmada. Revisa tu correo.';
+      this.solicitudEmail = '';
+      this.snack.success('Suscripción a solicitudes confirmada');
+      this.suscritoSolicitudSig.set(true);
+    } catch (err: any) {
+      this.solicitudMsg = err?.message || 'No se pudo suscribir a solicitudes';
+      this.snack.error(this.solicitudMsg);
+    } finally {
+      this.solicitudLoading = false;
     }
   }
 
@@ -150,6 +191,28 @@ export class PerfilComponent implements OnInit {
       this.suscripcionMsg = msg;
     } finally {
       this.suscripcionLoading = false;
+    }
+  }
+
+  async onCancelarSuscripcionSolicitudes() {
+    const email = this.user()?.email || '';
+    if (!email) {
+      this.snack.warn('No hay usuario autenticado');
+      return;
+    }
+    if (!window.confirm('¿Cancelar la suscripción a nuevas solicitudes?')) return;
+    this.solicitudLoading = true;
+    try {
+      await this.solicitudesService.cancelarSuscripcionSolicitudes(email);
+      this.snack.success('Suscripción de solicitudes cancelada');
+      this.suscritoSolicitudSig.set(false);
+      this.solicitudMsg = 'Suscripción de solicitudes cancelada';
+    } catch (err: any) {
+      const msg = err?.message || 'No se pudo cancelar la suscripción de solicitudes';
+      this.snack.error(msg);
+      this.solicitudMsg = msg;
+    } finally {
+      this.solicitudLoading = false;
     }
   }
 

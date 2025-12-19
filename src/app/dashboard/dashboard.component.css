@@ -452,9 +452,8 @@
     background: linear-gradient(135deg, var(--primary-white) 0%, #fffef8 100%);
     border-radius: 15px;
     margin: 1.5rem;
-    box-shadow: 0 8px 30px rgba(255, 243, 176, 0.4);
-    border: 3px solid rgba(255, 243, 176, 0.6);
-    border-left: 6px solid var(--alert-yellow);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+    border: 3px solid rgba(0, 0, 0, 0.05);
     position: relative;
     overflow: hidden;
     backdrop-filter: blur(10px);
@@ -469,6 +468,7 @@
     height: 200%;
     background: radial-gradient(circle, rgba(255, 243, 176, 0.15) 0%, transparent 70%);
     animation: rotate 20s linear infinite;
+    opacity: 0.1; /* Reducir opacidad para eliminar el tinte amarillo fuerte */
 }
 
 @keyframes rotate {
@@ -481,14 +481,14 @@
 }
 
 .alert-card.warning {
-    border-left-color: var(--alert-yellow);
+    /* border-left-color: var(--alert-yellow); */
 }
 
 /* Variante para vencidos */
 .alert-card.danger {
-    border-left-color: var(--alert-red);
-    box-shadow: 0 8px 30px rgba(255, 173, 173, 0.4);
-    border: 3px solid rgba(255, 173, 173, 0.6);
+    /* border-left-color: var(--alert-red); */
+    /* box-shadow: 0 8px 30px rgba(255, 173, 173, 0.4); */
+    /* border: 3px solid rgba(255, 173, 173, 0.6); */
 }
 
 .alert-content {
@@ -512,7 +512,7 @@
     gap: 1rem;
     max-height: 420px;
     overflow-y: auto;
-    padding: 0 1.5rem 1.5rem 1.5rem;
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
     padding-right: calc(1.5rem + 8px);
 }
 
@@ -533,7 +533,7 @@
     min-width: 0; /* Evita desbordamiento */
 }
 
-.reactivo-item::before {
+/* .reactivo-item::before {
     content: '';
     position: absolute;
     left: 0;
@@ -547,12 +547,20 @@
 
 .reactivo-item:hover::before {
     transform: scaleY(1);
-}
+} */
 
 .reactivo-item:hover {
-    transform: translateX(5px);
+    transform: translateY(-5px);
     box-shadow: var(--shadow-md);
-    border-color: var(--primary-turquoise);
+}
+
+/* Colores de borde específicos según el contexto de alerta */
+.alert-card.warning .reactivo-item:hover {
+    border-color: var(--alert-yellow);
+}
+
+.alert-card.danger .reactivo-item:hover {
+    border-color: var(--alert-red);
 }
 
 /* Encabezado con icono y nombre - Altura fija */
