@@ -14,6 +14,18 @@ export interface PapeleriaCreateInput {
   observaciones?: string | null;
 }
 
+export interface PapeleriaUpdateInput {
+  nombre: string;
+  cantidad_adquirida: number;
+  cantidad_existente?: number;
+  presentacion: PapeleriaPresentacion;
+  marca?: string | null;
+  descripcion?: string | null;
+  fecha_adquisicion?: string | null;
+  ubicacion?: string | null;
+  observaciones?: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -67,11 +79,13 @@ export class PapeleriaService {
     return data;
   }
 
-  async actualizar(id: number, input: PapeleriaCreateInput, imagen?: File | null): Promise<any> {
+  async actualizar(id: number, input: PapeleriaUpdateInput, imagen?: File | null): Promise<any> {
     const fd = new FormData();
     fd.append('nombre', input.nombre);
     fd.append('cantidad_adquirida', String(input.cantidad_adquirida));
-    fd.append('cantidad_existente', String(input.cantidad_existente));
+    if (input.cantidad_existente !== undefined) {
+      fd.append('cantidad_existente', String(input.cantidad_existente));
+    }
     fd.append('presentacion', input.presentacion);
     if (input.marca) fd.append('marca', input.marca);
     if (input.descripcion) fd.append('descripcion', input.descripcion);

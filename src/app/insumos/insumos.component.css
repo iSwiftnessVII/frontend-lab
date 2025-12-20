@@ -57,6 +57,10 @@
   align-items: end;
 }
 
+.insumos-page .list-section .equipos-grid {
+  margin-top: 1.5rem;
+}
+
 .insumos-page .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -88,4 +92,370 @@
   background: #fff;
   border-radius: 12px;
   border: 1px solid var(--border-gray);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeInUp 360ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.equipos-grid .equipo-card {
+  margin-bottom: 1rem;
+}
+
+.equipos-grid .equipo-card:last-child {
+  margin-bottom: 0;
+}
+
+.equipo-card {
+  background: var(--primary-white);
+  border: 2px solid var(--border-gray);
+  border-radius: 10px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  cursor: pointer;
+  width: 100%;
+}
+
+.equipo-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-turquoise);
+}
+
+.equipo-card .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.equipo-card .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.equipo-card .tag {
+  background: var(--light-gray);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-gray);
+  border: 1px solid var(--border-gray);
+  white-space: nowrap;
+}
+
+.equipo-card .tag strong {
+  color: var(--primary-blue);
+  margin-right: 0.25rem;
+}
+
+.equipo-card .card-name {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-turquoise) 100%);
+  color: var(--primary-white);
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.equipo-card .card-name .name-line {
+  font-size: 1.05rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  padding-right: 30px;
+}
+
+.insumo-card .card-name .name-line {
+  padding-right: 230px;
+}
+
+.insumo-card .card-right-controls {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  z-index: 3;
+}
+
+.insumo-card .qty-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 6px 10px;
+  border-radius: 8px;
+  min-height: 32px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.insumo-card .qty-input {
+  width: 80px;
+  padding: 6px 8px;
+  font-size: 0.92rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+}
+
+.insumo-card .qty-input:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.35);
+}
+
+.insumo-card .qty-reduce-btn {
+  width: 32px;
+  height: 32px;
+}
+
+.equipo-card .card-name .meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  opacity: 0.95;
+}
+
+.equipo-card .card-name .meta-line .chip {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.equipo-card .card-name .toggle-icon {
+  position: absolute;
+  right: 12px;
+  top: 8px;
+  transition: transform 0.18s ease;
+  font-size: 1.2rem;
+  z-index: 4;
+}
+
+.equipo-card .card-name .toggle-icon.open {
+  transform: rotate(180deg);
+}
+
+.equipo-detalles {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0;
+  animation: fadeInUp 0.3s ease;
+}
+
+.detalle-grid-compacto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.detalle-item {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-gray);
+  box-shadow: 0 4px 12px rgba(2, 6, 23, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.detalle-item .detalle-label {
+  background: #e9e9ea;
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-align: center;
+  font-weight: 500;
+}
+
+.detalle-item span:not(.detalle-label) {
+  padding: 6px 8px;
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: #0f172a;
+  text-align: center;
+}
+
+.detalle-item-full {
+  grid-column: 1 / -1;
+}
+
+.detalle-item-full .detalle-label {
+  text-align: left;
+  padding-left: 12px;
+}
+
+.detalle-item-full span:not(.detalle-label) {
+  text-align: left;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.insumo-card-row {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.insumo-card-image {
+  flex: 0 0 130px;
+  width: 130px;
+  height: 130px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-gray);
+  background: var(--light-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.insumo-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.insumo-card-image-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-gray);
+  font-size: 1.6rem;
+}
+
+.insumo-card-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.insumo-card .card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.insumo-card .pdf-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 200ms ease;
+  opacity: 1;
+}
+
+.edit-modal {
+  background: #fff;
+  padding: 18px;
+  border-radius: 8px;
+  width: 900px;
+  max-width: calc(100vw - 40px);
+  height: 620px;
+  max-height: 90vh;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 200ms ease, opacity 200ms ease;
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.modal-overlay.closing {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.edit-modal.closing {
+  transform: translateY(10px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.edit-modal .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  align-items: start;
+  min-height: 0;
+}
+
+.edit-modal .form-grid > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-modal .form-grid .full-row {
+  grid-column: 1 / -1;
+}
+
+.edit-modal-body {
+  margin-top: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 8px;
+}
+
+.edit-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 720px) {
+  .edit-modal .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .insumo-card-row {
+    flex-direction: column;
+  }
+
+  .insumo-card-image {
+    width: 100%;
+    flex: 0 0 auto;
+    height: 160px;
+  }
 }

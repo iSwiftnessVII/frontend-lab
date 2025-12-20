@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SnackbarService } from '../shared/snackbar.service';
 import { authUser } from '../services/auth.service';
-import { PapeleriaCreateInput, PapeleriaPresentacion, PapeleriaService } from '../services/papeleria.service';
+import { PapeleriaCreateInput, PapeleriaPresentacion, PapeleriaService, PapeleriaUpdateInput } from '../services/papeleria.service';
+import { logsService } from '../services/logs.service';
 
 @Component({
   standalone: true,
@@ -37,6 +38,9 @@ export class PapeleriaComponent implements OnInit {
   imagenPreviewUrl: string | null = null;
 
   private imagenBust: Record<string, string> = {};
+
+  reduceCantidadByKey: Record<string, number | null> = {};
+  private reducingKeys = new Set<string>();
 
   editPapeleriaModalOpen = false;
   editPapeleriaModalClosing = false;
@@ -157,8 +161,15 @@ export class PapeleriaComponent implements OnInit {
     }
 
     try {
-      await this.papeleriaService.crear(input, this.imagenFile);
+      const created = await this.papeleriaService.crear(input, this.imagenFile);
+      const createdId = this.papeleriaId(created);
       this.snack.success('Papelería registrada');
+      logsService.crearLogAccion({
+        modulo: 'PAPELERIA',
+        accion: 'CREAR',
+        descripcion: `Creación de papelería: ${createdId ?? input.nombre}`,
+        detalle: { id: createdId ?? null, ...input, creo_imagen: !!this.imagenFile }
+      }).catch(console.error);
       this.resetForm();
       this.formularioActivo = null;
       await this.cargarPapeleria();
@@ -216,6 +227,90 @@ export class PapeleriaComponent implements OnInit {
     this.detallesVisibles[key] = !this.detallesVisibles[key];
   }
 
+  isReduciendo(key: string): boolean {
+    return this.reducingKeys.has(key);
+  }
+
+  async reducirExistencias(p: any, key: string, event?: Event): Promise<void> {
+    if (event) event.stopPropagation();
+
+    const id = this.papeleriaId(p);
+    if (!id) {
+      this.snack.warn('No se pudo identificar el registro');
+      return;
+    }
+
+    const rawCantidad = this.reduceCantidadByKey[key];
+    const cantidad = Number(rawCantidad);
+    if (!Number.isFinite(cantidad) || cantidad <= 0) {
+      this.snack.warn('Ingrese una cantidad válida para reducir');
+      return;
+    }
+
+    const existente = Number(p?.cantidad_existente);
+    if (!Number.isFinite(existente)) {
+      this.snack.warn('La cantidad existente no es válida');
+      return;
+    }
+    if (cantidad > existente) {
+      this.snack.warn(`Cantidad insuficiente. Disponible: ${existente}`);
+      return;
+    }
+
+    const adquirida = Number(p?.cantidad_adquirida);
+    if (!Number.isFinite(adquirida) || adquirida < 0) {
+      this.snack.warn('La cantidad adquirida no es válida');
+      return;
+    }
+
+    const presentacion = (p?.presentacion || '').toString() as PapeleriaPresentacion;
+    if (!presentacion) {
+      this.snack.warn('La presentación no es válida');
+      return;
+    }
+
+    const input: PapeleriaUpdateInput = {
+      nombre: (p?.nombre || '').toString().trim(),
+      cantidad_adquirida: adquirida,
+      cantidad_existente: existente - cantidad,
+      presentacion,
+      marca: (p?.marca || '').toString().trim() || null,
+      descripcion: (p?.descripcion || '').toString().trim() || null,
+      fecha_adquisicion: this.toDateInput(p?.fecha_adquisicion) || null,
+      ubicacion: (p?.ubicacion || '').toString().trim() || null,
+      observaciones: (p?.observaciones || '').toString().trim() || null
+    };
+
+    if (!input.nombre) {
+      this.snack.warn('El nombre es obligatorio');
+      return;
+    }
+
+    this.reducingKeys.add(key);
+    try {
+      await this.papeleriaService.actualizar(id, input, null);
+      this.reduceCantidadByKey[key] = null;
+      this.snack.success('Existencias actualizadas');
+      logsService.crearLogAccion({
+        modulo: 'PAPELERIA',
+        accion: 'CONSUMO',
+        descripcion: `Consumo de existencias de papelería: ${id}`,
+        detalle: {
+          id,
+          key,
+          cantidad_reducida: cantidad,
+          cantidad_existente_anterior: existente,
+          cantidad_existente_nueva: existente - cantidad
+        }
+      }).catch(console.error);
+      await this.cargarPapeleria();
+    } catch (err: any) {
+      this.snack.error(err?.message || 'Error actualizando existencias');
+    } finally {
+      this.reducingKeys.delete(key);
+    }
+  }
+
   editPapeleria(p: any): void {
     if (!this.canDelete()) return;
     const id = this.papeleriaId(p);
@@ -233,6 +328,12 @@ export class PapeleriaComponent implements OnInit {
     try {
       await this.papeleriaService.eliminar(id);
       this.snack.success('Papelería eliminada');
+      logsService.crearLogAccion({
+        modulo: 'PAPELERIA',
+        accion: 'ELIMINAR',
+        descripcion: `Eliminación de papelería: ${id}`,
+        detalle: { id, nombre: nombre || null }
+      }).catch(console.error);
       await this.cargarPapeleria();
     } catch (err: any) {
       this.snack.error(err?.message || 'Error eliminando papelería');
@@ -296,10 +397,11 @@ export class PapeleriaComponent implements OnInit {
     if (!this.canDelete()) return;
     if (!this.editPapeleriaId) return;
 
-    const input: PapeleriaCreateInput = {
+    const cantidadExistenteNum = Number(this.editCantidadExistente);
+    const input: PapeleriaUpdateInput = {
       nombre: (this.editNombre || '').trim(),
       cantidad_adquirida: Number(this.editCantidadAdquirida),
-      cantidad_existente: Number(this.editCantidadExistente),
+      cantidad_existente: Number.isFinite(cantidadExistenteNum) ? cantidadExistenteNum : undefined,
       presentacion: this.editPresentacion as PapeleriaPresentacion,
       marca: (this.editMarca || '').trim() || null,
       descripcion: (this.editDescripcion || '').trim() || null,
@@ -316,10 +418,6 @@ export class PapeleriaComponent implements OnInit {
       this.snack.warn('La cantidad adquirida es obligatoria');
       return;
     }
-    if (!Number.isFinite(input.cantidad_existente) || input.cantidad_existente < 0) {
-      this.snack.warn('La cantidad existente es obligatoria');
-      return;
-    }
     if (!input.presentacion) {
       this.snack.warn('La presentación es obligatoria');
       return;
@@ -329,6 +427,12 @@ export class PapeleriaComponent implements OnInit {
       await this.papeleriaService.actualizar(this.editPapeleriaId, input, this.editImagenFile);
       this.imagenBust[String(this.editPapeleriaId)] = String(Date.now());
       this.snack.success('Papelería actualizada');
+      logsService.crearLogAccion({
+        modulo: 'PAPELERIA',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de papelería: ${this.editPapeleriaId}`,
+        detalle: { id: this.editPapeleriaId, ...input, actualizo_imagen: !!this.editImagenFile }
+      }).catch(console.error);
       this.closeEditPapeleriaModal();
       await this.cargarPapeleria();
     } catch (err: any) {

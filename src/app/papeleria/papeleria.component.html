@@ -163,6 +163,17 @@
                         <span class="chip">Ubicación: {{ p?.ubicacion || '—' }}</span>
                         <span class="chip">Adquisición: {{ limpiarFecha(p?.fecha_adquisicion) }}</span>
                       </div>
+                      <div class="card-right-controls" (click)="$event.stopPropagation()">
+                        <div class="qty-field">
+                          <input class="qty-input" type="number" min="1" step="1" [(ngModel)]="reduceCantidadByKey[key]" placeholder="0" />
+                          <button type="button" class="pdf-btn delete qty-reduce-btn" [disabled]="isReduciendo(key)" (click)="reducirExistencias(p, key, $event)" title="Reducir existencias" aria-label="Reducir existencias">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" class="icon">
+                              <rect x="3" y="3" width="18" height="18" rx="6" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+                              <path d="M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
                       <span class="toggle-icon" [class.open]="detallesVisibles[key]" aria-hidden="true">▾</span>
                     </div>
 
@@ -238,10 +249,6 @@
           <div>
             <label>Cantidad adquirida *</label>
             <input type="number" min="0" step="1" [(ngModel)]="editCantidadAdquirida" />
-          </div>
-          <div>
-            <label>Cantidad existente *</label>
-            <input type="number" min="0" step="1" [(ngModel)]="editCantidadExistente" />
           </div>
           <div>
             <label>Marca</label>

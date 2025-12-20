@@ -1,4 +1,4 @@
-﻿﻿<div class="liba-theme container reactivos-page">
+﻿﻿﻿﻿﻿﻿<div class="liba-theme container reactivos-page">
   <h1>
     <i class="fas fa-flask"></i>
     | Reactivos
@@ -717,7 +717,7 @@
               <div class="pdf-actions" aria-label="Acciones del reactivo" (click)="$event.stopPropagation()">
                 <div class="pdf-group">
                   <button *ngIf="!esAuxiliar" type="button" class="pdf-btn view" title="Editar reactivo" aria-label="Editar reactivo"
-                    (click)="openEditModal(r)">
+                    (click)="$event.stopPropagation(); openEditModal(r)">
                     <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
                       <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z" fill="currentColor" />
                       <path d="M20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.29a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"
@@ -725,7 +725,10 @@
                     </svg>
                   </button>
                   <button type="button" class="pdf-btn delete" *ngIf="canDelete()" title="Eliminar reactivo"
-                    aria-label="Eliminar reactivo" (click)="eliminarReactivo(r.lote)">
+                    aria-label="Eliminar reactivo"
+                    (click)="$event.stopPropagation(); eliminarReactivo(r.lote)"
+                    [disabled]="isDeletingReactivo(r.lote)"
+                    [attr.aria-busy]="isDeletingReactivo(r.lote) ? 'true' : null">
                     <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
                       <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                     </svg>

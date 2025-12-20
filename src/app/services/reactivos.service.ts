@@ -8,6 +8,23 @@ function authHeaders(): HeadersInit {
   return headers;
 }
 
+async function readApiError(res: Response, fallback: string): Promise<string> {
+  const suffix = res.status ? ` (HTTP ${res.status})` : '';
+  try {
+    const data: any = await res.clone().json();
+    const msg = data?.message;
+    if (typeof msg === 'string' && msg.trim()) return msg.trim();
+  } catch {}
+  try {
+    const text = (await res.clone().text()).trim();
+    if (text) {
+      if (text.startsWith('<')) return `${fallback}${suffix}`;
+      return text.length > 280 ? text.slice(0, 280) + '…' : text;
+    }
+  } catch {}
+  return `${fallback}${suffix}`;
+}
+
 export const reactivosService = {
   async aux() {
     const res = await fetch(`${API_BASE}/aux`);
@@ -112,9 +129,17 @@ export const reactivosService = {
     return data;
   },
   async eliminarReactivo(lote: string) {
-    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}`, { method: 'DELETE', headers: { ...authHeaders() } });
-    let data: any = null; try { data = await res.json(); } catch { }
-    if (!res.ok) throw new Error((data && data.message) || 'Error eliminando reactivo');
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(lote)}`, {
+      method: 'DELETE',
+      headers: { ...authHeaders() }
+    });
+    if (!res.ok) {
+      const err: any = new Error(await readApiError(res, 'Error eliminando reactivo'));
+      err.status = res.status;
+      throw err;
+    }
+    let data: any = null;
+    try { data = await res.json(); } catch {}
     return data;
   },
 

@@ -68,8 +68,8 @@ export class LogsComponent implements OnInit {
   get paginacionMovimientos() { return this.paginacionMovimientosSig(); }
 
   // Opciones para filtros
-  modulos = ['INSUMOS', 'REACTIVOS', 'SOLICITUDES', 'CLIENTES', 'CATALOGO_INSUMOS', 'CATALOGO_REACTIVOS', 'EQUIPOS', 'MAT_REFERENCIA', 'MAT_VOLUMETRICOS'];
-  acciones = ['CREAR', 'ACTUALIZAR', 'ELIMINAR', 'SUBIR_PDF', 'ELIMINAR_PDF', 'CREAR_ENCUESTA', 'AJUSTAR_EXISTENCIAS'];
+  modulos = ['INSUMOS', 'PAPELERIA', 'REACTIVOS', 'SOLICITUDES', 'CLIENTES', 'CATALOGO_INSUMOS', 'CATALOGO_REACTIVOS', 'EQUIPOS', 'MAT_REFERENCIA', 'MAT_VOLUMETRICOS'];
+  acciones = ['CREAR', 'ACTUALIZAR', 'ELIMINAR', 'SUBIR_PDF', 'ELIMINAR_PDF', 'CREAR_ENCUESTA', 'AJUSTAR_EXISTENCIAS', 'CONSUMO'];
   tiposProducto = ['INSUMO', 'REACTIVO', 'EQUIPO', 'PAPELERIA'];
   tiposMovimiento = ['ENTRADA', 'SALIDA', 'AJUSTE'];
 
@@ -303,7 +303,8 @@ cambiarPaginaMovimientos(pagina: number) {
       'ELIMINAR': 'status-critical',
       'SUBIR_PDF': 'status-good',
       'ELIMINAR_PDF': 'status-critical',
-      'AJUSTAR_EXISTENCIAS': 'status-warning'
+      'AJUSTAR_EXISTENCIAS': 'status-warning',
+      'CONSUMO': 'status-critical'
     };
     return clases[accion] || 'status-neutral';
   }

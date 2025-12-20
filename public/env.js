@@ -4,7 +4,7 @@
 
 // API URL Tunnel de cloudflared para poder compartir la aplicacion 
 
-  const RENDER_URL = 'https://wagon-nav-arab-hearings.trycloudflare.com'
+  const RENDER_URL = 'https://described-coating-authorized-assumed.trycloudflare.com'
 
  
   window.__env.API_BASE = RENDER_URL + '/api';

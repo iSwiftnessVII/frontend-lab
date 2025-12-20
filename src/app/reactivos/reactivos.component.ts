@@ -235,6 +235,15 @@ reactivoErrors: { [key: string]: string } = {};
 
   constructor(private sanitizer: DomSanitizer, private cdr: ChangeDetectorRef, public snack: SnackbarService) {}
 
+  private esActivo(item: any): boolean {
+    const v = item?.activo;
+    if (v === undefined || v === null) return true;
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'number') return v === 1;
+    const s = String(v).trim().toLowerCase();
+    return s === '1' || s === 'true' || s === 't' || s === 'yes' || s === 'y';
+  }
+
   async toggleFormulario(tipo: string) {
     this.formularioActivo = this.formularioActivo === tipo ? null : tipo;
     if (this.formularioActivo === 'consumo') {
@@ -256,7 +265,8 @@ reactivoErrors: { [key: string]: string } = {};
   async cargarReactivosConsumo() {
     try {
       const resp = await reactivosService.listarReactivos('', 0, 0);
-      this.reactivosConsumo = Array.isArray(resp) ? resp : resp.rows;
+      const rows = Array.isArray(resp) ? resp : resp.rows;
+      this.reactivosConsumo = (rows || []).filter((r: any) => this.esActivo(r));
     } catch (e) {
       console.error('Error cargando reactivos para consumo', e);
     }
@@ -471,7 +481,8 @@ reactivoErrors: { [key: string]: string } = {};
       rows = resp.rows || [];
       this.reactivosTotal = resp.total || rows.length;
     }
-    this.reactivosSig.set(rows || []);
+    const visibleRows = (rows || []).filter((r: any) => this.esActivo(r));
+    this.reactivosSig.set(visibleRows);
     this.aplicarFiltroReactivos();
     // Preload PDF availability for items in inventory (by lote)
     try { this.preloadDocsForReactivosVisible(this.reactivosSig()); } catch (e) { /* non-fatal */ }
@@ -522,13 +533,14 @@ reactivoErrors: { [key: string]: string } = {};
     try {
       // Traer todo (sin límite) para que los filtros y sugerencias funcionen sobre el universo completo
       const resp = await reactivosService.buscarCatalogo('', 0, 0);
-      const base = Array.isArray(resp) ? resp : (resp.rows || []);
+      const baseAll = Array.isArray(resp) ? resp : (resp.rows || []);
+      const base = (baseAll || []).filter((c: any) => this.esActivo(c));
       
       // Actualizar ambas signals
       this.catalogoCompletoSig.set(base); // Para códigos consecutivos
       this.catalogoBaseSig.set(base);     // Para filtrado
       
-      this.catalogoTotal = Array.isArray(resp) ? resp.length : (resp.total || base.length);
+      this.catalogoTotal = base.length;
       // Mostrar solo los primeros N en el catálogo (independiente del dropdown)
       this.catalogoResultadosSig.set(base.slice(0, this.catalogoVisibleCount));
       this.catalogoCodigoResultados = this.catalogoBaseSig().slice();
@@ -977,6 +989,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       base = resp.rows || [];
       this.catalogoTotal = resp.total || base.length;
     }
+    base = (base || []).filter((c: any) => this.esActivo(c));
 
     // Filtrado exclusivo
     let filtered = base;
@@ -1024,6 +1037,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       nuevos = resp.rows || [];
       this.catalogoTotal = resp.total || this.catalogoTotal;
     }
+    nuevos = (nuevos || []).filter((c: any) => this.esActivo(c));
     this.catalogoResultadosSig.set(this.catalogoResultadosSig().concat(nuevos));
     this.preloadDocsForVisible(nuevos);
   }
@@ -1939,13 +1953,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     const qLote = normalizar(this.reactivosLoteQ);
     const qCod = normalizar(this.reactivosCodigoQ);
     const qNom = normalizar(this.reactivosNombreQ);
+    const base = (this.reactivosSig() || []).filter((r: any) => this.esActivo(r));
 
     if (!qLote && !qCod && !qNom) {
-      this.reactivosFiltradosSig.set(this.reactivosSig().slice());
+      this.reactivosFiltradosSig.set(base.slice());
       return;
     }
 
-    const filtrados = (this.reactivosSig() || []).filter((r: any) => {
+    const filtrados = base.filter((r: any) => {
       const lote = normalizar(String(r.lote ?? ''));
       const codigo = normalizar(String(r.codigo ?? ''));
       const nombre = normalizar(String(r.nombre ?? ''));
@@ -1962,21 +1977,41 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     await this.loadReactivos(); // sin límite => todos
   }
 
+  private reactivoDeleting = new Set<string>();
+  isDeletingReactivo(lote: string): boolean {
+    const key = String(lote ?? '').trim();
+    return !!key && this.reactivoDeleting.has(key);
+  }
+
   async eliminarReactivo(lote: string) {
+    if (!this.canDelete()) return;
+    const key = String(lote ?? '').trim();
+    if (!key) return;
+    if (this.reactivoDeleting.has(key)) return;
     if (!confirm('¿Eliminar reactivo ' + lote + '?')) return;
+    this.reactivoDeleting.add(key);
+    const snapshot = this.reactivosSig();
     try {
-      // Optimista: quitar de la lista inmediatamente
-      const prev = this.reactivosSig();
-      const next = prev.filter(r => String(r.lote) !== String(lote));
+      const next = snapshot.filter(r => String(r.lote) !== String(key));
       this.reactivosSig.set(next);
       this.aplicarFiltroReactivos();
 
-      await reactivosService.eliminarReactivo(lote);
-      // Para consistencia estricta, podría recargarse del servidor:
-      // await this.loadReactivos();
-    } catch (err) {
-      console.error('Error eliminando reactivo', err);
-      await this.loadReactivos();
+      await reactivosService.eliminarReactivo(key);
+      await this.filtrarReactivos();
+      const stillExists = (this.reactivosSig() || []).some(r => String(r.lote) === String(key));
+      if (stillExists) {
+        this.snack.error('No se pudo eliminar el reactivo (sigue apareciendo en la lista)');
+      } else {
+        this.snack.success('Reactivo eliminado correctamente');
+      }
+    } catch (e: any) {
+      this.snack.error(e?.message || 'Error eliminando reactivo');
+      try {
+        this.reactivosSig.set((snapshot || []).filter((r: any) => this.esActivo(r)));
+        this.aplicarFiltroReactivos();
+      } catch {}
+    } finally {
+      this.reactivoDeleting.delete(key);
     }
   }
 
@@ -2042,7 +2077,8 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     // Actualizar listado local eliminando los exitosos
     if (lotesEliminados.length) {
       const prev = this.reactivosSig();
-      const restantes = prev.filter(r => !lotesEliminados.includes(String(r.lote)));
+      const toRemove = new Set<string>([...lotesEliminados]);
+      const restantes = prev.filter(r => !toRemove.has(String(r.lote)));
       this.reactivosSig.set(restantes);
       this.aplicarFiltroReactivos();
     }
@@ -2062,11 +2098,11 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
         this.reactivosTotal = t.total;
       } else if (!usedFullDataset) {
         // fallback si no hubo respuesta estructurada
-        this.reactivosTotal = Math.max(0, this.reactivosTotal - lotesEliminados.length);
+        this.reactivosTotal = Math.max(0, this.reactivosTotal - (lotesEliminados.length));
       }
     } catch {
       if (!usedFullDataset) {
-        this.reactivosTotal = Math.max(0, this.reactivosTotal - lotesEliminados.length);
+        this.reactivosTotal = Math.max(0, this.reactivosTotal - (lotesEliminados.length));
       }
     }
 

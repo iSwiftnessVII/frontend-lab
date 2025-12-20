@@ -104,35 +104,194 @@
       @if (insumosFiltrados().length === 0) {
         <div class="empty">Sin registros</div>
       } @else {
-        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Existente</th>
-                <th>Presentación</th>
-                <th>Marca</th>
-                <th>Referencia</th>
-                <th>Ubicación</th>
-                <th>Adquisición</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (i of insumosFiltrados(); track (i?.id ?? i)) {
-                <tr>
-                  <td>{{ i?.nombre }}</td>
-                  <td>{{ i?.cantidad_existente }}</td>
-                  <td>{{ i?.presentacion || '-' }}</td>
-                  <td>{{ i?.marca || '-' }}</td>
-                  <td>{{ i?.referencia || '-' }}</td>
-                  <td>{{ i?.ubicacion || '-' }}</td>
-                  <td>{{ i?.fecha_adquisicion || '-' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+        <div class="equipos-grid">
+          <div class="fade-in">
+            @for (i of insumosFiltrados(); track insumoKey(i, $index)) {
+              @let key = insumoKey(i, $index);
+              @let img = resolveInsumoImageUrl(i);
+              <article
+                class="equipo-card insumo-card"
+                (click)="toggleInsumoDetails(key)"
+                [attr.aria-expanded]="detallesVisibles[key] ? 'true' : 'false'"
+                tabindex="0"
+              >
+                <div class="insumo-card-row">
+                  <div class="insumo-card-image">
+                    @if (img) {
+                      <img [src]="img" [alt]="'Imagen de ' + (i?.nombre || 'insumo')" (error)="onInsumoImgError(i, img)" />
+                    } @else {
+                      <div class="insumo-card-image-fallback" aria-hidden="true">
+                        <i class="fas fa-image"></i>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="insumo-card-main">
+                    <div class="card-top">
+                      <div class="tags">
+                        <span class="tag"><strong>ID:</strong> {{ key }}</span>
+                        <span class="tag"><strong>Existente:</strong> {{ i?.cantidad_existente ?? '—' }}</span>
+                        <span class="tag"><strong>Presentación:</strong> {{ i?.presentacion || '—' }}</span>
+                        <span class="tag"><strong>Marca:</strong> {{ i?.marca || '—' }}</span>
+                        <span class="tag"><strong>Referencia:</strong> {{ i?.referencia || '—' }}</span>
+                      </div>
+                      <div class="pdf-actions">
+                        @if (canDelete()) {
+                          <button type="button" class="pdf-btn edit"
+                                  title="Editar insumo"
+                                  aria-label="Editar insumo"
+                                  (click)="$event.stopPropagation(); editInsumo(i)">
+                            <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z" fill="currentColor" />
+                              <path d="M20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.29a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" fill="currentColor" />
+                            </svg>
+                          </button>
+                          <button type="button" class="pdf-btn delete"
+                                  title="Eliminar insumo"
+                                  aria-label="Eliminar insumo"
+                                  (click)="$event.stopPropagation(); deleteInsumo(i)">
+                            <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                              <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                          </button>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="card-name">
+                      <div class="name-line">{{ i?.nombre || '—' }}</div>
+                      <div class="meta-line">
+                        <span class="chip">Ubicación: {{ i?.ubicacion || '—' }}</span>
+                        <span class="chip">Adquisición: {{ limpiarFecha(i?.fecha_adquisicion) }}</span>
+                      </div>
+                      <div class="card-right-controls" (click)="$event.stopPropagation()">
+                        <div class="qty-field">
+                          <input class="qty-input" type="number" min="1" step="1" [(ngModel)]="reduceCantidadByKey[key]" placeholder="0" />
+                          <button type="button" class="pdf-btn delete qty-reduce-btn" [disabled]="isReduciendo(key)"
+                                  (click)="reducirExistencias(i, key, $event)"
+                                  title="Reducir existencias" aria-label="Reducir existencias">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" class="icon">
+                              <rect x="3" y="3" width="18" height="18" rx="6" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+                              <path d="M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      <span class="toggle-icon" [class.open]="detallesVisibles[key]" aria-hidden="true">▾</span>
+                    </div>
+
+                    @if (detallesVisibles[key]) {
+                      <div class="equipo-detalles" (click)="$event.stopPropagation()">
+                        <div class="detalle-grid-compacto">
+                          <div class="detalle-item">
+                            <div class="detalle-label">Cantidad adquirida</div>
+                            <span>{{ i?.cantidad_adquirida ?? '—' }}</span>
+                          </div>
+                          <div class="detalle-item">
+                            <div class="detalle-label">Cantidad existente</div>
+                            <span>{{ i?.cantidad_existente ?? '—' }}</span>
+                          </div>
+                          <div class="detalle-item">
+                            <div class="detalle-label">Presentación</div>
+                            <span>{{ i?.presentacion || '—' }}</span>
+                          </div>
+                          <div class="detalle-item">
+                            <div class="detalle-label">Marca</div>
+                            <span>{{ i?.marca || '—' }}</span>
+                          </div>
+                          <div class="detalle-item">
+                            <div class="detalle-label">Referencia</div>
+                            <span>{{ i?.referencia || '—' }}</span>
+                          </div>
+                          <div class="detalle-item">
+                            <div class="detalle-label">Ubicación</div>
+                            <span>{{ i?.ubicacion || '—' }}</span>
+                          </div>
+                          <div class="detalle-item">
+                            <div class="detalle-label">Fecha adquisición</div>
+                            <span>{{ limpiarFecha(i?.fecha_adquisicion) }}</span>
+                          </div>
+                          <div class="detalle-item detalle-item-full">
+                            <div class="detalle-label">Descripción</div>
+                            <span>{{ i?.descripcion || '—' }}</span>
+                          </div>
+                          <div class="detalle-item detalle-item-full">
+                            <div class="detalle-label">Observaciones</div>
+                            <span>{{ i?.observaciones || '—' }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
         </div>
       }
     }
   </div>
 </div>
+
+@if (editInsumoModalOpen || editInsumoModalClosing) {
+  <div class="modal-overlay" [class.closing]="editInsumoModalClosing" (click)="closeEditInsumoModal()">
+    <div class="edit-modal" [class.closing]="editInsumoModalClosing" (click)="$event.stopPropagation()">
+      <h3>Editar insumo #{{ editInsumoId }}</h3>
+
+      <div class="edit-modal-body">
+        <div class="form-grid">
+          <div>
+            <label>Nombre *</label>
+            <input [(ngModel)]="editNombre" />
+          </div>
+          <div>
+            <label>Presentación</label>
+            <input [(ngModel)]="editPresentacion" />
+          </div>
+          <div>
+            <label>Cantidad adquirida *</label>
+            <input type="number" min="0" step="1" [(ngModel)]="editCantidadAdquirida" />
+          </div>
+          <div>
+            <label>Marca</label>
+            <input [(ngModel)]="editMarca" />
+          </div>
+          <div>
+            <label>Referencia</label>
+            <input [(ngModel)]="editReferencia" />
+          </div>
+          <div>
+            <label>Fecha de adquisición</label>
+            <input type="date" [(ngModel)]="editFechaAdquisicion" />
+          </div>
+          <div>
+            <label>Ubicación</label>
+            <input [(ngModel)]="editUbicacion" />
+          </div>
+          <div>
+            <label>Imagen</label>
+            <input type="file" accept="image/*" (change)="onEditImagenChange($event)" />
+            @if (editImagenPreviewUrl) {
+              <div class="image-preview">
+                <img [src]="editImagenPreviewUrl" alt="Vista previa" />
+              </div>
+            }
+          </div>
+          <div class="full-row">
+            <label>Descripción</label>
+            <textarea rows="2" [(ngModel)]="editDescripcion"></textarea>
+          </div>
+          <div class="full-row">
+            <label>Observaciones</label>
+            <textarea rows="2" [(ngModel)]="editObservaciones"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit-modal-actions">
+        <button type="button" class="btn-compact" (click)="saveEditInsumo()">Guardar</button>
+        <button type="button" class="btn-compact" (click)="closeEditInsumoModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}

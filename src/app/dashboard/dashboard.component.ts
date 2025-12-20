@@ -147,8 +147,16 @@ export class DashboardComponent implements OnInit {
     try {
       const resp = await reactivosService.listarReactivos('', 1000);
       const reactivos = Array.isArray(resp) ? resp : (resp?.rows || []);
-      const total = Array.isArray(resp) ? resp.length : (resp?.total ?? reactivos.length);
-      this.reactivosData.set(reactivos);
+      const visible = reactivos.filter((r: any) => {
+        const v = r?.activo;
+        if (v === undefined || v === null) return true;
+        if (typeof v === 'boolean') return v;
+        if (typeof v === 'number') return v === 1;
+        const s = String(v).trim().toLowerCase();
+        return s === '1' || s === 'true' || s === 't' || s === 'yes' || s === 'y';
+      });
+      const total = Array.isArray(resp) ? visible.length : (resp?.total ?? visible.length);
+      this.reactivosData.set(visible);
       this.metricas.update(m => ({ ...m, totalReactivos: total }));
       
       // Calcular reactivos próximos a vencer (30 días)
@@ -156,7 +164,7 @@ export class DashboardComponent implements OnInit {
       const limite = new Date();
       limite.setDate(hoy.getDate() + 30);
       
-      const proximos = reactivos.filter((reactivo: any) => {
+      const proximos = visible.filter((reactivo: any) => {
         if (!reactivo.fecha_vencimiento) return false;
         const fechaVenc = new Date(reactivo.fecha_vencimiento);
         return fechaVenc <= limite && fechaVenc >= hoy;
@@ -165,7 +173,7 @@ export class DashboardComponent implements OnInit {
       this.reactivosProximosVencer.set(proximos);
 
       // Vencidos: fecha_vencimiento estrictamente menor a hoy
-      const vencidos = reactivos.filter((reactivo: any) => {
+      const vencidos = visible.filter((reactivo: any) => {
         if (!reactivo.fecha_vencimiento) return false;
         const fechaVenc = new Date(reactivo.fecha_vencimiento);
         return fechaVenc < hoy;
