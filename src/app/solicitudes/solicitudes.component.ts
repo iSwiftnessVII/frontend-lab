@@ -50,6 +50,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   encuestaErrors: { [key: string]: string } = {};
 
   @ViewChild('clienteDocTemplateInput') private clienteDocTemplateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('solicitudDocTemplateInput') private solicitudDocTemplateInput?: ElementRef<HTMLInputElement>;
 
   clientesDocumentos: any[] = [];
   clienteDocFiltroTipo: string = 'todos';
@@ -59,6 +60,15 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   clienteDocTemplateFile: File | null = null;
   clienteDocMsg: string = '';
   clienteDocLoading: boolean = false;
+
+  solicitudesDocumentos: any[] = [];
+  solicitudDocFiltroTipo: string = 'todos';
+  solicitudDocBusqueda: string = '';
+  solicitudDocResultados: any[] = [];
+  solicitudDocSeleccionada: any = null;
+  solicitudDocTemplateFile: File | null = null;
+  solicitudDocMsg: string = '';
+  solicitudDocLoading: boolean = false;
 
   // Variables de formulario
   clienteNombre = '';
@@ -712,6 +722,131 @@ getTomorrowDate(): string {
       this.snackbarService.error(this.clienteDocMsg);
     } finally {
       this.clienteDocLoading = false;
+    }
+  }
+
+  async cargarSolicitudesDocumentos(): Promise<void> {
+    try {
+      if (!(this.solicitudes() || []).length) {
+        await this.solicitudesService.loadSolicitudes();
+      }
+      this.solicitudesDocumentos = this.solicitudes() || [];
+    } catch (e) {
+      console.error('Error cargando solicitudes para documentos', e);
+      this.solicitudesDocumentos = [];
+    }
+  }
+
+  filtrarSolicitudesDocumentos(): void {
+    const q = (this.solicitudDocBusqueda || '').toLowerCase().trim();
+    if (!q) {
+      this.solicitudDocResultados = [];
+      return;
+    }
+
+    this.solicitudDocResultados = this.solicitudesDocumentos.filter((s) => {
+      const id = String(s?.solicitud_id ?? s?.id_solicitud ?? '').toLowerCase();
+      const tipo = (s?.tipo_solicitud || '').toLowerCase();
+      const numeroFront = (s?.numero_solicitud_front || '').toLowerCase();
+      const solicitante = (s?.nombre_solicitante || '').toLowerCase();
+      const muestra = (s?.nombre_muestra || '').toLowerCase();
+      const analisis = (s?.analisis_requerido || '').toLowerCase();
+      const lote = (s?.lote_producto || '').toLowerCase();
+
+      if (this.solicitudDocFiltroTipo === 'todos') {
+        return (
+          id.includes(q) ||
+          tipo.includes(q) ||
+          numeroFront.includes(q) ||
+          solicitante.includes(q) ||
+          muestra.includes(q) ||
+          analisis.includes(q) ||
+          lote.includes(q)
+        );
+      } else if (this.solicitudDocFiltroTipo === 'id') {
+        return id.includes(q);
+      } else if (this.solicitudDocFiltroTipo === 'numero_front') {
+        return numeroFront.includes(q);
+      } else if (this.solicitudDocFiltroTipo === 'solicitante') {
+        return solicitante.includes(q);
+      } else if (this.solicitudDocFiltroTipo === 'muestra') {
+        return muestra.includes(q);
+      } else if (this.solicitudDocFiltroTipo === 'analisis') {
+        return analisis.includes(q);
+      } else if (this.solicitudDocFiltroTipo === 'lote') {
+        return lote.includes(q);
+      }
+      return false;
+    });
+  }
+
+  seleccionarSolicitudDocumento(item: any): void {
+    this.solicitudDocSeleccionada = item;
+    this.solicitudDocResultados = [];
+    this.solicitudDocBusqueda = '';
+  }
+
+  limpiarSeleccionSolicitudDocumento(): void {
+    this.solicitudDocSeleccionada = null;
+    this.solicitudDocBusqueda = '';
+    this.solicitudDocResultados = [];
+    this.solicitudDocFiltroTipo = 'todos';
+    this.solicitudDocTemplateFile = null;
+    this.solicitudDocMsg = '';
+    try {
+      const el = this.solicitudDocTemplateInput?.nativeElement;
+      if (el) el.value = '';
+    } catch {}
+  }
+
+  onSolicitudDocTemplateSelected(event: any): void {
+    try {
+      const f = event?.target?.files?.[0] || null;
+      this.solicitudDocTemplateFile = f;
+      this.solicitudDocMsg = '';
+    } catch {
+      this.solicitudDocTemplateFile = null;
+    }
+  }
+
+  async generarDocumentoSolicitud(): Promise<void> {
+    if (this.solicitudDocLoading) return;
+    const id = Number(this.solicitudDocSeleccionada?.solicitud_id ?? this.solicitudDocSeleccionada?.id_solicitud);
+    if (!Number.isFinite(id) || id <= 0) {
+      this.solicitudDocMsg = 'Debe seleccionar una solicitud';
+      this.snackbarService.warn(this.solicitudDocMsg);
+      return;
+    }
+    if (!this.solicitudDocTemplateFile) {
+      this.solicitudDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+      this.snackbarService.warn(this.solicitudDocMsg);
+      return;
+    }
+
+    this.solicitudDocLoading = true;
+    this.solicitudDocMsg = '';
+    try {
+      const originalTemplateName = this.solicitudDocTemplateFile?.name || null;
+      const { blob, filename } = await this.solicitudesService.generarDocumentoSolicitud({
+        solicitud_id: id,
+        template: this.solicitudDocTemplateFile
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = originalTemplateName || filename || 'documento_solicitud';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.solicitudDocMsg = 'Documento generado';
+      this.snackbarService.success('Documento generado');
+      this.limpiarSeleccionSolicitudDocumento();
+    } catch (err: any) {
+      this.solicitudDocMsg = err?.message || 'No se pudo generar el documento';
+      this.snackbarService.error(this.solicitudDocMsg);
+    } finally {
+      this.solicitudDocLoading = false;
     }
   }
 
@@ -2647,6 +2782,19 @@ private getValorEncuesta(campo: string): any {
           if (el) el.value = '';
         } catch {}
         await this.cargarClientesDocumentos();
+      } else if (this.formularioActivo === 'solicitud-documentos') {
+        this.solicitudDocFiltroTipo = 'todos';
+        this.solicitudDocBusqueda = '';
+        this.solicitudDocResultados = [];
+        this.solicitudDocSeleccionada = null;
+        this.solicitudDocTemplateFile = null;
+        this.solicitudDocMsg = '';
+        this.solicitudDocLoading = false;
+        try {
+          const el = this.solicitudDocTemplateInput?.nativeElement;
+          if (el) el.value = '';
+        } catch {}
+        await this.cargarSolicitudesDocumentos();
       }
     }
   }
