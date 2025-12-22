@@ -28,7 +28,6 @@
             ],
             "styles": [
               "src/styles.css"
-              
             ]
           },
           "configurations": {
@@ -102,11 +101,13 @@
               "src/styles.css"
             ]
           }
-        }
+        },
+        
       }
     }
   },
   "cli": {
-    "analytics": false
+    "analytics": false,
+    "schematicCollections": []
   }
 }

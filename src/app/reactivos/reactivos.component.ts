@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ChangeDetectorRef, computed } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectorRef, computed, ElementRef, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -18,6 +18,8 @@ import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
   imports: [CommonModule, FormsModule, RouterModule, NumbersOnlyDirective, LettersOnlyDirective, AlphaNumericDirective],
 })
 export class ReactivosComponent implements OnInit {
+  @ViewChild('docTemplateInput') private docTemplateInput?: ElementRef<HTMLInputElement>;
+
   public get esAuxiliar(): boolean {
     const user = authUser();
     return user?.rol === 'Auxiliar';
@@ -121,6 +123,19 @@ export class ReactivosComponent implements OnInit {
   // Files selected when creating/editing a reactivo (SDS / CoA at creation time)
   reactivoSdsFile: File | null = null;
   reactivoCoaFile: File | null = null;
+
+  // Generación de documentos (plantillas)
+  docCodigo = '';
+  docLote = '';
+  docTemplateFile: File | null = null;
+  docMsg = '';
+  docLoading = false;
+  // Selector de reactivo para documentos (similar a consumo)
+  reactivosDocumentos: any[] = [];
+  docFiltroTipo: string = 'todos';
+  docBusqueda: string = '';
+  docResultados: any[] = [];
+  docReactivoSeleccionado: any = null;
 
   // Reactivo form
   lote = '';
@@ -257,9 +272,134 @@ reactivoErrors: { [key: string]: string } = {};
       this.consumoResultados = [];
       this.consumoReactivoSeleccionado = null;
 
+
       await this.cargarReactivosConsumo();
     }
-    try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
+    if (this.formularioActivo === 'documentos') {
+      this.docCodigo = '';
+      this.docLote = '';
+      this.docTemplateFile = null;
+      this.docMsg = '';
+      this.docLoading = false;
+      this.docFiltroTipo = 'todos';
+      this.docBusqueda = '';
+      this.docResultados = [];
+      this.docReactivoSeleccionado = null;
+      await this.cargarReactivosDocumentos();
+    }
+  }
+
+  onDocTemplateSelected(event: any) {
+    try {
+      const f = event?.target?.files?.[0] || null;
+      this.docTemplateFile = f;
+      this.docMsg = '';
+    } catch {
+      this.docTemplateFile = null;
+    }
+  }
+
+  async generarDocumentoReactivo() {
+    if (this.docLoading) return;
+    const codigo = String(this.docCodigo || this.docReactivoSeleccionado?.codigo || '').trim();
+    const lote = String(this.docLote || this.docReactivoSeleccionado?.lote || '').trim();
+    if (!codigo && !lote) {
+      this.docMsg = 'Debe seleccionar un reactivo';
+      this.snack.warn(this.docMsg);
+      return;
+    }
+    if (!this.docTemplateFile) {
+      this.docMsg = 'Selecciona una plantilla .xlsx o .docx';
+      this.snack.warn(this.docMsg);
+      return;
+    }
+
+    this.docLoading = true;
+    this.docMsg = '';
+    try {
+      const originalTemplateName = this.docTemplateFile?.name || null;
+      const { blob, filename } = await reactivosService.generarDocumentoReactivo({
+        codigo,
+        lote: lote || undefined,
+        template: this.docTemplateFile
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = originalTemplateName || filename || 'documento_reactivo';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.docMsg = 'Documento generado';
+      this.snack.success('Documento generado');
+      this.limpiarSeleccionDocumento();
+      this.docFiltroTipo = 'todos';
+      this.docTemplateFile = null;
+      try {
+        const el = this.docTemplateInput?.nativeElement;
+        if (el) el.value = '';
+      } catch {}
+    } catch (err: any) {
+      this.docMsg = err?.message || 'No se pudo generar el documento';
+      this.snack.error(this.docMsg);
+    } finally {
+      this.docLoading = false;
+    }
+  }
+
+  async cargarReactivosDocumentos(): Promise<void> {
+    try {
+      const resp = await reactivosService.listarReactivos('', 0, 0);
+      const rows = Array.isArray(resp) ? resp : resp.rows;
+      this.reactivosDocumentos = (rows || []).filter((r: any) => this.esActivo(r));
+    } catch (e) {
+      console.error('Error cargando reactivos para documentos', e);
+      this.reactivosDocumentos = [];
+    }
+  }
+
+  filtrarReactivosDocumentos(): void {
+    const q = (this.docBusqueda || '').toLowerCase().trim();
+    if (!q) {
+      this.docResultados = [];
+      return;
+    }
+    this.docResultados = this.reactivosDocumentos.filter(r => {
+      const lote = (r.lote || '').toLowerCase();
+      const codigo = (r.codigo || '').toLowerCase();
+      const nombre = (r.nombre || '').toLowerCase();
+      const cas = (r.cas || '').toLowerCase();
+
+      if (this.docFiltroTipo === 'todos') {
+        return lote.includes(q) || codigo.includes(q) || nombre.includes(q) || cas.includes(q);
+      } else if (this.docFiltroTipo === 'codigo') {
+        return codigo.includes(q);
+      } else if (this.docFiltroTipo === 'nombre') {
+        return nombre.includes(q);
+      } else if (this.docFiltroTipo === 'lote') {
+        return lote.includes(q);
+      } else if (this.docFiltroTipo === 'cas') {
+        return cas.includes(q);
+      }
+      return false;
+    });
+  }
+
+  seleccionarReactivoDocumento(item: any): void {
+    this.docReactivoSeleccionado = item;
+    this.docCodigo = String(item?.codigo ?? '').trim();
+    this.docLote = String(item?.lote ?? '').trim();
+    this.docResultados = [];
+    this.docBusqueda = '';
+  }
+
+  limpiarSeleccionDocumento(): void {
+    this.docReactivoSeleccionado = null;
+    this.docCodigo = '';
+    this.docLote = '';
+    this.docBusqueda = '';
+    this.docResultados = [];
   }
 
   async cargarReactivosConsumo() {
@@ -1916,11 +2056,11 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   }
 
 
-  async filtrarReactivos() {
+  async filtrarReactivos(): Promise<void> {
     const qLote = (this.reactivosLoteQ || '').trim();
     const qCod = (this.reactivosCodigoQ || '').trim();
     const qNom = (this.reactivosNombreQ || '').trim();
-    const hayFiltro = qLote || qCod || qNom;
+    const hayFiltro = !!(qLote || qCod || qNom);
 
     if (hayFiltro) {
       // Construir consulta base para el backend (usa OR sobre lote/codigo/nombre/marca)
@@ -1948,7 +2088,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     this.aplicarFiltroReactivos();
   }
 
-  private aplicarFiltroReactivos() {
+  private aplicarFiltroReactivos(): void {
     const normalizar = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     const qLote = normalizar(this.reactivosLoteQ);
     const qCod = normalizar(this.reactivosCodigoQ);
@@ -2148,7 +2288,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   }
 
   // Estado visual de vencimiento: negro (vencido), rojo (<=2 meses), amarillo (<=6 meses)
-  getVencimientoInfo(fecha: string | null | undefined): { text: string; bg: string; fg: string; title: string } | null {
+  getVencimientoInfo(fecha?: string | null): { text: string; bg: string; fg: string; title: string } | null {
     if (!fecha) return null;
     let d = new Date(fecha);
     // Fallback para formato dd-mm-yyyy insertado manualmente por SQL
