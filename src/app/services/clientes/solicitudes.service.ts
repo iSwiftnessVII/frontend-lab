@@ -21,6 +21,27 @@ export class SolicitudesService {
     return headers;
   }
 
+  private getAuthHeadersMultipart(): Record<string, string> {
+    const token = authService.getToken();
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+  }
+
+  private async readApiError(res: Response, fallback: string): Promise<string> {
+    try {
+      const data: any = await res.json();
+      return data?.message || data?.error || fallback;
+    } catch {}
+    try {
+      const text = await res.text();
+      return text || fallback;
+    } catch {}
+    return fallback;
+  }
+
   async loadSolicitudes(): Promise<void> {
     try {
       const res = await fetch(API_DETALLE_LISTA, {
@@ -434,5 +455,37 @@ export class SolicitudesService {
       throw new Error((data && data.error) || 'Error al cancelar suscripción de revisión');
     }
     return data;
+  }
+
+  async generarDocumentoCliente(params: { id_cliente: number; template: File }): Promise<{ blob: Blob; filename: string | null }> {
+    const id_cliente = Number(params?.id_cliente);
+    const template = params?.template;
+    if (!Number.isFinite(id_cliente) || id_cliente <= 0) throw new Error('Debe seleccionar un cliente');
+    if (!template) throw new Error('Debe seleccionar una plantilla');
+
+    const fd = new FormData();
+    fd.append('template', template);
+    fd.append('id_cliente', String(id_cliente));
+
+    const res = await fetch(API + '/clientes/documentos/generar', {
+      method: 'POST',
+      headers: this.getAuthHeadersMultipart(),
+      body: fd
+    });
+    if (!res.ok) {
+      const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
+      err.status = res.status;
+      throw err;
+    }
+
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename: string | null = null;
+    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
+    if (m && m[1]) {
+      try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
+    }
+
+    return { blob, filename };
   }
 }

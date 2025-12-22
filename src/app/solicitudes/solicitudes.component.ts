@@ -1,4 +1,4 @@
-import { Component, signal, effect, EffectRef, OnDestroy, OnInit, ViewEncapsulation, inject } from '@angular/core';
+import { Component, signal, effect, EffectRef, OnDestroy, OnInit, ViewEncapsulation, inject, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -48,6 +48,17 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   ofertaErrors: { [key: string]: string } = {};
   resultadoErrors: { [key: string]: string } = {};
   encuestaErrors: { [key: string]: string } = {};
+
+  @ViewChild('clienteDocTemplateInput') private clienteDocTemplateInput?: ElementRef<HTMLInputElement>;
+
+  clientesDocumentos: any[] = [];
+  clienteDocFiltroTipo: string = 'todos';
+  clienteDocBusqueda: string = '';
+  clienteDocResultados: any[] = [];
+  clienteDocSeleccionado: any = null;
+  clienteDocTemplateFile: File | null = null;
+  clienteDocMsg: string = '';
+  clienteDocLoading: boolean = false;
 
   // Variables de formulario
   clienteNombre = '';
@@ -551,8 +562,8 @@ getTomorrowDate(): string {
       const nombre = (cliente.nombre_solicitante || '').toLowerCase();
       const correo = (cliente.correo_electronico || '').toLowerCase();
       const identificacion = (cliente.numero_identificacion || '').toLowerCase();
-      const ciudad = (cliente.ciudad || '').toLowerCase();
-      const departamento = (cliente.departamento || '').toLowerCase();
+      const ciudad = (this.resolveCiudad(cliente) || '').toLowerCase();
+      const departamento = (this.resolveDepartamento(cliente) || '').toLowerCase();
       const celular = (cliente.celular || '').toLowerCase();
       const telefono = (cliente.telefono || '').toLowerCase();
       const tipoUsuario = (cliente.tipo_usuario || '').toLowerCase();
@@ -564,6 +575,144 @@ getTomorrowDate(): string {
     });
     
     this.clientesFiltrados.set(clientesFiltrados);
+  }
+
+  private esActivoCliente(item: any): boolean {
+    const v = item?.activo;
+    if (v === undefined || v === null) return true;
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'number') return v === 1;
+    const s = String(v).trim().toLowerCase();
+    return s === '1' || s === 'true' || s === 't' || s === 'yes' || s === 'y';
+  }
+
+  async cargarClientesDocumentos(): Promise<void> {
+    try {
+      if (!(this.clientes() || []).length) {
+        await this.clientesService.loadClientes();
+      }
+      const rows = this.clientes() || [];
+      this.clientesDocumentos = rows.filter((c: any) => this.esActivoCliente(c));
+    } catch (e) {
+      console.error('Error cargando clientes para documentos', e);
+      this.clientesDocumentos = [];
+    }
+  }
+
+  filtrarClientesDocumentos(): void {
+    const q = (this.clienteDocBusqueda || '').toLowerCase().trim();
+    if (!q) {
+      this.clienteDocResultados = [];
+      return;
+    }
+    this.clienteDocResultados = this.clientesDocumentos.filter((c) => {
+      const nombre = (c.nombre_solicitante || '').toLowerCase();
+      const razon = (c.razon_social || '').toLowerCase();
+      const ident = (c.numero_identificacion || '').toLowerCase();
+      const correo = (c.correo_electronico || '').toLowerCase();
+      const numero = String(c.numero ?? '').toLowerCase();
+      const ciudad = (this.resolveCiudad(c) || '').toLowerCase();
+      const departamento = (this.resolveDepartamento(c) || '').toLowerCase();
+
+      if (this.clienteDocFiltroTipo === 'todos') {
+        return (
+          nombre.includes(q) ||
+          razon.includes(q) ||
+          ident.includes(q) ||
+          correo.includes(q) ||
+          numero.includes(q) ||
+          ciudad.includes(q) ||
+          departamento.includes(q)
+        );
+      } else if (this.clienteDocFiltroTipo === 'nombre') {
+        return nombre.includes(q);
+      } else if (this.clienteDocFiltroTipo === 'razon_social') {
+        return razon.includes(q);
+      } else if (this.clienteDocFiltroTipo === 'identificacion') {
+        return ident.includes(q);
+      } else if (this.clienteDocFiltroTipo === 'correo') {
+        return correo.includes(q);
+      } else if (this.clienteDocFiltroTipo === 'numero') {
+        return numero.includes(q);
+      }
+      return false;
+    });
+  }
+
+  seleccionarClienteDocumento(item: any): void {
+    this.clienteDocSeleccionado = item;
+    this.clienteDocResultados = [];
+    this.clienteDocBusqueda = '';
+  }
+
+  limpiarSeleccionClienteDocumento(): void {
+    this.clienteDocSeleccionado = null;
+    this.clienteDocBusqueda = '';
+    this.clienteDocResultados = [];
+    this.clienteDocFiltroTipo = 'todos';
+    this.clienteDocTemplateFile = null;
+    this.clienteDocMsg = '';
+    try {
+      const el = this.clienteDocTemplateInput?.nativeElement;
+      if (el) el.value = '';
+    } catch {}
+  }
+
+  onClienteDocTemplateSelected(event: any): void {
+    try {
+      const f = event?.target?.files?.[0] || null;
+      this.clienteDocTemplateFile = f;
+      this.clienteDocMsg = '';
+    } catch {
+      this.clienteDocTemplateFile = null;
+    }
+  }
+
+  async generarDocumentoCliente(): Promise<void> {
+    if (this.clienteDocLoading) return;
+    const id = Number(this.clienteDocSeleccionado?.id_cliente);
+    if (!Number.isFinite(id) || id <= 0) {
+      this.clienteDocMsg = 'Debe seleccionar un cliente';
+      this.snackbarService.warn(this.clienteDocMsg);
+      return;
+    }
+    if (!this.clienteDocTemplateFile) {
+      this.clienteDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+      this.snackbarService.warn(this.clienteDocMsg);
+      return;
+    }
+
+    this.clienteDocLoading = true;
+    this.clienteDocMsg = '';
+    try {
+      const originalTemplateName = this.clienteDocTemplateFile?.name || null;
+      const { blob, filename } = await this.solicitudesService.generarDocumentoCliente({
+        id_cliente: id,
+        template: this.clienteDocTemplateFile
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = originalTemplateName || filename || 'documento_cliente';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.clienteDocMsg = 'Documento generado';
+      this.snackbarService.success('Documento generado');
+      this.limpiarSeleccionClienteDocumento();
+      this.clienteDocFiltroTipo = 'todos';
+      this.clienteDocTemplateFile = null;
+      try {
+        const el = this.clienteDocTemplateInput?.nativeElement;
+        if (el) el.value = '';
+      } catch {}
+    } catch (err: any) {
+      this.clienteDocMsg = err?.message || 'No se pudo generar el documento';
+      this.snackbarService.error(this.clienteDocMsg);
+    } finally {
+      this.clienteDocLoading = false;
+    }
   }
 
   filtrarSolicitudes(): void {
@@ -2262,29 +2411,32 @@ private getValorEncuesta(campo: string): any {
 
   // Helpers: resolve display names for departamento/ciudad from IDs or codes
   resolveDepartamento(cliente: any): string {
-    const nombre = cliente?.departamento;
-    if (nombre) return this.formatValue(nombre);
-    const codigo = cliente?.id_departamento || cliente?.departamento_codigo;
     const depList = this.departamentos();
-    const found = depList.find(d => String(d.codigo) === String(codigo));
-    return this.formatValue(found?.nombre) || '—';
+    const raw = cliente?.departamento;
+    const codigo = cliente?.id_departamento || cliente?.departamento_codigo || raw;
+    if (codigo && Array.isArray(depList) && depList.length) {
+      const found = depList.find(d => String(d.codigo) === String(codigo));
+      if (found?.nombre) return this.formatValue(found.nombre);
+    }
+    if (raw) return this.formatValue(raw);
+    return '—';
   }
 
   resolveCiudad(cliente: any): string {
     // Try common name keys first
-    const nombre = cliente?.ciudad
+    const raw = cliente?.ciudad
       || cliente?.ciudad_nombre
       || cliente?.nombre_ciudad
       || cliente?.municipio
       || cliente?.municipio_nombre;
-    if (nombre) return this.formatValue(nombre);
     // Try to resolve by code if we have cities loaded
-    const codigo = cliente?.id_ciudad || cliente?.ciudad_codigo || cliente?.codigo_ciudad;
+    const codigo = cliente?.id_ciudad || cliente?.ciudad_codigo || cliente?.codigo_ciudad || raw;
     const cityList = this.ciudades();
     if (codigo && Array.isArray(cityList) && cityList.length) {
       const found = cityList.find(c => String(c.codigo) === String(codigo));
       if (found?.nombre) return this.formatValue(found.nombre);
     }
+    if (raw) return this.formatValue(raw);
     return '—';
   }
 
@@ -2311,7 +2463,7 @@ private getValorEncuesta(campo: string): any {
       case 'direccion':
         return this.formatValue(cliente.direccion);
       case 'ciudad_departamento':
-        return `${this.formatValue(cliente.ciudad)} / ${this.formatValue(cliente.departamento)}`;
+        return `${this.resolveCiudad(cliente)} / ${this.resolveDepartamento(cliente)}`;
       case 'telefono_celular':
         return `${this.formatValue(cliente.telefono)} / ${this.formatValue(cliente.celular)}`;
       case 'correo_electronico':
@@ -2476,12 +2628,26 @@ private getValorEncuesta(campo: string): any {
   formularioActivo: string | null = null;
 
   // Mostrar/ocultar formularios al pulsar las tarjetas de acción
-  toggleFormulario(tipo: string) {
+  async toggleFormulario(tipo: string) {
     if (this.formularioActivo === tipo) {
       this.formularioActivo = null;
     } else {
       // cerrar cualquiera abierto y abrir el solicitado
       this.formularioActivo = tipo;
+      if (this.formularioActivo === 'cliente-documentos') {
+        this.clienteDocFiltroTipo = 'todos';
+        this.clienteDocBusqueda = '';
+        this.clienteDocResultados = [];
+        this.clienteDocSeleccionado = null;
+        this.clienteDocTemplateFile = null;
+        this.clienteDocMsg = '';
+        this.clienteDocLoading = false;
+        try {
+          const el = this.clienteDocTemplateInput?.nativeElement;
+          if (el) el.value = '';
+        } catch {}
+        await this.cargarClientesDocumentos();
+      }
     }
   }
 

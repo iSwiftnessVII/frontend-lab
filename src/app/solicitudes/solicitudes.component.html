@@ -10,6 +10,10 @@
         <i class="fas fa-check-double"></i>
         <span>Registrar Revisión</span>
       </div>
+      <div class="action-card" (click)="toggleFormulario('cliente-documentos')" [class.active]="formularioActivo === 'cliente-documentos'">
+        <i class="fas fa-file-signature"></i>
+        <span>Generar Documento Cliente</span>
+      </div>
     } @else {
       <div class="action-card" (click)="toggleFormulario('cliente')" [class.active]="formularioActivo === 'cliente'">
         <i class="fas fa-user-plus"></i>
@@ -31,8 +35,107 @@
         <i class="fas fa-star"></i>
         <span>Seguimiento Encuesta</span>
       </div>
+      <div class="action-card" (click)="toggleFormulario('cliente-documentos')" [class.active]="formularioActivo === 'cliente-documentos'">
+        <i class="fas fa-file-signature"></i>
+        <span>Generar Documento Cliente</span>
+      </div>
     }
   </div>
+
+  @if (formularioActivo === 'cliente-documentos') {
+  <h2>Generación de documentos (Clientes)</h2>
+  <section>
+    <div class="form-grid">
+      <div class="form-field full-row search-section" style="position: relative; z-index: 1001;">
+        <label>Buscar y Seleccionar Cliente: *</label>
+
+        @if (!clienteDocSeleccionado) {
+          <div class="campo-combinado">
+            <select name="clienteDocFiltroTipo" [(ngModel)]="clienteDocFiltroTipo" (change)="filtrarClientesDocumentos()" class="select-filtro">
+              <option value="todos">Todos los campos</option>
+              <option value="nombre">Nombre</option>
+              <option value="razon_social">Razón social</option>
+              <option value="identificacion">Identificación</option>
+              <option value="correo">Correo</option>
+              <option value="numero">Consecutivo</option>
+            </select>
+            <input
+              type="text"
+              name="clienteDocBusqueda"
+              [(ngModel)]="clienteDocBusqueda"
+              (input)="filtrarClientesDocumentos()"
+              class="input-combinado"
+              placeholder="Buscar cliente..."
+              autocomplete="off"
+            />
+          </div>
+
+          @if (clienteDocBusqueda && clienteDocResultados.length > 0) {
+            <div class="lista-resultados">
+              @for (c of clienteDocResultados; track c.id_cliente) {
+                <div class="resultado-item" (click)="seleccionarClienteDocumento(c)">
+                  <div class="resultado-header">
+                    <span class="codigo">{{ c.numero_identificacion }}</span>
+                    <span class="nombre">{{ c.nombre_solicitante }}</span>
+                  </div>
+                  <div class="info-adicional">
+                    <span><i class="fas fa-hashtag"></i> N°: {{ c.numero }}</span>
+                    <span><i class="fas fa-envelope"></i> {{ c.correo_electronico || '—' }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (clienteDocBusqueda && clienteDocResultados.length === 0) {
+            <div class="lista-resultados">
+              <div class="sin-resultados">
+                <i class="fas fa-search"></i>
+                <span>No se encontraron resultados</span>
+              </div>
+            </div>
+          }
+        } @else {
+          <div class="reactivo-seleccionado">
+            <div class="seleccionado-info">
+              <div class="seleccionado-content">
+                <div class="seleccionado-header">
+                  <i class="fas fa-check-circle"></i>
+                  <strong>Cliente Seleccionado</strong>
+                </div>
+                <span class="codigo-nombre">
+                  {{ clienteDocSeleccionado.nombre_solicitante }} ({{ clienteDocSeleccionado.numero_identificacion }})
+                </span>
+                <div class="detalles-seleccionado">
+                  <span><i class="fas fa-hashtag"></i> N°: {{ clienteDocSeleccionado.numero }}</span>
+                  <span><i class="fas fa-map-marker-alt"></i> {{ resolveCiudad(clienteDocSeleccionado) }} / {{ resolveDepartamento(clienteDocSeleccionado) }}</span>
+                </div>
+              </div>
+              <button type="button" class="btn-limpiar" (click)="limpiarSeleccionClienteDocumento()" title="Cambiar cliente">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="clienteDocTemplate">Plantilla (.xlsx o .docx): *</label>
+        <input #clienteDocTemplateInput id="clienteDocTemplate" type="file" accept=".xlsx,.docx" (change)="onClienteDocTemplateSelected($event)" />
+      </div>
+
+      <div class="actions">
+        <button class="btn-compact" type="button" (click)="generarDocumentoCliente()" [disabled]="clienteDocLoading">
+          {{ clienteDocLoading ? 'Generando…' : 'Generar y descargar' }}
+        </button>
+      </div>
+
+      @if (clienteDocMsg) {
+        <small class="error-message">{{ clienteDocMsg }}</small>
+      }
+    </div>
+  </section>
+  }
 
   @if (formularioActivo === 'cliente') {
   <h2>Agregar cliente</h2>
