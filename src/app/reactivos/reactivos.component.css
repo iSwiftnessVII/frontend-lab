@@ -839,7 +839,7 @@
 .select-filtro:focus {
   z-index: 10;
   border-color: var(--primary-turquoise);
-  ring: 2px solid rgba(0, 184, 181, 0.2);
+  box-shadow: 0 0 0 3px rgba(0, 184, 181, 0.15);
 }
 
 .input-combinado {
