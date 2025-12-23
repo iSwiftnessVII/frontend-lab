@@ -194,9 +194,11 @@ export class DashboardComponent implements OnInit {
       
       const res = await fetch(API_SOLICITUDES, { headers });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const solicitudes = await res.json();
+      const payload = await res.json();
+      const solicitudes = Array.isArray(payload) ? payload : (payload?.rows || payload?.data || []);
+      const total = Array.isArray(payload) ? solicitudes.length : (payload?.total ?? solicitudes.length);
       this.solicitudesData.set(solicitudes);
-      this.metricas.update(m => ({ ...m, totalSolicitudes: solicitudes.length }));
+      this.metricas.update(m => ({ ...m, totalSolicitudes: total }));
     } catch (error) {
       console.error('Error cargando solicitudes:', error);
       this.solicitudesData.set([]); // ← SETEAR ARRAY VACÍO EN CASO DE ERROR
@@ -223,17 +225,45 @@ export class DashboardComponent implements OnInit {
   }
 
   // Métodos para cálculos
+  private isTruthyFlag(val: any): boolean {
+    return val === true || val === 1 || val === '1' || val === 'true';
+  }
+
+  private isUnset(val: any): boolean {
+    return val === null || val === undefined || val === '';
+  }
+
   contarSolicitudesViable(): number {
     return this.solicitudesData().filter(s => {
-      const val = s.servicio_es_viable;
-      return val === true || val === 1 || val === '1' || val === 'true';
+      return this.isTruthyFlag((s as any).servicio_es_viable);
     }).length;
   }
 
   contarSolicitudesConOferta(): number {
     return this.solicitudesData().filter(s => {
-      const val = s.genero_cotizacion;
-      return val === true || val === 1 || val === '1' || val === 'true';
+      return this.isTruthyFlag((s as any).genero_cotizacion);
+    }).length;
+  }
+
+  contarSolicitudesNoViable(): number {
+    return this.solicitudesData().filter(s => {
+      const val = (s as any).servicio_es_viable;
+      return !this.isUnset(val) && !this.isTruthyFlag(val);
+    }).length;
+  }
+
+  contarSolicitudesRevisionPendiente(): number {
+    return this.solicitudesData().filter(s => this.isUnset((s as any).servicio_es_viable)).length;
+  }
+
+  contarSolicitudesOfertaPendiente(): number {
+    return this.solicitudesData().filter(s => this.isUnset((s as any).genero_cotizacion)).length;
+  }
+
+  contarSolicitudesSinOferta(): number {
+    return this.solicitudesData().filter(s => {
+      const val = (s as any).genero_cotizacion;
+      return !this.isUnset(val) && !this.isTruthyFlag(val);
     }).length;
   }
 

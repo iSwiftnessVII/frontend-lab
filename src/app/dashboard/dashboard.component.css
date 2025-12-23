@@ -106,6 +106,102 @@
     animation: fadeInUp 0.8s ease-out;
 }
 
+.submetrics-section {
+    margin-bottom: 2.5rem;
+    animation: fadeInUp 0.9s ease-out;
+}
+
+.submetrics-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.submetrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.submetric-card {
+    background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%);
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-gray);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.submetric-card.clickable {
+    cursor: pointer;
+}
+
+.submetric-card.clickable:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(0, 184, 181, 0.6);
+}
+
+.submetric-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    color: var(--primary-white);
+    flex: 0 0 auto;
+}
+
+.submetric-icon.viable {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+}
+
+.submetric-icon.no-viable {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+}
+
+.submetric-icon.revision {
+    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+.submetric-icon.oferta {
+    background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+}
+
+.submetric-icon.sin-oferta {
+    background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+}
+
+.submetric-icon.oferta-pendiente {
+    background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+}
+
+.submetric-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.submetric-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--primary-blue);
+    line-height: 1;
+    margin-bottom: 0.15rem;
+}
+
+.submetric-label {
+    font-size: 0.85rem;
+    color: var(--text-gray);
+    font-weight: 600;
+}
+
 .metric-card {
     background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%);
     cursor: pointer;
