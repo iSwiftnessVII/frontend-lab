@@ -723,16 +723,23 @@
 }
 .detail-full {
   grid-column: 1 / -1;
-  background: #fff;
-  border-radius: 10px;
-  padding: 8px 10px;
-  border: 1px solid var(--border-gray);
-  box-shadow: 0 6px 12px rgba(2, 6, 23, 0.04);
-  font-size: 0.84rem; /* reducir tamaño de observaciones */
-  color: var(--text-gray);
 }
 
 /* Make Observaciones behave like the other detail cards but with left-aligned, wrapped text */
+.detail-card.detail-full {
+  padding: 0;
+  border: 1px solid var(--border-gray, #e2e8f0);
+  box-shadow: 0 8px 18px rgba(2,6,23,0.06);
+  color: inherit;
+  font-size: inherit;
+}
+
+.detail-card.detail-full .detail-label {
+  text-align: center;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
 .detail-card.detail-full .detail-value {
   text-align: left;
   white-space: pre-wrap; /* preserve line breaks */
@@ -741,9 +748,10 @@
   padding: 10px 12px;
   font-weight: 400;
 }
+
 .detail-card.detail-full .detail-label {
-  text-align: left; /* label aligned left for observations */
-  padding-left: 12px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
 }
 
 @media (max-width: 900px) {

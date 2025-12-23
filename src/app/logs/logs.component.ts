@@ -114,9 +114,7 @@ export class LogsComponent implements OnInit {
         }
       });
 
-      console.log('Cargando logs con filtros:', filtrosParaServicio);
       const response = await logsService.getLogsAcciones(filtrosParaServicio);
-      console.log('Logs recibidos:', response.data);
       this.logsAccionesSig.set(response.data || []);
       
       if (response.pagination) {
@@ -137,18 +135,6 @@ export class LogsComponent implements OnInit {
   // Modal de detalles
   verDetallesLog(log: any) {
     this.logSeleccionadoSig.set(log);
-  }
-
-  async testVolumetricos() {
-    try {
-      console.log('Testing MAT_VOLUMETRICOS fetch...');
-      const response = await logsService.getLogsAcciones({ modulo: 'MAT_VOLUMETRICOS' });
-      console.log('Test result:', response);
-      alert(`Test: Encontrados ${response.data?.length || 0} logs de MAT_VOLUMETRICOS. Revisar consola.`);
-    } catch (e: any) {
-      console.error('Test failed:', e);
-      alert(`Test failed: ${e.message}`);
-    }
   }
 
   cerrarModalDetalles() {

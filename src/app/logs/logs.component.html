@@ -81,15 +81,11 @@
                 <p>Cargando logs...</p>
             </div>
         } @else {
-            <div style="padding: 1rem; background-color: #f0f4f8; border-radius: 8px; margin-bottom: 1rem;">
-                <p><strong>Debug Info:</strong> Logs encontrados: {{ logsAcciones.length }} | Total paginación: {{ paginacionAcciones.total }}</p>
-                <button (click)="testVolumetricos()" style="margin-top: 5px; background: #333; color: white; padding: 5px 10px; border-radius: 4px;">
-                    Test MAT_VOLUMETRICOS
-                </button>
-                @if (logsAcciones.length === 0) {
-                    <p style="color: red;">No se encontraron logs con los filtros actuales.</p>
-                }
-            </div>
+            @if (logsAcciones.length === 0) {
+                <div class="loading-state">
+                    <p>No se encontraron logs con los filtros actuales.</p>
+                </div>
+            }
 
             <div class="table-container">
                 <table class="logs-table">
