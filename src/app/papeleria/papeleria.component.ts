@@ -297,6 +297,7 @@ export class PapeleriaComponent implements OnInit {
         descripcion: `Consumo de existencias de papelería: ${id}`,
         detalle: {
           id,
+          nombre: (p?.nombre || '').toString().trim() || null,
           key,
           cantidad_reducida: cantidad,
           cantidad_existente_anterior: existente,

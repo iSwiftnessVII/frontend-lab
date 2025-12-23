@@ -122,71 +122,66 @@
                 </p>
             }
 
-            <!-- Tabla de usuarios cuando no está cargando y hay datos -->
+            <!-- Lista de usuarios cuando no está cargando y hay datos -->
             @if (!cargando && usuariosFiltradosList.length) {
-                <table class="usuarios-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Email</th>
-                            <th>Rol</th>
-                            <th>Estado</th>
-                            <th>Fecha Creación</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div class="equipos-grid">
+                    <div class="fade-in">
                         @for (usuario of usuariosFiltradosList; track usuario.id_usuario) {
-                            <tr [class.usuario-inactivo]="usuario.estado === 'INACTIVO'">
-                                <td>{{ usuario.id_usuario }}</td>
-                                <td>
-                                    <i class="fas fa-user-tie" style="color: #3182ce; margin-right: 0.5rem;"></i> 
-                                    {{ usuario.email }}
-                                </td>
-                                <td>
-                                    @if (!canChangeRole()) {
-                                        <span class="role-badge">{{ usuario.rol_nombre || 'Sin rol' }}</span>
-                                    } @else {
-                                        <select [ngModel]="usuario.rol_id"
-                                            (ngModelChange)="cambiarRol(usuario, $event)" class="role-select">
-                                            @for (rol of roles; track rol.id_rol) {
-                                                <option [value]="rol.id_rol">{{ rol.nombre }}</option>
+                            <article class="equipo-card usuario-card" [class.usuario-inactivo]="usuario.estado === 'INACTIVO'">
+                                <div class="card-top">
+                                    <div class="tags">
+                                        <span class="tag"><strong>ID:</strong> {{ usuario.id_usuario }}</span>
+                                        <span class="tag">
+                                            <strong>Rol:</strong>
+                                            @if (!canChangeRole()) {
+                                                <span class="role-badge">{{ usuario.rol_nombre || 'Sin rol' }}</span>
+                                            } @else {
+                                                <select [ngModel]="usuario.rol_id" (ngModelChange)="cambiarRol(usuario, $event)" class="role-select">
+                                                    @for (rol of roles; track rol.id_rol) {
+                                                        <option [value]="rol.id_rol">{{ rol.nombre }}</option>
+                                                    }
+                                                </select>
                                             }
-                                        </select>
-                                    }
-                                </td>
-                                <td>
-                                    <span class="estado-badge" [class]="'estado-' + usuario.estado">
-                                        <i [class]="usuario.estado === 'ACTIVO' ? 'fas fa-check-circle' : 'fas fa-ban'"></i> 
-                                        {{ usuario.estado }}
-                                    </span>
-                                </td>
-                                <td>{{ formatearFecha(usuario.created_at) }}</td>
-                                <td class="actions-cell">
-                                    @if (usuario.estado === 'ACTIVO') {
-                                        <button type="button" class="btn-desactivar"
-                                            (click)="cambiarEstado(usuario, 'INACTIVO')" title="Desactivar usuario">
-                                            <i class="fas fa-user-lock"></i>
+                                        </span>
+                                        <span class="tag">
+                                            <strong>Estado:</strong>
+                                            <span class="estado-badge" [class]="'estado-' + usuario.estado">
+                                                <i [class]="usuario.estado === 'ACTIVO' ? 'fas fa-check-circle' : 'fas fa-ban'"></i>
+                                                {{ usuario.estado }}
+                                            </span>
+                                        </span>
+                                        <span class="tag"><strong>Creación:</strong> {{ formatearFecha(usuario.created_at) }}</span>
+                                    </div>
+
+                                    <div class="actions-cell">
+                                        @if (usuario.estado === 'ACTIVO') {
+                                            <button type="button" class="btn-desactivar" (click)="cambiarEstado(usuario, 'INACTIVO')" title="Desactivar usuario">
+                                                <i class="fas fa-user-lock"></i>
+                                            </button>
+                                        } @else if (usuario.estado === 'INACTIVO') {
+                                            <button type="button" class="btn-activar" (click)="cambiarEstado(usuario, 'ACTIVO')" title="Activar usuario">
+                                                <i class="fas fa-user-check"></i>
+                                            </button>
+                                        }
+                                        <button type="button" class="btn-editar" (click)="abrirModalEditar(usuario)" title="Editar usuario">
+                                            <i class="fas fa-user-edit"></i>
                                         </button>
-                                    } @else if (usuario.estado === 'INACTIVO') {
-                                        <button type="button" class="btn-activar"
-                                            (click)="cambiarEstado(usuario, 'ACTIVO')" title="Activar usuario">
-                                            <i class="fas fa-user-check"></i>
+                                        <button type="button" class="btn-delete" (click)="eliminarUsuario(usuario.id_usuario)" title="Eliminar usuario">
+                                            <i class="fas fa-trash"></i>
                                         </button>
-                                    }
-                                    <button type="button" class="btn-editar"
-                                        (click)="abrirModalEditar(usuario)" title="Editar usuario">
-                                        <i class="fas fa-user-edit"></i>
-                                    </button>
-                                    <button type="button" class="btn-delete" 
-                                        (click)="eliminarUsuario(usuario.id_usuario)" title="Eliminar usuario">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
+                                    </div>
+                                </div>
+
+                                <div class="card-name">
+                                    <div class="name-line">
+                                        <i class="fas fa-user-tie" aria-hidden="true"></i>
+                                        {{ usuario.email }}
+                                    </div>
+                                </div>
+                            </article>
                         }
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             }
 
             <!-- Mensaje cuando no hay usuarios -->

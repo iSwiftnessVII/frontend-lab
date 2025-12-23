@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, effect } from '@angular/core';
+import { Component, EffectRef, OnDestroy, OnInit, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -13,7 +13,7 @@ import { usuariosService } from '../services/usuarios.service'
   styleUrls: ['./usuarios.component.css'],
   imports: [CommonModule, FormsModule, RouterModule]
 })
-export class UsuariosComponent implements OnInit {
+export class UsuariosComponent implements OnInit, OnDestroy {
   // Estado de carga
   cargando: boolean = false;
 
@@ -50,18 +50,24 @@ export class UsuariosComponent implements OnInit {
   get estadoQ() { return this.estadoQSig(); }
   set estadoQ(v: string) { this.estadoQSig.set((v ?? '').toString()); }
 
-  constructor(public snack: SnackbarService) {}
+  private filtrosEffectStop?: EffectRef;
 
-  ngOnInit() {
-    this.preloadAll();
-    effect(() => {
-      // Recalcular filtros en tiempo real cuando cambian usuarios o filtros
+  constructor(public snack: SnackbarService) {
+    this.filtrosEffectStop = effect(() => {
       const _ = this.usuariosSig();
       const __e = this.emailQSig();
       const __r = this.rolQSig();
       const __s = this.estadoQSig();
       this.aplicarFiltros();
     });
+  }
+
+  ngOnInit() {
+    this.preloadAll();
+  }
+
+  ngOnDestroy() {
+    try { this.filtrosEffectStop?.destroy(); } catch {}
   }
 
   editUserModalOpen = false;

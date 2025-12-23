@@ -156,7 +156,7 @@ export class EquiposComponent implements OnInit {
             modulo: 'EQUIPOS',
             accion: 'ACTUALIZAR',
             descripcion: `Actualización de equipo: ${this.editingEquipoCodigo}`,
-            detalle: { codigo: this.editingEquipoCodigo, ...payload }
+            detalle: { id: this.editingEquipoCodigo, ...payload, nombre: payload?.nombre ?? null }
           }).catch(console.error);
 
           await this.obtenerEquiposRegistrados();
@@ -304,7 +304,7 @@ export class EquiposComponent implements OnInit {
             modulo: 'EQUIPOS',
             accion: 'ACTUALIZAR',
             descripcion: `Actualización de historial para equipo: ${equipoCodigo}`,
-            detalle: { equipoCodigo, consecutivo: registro.consecutivo, ...payload }
+            detalle: { id: equipoCodigo, consecutivo: registro.consecutivo, ...payload }
           }).catch(console.error);
 
           // refresh local list if needed
@@ -527,7 +527,7 @@ export class EquiposComponent implements OnInit {
           modulo: 'EQUIPOS',
           accion: 'ELIMINAR_PDF',
           descripcion: `Eliminación de PDF para equipo: ${codigo}`,
-          detalle: { codigo, pdfId: item.id, pdfName: item.name }
+          detalle: { id: codigo, archivo: item.name, pdf_id: item.id, categoria: item.categoria || null }
         }).catch(console.error);
 
         await this.listarPdfs(codigo);
@@ -558,7 +558,7 @@ export class EquiposComponent implements OnInit {
             modulo: 'EQUIPOS',
             accion: 'SUBIR_PDF',
             descripcion: `Subida de PDF para equipo: ${codigo}`,
-            detalle: { codigo, categoria, fileName: file.name }
+            detalle: { id: codigo, archivo: file.name, categoria: categoria || null }
           }).catch(console.error);
 
           await this.listarPdfs(codigo);
@@ -803,7 +803,7 @@ export class EquiposComponent implements OnInit {
         modulo: 'EQUIPOS',
         accion: 'ACTUALIZAR',
         descripcion: `Actualización de hoja de vida: ${this.editingEquipoCodigo}`,
-        detalle: { codigo: this.editingEquipoCodigo, ...payload }
+        detalle: { id: this.editingEquipoCodigo, ...payload, nombre: payload?.nombre ?? null }
       }).catch(console.error);
 
       await this.obtenerEquiposRegistrados();
@@ -869,7 +869,7 @@ export class EquiposComponent implements OnInit {
         modulo: 'EQUIPOS',
         accion: 'ACTUALIZAR',
         descripcion: `Actualización de ficha técnica: ${this.codigo_identificacion}`,
-        detalle: { codigo: this.codigo_identificacion }
+        detalle: { id: this.codigo_identificacion, nombre: this.nombre || null }
       }).catch(console.error);
 
       await this.obtenerEquiposRegistrados();
@@ -1619,11 +1619,12 @@ export class EquiposComponent implements OnInit {
       this.snack.success('Intervalo registrado exitosamente');
       
       // Log auditoría
+      const equipoNombre = (this.equiposRegistrados || []).find((e: any) => String(e?.codigo_identificacion) === String(equipo_id))?.nombre || null;
       logsService.crearLogAccion({
         modulo: 'EQUIPOS',
         accion: 'CREAR',
         descripcion: `Creación de intervalo para equipo: ${equipo_id}`,
-        detalle: { equipo_id, consecutivo }
+        detalle: { id: equipo_id, nombre: equipoNombre, consecutivo }
       }).catch(console.error);
 
       this.resetFormIntervalo();
@@ -1665,11 +1666,12 @@ export class EquiposComponent implements OnInit {
       this.snack.success('Historial registrado exitosamente');
 
       // Log auditoría
+      const equipoNombre = (this.equiposRegistrados || []).find((e: any) => String(e?.codigo_identificacion) === String(equipo_id))?.nombre || null;
       logsService.crearLogAccion({
         modulo: 'EQUIPOS',
         accion: 'CREAR',
         descripcion: `Creación de historial para equipo: ${equipo_id}`,
-        detalle: { equipo_id, consecutivo, tipo: this.tipo_historial }
+        detalle: { id: equipo_id, nombre: equipoNombre, consecutivo, tipo_historial: this.tipo_historial || null }
       }).catch(console.error);
 
       this.resetFormHistorial();
@@ -1789,7 +1791,7 @@ export class EquiposComponent implements OnInit {
           modulo: 'EQUIPOS',
           accion: 'ACTUALIZAR',
           descripcion: `Actualización de equipo (Formulario): ${this.editingEquipoCodigo}`,
-          detalle: { codigo: this.editingEquipoCodigo, ...payload }
+          detalle: { id: this.editingEquipoCodigo, ...payload, nombre: payload?.nombre ?? null }
         }).catch(console.error);
 
         this.editEquipoMode = false;
@@ -1805,7 +1807,7 @@ export class EquiposComponent implements OnInit {
           modulo: 'EQUIPOS',
           accion: 'CREAR',
           descripcion: `Creación de equipo: ${this.codigo_identificacion}`,
-          detalle: payload
+          detalle: { id: this.codigo_identificacion, ...payload }
         }).catch(console.error);
 
         this.resetForm();
@@ -1846,7 +1848,7 @@ export class EquiposComponent implements OnInit {
         modulo: 'EQUIPOS',
         accion: 'ELIMINAR',
         descripcion: `Eliminación de equipo: ${codigo}`,
-        detalle: { codigo, nombre: equipo.nombre }
+        detalle: { id: codigo, nombre: equipo?.nombre || null }
       }).catch(console.error);
 
       // Actualizar lista local

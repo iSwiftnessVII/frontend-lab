@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { SnackbarService } from '../shared/snackbar.service';
 import { ReferenciaService } from '../services/referencia.service';
 import { authUser } from '../services/auth.service';
+import { logsService } from '../services/logs.service';
 
 @Component({
   standalone: true,
@@ -448,6 +449,12 @@ export class ReferenciaComponent implements OnInit {
       };
       await this.referenciaService.crearMaterial(payload);
       this.snack.success('Material de referencia registrado exitosamente');
+      logsService.crearLogAccion({
+        modulo: 'MAT_REFERENCIA',
+        accion: 'CREAR',
+        descripcion: `Creación de material de referencia: ${nextCodigo}`,
+        detalle: { id: nextCodigo, ...payload }
+      }).catch(console.error);
       
       this.resetFormMaterial();
       await this.obtenerMaterialesRegistrados();
@@ -796,6 +803,14 @@ export class ReferenciaComponent implements OnInit {
     try {
       await this.referenciaService.eliminarPdf(item.id);
       this.snack.success('PDF eliminado');
+      const codigoNum = Number(codigo);
+      const materialNombre = (this.materialesRegistrados || []).find(m => Number(m?.codigo_id) === codigoNum)?.nombre_material || null;
+      logsService.crearLogAccion({
+        modulo: 'MAT_REFERENCIA',
+        accion: 'ELIMINAR_PDF',
+        descripcion: `Eliminación de PDF para material de referencia: ${codigo}`,
+        detalle: { id: Number.isFinite(codigoNum) ? codigoNum : codigo, nombre_material: materialNombre, archivo: item.name, categoria: item.categoria || null, pdf_id: item.id }
+      }).catch(console.error);
 
       await this.listarPdfs(codigo);
     } catch (err: any) {
@@ -827,6 +842,14 @@ export class ReferenciaComponent implements OnInit {
       try {
         await this.referenciaService.subirPdfMaterial(codigo, categoria, file);
         this.snack.success('PDF subido correctamente');
+        const codigoNum = Number(codigo);
+        const materialNombre = (this.materialesRegistrados || []).find(m => Number(m?.codigo_id) === codigoNum)?.nombre_material || null;
+        logsService.crearLogAccion({
+          modulo: 'MAT_REFERENCIA',
+          accion: 'SUBIR_PDF',
+          descripcion: `Subida de PDF para material de referencia: ${codigo}`,
+          detalle: { id: Number.isFinite(codigoNum) ? codigoNum : codigo, nombre_material: materialNombre, archivo: file.name, categoria: categoria || null }
+        }).catch(console.error);
         
         await this.listarPdfs(codigo);
       } catch (err: any) {
@@ -849,6 +872,12 @@ export class ReferenciaComponent implements OnInit {
     try {
       await this.referenciaService.eliminarMaterial(codigo);
       this.snack.success('Material eliminado');
+      logsService.crearLogAccion({
+        modulo: 'MAT_REFERENCIA',
+        accion: 'ELIMINAR',
+        descripcion: `Eliminación de material de referencia: ${codigo}`,
+        detalle: { id: codigo, nombre_material: material?.nombre_material || null }
+      }).catch(console.error);
 
       this.materialesRegistrados = this.materialesRegistrados.filter(m => m.codigo_id !== codigo);
       
@@ -902,6 +931,12 @@ export class ReferenciaComponent implements OnInit {
     try {
       await this.referenciaService.actualizarMaterial(this.editingMaterialCodigo, payload);
       this.snack.success('Cambios guardados');
+      logsService.crearLogAccion({
+        modulo: 'MAT_REFERENCIA',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de material de referencia: ${this.editingMaterialCodigo}`,
+        detalle: { id: this.editingMaterialCodigo, ...payload }
+      }).catch(console.error);
 
       await this.obtenerMaterialesRegistrados();
       this.closeEditMaterialModal();

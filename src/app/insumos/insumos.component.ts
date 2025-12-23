@@ -236,6 +236,7 @@ export class InsumosComponent implements OnInit, OnDestroy {
         descripcion: `Consumo de existencias de insumo: ${id}`,
         detalle: {
           id,
+          nombre: (i?.nombre || '').toString().trim() || null,
           key,
           cantidad_reducida: cantidad,
           cantidad_existente_anterior: existente,

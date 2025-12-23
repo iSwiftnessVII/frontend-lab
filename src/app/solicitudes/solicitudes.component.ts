@@ -8,6 +8,7 @@ import { LocationsService } from '../services/clientes/locations.service';
 import { UtilsService } from '../services/clientes/utils.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { authService, authUser } from '../services/auth.service';
+import { logsService } from '../services/logs.service';
 import { NumbersOnlyDirective } from '../directives/numbers-only.directive';
 import { LettersOnlyDirective } from '../directives/letters-only.directive';
 import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
@@ -1542,6 +1543,49 @@ private getValorEncuesta(campo: string): any {
 }
 
   // ========== OPERACIONES CRUD ==========
+  private findClienteById(id: any): any | null {
+    const nid = Number(id);
+    if (!Number.isFinite(nid) || nid <= 0) return null;
+    return (this.clientes() || []).find((c: any) => Number(c?.id_cliente ?? c?.cliente_id ?? c?.id) === nid) ?? null;
+  }
+
+  private findSolicitudById(id: any): any | null {
+    const nid = Number(id);
+    if (!Number.isFinite(nid) || nid <= 0) return null;
+    return (this.solicitudes() || []).find((s: any) => Number(s?.solicitud_id ?? s?.id_solicitud ?? s?.id) === nid) ?? null;
+  }
+
+  private createClienteLogDetalle(id: any, cliente: any, body: any): any {
+    const base = { ...(cliente && typeof cliente === 'object' ? cliente : {}), ...(body && typeof body === 'object' ? body : {}) };
+    return {
+      id,
+      cliente_id: id,
+      nombre_solicitante: base?.nombre_solicitante ?? null,
+      razon_social: base?.razon_social ?? null,
+      numero_identificacion: base?.numero_identificacion ?? null,
+      nit: base?.nit ?? null,
+      correo_electronico: base?.correo_electronico ?? null,
+      ...base
+    };
+  }
+
+  private createSolicitudLogDetalle(id: any, solicitud: any, body: any, cliente: any): any {
+    const base = { ...(solicitud && typeof solicitud === 'object' ? solicitud : {}), ...(body && typeof body === 'object' ? body : {}) };
+    const c = cliente && typeof cliente === 'object' ? cliente : null;
+    return {
+      id,
+      solicitud_id: id,
+      id_solicitud: id,
+      id_cliente: base?.id_cliente ?? c?.id_cliente ?? null,
+      nombre_muestra: base?.nombre_muestra ?? null,
+      nombre_solicitante: base?.nombre_solicitante ?? c?.nombre_solicitante ?? null,
+      razon_social: base?.razon_social ?? c?.razon_social ?? null,
+      correo_electronico: base?.correo_electronico ?? c?.correo_electronico ?? null,
+      tipo_solicitud: base?.tipo_solicitud ?? null,
+      ...base
+    };
+  }
+
   async createCliente(e: Event): Promise<void> {
     e.preventDefault();
 
@@ -1583,6 +1627,25 @@ private getValorEncuesta(campo: string): any {
 
       this.snackbarService.success('✅ Cliente creado exitosamente');
       this.clienteErrors = {};
+
+      const created =
+        (this.clientes() || []).find((c: any) => {
+          const idn = (payload?.numero_identificacion || '').toString().trim();
+          const nit = (payload?.nit || '').toString().trim();
+          const email = (payload?.correo_electronico || '').toString().trim();
+          if (idn && String(c?.numero_identificacion || '').trim() === idn) return true;
+          if (nit && String(c?.nit || '').trim() === nit) return true;
+          if (email && String(c?.correo_electronico || '').trim() === email) return true;
+          return false;
+        }) ?? null;
+      const createdId = Number(created?.id_cliente ?? created?.cliente_id ?? created?.id ?? 0) || null;
+      const detalle = this.createClienteLogDetalle(createdId ?? payload?.numero ?? payload?.numero_identificacion ?? null, created, payload);
+      logsService.crearLogAccion({
+        modulo: 'CLIENTES',
+        accion: 'CREAR',
+        descripcion: `Creación de cliente: ${detalle?.id ?? ''}`.trim(),
+        detalle
+      }).catch(console.error);
 
       this.limpiarFormularioCliente();
       this.computeNextClienteNumero();
@@ -1666,6 +1729,16 @@ private getValorEncuesta(campo: string): any {
         }
       }
 
+      const sid = Number(created?.solicitud_id ?? created?.id_solicitud ?? nuevo?.solicitud_id ?? nuevo?.id_solicitud ?? body?.solicitud_id ?? 0) || null;
+      const cliente = this.findClienteById(body?.id_cliente);
+      const detalle = this.createSolicitudLogDetalle(sid ?? body?.solicitud_id ?? null, created, body, cliente);
+      logsService.crearLogAccion({
+        modulo: 'SOLICITUDES',
+        accion: 'CREAR',
+        descripcion: `Creación de solicitud: ${detalle?.id ?? ''}`.trim(),
+        detalle
+      }).catch(console.error);
+
     } catch (err: any) {
       console.error('Error creating solicitud:', err);
       this.manejarError(err, 'crear solicitud');
@@ -1705,6 +1778,16 @@ private getValorEncuesta(campo: string): any {
 
       this.snackbarService.success('✅ Oferta registrada exitosamente');
       this.ofertaErrors = {};
+
+      const s = this.findSolicitudById(ofertaId);
+      const c = this.findClienteById(s?.id_cliente);
+      const detalle = this.createSolicitudLogDetalle(ofertaId, s, { ...body }, c);
+      logsService.crearLogAccion({
+        modulo: 'SOLICITUDES',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de oferta de solicitud: ${ofertaId}`,
+        detalle
+      }).catch(console.error);
 
       this.limpiarFormularioOferta();
 
@@ -1747,13 +1830,23 @@ private getValorEncuesta(campo: string): any {
         servicio_es_viable: this.resultadoServicioViable ? 1 : 0
       };
 
-      await this.solicitudesService.upsertRevision(Number(this.resultadoSolicitudId), body);
+      const sid = Number(this.resultadoSolicitudId);
+      await this.solicitudesService.upsertRevision(sid, body);
 
       this.snackbarService.success('✅ Resultados registrados exitosamente');
       this.resultadoErrors = {};
 
+      const s = this.findSolicitudById(sid);
+      const c = this.findClienteById(s?.id_cliente);
+      const detalle = this.createSolicitudLogDetalle(sid, s, { ...body }, c);
+      logsService.crearLogAccion({
+        modulo: 'SOLICITUDES',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de revisión de solicitud: ${sid}`,
+        detalle
+      }).catch(console.error);
+
       // Optimistic UX: expand card and show 'revision' tab with fresh data
-      const sid = Number(this.resultadoSolicitudId);
       if (sid) {
         this.activeSolicitudTab[sid] = 'revision';
         this.solicitudExpandida = sid;
@@ -1792,13 +1885,23 @@ private getValorEncuesta(campo: string): any {
         solicito_nueva_encuesta: this.encuestaSolicitoNueva
       };
 
-      await this.solicitudesService.upsertSeguimientoEncuesta(Number(this.encuestaSolicitudId), body);
+      const sid = Number(this.encuestaSolicitudId);
+      await this.solicitudesService.upsertSeguimientoEncuesta(sid, body);
 
       this.snackbarService.success('✅ Encuesta registrada exitosamente');
       this.encuestaErrors = {};
 
+      const s = this.findSolicitudById(sid);
+      const c = this.findClienteById(s?.id_cliente);
+      const detalle = this.createSolicitudLogDetalle(sid, s, { ...body }, c);
+      logsService.crearLogAccion({
+        modulo: 'SOLICITUDES',
+        accion: 'CREAR_ENCUESTA',
+        descripcion: `Registro de encuesta para solicitud: ${sid}`,
+        detalle
+      }).catch(console.error);
+
       // Optimistic UX: expand card and show 'encuesta' tab with fresh data
-      const sid = Number(this.encuestaSolicitudId);
       if (sid) {
         this.activeSolicitudTab[sid] = 'encuesta';
         this.solicitudExpandida = sid;
@@ -1823,8 +1926,16 @@ private getValorEncuesta(campo: string): any {
     }
 
     try {
+      const cliente = this.findClienteById(id);
       await this.clientesService.deleteCliente(id);
       this.snackbarService.success('✅ Cliente eliminado exitosamente');
+      const detalle = this.createClienteLogDetalle(id, cliente, null);
+      logsService.crearLogAccion({
+        modulo: 'CLIENTES',
+        accion: 'ELIMINAR',
+        descripcion: `Eliminación de cliente: ${id}`,
+        detalle
+      }).catch(console.error);
       try {
         const next = this.clientesFiltrados().filter(c => Number(c.id_cliente || c.id || c.cliente_id) !== Number(id));
         this.clientesFiltrados.set(next);
@@ -1845,8 +1956,17 @@ private getValorEncuesta(campo: string): any {
     }
 
     try {
+      const solicitud = this.findSolicitudById(id);
+      const cliente = this.findClienteById(solicitud?.id_cliente);
       await this.solicitudesService.deleteSolicitud(id);
       this.snackbarService.success('✅ Solicitud eliminada exitosamente');
+      const detalle = this.createSolicitudLogDetalle(id, solicitud, null, cliente);
+      logsService.crearLogAccion({
+        modulo: 'SOLICITUDES',
+        accion: 'ELIMINAR',
+        descripcion: `Eliminación de solicitud: ${id}`,
+        detalle
+      }).catch(console.error);
       try {
         const next = this.solicitudesFiltradas().filter(s => Number(s.solicitud_id || s.id_solicitud || s.id) !== Number(id));
         this.solicitudesFiltradas.set(next);
@@ -2149,6 +2269,7 @@ private getValorEncuesta(campo: string): any {
 
   async saveEditCliente(): Promise<void> {
     if (!this.editClienteId) return;
+    const clienteBefore = this.findClienteById(this.editClienteId);
     const body = {
       nombre_solicitante: this.editClienteNombre,
       correo_electronico: this.editClienteCorreo,
@@ -2172,6 +2293,13 @@ private getValorEncuesta(campo: string): any {
     try {
       await this.clientesService.updateCliente(this.editClienteId, body);
       this.snackbarService.success('✅ Cliente actualizado');
+      const detalle = this.createClienteLogDetalle(this.editClienteId, clienteBefore, body);
+      logsService.crearLogAccion({
+        modulo: 'CLIENTES',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de cliente: ${this.editClienteId}`,
+        detalle
+      }).catch(console.error);
       this.closeEditClienteModal();
     } catch (err: any) {
       console.error('saveEditCliente', err);
@@ -2393,6 +2521,8 @@ private getValorEncuesta(campo: string): any {
 
   async saveEditSolicitud(): Promise<void> {
     if (!this.editSolicitudId) return;
+    const solicitudBefore = this.findSolicitudById(this.editSolicitudId);
+    const cliente = this.findClienteById(solicitudBefore?.id_cliente);
     const body: any = {
       nombre_muestra: this.editSolicitudNombreMuestra,
       tipo_solicitud: this.editSolicitudTipo,
@@ -2413,6 +2543,13 @@ private getValorEncuesta(campo: string): any {
     try {
       await this.solicitudesService.updateSolicitud(this.editSolicitudId, body);
       this.snackbarService.success('✅ Solicitud actualizada');
+      const detalle = this.createSolicitudLogDetalle(this.editSolicitudId, solicitudBefore, body, cliente);
+      logsService.crearLogAccion({
+        modulo: 'SOLICITUDES',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de solicitud: ${this.editSolicitudId}`,
+        detalle
+      }).catch(console.error);
       this.closeEditSolicitudModal();
       await this.loadSolicitudes();
     } catch (err: any) {
@@ -2424,6 +2561,8 @@ private getValorEncuesta(campo: string): any {
   // Save oferta tab
   async saveEditOferta(): Promise<void> {
     if (!this.editSolicitudId) return;
+    const solicitudBefore = this.findSolicitudById(this.editSolicitudId);
+    const cliente = this.findClienteById(solicitudBefore?.id_cliente);
     const body: any = {
       genero_cotizacion: this.editOfertaGeneroCotizacion === null ? null : (this.editOfertaGeneroCotizacion ? 1 : 0),
       valor_cotizacion: this.editOfertaValorCotizacion,
@@ -2434,6 +2573,13 @@ private getValorEncuesta(campo: string): any {
     try {
       await this.solicitudesService.upsertOferta(Number(this.editSolicitudId), body);
       this.snackbarService.success('✅ Oferta actualizada');
+      const detalle = this.createSolicitudLogDetalle(this.editSolicitudId, solicitudBefore, { ...body }, cliente);
+      logsService.crearLogAccion({
+        modulo: 'SOLICITUDES',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de oferta de solicitud: ${this.editSolicitudId}`,
+        detalle
+      }).catch(console.error);
       // refresh local prefill
       await this.loadSolicitudes();
       const updated = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === Number(this.editSolicitudId));
@@ -2447,6 +2593,8 @@ private getValorEncuesta(campo: string): any {
   // Save revision tab
   async saveEditRevision(): Promise<void> {
     if (!this.editSolicitudId) return;
+    const solicitudBefore = this.findSolicitudById(this.editSolicitudId);
+    const cliente = this.findClienteById(solicitudBefore?.id_cliente);
     const body: any = {
       fecha_limite_entrega: this.editRevisionFechaLimite || null,
       servicio_es_viable: this.editRevisionServicioViable === null ? null : (this.editRevisionServicioViable ? 1 : 0)
@@ -2454,6 +2602,13 @@ private getValorEncuesta(campo: string): any {
     try {
       await this.solicitudesService.upsertRevision(Number(this.editSolicitudId), body);
       this.snackbarService.success('✅ Revisión actualizada');
+      const detalle = this.createSolicitudLogDetalle(this.editSolicitudId, solicitudBefore, { ...body }, cliente);
+      logsService.crearLogAccion({
+        modulo: 'SOLICITUDES',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de revisión de solicitud: ${this.editSolicitudId}`,
+        detalle
+      }).catch(console.error);
       await this.loadSolicitudes();
       const updated = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === Number(this.editSolicitudId));
       if (updated) this.editSolicitudOpen(updated);
@@ -2466,6 +2621,8 @@ private getValorEncuesta(campo: string): any {
   // Save encuesta tab
   async saveEditEncuesta(): Promise<void> {
     if (!this.editSolicitudId) return;
+    const solicitudBefore = this.findSolicitudById(this.editSolicitudId);
+    const cliente = this.findClienteById(solicitudBefore?.id_cliente);
     const body: any = {
       fecha_encuesta: this.editEncuestaFecha || null,
       comentarios: this.editEncuestaComentarios || null,
@@ -2477,6 +2634,13 @@ private getValorEncuesta(campo: string): any {
     try {
       await this.solicitudesService.upsertSeguimientoEncuesta(Number(this.editSolicitudId), body);
       this.snackbarService.success('✅ Encuesta actualizada');
+      const detalle = this.createSolicitudLogDetalle(this.editSolicitudId, solicitudBefore, { ...body }, cliente);
+      logsService.crearLogAccion({
+        modulo: 'SOLICITUDES',
+        accion: 'ACTUALIZAR',
+        descripcion: `Actualización de encuesta de solicitud: ${this.editSolicitudId}`,
+        detalle
+      }).catch(console.error);
       await this.loadSolicitudes();
       const updated = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === Number(this.editSolicitudId));
       if (updated) this.editSolicitudOpen(updated);

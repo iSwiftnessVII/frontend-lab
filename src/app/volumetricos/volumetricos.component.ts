@@ -350,7 +350,7 @@ export class VolumetricosComponent implements OnInit {
         modulo: 'MAT_VOLUMETRICOS',
         accion: 'CREAR',
         descripcion: `Creación de material volumétrico: ${payload.codigo_id}`,
-        detalle: payload
+        detalle: { id: payload.codigo_id, ...payload }
       }).then(() => console.log('Log de auditoría creado'))
         .catch(err => {
           console.error('Error creando log:', err);
@@ -390,11 +390,12 @@ export class VolumetricosComponent implements OnInit {
       this.snack.success('Historial registrado exitosamente');
 
       // Log auditoría
+      const materialNombre = (this.materialesRegistrados || []).find(m => Number(m?.codigo_id) === Number(codigo_material))?.nombre_material || null;
       logsService.crearLogAccion({
         modulo: 'MAT_VOLUMETRICOS',
         accion: 'CREAR',
         descripcion: `Creación de historial para volumétrico: ${codigo_material}`,
-        detalle: { codigo_material, consecutivo, tipo: this.tipo_historial_instrumento }
+        detalle: { id: codigo_material, nombre_material: materialNombre, consecutivo, tipo_historial_instrumento: this.tipo_historial_instrumento || null }
       }).catch(console.error);
 
       this.resetFormHistorial();
@@ -486,11 +487,12 @@ export class VolumetricosComponent implements OnInit {
       this.snack.success('Intervalo registrado exitosamente');
 
       // Log auditoría
+      const materialNombre = (this.materialesRegistrados || []).find(m => Number(m?.codigo_id) === Number(codigo_material))?.nombre_material || null;
       logsService.crearLogAccion({
         modulo: 'MAT_VOLUMETRICOS',
         accion: 'CREAR',
         descripcion: `Creación de intervalo para volumétrico: ${codigo_material}`,
-        detalle: { codigo_material, consecutivo }
+        detalle: { id: codigo_material, nombre_material: materialNombre, consecutivo }
       }).catch(console.error);
 
       this.resetFormIntervalo();
@@ -837,7 +839,7 @@ export class VolumetricosComponent implements OnInit {
         modulo: 'MAT_VOLUMETRICOS',
         accion: 'ELIMINAR_PDF',
         descripcion: `Eliminación de PDF para material volumétrico: ${codigo}`,
-        detalle: { codigo, pdfId: item.id, pdfName: item.name }
+        detalle: { id: Number(codigo), archivo: item.name, pdf_id: item.id, categoria: item.categoria || null }
       }).catch(console.error);
 
       await this.listarPdfs(codigo);
@@ -876,7 +878,7 @@ export class VolumetricosComponent implements OnInit {
         modulo: 'MAT_VOLUMETRICOS',
         accion: 'SUBIR_PDF',
         descripcion: `Subida de PDF para material volumétrico: ${codigo}`,
-        detalle: { codigo, categoria, fileName: file.name }
+        detalle: { id: Number(codigo), archivo: file.name, categoria: categoria || null }
       }).catch(console.error);
 
         await this.listarPdfs(codigo);
@@ -906,7 +908,7 @@ export class VolumetricosComponent implements OnInit {
         modulo: 'MAT_VOLUMETRICOS',
         accion: 'ELIMINAR',
         descripcion: `Eliminación de material volumétrico: ${codigo}`,
-        detalle: { codigo, nombre: material.nombre_material }
+        detalle: { id: codigo, nombre_material: material?.nombre_material || null }
       }).catch(console.error);
 
       this.materialesRegistrados = this.materialesRegistrados.filter(m => m.codigo_id !== codigo);
@@ -970,7 +972,7 @@ export class VolumetricosComponent implements OnInit {
           modulo: 'MAT_VOLUMETRICOS',
           accion: 'ACTUALIZAR',
           descripcion: `Actualización de material volumétrico: ${this.editingMaterialCodigo}`,
-          detalle: payload
+          detalle: { id: this.editingMaterialCodigo, ...payload }
         });
       } catch (error) {
         console.error('Error al registrar log de auditoría:', error);
@@ -1014,11 +1016,20 @@ export class VolumetricosComponent implements OnInit {
       this.snack.success('Historial actualizado');
 
       // Log auditoría
+      const materialNombre = (this.materialesRegistrados || []).find(m => Number(m?.codigo_id) === Number(codigo_material))?.nombre_material || null;
       logsService.crearLogAccion({
         modulo: 'MAT_VOLUMETRICOS',
         accion: 'ACTUALIZAR',
         descripcion: `Actualización de historial para volumétrico: ${codigo_material}`,
-        detalle: { codigo_material, consecutivo: registro.consecutivo, ...registro }
+        detalle: {
+          id: codigo_material,
+          nombre_material: materialNombre,
+          consecutivo: registro.consecutivo,
+          tipo_historial_instrumento: registro.tipo_historial_instrumento,
+          codigo_registro: registro.codigo_registro,
+          realizo: registro.realizo,
+          superviso: registro.superviso
+        }
       }).catch(console.error);
 
       registro.editando = false;
@@ -1062,11 +1073,28 @@ export class VolumetricosComponent implements OnInit {
       this.snack.success('Intervalo actualizado');
 
       // Log auditoría
+      const materialNombre = (this.materialesRegistrados || []).find(m => Number(m?.codigo_id) === Number(codigo_material))?.nombre_material || null;
       logsService.crearLogAccion({
         modulo: 'MAT_VOLUMETRICOS',
         accion: 'ACTUALIZAR',
         descripcion: `Actualización de intervalo para volumétrico: ${codigo_material}`,
-        detalle: { codigo_material, consecutivo: registro.consecutivo, ...registro }
+        detalle: {
+          id: codigo_material,
+          nombre_material: materialNombre,
+          consecutivo: registro.consecutivo,
+          valor_nominal: registro.valor_nominal,
+          fecha_c1: registro.fecha_c1,
+          error_c1: registro.error_c1,
+          fecha_c2: registro.fecha_c2,
+          error_c2: registro.error_c2,
+          diferencia_tiempo_dias: registro.diferencia_tiempo_dias,
+          desviacion_abs: registro.desviacion_abs,
+          deriva: registro.deriva,
+          tolerancia: registro.tolerancia,
+          intervalo_calibracion_dias: registro.intervalo_calibracion_dias,
+          intervalo_calibracion_anos: registro.intervalo_calibracion_anos,
+          incertidumbre_exp: registro.incertidumbre_exp
+        }
       }).catch(console.error);
 
       registro.editando = false;

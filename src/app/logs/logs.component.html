@@ -51,7 +51,7 @@
                         (change)="aplicarFiltrosAcciones()">
                     <option value="">Todas las acciones</option>
                     @for (accion of acciones; track accion) {
-                        <option [value]="accion">{{ accion }}</option>
+                        <option [value]="accion">{{ getAccionLabel(accion) }}</option>
                     }
                 </select>
             </div>
@@ -110,7 +110,7 @@
                             <td>{{ log.modulo }}</td>
                             <td>
                                 <span class="status-badge" [ngClass]="getClaseAccion(log.accion)">
-                                    {{ log.accion }}
+                                    {{ getAccionLabel(log.accion) }}
                                 </span>
                             </td>
                             <td>
@@ -145,24 +145,90 @@
         <div class="modal-overlay" (click)="cerrarModalDetalles()">
             <div class="modal-content" (click)="$event.stopPropagation()">
                 <div class="modal-header">
-                    <h3>Detalle de Acción</h3>
+                    <h3>Detalle de acción</h3>
                     <button class="close-btn" (click)="cerrarModalDetalles()">&times;</button>
                 </div>
-                <div class="modal-body">
-                    <p><strong>Módulo:</strong> {{ logSeleccionado.modulo }}</p>
-                    <p><strong>Acción:</strong> {{ logSeleccionado.accion }}</p>
-                    <p><strong>Fecha:</strong> {{ formatearFecha(logSeleccionado.fecha) }}</p>
-                    <p><strong>Usuario:</strong> {{ logSeleccionado.usuario_nombre || logSeleccionado.usuario_email || 'N/A' }}</p>
-                    <hr>
-                    <p><strong>Descripción:</strong></p>
-                    <p>{{ logSeleccionado.descripcion || 'Sin descripción' }}</p>
-                    
-                    @if (logSeleccionado.detalle) {
-                    <div class="json-viewer">
-                        <strong>Detalles técnicos:</strong>
-                        <pre>{{ logSeleccionado.detalle | json }}</pre>
+                    <div class="modal-body">
+                    @let detalle = getDetalleNormalizado(logSeleccionado);
+                    @let cambios = getCambios(detalle);
+                    @let cards = getDetalleCardsModal(logSeleccionado);
+                    @let extras = getDetalleExtrasModal(logSeleccionado);
+
+                    <div class="modal-meta-grid">
+                        <div class="meta-card">
+                            <div class="meta-label">Acción</div>
+                            <div class="meta-value">
+                                <span class="status-badge" [ngClass]="getClaseAccion(logSeleccionado.accion)">
+                                    {{ getAccionLabel(logSeleccionado.accion) }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="meta-card">
+                            <div class="meta-label">Módulo</div>
+                            <div class="meta-value">{{ logSeleccionado.modulo }}</div>
+                        </div>
+                        <div class="meta-card">
+                            <div class="meta-label">Fecha y hora</div>
+                            <div class="meta-value">{{ formatearFecha(logSeleccionado.fecha) }}</div>
+                        </div>
+                        <div class="meta-card">
+                            <div class="meta-label">Usuario</div>
+                            <div class="meta-value">{{ logSeleccionado.usuario_nombre || logSeleccionado.usuario_email || 'N/A' }}</div>
+                        </div>
                     </div>
+
+                    <div class="detail-card">
+                        <div class="detail-title">Resumen</div>
+                        <div class="detail-text">{{ getAccionDescripcion(logSeleccionado) }}</div>
+                    </div>
+
+                    @if (cambios.length > 0) {
+                        <div class="detail-card">
+                            <div class="detail-title">Cambios realizados</div>
+                            <div class="changes-grid">
+                                <div class="changes-head">
+                                    <div>Campo</div>
+                                    <div>Antes</div>
+                                    <div>Después</div>
+                                </div>
+                                @for (c of cambios; track c.campo) {
+                                    <div class="changes-row">
+                                        <div class="changes-field">{{ c.campo }}</div>
+                                        <div class="changes-before">{{ c.antes }}</div>
+                                        <div class="changes-after">{{ c.despues }}</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
                     }
+
+                    @if (cards.length > 0 || extras.length > 0) {
+                        <div class="detail-card">
+                            <div class="detail-title">Detalles adicionales</div>
+                            @if (cards.length > 0) {
+                                <div class="pairs-grid">
+                                    @for (c of cards; track c.label) {
+                                        <div class="pair-item">
+                                            <div class="pair-label">{{ c.label }}</div>
+                                            <div class="pair-value">{{ c.value }}</div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            @if (extras.length > 0) {
+                                @if (cards.length > 0) { <hr /> }
+                                <div class="pairs-grid">
+                                    @for (p of extras; track p.label) {
+                                        <div class="pair-item">
+                                            <div class="pair-label">{{ p.label }}</div>
+                                            <div class="pair-value">{{ p.value }}</div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+
                 </div>
                 <div class="modal-footer">
                     <button class="btn-secondary" (click)="cerrarModalDetalles()">Cerrar</button>
