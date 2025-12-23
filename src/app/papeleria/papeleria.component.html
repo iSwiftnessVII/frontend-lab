@@ -99,10 +99,13 @@
     </div>
 
     @if (cargando()) {
-      <div class="loading">Cargando…</div>
+      <div class="sin-equipos">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Cargando papelería...</p>
+      </div>
     } @else {
       @if (papeleriaFiltrada().length === 0) {
-        <div class="empty">Sin registros</div>
+        <p class="sin-equipos">No hay papelería para mostrar</p>
       } @else {
         <div class="equipos-grid">
           <div class="fade-in">

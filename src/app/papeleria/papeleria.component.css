@@ -94,6 +94,26 @@
   border: 1px solid var(--border-gray);
 }
 
+.papeleria-page .sin-equipos {
+  text-align: center;
+  padding: 3rem;
+  background: var(--light-gray);
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+
+.papeleria-page .sin-equipos i {
+  font-size: 4rem;
+  color: var(--border-gray);
+  margin-bottom: 1rem;
+}
+
+.papeleria-page .sin-equipos p {
+  color: var(--text-gray);
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
