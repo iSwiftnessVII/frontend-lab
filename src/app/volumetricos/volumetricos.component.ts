@@ -1,4 +1,4 @@
-import { Component, signal, effect, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, signal, effect, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -49,6 +49,16 @@ export class VolumetricosComponent implements OnInit {
   materialesFiltrados: any[] = [];
   materialSeleccionado: any = null;
   mostrarResultados: boolean = false;
+
+  @ViewChild('volDocTemplateInput') volDocTemplateInput?: ElementRef<HTMLInputElement>;
+
+  volDocFiltroTipo: string = 'todos';
+  volDocBusqueda: string = '';
+  volDocResultados: any[] = [];
+  volDocSeleccionado: any = null;
+  volDocTemplateFile: File | null = null;
+  volDocMsg: string = '';
+  volDocLoading: boolean = false;
 
   // Opciones para el select de filtro
   opcionesFiltro = [
@@ -558,9 +568,119 @@ export class VolumetricosComponent implements OnInit {
         this.codigo_material_intervalo = null;
         this.codigoIntervaloSig.set(null);
         this.consecutivoIntervaloSig.set(null);
+      } else if (tipo === 'documentos') {
+        this.formularioActivo = tipo;
+        this.volDocFiltroTipo = 'todos';
+        this.volDocBusqueda = '';
+        this.volDocResultados = [];
+        this.volDocSeleccionado = null;
+        this.volDocTemplateFile = null;
+        this.volDocMsg = '';
+        this.volDocLoading = false;
+        try {
+          const el = this.volDocTemplateInput?.nativeElement;
+          if (el) el.value = '';
+        } catch {}
       } else {
         this.formularioActivo = tipo;
       }
+    }
+  }
+
+  filtrarVolumetricosDocumentos() {
+    const q = String(this.volDocBusqueda || '').trim().toLowerCase();
+    if (!q) {
+      this.volDocResultados = [];
+      return;
+    }
+
+    const out = (this.materialesRegistrados || []).filter((m: any) => {
+      const codigo = String(m?.codigo_id ?? '').toLowerCase();
+      const nombre = String(m?.nombre_material ?? '').toLowerCase();
+      const marca = String(m?.marca ?? '').toLowerCase();
+      const modelo = String(m?.modelo ?? '').toLowerCase();
+      switch (this.volDocFiltroTipo) {
+        case 'codigo': return codigo.includes(q);
+        case 'nombre': return nombre.includes(q);
+        case 'marca': return marca.includes(q);
+        case 'modelo': return modelo.includes(q);
+        case 'todos':
+        default:
+          return codigo.includes(q) || nombre.includes(q) || marca.includes(q) || modelo.includes(q);
+      }
+    });
+
+    this.volDocResultados = out.slice(0, 50);
+  }
+
+  seleccionarVolumetricoDocumento(material: any) {
+    this.volDocSeleccionado = material || null;
+    this.volDocResultados = [];
+    this.volDocBusqueda = '';
+    this.volDocMsg = '';
+  }
+
+  limpiarSeleccionVolumetricoDocumento() {
+    this.volDocSeleccionado = null;
+    this.volDocBusqueda = '';
+    this.volDocResultados = [];
+    this.volDocMsg = '';
+  }
+
+  onVolDocTemplateSelected(event: any): void {
+    try {
+      const f = event?.target?.files?.[0] || null;
+      this.volDocTemplateFile = f;
+      this.volDocMsg = '';
+    } catch {
+      this.volDocTemplateFile = null;
+    }
+  }
+
+  async generarDocumentoVolumetrico(): Promise<void> {
+    if (this.volDocLoading) return;
+    const codigo = Number(this.volDocSeleccionado?.codigo_id);
+    if (!Number.isFinite(codigo) || codigo <= 0) {
+      this.volDocMsg = 'Debe seleccionar un material';
+      this.snack.warn(this.volDocMsg);
+      return;
+    }
+    if (!this.volDocTemplateFile) {
+      this.volDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+      this.snack.warn(this.volDocMsg);
+      return;
+    }
+
+    this.volDocLoading = true;
+    this.volDocMsg = '';
+    try {
+      const originalTemplateName = this.volDocTemplateFile?.name || null;
+      const { blob, filename } = await this.volumetricosService.generarDocumentoVolumetrico({
+        codigo,
+        template: this.volDocTemplateFile
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = originalTemplateName || filename || 'documento_volumetrico';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.volDocMsg = 'Documento generado';
+      this.snack.success('Documento generado');
+      this.limpiarSeleccionVolumetricoDocumento();
+      this.volDocFiltroTipo = 'todos';
+      this.volDocTemplateFile = null;
+      try {
+        const el = this.volDocTemplateInput?.nativeElement;
+        if (el) el.value = '';
+      } catch {}
+    } catch (err: any) {
+      this.volDocMsg = err?.message || 'No se pudo generar el documento';
+      this.snack.error(this.volDocMsg);
+    } finally {
+      this.volDocLoading = false;
     }
   }
 

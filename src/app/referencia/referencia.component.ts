@@ -1,4 +1,4 @@
-import { Component, signal, effect, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, signal, effect, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -45,6 +45,16 @@ export class ReferenciaComponent implements OnInit {
   materialesFiltrados: any[] = [];
   materialSeleccionado: any = null;
   mostrarResultados: boolean = false;
+
+  @ViewChild('refDocTemplateInput') refDocTemplateInput?: ElementRef<HTMLInputElement>;
+
+  refDocFiltroTipo: string = 'todos';
+  refDocBusqueda: string = '';
+  refDocResultados: any[] = [];
+  refDocSeleccionado: any = null;
+  refDocTemplateFile: File | null = null;
+  refDocMsg: string = '';
+  refDocLoading: boolean = false;
 
   // Opciones para el select de filtro
   opcionesFiltro = [
@@ -278,6 +288,111 @@ export class ReferenciaComponent implements OnInit {
     this.materialesFiltrados = [];
     this.materialSeleccionado = null;
     this.mostrarResultados = false;
+  }
+
+  filtrarReferenciaDocumentos() {
+    const q = String(this.refDocBusqueda || '').trim().toLowerCase();
+    if (!q) {
+      this.refDocResultados = [];
+      return;
+    }
+
+    const out = (this.materialesRegistrados || []).filter((m: any) => {
+      const codigo = String(m?.codigo_id ?? '').toLowerCase();
+      const nombre = String(m?.nombre_material ?? '').toLowerCase();
+      const marca = String(m?.marca ?? '').toLowerCase();
+      const serie = String(m?.serie ?? '').toLowerCase();
+      switch (this.refDocFiltroTipo) {
+        case 'codigo': return codigo.includes(q);
+        case 'nombre': return nombre.includes(q);
+        case 'marca': return marca.includes(q);
+        case 'serie': return serie.includes(q);
+        case 'todos':
+        default:
+          return codigo.includes(q) || nombre.includes(q) || marca.includes(q) || serie.includes(q);
+      }
+    });
+
+    this.refDocResultados = out.slice(0, 50);
+  }
+
+  seleccionarReferenciaDocumento(material: any) {
+    this.refDocSeleccionado = material || null;
+    this.refDocResultados = [];
+    this.refDocBusqueda = '';
+    this.refDocMsg = '';
+  }
+
+  limpiarSeleccionReferenciaDocumento() {
+    this.refDocSeleccionado = null;
+    this.refDocBusqueda = '';
+    this.refDocResultados = [];
+    this.refDocMsg = '';
+  }
+
+  onRefDocTemplateSelected(event: any): void {
+    try {
+      const f = event?.target?.files?.[0] || null;
+      this.refDocTemplateFile = f;
+      this.refDocMsg = '';
+    } catch {
+      this.refDocTemplateFile = null;
+    }
+  }
+
+  private resetGeneracionDocumentoReferencia(): void {
+    this.refDocFiltroTipo = 'todos';
+    this.refDocBusqueda = '';
+    this.refDocResultados = [];
+    this.refDocSeleccionado = null;
+    this.refDocTemplateFile = null;
+    this.refDocMsg = '';
+    this.refDocLoading = false;
+    try {
+      const el = this.refDocTemplateInput?.nativeElement;
+      if (el) el.value = '';
+    } catch {}
+  }
+
+  async generarDocumentoReferencia(): Promise<void> {
+    if (this.refDocLoading) return;
+    const codigo = Number(this.refDocSeleccionado?.codigo_id);
+    if (!Number.isFinite(codigo) || codigo <= 0) {
+      this.refDocMsg = 'Debe seleccionar un material';
+      this.snack.warn(this.refDocMsg);
+      return;
+    }
+    if (!this.refDocTemplateFile) {
+      this.refDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+      this.snack.warn(this.refDocMsg);
+      return;
+    }
+
+    this.refDocLoading = true;
+    this.refDocMsg = '';
+    try {
+      const originalTemplateName = this.refDocTemplateFile?.name || null;
+      const { blob, filename } = await this.referenciaService.generarDocumentoReferencia({
+        codigo,
+        template: this.refDocTemplateFile
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = originalTemplateName || filename || 'documento_referencia';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.refDocMsg = 'Documento generado';
+      this.snack.success('Documento generado');
+      this.resetGeneracionDocumentoReferencia();
+    } catch (err: any) {
+      this.refDocMsg = err?.message || 'No se pudo generar el documento';
+      this.snack.error(this.refDocMsg);
+    } finally {
+      this.refDocLoading = false;
+    }
   }
 
   // Método para obtener placeholder dinámico
@@ -514,6 +629,7 @@ export class ReferenciaComponent implements OnInit {
       this.resetFormMaterial();
       this.resetFormHistorial();
       this.resetFormIntervalo();
+      this.resetGeneracionDocumentoReferencia();
       this.limpiarBusqueda();
 
       if (tipo === 'historial') {

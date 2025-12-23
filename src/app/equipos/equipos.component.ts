@@ -1,4 +1,4 @@
-import { Component, signal, effect, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, signal, effect, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { equiposService } from '../services/equipos.service';
 import { logsService } from '../services/logs.service';
 import { SnackbarService } from '../shared/snackbar.service';
@@ -15,6 +15,7 @@ import { authUser } from '../services/auth.service';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class EquiposComponent implements OnInit {
+  @ViewChild('equipoDocTemplateInput') private equipoDocTemplateInput?: ElementRef<HTMLInputElement>;
   public get esAuxiliar(): boolean {
     const user = authUser();
     return user?.rol === 'Auxiliar';
@@ -571,6 +572,23 @@ export class EquiposComponent implements OnInit {
   // Variable para controlar el formulario activo
   formularioActivo: string | null = null;
 
+  equipoDocFiltroTipo: string = 'todos';
+  equipoDocBusqueda: string = '';
+  equipoDocResultados: any[] = [];
+  equipoDocSeleccionado: any = null;
+  equipoDocMostrarResultados: boolean = false;
+  equipoDocTemplateFile: File | null = null;
+  equipoDocMsg: string = '';
+  equipoDocLoading: boolean = false;
+
+  opcionesFiltroDocumentos = [
+    { valor: 'todos', texto: 'Todos los campos' },
+    { valor: 'codigo', texto: 'Código' },
+    { valor: 'nombre', texto: 'Nombre' },
+    { valor: 'marca', texto: 'Marca' },
+    { valor: 'modelo', texto: 'Modelo' }
+  ];
+
   // Variable para controlar el equipo expandido en la lista
   equipoExpandido: string | null = null;
   // Segundo nivel: tarjeta de información completa
@@ -1097,6 +1115,117 @@ export class EquiposComponent implements OnInit {
     setTimeout(() => {
       this.mostrarResultados = false;
     }, 200);
+  }
+
+  filtrarEquiposDocumentos() {
+    const q = this.equipoDocBusqueda.toLowerCase().trim();
+    if (!q) {
+      this.equipoDocResultados = [];
+      this.equipoDocMostrarResultados = false;
+      return;
+    }
+
+    this.equipoDocMostrarResultados = true;
+    this.equipoDocResultados = this.equiposRegistrados.filter((equipo) => {
+      const codigo = String(equipo?.codigo_identificacion ?? '').toLowerCase();
+      const nombre = String(equipo?.nombre ?? '').toLowerCase();
+      const marca = String(equipo?.marca ?? '').toLowerCase();
+      const modelo = String(equipo?.modelo ?? '').toLowerCase();
+
+      switch (this.equipoDocFiltroTipo) {
+        case 'codigo':
+          return codigo.includes(q);
+        case 'nombre':
+          return nombre.includes(q);
+        case 'marca':
+          return marca.includes(q);
+        case 'modelo':
+          return modelo.includes(q);
+        case 'todos':
+        default:
+          return codigo.includes(q) || nombre.includes(q) || marca.includes(q) || modelo.includes(q);
+      }
+    });
+  }
+
+  seleccionarEquipoDocumento(equipo: any) {
+    this.equipoDocSeleccionado = equipo;
+    this.equipoDocBusqueda = `${equipo?.codigo_identificacion ?? ''} - ${equipo?.nombre ?? ''}`.trim();
+    this.equipoDocResultados = [];
+    this.equipoDocMostrarResultados = false;
+    this.equipoDocMsg = '';
+  }
+
+  limpiarSeleccionEquipoDocumento() {
+    this.equipoDocFiltroTipo = 'todos';
+    this.equipoDocBusqueda = '';
+    this.equipoDocResultados = [];
+    this.equipoDocSeleccionado = null;
+    this.equipoDocMostrarResultados = false;
+    this.equipoDocTemplateFile = null;
+    this.equipoDocMsg = '';
+    this.equipoDocLoading = false;
+    try {
+      const el = this.equipoDocTemplateInput?.nativeElement;
+      if (el) el.value = '';
+    } catch {}
+  }
+
+  onEquipoDocTemplateSelected(event: any) {
+    try {
+      const f = event?.target?.files?.[0] || null;
+      this.equipoDocTemplateFile = f;
+      this.equipoDocMsg = '';
+    } catch {
+      this.equipoDocTemplateFile = null;
+    }
+  }
+
+  onEquipoDocFocusOut() {
+    setTimeout(() => {
+      this.equipoDocMostrarResultados = false;
+    }, 200);
+  }
+
+  async generarDocumentoEquipo(): Promise<void> {
+    if (this.equipoDocLoading) return;
+    const codigo = String(this.equipoDocSeleccionado?.codigo_identificacion || '').trim();
+    if (!codigo) {
+      this.equipoDocMsg = 'Debe seleccionar un equipo';
+      this.snack.warn(this.equipoDocMsg);
+      return;
+    }
+    if (!this.equipoDocTemplateFile) {
+      this.equipoDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+      this.snack.warn(this.equipoDocMsg);
+      return;
+    }
+
+    this.equipoDocLoading = true;
+    this.equipoDocMsg = '';
+    try {
+      const originalTemplateName = this.equipoDocTemplateFile?.name || null;
+      const { blob, filename } = await equiposService.generarDocumentoEquipo({
+        codigo,
+        template: this.equipoDocTemplateFile
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = originalTemplateName || filename || 'documento_equipo';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.equipoDocMsg = 'Documento generado';
+      this.snack.success('Documento generado');
+      this.limpiarSeleccionEquipoDocumento();
+    } catch (err: any) {
+      this.equipoDocMsg = err?.message || 'No se pudo generar el documento';
+      this.snack.error(this.equipoDocMsg);
+    } finally {
+      this.equipoDocLoading = false;
+    }
   }
 
   async obtenerEquiposRegistrados() {
@@ -1822,6 +1951,7 @@ toggleFormulario(tipo: string) {
     this.resetFormHistorial();
     this.resetFormIntervalo();
     this.limpiarBusqueda();
+    this.limpiarSeleccionEquipoDocumento();
 
     if (tipo === 'historial') {
       this.formularioActivo = tipo;

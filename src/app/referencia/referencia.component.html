@@ -20,7 +20,91 @@
       <i class="fas fa-calendar-alt"></i>
       <span>Registrar Intervalo de Calibración</span>
     </div>
+
+    @if (!esAuxiliar) {
+      <div class="action-card" (click)="toggleFormulario('documentos')" [class.active]="formularioActivo === 'documentos'">
+        <i class="fas fa-file-alt"></i>
+        <span>Generar Documento</span>
+      </div>
+    }
   </div>
+
+  @if (formularioActivo === 'documentos' && !esAuxiliar) {
+    <div class="form-section">
+      <h2>
+        <i class="fas fa-file-alt"></i>
+        | Generación de documentos (Referencia)
+      </h2>
+      <section>
+        <div class="form-grid">
+          <div class="form-field full-row search-section" style="position: relative; z-index: 1001;">
+            <label>Buscar y Seleccionar Material: *</label>
+
+            @if (!refDocSeleccionado) {
+              <div class="campo-combinado">
+                <select name="refDocFiltroTipo" [(ngModel)]="refDocFiltroTipo" (change)="filtrarReferenciaDocumentos()" class="select-filtro">
+                  <option value="todos">Todos los campos</option>
+                  <option value="codigo">Código</option>
+                  <option value="nombre">Nombre</option>
+                  <option value="marca">Marca</option>
+                  <option value="serie">Serie</option>
+                </select>
+
+                <input
+                  type="text"
+                  name="refDocBusqueda"
+                  [(ngModel)]="refDocBusqueda"
+                  (input)="filtrarReferenciaDocumentos()"
+                  class="input-combinado"
+                  placeholder="Buscar material..."
+                  autocomplete="off"
+                />
+              </div>
+
+              @if (refDocBusqueda && refDocResultados.length > 0) {
+                <div class="lista-resultados">
+                  @for (m of refDocResultados; track m.codigo_id) {
+                    <div class="resultado-item" (click)="seleccionarReferenciaDocumento(m)">
+                      <div class="resultado-header">
+                        <span class="codigo">{{ m.codigo_id }}</span>
+                        <span class="nombre">{{ m.nombre_material }}</span>
+                      </div>
+                      <div class="resultado-sub">
+                        <span class="extra">{{ m.marca || '—' }}</span>
+                        <span class="extra">{{ m.serie || '—' }}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            } @else {
+              <div class="selected-doc-item">
+                <div>
+                  <strong>{{ refDocSeleccionado.codigo_id }}</strong> - {{ refDocSeleccionado.nombre_material }}
+                </div>
+                <button type="button" class="btn-compact" (click)="limpiarSeleccionReferenciaDocumento()">Cambiar</button>
+              </div>
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="refDocTemplate">Plantilla (.xlsx o .docx): *</label>
+            <input #refDocTemplateInput id="refDocTemplate" type="file" accept=".xlsx,.docx" (change)="onRefDocTemplateSelected($event)" />
+          </div>
+
+          <div class="actions">
+            <button class="btn-compact" type="button" (click)="generarDocumentoReferencia()" [disabled]="refDocLoading">
+              {{ refDocLoading ? 'Generando…' : 'Generar y descargar' }}
+            </button>
+          </div>
+
+          @if (refDocMsg) {
+            <small class="error-message">{{ refDocMsg }}</small>
+          }
+        </div>
+      </section>
+    </div>
+  }
 
   <!-- Formulario de Material de Referencia -->
   @if (formularioActivo === 'material' && !esAuxiliar) {

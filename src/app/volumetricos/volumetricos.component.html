@@ -20,7 +20,91 @@
       <i class="fas fa-calendar-alt"></i>
       <span>Registrar Intervalo de Calibración</span>
     </div>
+
+    @if (!esAuxiliar) {
+      <div class="action-card" (click)="toggleFormulario('documentos')" [class.active]="formularioActivo === 'documentos'">
+        <i class="fas fa-file-alt"></i>
+        <span>Generar Documento</span>
+      </div>
+    }
   </div>
+
+  @if (formularioActivo === 'documentos' && !esAuxiliar) {
+    <div class="form-section">
+      <h2>
+        <i class="fas fa-file-alt"></i>
+        | Generación de documentos (Volumétricos)
+      </h2>
+      <section>
+        <div class="form-grid">
+          <div class="form-field full-row search-section" style="position: relative; z-index: 1001;">
+            <label>Buscar y Seleccionar Material: *</label>
+
+            @if (!volDocSeleccionado) {
+              <div class="campo-combinado">
+                <select name="volDocFiltroTipo" [(ngModel)]="volDocFiltroTipo" (change)="filtrarVolumetricosDocumentos()" class="select-filtro">
+                  <option value="todos">Todos los campos</option>
+                  <option value="codigo">Código</option>
+                  <option value="nombre">Nombre</option>
+                  <option value="marca">Marca</option>
+                  <option value="modelo">Modelo</option>
+                </select>
+
+                <input
+                  type="text"
+                  name="volDocBusqueda"
+                  [(ngModel)]="volDocBusqueda"
+                  (input)="filtrarVolumetricosDocumentos()"
+                  class="input-combinado"
+                  placeholder="Buscar material..."
+                  autocomplete="off"
+                />
+              </div>
+
+              @if (volDocBusqueda && volDocResultados.length > 0) {
+                <div class="lista-resultados">
+                  @for (m of volDocResultados; track m.codigo_id) {
+                    <div class="resultado-item" (click)="seleccionarVolumetricoDocumento(m)">
+                      <div class="resultado-header">
+                        <span class="codigo">{{ m.codigo_id }}</span>
+                        <span class="nombre">{{ m.nombre_material }}</span>
+                      </div>
+                      <div class="resultado-sub">
+                        <span class="extra">{{ m.marca || '—' }}</span>
+                        <span class="extra">{{ m.modelo || '—' }}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            } @else {
+              <div class="selected-doc-item">
+                <div>
+                  <strong>{{ volDocSeleccionado.codigo_id }}</strong> - {{ volDocSeleccionado.nombre_material }}
+                </div>
+                <button type="button" class="btn-compact" (click)="limpiarSeleccionVolumetricoDocumento()">Cambiar</button>
+              </div>
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="volDocTemplate">Plantilla (.xlsx o .docx): *</label>
+            <input #volDocTemplateInput id="volDocTemplate" type="file" accept=".xlsx,.docx" (change)="onVolDocTemplateSelected($event)" />
+          </div>
+
+          <div class="actions">
+            <button class="btn-compact" type="button" (click)="generarDocumentoVolumetrico()" [disabled]="volDocLoading">
+              {{ volDocLoading ? 'Generando…' : 'Generar y descargar' }}
+            </button>
+          </div>
+
+          @if (volDocMsg) {
+            <small class="error-message">{{ volDocMsg }}</small>
+          }
+        </div>
+      </section>
+    </div>
+  }
 
   <!-- Formulario de Material Volumétrico -->
   @if (formularioActivo === 'material' && !esAuxiliar) {

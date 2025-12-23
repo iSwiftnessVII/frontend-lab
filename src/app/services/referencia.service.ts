@@ -97,4 +97,50 @@ export class ReferenciaService {
   async eliminarPdf(id: number) {
     return firstValueFrom(this.http.delete(`${this.API_REFERENCIA}/pdf/${id}`, this.getOptions()));
   }
+
+  async generarDocumentoReferencia(params: { codigo: number; template: File }): Promise<{ blob: Blob; filename: string | null }> {
+    const codigo = Number(params?.codigo);
+    const template = params?.template;
+    if (!Number.isFinite(codigo) || codigo <= 0) throw new Error('Debe seleccionar un material');
+    if (!template) throw new Error('Debe seleccionar una plantilla');
+
+    const formData = new FormData();
+    formData.append('template', template);
+    formData.append('codigo', String(codigo));
+
+    const { headers } = this.getOptions();
+    try {
+      const resp: any = await firstValueFrom(
+        this.http.post(`${this.API_REFERENCIA}/documentos/generar`, formData, {
+          headers,
+          observe: 'response',
+          responseType: 'blob'
+        } as any)
+      );
+
+      const blob: Blob = resp?.body;
+      const cd = resp?.headers?.get?.('content-disposition') || '';
+      let filename: string | null = null;
+      const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
+      if (m && m[1]) {
+        try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
+      }
+
+      return { blob, filename };
+    } catch (err: any) {
+      let msg = err?.error?.message || err?.error?.error || err?.message || 'Error generando documento';
+      try {
+        if (err?.error instanceof Blob) {
+          const t = await err.error.text();
+          try {
+            const j = JSON.parse(t);
+            msg = j?.message || j?.error || msg;
+          } catch {
+            msg = t || msg;
+          }
+        }
+      } catch {}
+      throw new Error(String(msg || 'Error generando documento'));
+    }
+  }
 }

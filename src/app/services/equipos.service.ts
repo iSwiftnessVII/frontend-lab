@@ -136,6 +136,41 @@ export const equiposService = {
     return await res.json();
   },
 
+  async generarDocumentoEquipo(params: { codigo: string; template: File }): Promise<{ blob: Blob; filename: string | null }> {
+    const codigo = String(params?.codigo ?? '').trim();
+    const template = params?.template;
+    if (!codigo) throw new Error('Debe seleccionar un equipo');
+    if (!template) throw new Error('Debe seleccionar una plantilla');
+
+    const fd = new FormData();
+    fd.append('template', template);
+    fd.append('codigo', codigo);
+
+    const res = await fetch(`${API}/documentos/generar`, {
+      method: 'POST',
+      headers: {
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      },
+      body: fd
+    });
+    if (!res.ok) {
+      const errBody: any = await res.json().catch(() => ({}));
+      const err: any = new Error(errBody?.message || 'Error generando documento');
+      err.status = res.status;
+      throw err;
+    }
+
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename: string | null = null;
+    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
+    if (m && m[1]) {
+      try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
+    }
+
+    return { blob, filename };
+  },
+
   // ✅ NUEVO: Obtener fichas técnicas
   async listarFichasTecnicas() {
     const res = await fetch(`${API}/fichas-tecnicas`, {

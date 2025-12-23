@@ -154,6 +154,114 @@
   gap: 10px;
 }
 
+.campo-combinado {
+  position: relative;
+  display: flex;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.campo-combinado:focus-within {
+  border-color: #001f5b;
+  box-shadow: 0 0 0 2px rgba(0, 31, 91, 0.1);
+}
+
+.select-filtro {
+  width: 160px;
+  border: none;
+  border-right: 1px solid #ccc;
+  background: #f8f9fa;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  color: #495057;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s ease;
+}
+
+.select-filtro:focus {
+  background: #e9ecef;
+}
+
+.input-combinado {
+  flex: 1;
+  border: none;
+  padding: 0.5rem;
+  font-size: 1rem;
+  outline: none;
+  min-width: 0;
+}
+
+.input-combinado::placeholder {
+  color: #6c757d;
+  opacity: 0.7;
+}
+
+.lista-resultados {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.resultado-item {
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.resultado-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(2px);
+}
+
+.resultado-item:last-child {
+  border-bottom: none;
+}
+
+.resultado-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.codigo {
+  color: #001f5b;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.nombre {
+  color: #495057;
+  font-size: 0.95rem;
+}
+
+.selected-doc-item {
+  margin-top: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+  border: 1px solid #c3e6cb;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
 .card-name .card-right-controls {
   position: absolute;
   top: 50%;

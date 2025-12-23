@@ -8,6 +8,20 @@ export class VolumetricosService {
 
   constructor() {}
 
+  private async readApiError(res: Response, fallback: string): Promise<string> {
+    try {
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        const j: any = await res.json();
+        if (j?.message) return String(j.message);
+        if (j?.error) return String(j.error);
+      }
+      const t = await res.text();
+      if (t) return t;
+    } catch {}
+    return fallback;
+  }
+
   private getHeaders(): HeadersInit {
     const token = localStorage.getItem('token');
     return {
@@ -173,5 +187,37 @@ export class VolumetricosService {
       headers: this.getHeaders()
     });
     if (!response.ok) throw new Error('Error al eliminar PDF');
+  }
+
+  async generarDocumentoVolumetrico(params: { codigo: number; template: File }): Promise<{ blob: Blob; filename: string | null }> {
+    const codigo = Number(params?.codigo);
+    const template = params?.template;
+    if (!Number.isFinite(codigo) || codigo <= 0) throw new Error('Debe seleccionar un material');
+    if (!template) throw new Error('Debe seleccionar una plantilla');
+
+    const fd = new FormData();
+    fd.append('template', template);
+    fd.append('codigo', String(codigo));
+
+    const res = await fetch(`${this.API_URL}/documentos/generar`, {
+      method: 'POST',
+      headers: this.getAuthHeader(),
+      body: fd
+    });
+    if (!res.ok) {
+      const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
+      err.status = res.status;
+      throw err;
+    }
+
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename: string | null = null;
+    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
+    if (m && m[1]) {
+      try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
+    }
+
+    return { blob, filename };
   }
 }
