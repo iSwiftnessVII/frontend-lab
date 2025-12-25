@@ -4,7 +4,7 @@
 
 // API URL Tunnel de cloudflared para poder compartir la aplicacion 
 
-  const RENDER_URL = 'https://technological-believes-positioning-mariah.trycloudflare.com'
+  const RENDER_URL = 'https://inflation-emissions-publish-pediatric.trycloudflare.com'
 
  
   window.__env.API_BASE = RENDER_URL + '/api';
