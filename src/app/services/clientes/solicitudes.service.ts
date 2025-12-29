@@ -4,6 +4,10 @@ import { authService } from '../auth.service';
 const API = (window as any).__env?.API_SOLICITUDES || 'http://localhost:4000/api/solicitudes';
 const API_DETALLE_LISTA = (window as any).__env?.API_SOLICITUDES_DETALLE_LISTA || 
                          'http://localhost:4000/api/solicitudes/detalle/lista';
+const API_DOC_PLANTILLAS_BASE = String(
+  (window as any).__env?.API_SOLICITUDES_DOC_PLANTILLAS ?? (API + '/documentos/plantillas')
+).replace(/\/+$/g, '');
+let tplDocEndpointMissing = false;
 
 @Injectable({ providedIn: 'root' })
 export class SolicitudesService {
@@ -522,15 +526,20 @@ export class SolicitudesService {
   }
 
   async listarPlantillasDocumentoSolicitud(): Promise<any[]> {
-    const res = await fetch(API + '/documentos/plantillas', {
+    if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+    const res = await fetch(API_DOC_PLANTILLAS_BASE, {
       method: 'GET',
-      headers: this.getAuthHeadersMultipart()
+      headers: this.getAuthHeaders()
     });
     let data: any = null;
     try {
       data = await res.json();
     } catch {}
     if (!res.ok) {
+      if (res.status === 404) {
+        tplDocEndpointMissing = true;
+        throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+      }
       const err: any = new Error((data && (data.message || data.error)) || 'Error listando plantillas');
       err.status = res.status;
       throw err;
@@ -539,6 +548,7 @@ export class SolicitudesService {
   }
 
   async subirPlantillaDocumentoSolicitud(params: { template: File; nombre?: string }): Promise<any> {
+    if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
     const template = params?.template;
     if (!template) throw new Error('Debe seleccionar una plantilla');
 
@@ -547,7 +557,7 @@ export class SolicitudesService {
     const nombre = typeof params?.nombre === 'string' ? params.nombre.trim() : '';
     if (nombre) fd.append('nombre', nombre);
 
-    const res = await fetch(API + '/documentos/plantillas', {
+    const res = await fetch(API_DOC_PLANTILLAS_BASE, {
       method: 'POST',
       headers: this.getAuthHeadersMultipart(),
       body: fd
@@ -557,6 +567,10 @@ export class SolicitudesService {
       data = await res.json();
     } catch {}
     if (!res.ok) {
+      if (res.status === 404) {
+        tplDocEndpointMissing = true;
+        throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+      }
       const err: any = new Error((data && (data.message || data.error)) || 'Error subiendo plantilla');
       err.status = res.status;
       throw err;
@@ -565,10 +579,11 @@ export class SolicitudesService {
   }
 
   async eliminarPlantillaDocumentoSolicitud(id: number): Promise<any> {
+    if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
     const tplId = Number(id);
     if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
 
-    const res = await fetch(API + '/documentos/plantillas/' + encodeURIComponent(String(tplId)), {
+    const res = await fetch(API_DOC_PLANTILLAS_BASE + '/' + encodeURIComponent(String(tplId)), {
       method: 'DELETE',
       headers: this.getAuthHeadersMultipart()
     });
@@ -577,6 +592,10 @@ export class SolicitudesService {
       data = await res.json();
     } catch {}
     if (!res.ok) {
+      if (res.status === 404) {
+        tplDocEndpointMissing = true;
+        throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+      }
       const err: any = new Error((data && (data.message || data.error)) || 'Error eliminando plantilla');
       err.status = res.status;
       throw err;
@@ -601,12 +620,18 @@ export class SolicitudesService {
     if (hasSolicitud) body.solicitud_id = solicitud_id;
     if (hasCliente) body.id_cliente = id_cliente;
 
-    const res = await fetch(API + '/documentos/plantillas/' + encodeURIComponent(String(templateId)) + '/generar', {
+    const res = await fetch(API_DOC_PLANTILLAS_BASE + '/' + encodeURIComponent(String(templateId)) + '/generar', {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify(body)
     });
     if (!res.ok) {
+      if (res.status === 404) {
+        tplDocEndpointMissing = true;
+        const err: any = new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+        err.status = res.status;
+        throw err;
+      }
       const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
       err.status = res.status;
       throw err;
@@ -636,12 +661,18 @@ export class SolicitudesService {
     if (!Number.isFinite(templateId) || templateId <= 0) throw new Error('Debe seleccionar una plantilla');
     if (!Number.isFinite(solicitud_id) || solicitud_id <= 0) throw new Error('Debe seleccionar una solicitud');
 
-    const res = await fetch(API + '/documentos/plantillas/' + encodeURIComponent(String(templateId)) + '/generar', {
+    const res = await fetch(API_DOC_PLANTILLAS_BASE + '/' + encodeURIComponent(String(templateId)) + '/generar', {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ solicitud_id })
     });
     if (!res.ok) {
+      if (res.status === 404) {
+        tplDocEndpointMissing = true;
+        const err: any = new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+        err.status = res.status;
+        throw err;
+      }
       const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
       err.status = res.status;
       throw err;
