@@ -52,6 +52,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   @ViewChild('clienteDocTemplateInput') private clienteDocTemplateInput?: ElementRef<HTMLInputElement>;
   @ViewChild('solicitudDocTemplateInput') private solicitudDocTemplateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('tplSolicitudDocTemplateInput') private tplSolicitudDocTemplateInput?: ElementRef<HTMLInputElement>;
 
   clientesDocumentos: any[] = [];
   clienteDocFiltroTipo: string = 'todos';
@@ -70,6 +71,40 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   solicitudDocTemplateFile: File | null = null;
   solicitudDocMsg: string = '';
   solicitudDocLoading: boolean = false;
+
+  tplSolicitudDocFiltroTipo: string = 'todos';
+  tplSolicitudDocBusqueda: string = '';
+  tplSolicitudDocResultados: any[] = [];
+  tplSolicitudDocSeleccionado: any = null;
+  tplSolicitudDocPlantillas = signal<any[]>([]);
+  tplSolicitudDocPlantillaId: number | null = null;
+  tplSolicitudDocNombrePlantilla: string = '';
+  tplSolicitudDocTemplateFile: File | null = null;
+  tplSolicitudDocMsg: string = '';
+  tplSolicitudDocLoading: boolean = false;
+  tplSolicitudDocListLoading = signal(false);
+  tplSolicitudDocUploadLoading: boolean = false;
+  tplSolicitudDocDeleteLoading: Set<number> = new Set<number>();
+  tplSolicitudDocEntidad: 'solicitud' | 'cliente' = 'solicitud';
+
+  opcionesFiltroSolicitudesTplDocs = [
+    { valor: 'todos', texto: 'Todos los campos' },
+    { valor: 'id', texto: 'ID' },
+    { valor: 'numero_front', texto: 'Consecutivo' },
+    { valor: 'solicitante', texto: 'Solicitante' },
+    { valor: 'muestra', texto: 'Muestra' },
+    { valor: 'analisis', texto: 'Análisis' },
+    { valor: 'lote', texto: 'Lote' }
+  ];
+
+  opcionesFiltroClientesTplDocs = [
+    { valor: 'todos', texto: 'Todos los campos' },
+    { valor: 'nombre', texto: 'Nombre' },
+    { valor: 'razon_social', texto: 'Razón social' },
+    { valor: 'identificacion', texto: 'Identificación' },
+    { valor: 'correo', texto: 'Correo' },
+    { valor: 'numero', texto: 'Consecutivo' }
+  ];
 
   // Variables de formulario
   clienteNombre = '';
@@ -849,6 +884,255 @@ getTomorrowDate(): string {
     } finally {
       this.solicitudDocLoading = false;
     }
+  }
+
+  filtrarSolicitudesPlantillaDocumentos(): void {
+    const q = (this.tplSolicitudDocBusqueda || '').toLowerCase().trim();
+    if (!q) {
+      this.tplSolicitudDocResultados = [];
+      return;
+    }
+
+    if (this.tplSolicitudDocEntidad === 'cliente') {
+      this.tplSolicitudDocResultados = this.clientesDocumentos.filter((c) => {
+        const nombre = (c?.nombre_solicitante || '').toLowerCase();
+        const razon = (c?.razon_social || '').toLowerCase();
+        const ident = (c?.numero_identificacion || '').toLowerCase();
+        const correo = (c?.correo_electronico || '').toLowerCase();
+        const numero = String(c?.numero ?? '').toLowerCase();
+        const ciudad = (this.resolveCiudad(c) || '').toLowerCase();
+        const departamento = (this.resolveDepartamento(c) || '').toLowerCase();
+
+        if (this.tplSolicitudDocFiltroTipo === 'todos') {
+          return (
+            nombre.includes(q) ||
+            razon.includes(q) ||
+            ident.includes(q) ||
+            correo.includes(q) ||
+            numero.includes(q) ||
+            ciudad.includes(q) ||
+            departamento.includes(q)
+          );
+        } else if (this.tplSolicitudDocFiltroTipo === 'nombre') {
+          return nombre.includes(q);
+        } else if (this.tplSolicitudDocFiltroTipo === 'razon_social') {
+          return razon.includes(q);
+        } else if (this.tplSolicitudDocFiltroTipo === 'identificacion') {
+          return ident.includes(q);
+        } else if (this.tplSolicitudDocFiltroTipo === 'correo') {
+          return correo.includes(q);
+        } else if (this.tplSolicitudDocFiltroTipo === 'numero') {
+          return numero.includes(q);
+        }
+        return false;
+      });
+      return;
+    }
+
+    this.tplSolicitudDocResultados = this.solicitudesDocumentos.filter((s) => {
+      const id = String(s?.solicitud_id ?? s?.id_solicitud ?? '').toLowerCase();
+      const tipo = (s?.tipo_solicitud || '').toLowerCase();
+      const numeroFront = (s?.numero_solicitud_front || '').toLowerCase();
+      const solicitante = (s?.nombre_solicitante || '').toLowerCase();
+      const muestra = (s?.nombre_muestra || '').toLowerCase();
+      const analisis = (s?.analisis_requerido || '').toLowerCase();
+      const lote = (s?.lote_producto || '').toLowerCase();
+
+      if (this.tplSolicitudDocFiltroTipo === 'todos') {
+        return (
+          id.includes(q) ||
+          tipo.includes(q) ||
+          numeroFront.includes(q) ||
+          solicitante.includes(q) ||
+          muestra.includes(q) ||
+          analisis.includes(q) ||
+          lote.includes(q)
+        );
+      } else if (this.tplSolicitudDocFiltroTipo === 'id') {
+        return id.includes(q);
+      } else if (this.tplSolicitudDocFiltroTipo === 'numero_front') {
+        return numeroFront.includes(q);
+      } else if (this.tplSolicitudDocFiltroTipo === 'solicitante') {
+        return solicitante.includes(q);
+      } else if (this.tplSolicitudDocFiltroTipo === 'muestra') {
+        return muestra.includes(q);
+      } else if (this.tplSolicitudDocFiltroTipo === 'analisis') {
+        return analisis.includes(q);
+      } else if (this.tplSolicitudDocFiltroTipo === 'lote') {
+        return lote.includes(q);
+      }
+      return false;
+    });
+  }
+
+  seleccionarSolicitudPlantillaDocumento(item: any): void {
+    this.tplSolicitudDocSeleccionado = item;
+    this.tplSolicitudDocResultados = [];
+    this.tplSolicitudDocBusqueda = '';
+    this.tplSolicitudDocMsg = '';
+  }
+
+  onTplSolicitudDocEntidadChanged(): void {
+    this.tplSolicitudDocFiltroTipo = 'todos';
+    this.tplSolicitudDocBusqueda = '';
+    this.tplSolicitudDocResultados = [];
+    this.tplSolicitudDocSeleccionado = null;
+    this.tplSolicitudDocMsg = '';
+  }
+
+  limpiarSeleccionSolicitudPlantillaDocumento(): void {
+    this.tplSolicitudDocFiltroTipo = 'todos';
+    this.tplSolicitudDocBusqueda = '';
+    this.tplSolicitudDocResultados = [];
+    this.tplSolicitudDocSeleccionado = null;
+    this.tplSolicitudDocPlantillaId = null;
+    this.tplSolicitudDocNombrePlantilla = '';
+    this.tplSolicitudDocTemplateFile = null;
+    this.tplSolicitudDocMsg = '';
+    this.tplSolicitudDocLoading = false;
+    this.tplSolicitudDocUploadLoading = false;
+    try {
+      const el = this.tplSolicitudDocTemplateInput?.nativeElement;
+      if (el) el.value = '';
+    } catch {}
+  }
+
+  onTplSolicitudDocTemplateSelected(event: any): void {
+    try {
+      const f = event?.target?.files?.[0] || null;
+      this.tplSolicitudDocTemplateFile = f;
+      this.tplSolicitudDocMsg = '';
+    } catch {
+      this.tplSolicitudDocTemplateFile = null;
+    }
+  }
+
+  async cargarPlantillasDocumentoSolicitud(): Promise<void> {
+    if (this.tplSolicitudDocListLoading()) return;
+    this.tplSolicitudDocListLoading.set(true);
+    this.tplSolicitudDocMsg = '';
+    try {
+      const rows = await this.solicitudesService.listarPlantillasDocumentoSolicitud();
+      this.tplSolicitudDocPlantillas.set(Array.isArray(rows) ? rows : []);
+      if (this.tplSolicitudDocPlantillaId != null) {
+        const exists = this.tplSolicitudDocPlantillas().some(
+          (t) => Number(t?.id) === Number(this.tplSolicitudDocPlantillaId)
+        );
+        if (!exists) this.tplSolicitudDocPlantillaId = null;
+      }
+    } catch (err: any) {
+      this.tplSolicitudDocMsg = err?.message || 'Error listando plantillas';
+      this.snackbarService.error(this.tplSolicitudDocMsg);
+    } finally {
+      this.tplSolicitudDocListLoading.set(false);
+    }
+  }
+
+  async subirPlantillaDocumentoSolicitud(): Promise<void> {
+    if (this.tplSolicitudDocUploadLoading) return;
+    if (!this.tplSolicitudDocTemplateFile) {
+      this.tplSolicitudDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+      this.snackbarService.warn(this.tplSolicitudDocMsg);
+      return;
+    }
+
+    this.tplSolicitudDocUploadLoading = true;
+    this.tplSolicitudDocMsg = '';
+    try {
+      const created = await this.solicitudesService.subirPlantillaDocumentoSolicitud({
+        template: this.tplSolicitudDocTemplateFile,
+        nombre: this.tplSolicitudDocNombrePlantilla || undefined
+      });
+      await this.cargarPlantillasDocumentoSolicitud();
+      const id = Number(created?.id);
+      if (Number.isFinite(id) && id > 0) this.tplSolicitudDocPlantillaId = id;
+      this.tplSolicitudDocNombrePlantilla = '';
+      this.tplSolicitudDocTemplateFile = null;
+      try {
+        const el = this.tplSolicitudDocTemplateInput?.nativeElement;
+        if (el) el.value = '';
+      } catch {}
+      this.snackbarService.success('Plantilla guardada');
+    } catch (err: any) {
+      this.tplSolicitudDocMsg = err?.message || 'Error subiendo plantilla';
+      this.snackbarService.error(this.tplSolicitudDocMsg);
+    } finally {
+      this.tplSolicitudDocUploadLoading = false;
+    }
+  }
+
+  async eliminarPlantillaDocumentoSolicitud(): Promise<void> {
+    const id = this.tplSolicitudDocPlantillaId;
+    if (!id) {
+      this.tplSolicitudDocMsg = 'Seleccione una plantilla';
+      this.snackbarService.warn(this.tplSolicitudDocMsg);
+      return;
+    }
+    if (this.tplSolicitudDocDeleteLoading.has(id)) return;
+
+    this.tplSolicitudDocDeleteLoading.add(id);
+    this.tplSolicitudDocMsg = '';
+    try {
+      await this.solicitudesService.eliminarPlantillaDocumentoSolicitud(id);
+      await this.cargarPlantillasDocumentoSolicitud();
+      this.tplSolicitudDocPlantillaId = null;
+      this.snackbarService.success('Plantilla eliminada');
+    } catch (err: any) {
+      this.tplSolicitudDocMsg = err?.message || 'Error eliminando plantilla';
+      this.snackbarService.error(this.tplSolicitudDocMsg);
+    } finally {
+      this.tplSolicitudDocDeleteLoading.delete(id);
+    }
+  }
+
+  async generarDocumentoSolicitudDesdePlantilla(): Promise<void> {
+    if (this.tplSolicitudDocLoading) return;
+    const templateId = this.tplSolicitudDocPlantillaId;
+    if (!templateId) {
+      this.tplSolicitudDocMsg = 'Seleccione una plantilla';
+      this.snackbarService.warn(this.tplSolicitudDocMsg);
+      return;
+    }
+
+    this.tplSolicitudDocLoading = true;
+    this.tplSolicitudDocMsg = '';
+    try {
+      const selected = this.tplSolicitudDocPlantillas().find((t) => Number(t?.id) === Number(templateId));
+      const fallbackName = selected?.nombre_archivo || selected?.nombre || null;
+      const solicitud_id =
+        this.tplSolicitudDocEntidad === 'solicitud'
+          ? Number(this.tplSolicitudDocSeleccionado?.solicitud_id ?? this.tplSolicitudDocSeleccionado?.id_solicitud)
+          : undefined;
+      const id_cliente =
+        this.tplSolicitudDocEntidad === 'cliente'
+          ? Number(this.tplSolicitudDocSeleccionado?.id_cliente)
+          : Number(this.tplSolicitudDocSeleccionado?.id_cliente ?? this.tplSolicitudDocSeleccionado?.cliente_id);
+      if (this.tplSolicitudDocEntidad === 'solicitud') {
+        if (!Number.isFinite(solicitud_id) || (solicitud_id as number) <= 0) throw new Error('Debe seleccionar una solicitud');
+      } else {
+        if (!Number.isFinite(id_cliente) || (id_cliente as number) <= 0) throw new Error('Debe seleccionar un cliente');
+      }
+
+      const { blob, filename } = await this.solicitudesService.generarDocumentoDesdePlantilla({
+        templateId,
+        solicitud_id,
+        id_cliente
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || fallbackName || 'documento';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.snackbarService.success('Documento generado');
+      } catch (err: any) {
+        this.tplSolicitudDocMsg = err?.message || 'No se pudo generar el documento';
+        this.snackbarService.error(this.tplSolicitudDocMsg);
+      } finally {
+        this.tplSolicitudDocLoading = false;
+      }
   }
 
   filtrarSolicitudes(): void {
@@ -2959,6 +3243,25 @@ private getValorEncuesta(campo: string): any {
           if (el) el.value = '';
         } catch {}
         await this.cargarSolicitudesDocumentos();
+      } else if (this.formularioActivo === 'solicitud-documentos-plantilla') {
+        this.tplSolicitudDocEntidad = 'solicitud';
+        this.tplSolicitudDocFiltroTipo = 'todos';
+        this.tplSolicitudDocBusqueda = '';
+        this.tplSolicitudDocResultados = [];
+        this.tplSolicitudDocSeleccionado = null;
+        this.tplSolicitudDocPlantillaId = null;
+        this.tplSolicitudDocNombrePlantilla = '';
+        this.tplSolicitudDocTemplateFile = null;
+        this.tplSolicitudDocMsg = '';
+        this.tplSolicitudDocLoading = false;
+        this.tplSolicitudDocUploadLoading = false;
+        try {
+          const el = this.tplSolicitudDocTemplateInput?.nativeElement;
+          if (el) el.value = '';
+        } catch {}
+        await this.cargarClientesDocumentos();
+        await this.cargarSolicitudesDocumentos();
+        await this.cargarPlantillasDocumentoSolicitud();
       }
     }
   }

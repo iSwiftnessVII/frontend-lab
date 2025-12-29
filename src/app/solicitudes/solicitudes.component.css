@@ -902,6 +902,124 @@ div[ngIf] {
   opacity: 1;
 }
 
+.field-with-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.select-plantilla {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.field-actions {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
+.file-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+
+.search-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search-row .btn-compact {
+  white-space: nowrap;
+  font-size: 1rem;
+  line-height: 1.2;
+  min-height: 42px;
+}
+
+.tpl-doc-solicitudes .campo-combinado {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  position: static;
+  box-shadow: none;
+}
+
+.tpl-doc-solicitudes .search-control {
+  position: relative;
+}
+
+.tpl-doc-solicitudes .lista-resultados {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--border-gray);
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.tpl-doc-solicitudes .resultado-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--light-gray);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tpl-doc-solicitudes .resultado-item:last-child {
+  border-bottom: none;
+}
+
+.tpl-doc-solicitudes .resultado-item:hover {
+  background: #f8fafc;
+}
+
+.tpl-doc-solicitudes .resultado-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.tpl-doc-solicitudes .resultado-header .codigo {
+  font-weight: 700;
+  color: var(--primary-blue);
+}
+
+.tpl-doc-solicitudes .resultado-header .nombre {
+  color: var(--text-gray);
+}
+
+.tpl-doc-solicitudes .info-adicional {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.tpl-doc-solicitudes .sin-resultados {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-gray);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .info-ayuda {
   margin-top: 6px;
   padding: 8px;

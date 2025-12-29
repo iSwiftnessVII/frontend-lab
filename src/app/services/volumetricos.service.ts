@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 
+let tplDocEndpointMissing = false;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -207,6 +209,101 @@ export class VolumetricosService {
     if (!res.ok) {
       const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
       err.status = res.status;
+      throw err;
+    }
+
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename: string | null = null;
+    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
+    if (m && m[1]) {
+      try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
+    }
+
+    return { blob, filename };
+  }
+
+  async listarPlantillasDocumentoVolumetrico(): Promise<any[]> {
+    if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+    const res = await fetch(`${this.API_URL}/documentos/plantillas`, {
+      method: 'GET',
+      headers: this.getHeaders()
+    });
+    let data: any = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok) {
+      if (res.status === 404) {
+        tplDocEndpointMissing = true;
+        throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+      }
+      throw new Error((data && (data.message || data.error)) || 'Error listando plantillas');
+    }
+    return Array.isArray(data) ? data : (data?.rows || []);
+  }
+
+  async subirPlantillaDocumentoVolumetrico(params: { template: File; nombre?: string }): Promise<any> {
+    if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+    const template = params?.template;
+    if (!template) throw new Error('Debe seleccionar una plantilla');
+
+    const fd = new FormData();
+    fd.append('template', template);
+    const nombre = typeof params?.nombre === 'string' ? params.nombre.trim() : '';
+    if (nombre) fd.append('nombre', nombre);
+
+    const res = await fetch(`${this.API_URL}/documentos/plantillas`, {
+      method: 'POST',
+      headers: this.getAuthHeader(),
+      body: fd
+    });
+    let data: any = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok) {
+      if (res.status === 404) {
+        tplDocEndpointMissing = true;
+        throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+      }
+      throw new Error((data && (data.message || data.error)) || 'Error subiendo plantilla');
+    }
+    return data;
+  }
+
+  async eliminarPlantillaDocumentoVolumetrico(id: number): Promise<any> {
+    if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+    const tplId = Number(id);
+    if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
+    const res = await fetch(`${this.API_URL}/documentos/plantillas/${tplId}`, {
+      method: 'DELETE',
+      headers: this.getHeaders()
+    });
+    let data: any = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok) {
+      if (res.status === 404) {
+        tplDocEndpointMissing = true;
+        throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+      }
+      throw new Error((data && (data.message || data.error)) || 'Error eliminando plantilla');
+    }
+    return data;
+  }
+
+  async generarDocumentoVolumetricoDesdePlantilla(params: { id: number; codigo: number }): Promise<{ blob: Blob; filename: string | null }> {
+    if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+    const tplId = Number(params?.id);
+    const codigo = Number(params?.codigo);
+    if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
+    if (!Number.isFinite(codigo) || codigo <= 0) throw new Error('Debe seleccionar un material');
+
+    const res = await fetch(`${this.API_URL}/documentos/plantillas/${tplId}/generar`, {
+      method: 'POST',
+      headers: { ...this.getHeaders() },
+      body: JSON.stringify({ codigo })
+    });
+    if (!res.ok) {
+      const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
+      err.status = res.status;
+      if (res.status === 404) tplDocEndpointMissing = true;
       throw err;
     }
 

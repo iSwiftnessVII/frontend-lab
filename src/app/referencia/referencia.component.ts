@@ -53,9 +53,15 @@ export class ReferenciaComponent implements OnInit {
   refDocBusqueda: string = '';
   refDocResultados: any[] = [];
   refDocSeleccionado: any = null;
+  refDocPlantillas = signal<any[]>([]);
+  refDocPlantillaId: number | null = null;
+  refDocNombrePlantilla: string = '';
   refDocTemplateFile: File | null = null;
   refDocMsg: string = '';
   refDocLoading: boolean = false;
+  refDocListLoading = signal(false);
+  refDocUploadLoading: boolean = false;
+  refDocDeleteLoading: Set<number> = new Set<number>();
 
   // Opciones para el select de filtro
   opcionesFiltro = [
@@ -328,7 +334,16 @@ export class ReferenciaComponent implements OnInit {
     this.refDocSeleccionado = null;
     this.refDocBusqueda = '';
     this.refDocResultados = [];
+    this.refDocPlantillaId = null;
+    this.refDocNombrePlantilla = '';
+    this.refDocTemplateFile = null;
     this.refDocMsg = '';
+    this.refDocLoading = false;
+    this.refDocUploadLoading = false;
+    try {
+      const el = this.refDocTemplateInput?.nativeElement;
+      if (el) el.value = '';
+    } catch {}
   }
 
   onRefDocTemplateSelected(event: any): void {
@@ -346,16 +361,95 @@ export class ReferenciaComponent implements OnInit {
     this.refDocBusqueda = '';
     this.refDocResultados = [];
     this.refDocSeleccionado = null;
+    this.refDocPlantillaId = null;
+    this.refDocNombrePlantilla = '';
+    this.refDocPlantillas.set([]);
     this.refDocTemplateFile = null;
     this.refDocMsg = '';
     this.refDocLoading = false;
+    this.refDocUploadLoading = false;
     try {
       const el = this.refDocTemplateInput?.nativeElement;
       if (el) el.value = '';
     } catch {}
   }
 
-  async generarDocumentoReferencia(): Promise<void> {
+  async cargarPlantillasDocumentoReferencia(): Promise<void> {
+    if (this.refDocListLoading()) return;
+    this.refDocListLoading.set(true);
+    this.refDocMsg = '';
+    try {
+      const rows = await this.referenciaService.listarPlantillasDocumentoReferencia();
+      this.refDocPlantillas.set(Array.isArray(rows) ? rows : []);
+      if (this.refDocPlantillaId != null) {
+        const exists = this.refDocPlantillas().some((t) => Number(t?.id) === Number(this.refDocPlantillaId));
+        if (!exists) this.refDocPlantillaId = null;
+      }
+    } catch (err: any) {
+      this.refDocMsg = err?.message || 'Error listando plantillas';
+      this.snack.error(this.refDocMsg);
+    } finally {
+      this.refDocListLoading.set(false);
+    }
+  }
+
+  async subirPlantillaDocumentoReferencia(): Promise<void> {
+    if (this.refDocUploadLoading) return;
+    if (!this.refDocTemplateFile) {
+      this.refDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+      this.snack.warn(this.refDocMsg);
+      return;
+    }
+
+    this.refDocUploadLoading = true;
+    this.refDocMsg = '';
+    try {
+      const created = await this.referenciaService.subirPlantillaDocumentoReferencia({
+        template: this.refDocTemplateFile,
+        nombre: this.refDocNombrePlantilla || undefined
+      });
+      await this.cargarPlantillasDocumentoReferencia();
+      const id = Number(created?.id);
+      if (Number.isFinite(id) && id > 0) this.refDocPlantillaId = id;
+      this.refDocNombrePlantilla = '';
+      this.refDocTemplateFile = null;
+      try {
+        const el = this.refDocTemplateInput?.nativeElement;
+        if (el) el.value = '';
+      } catch {}
+      this.snack.success('Plantilla guardada');
+    } catch (err: any) {
+      this.refDocMsg = err?.message || 'No se pudo guardar la plantilla';
+      this.snack.error(this.refDocMsg);
+    } finally {
+      this.refDocUploadLoading = false;
+    }
+  }
+
+  async eliminarPlantillaDocumentoReferencia(): Promise<void> {
+    const id = this.refDocPlantillaId;
+    if (!id) {
+      this.refDocMsg = 'Seleccione una plantilla';
+      this.snack.warn(this.refDocMsg);
+      return;
+    }
+    if (this.refDocDeleteLoading.has(id)) return;
+    this.refDocDeleteLoading.add(id);
+    this.refDocMsg = '';
+    try {
+      await this.referenciaService.eliminarPlantillaDocumentoReferencia(id);
+      await this.cargarPlantillasDocumentoReferencia();
+      this.refDocPlantillaId = null;
+      this.snack.success('Plantilla eliminada');
+    } catch (err: any) {
+      this.refDocMsg = err?.message || 'No se pudo eliminar la plantilla';
+      this.snack.error(this.refDocMsg);
+    } finally {
+      this.refDocDeleteLoading.delete(id);
+    }
+  }
+
+  async generarDocumentoReferenciaDesdePlantilla(): Promise<void> {
     if (this.refDocLoading) return;
     const codigo = Number(this.refDocSeleccionado?.codigo_id);
     if (!Number.isFinite(codigo) || codigo <= 0) {
@@ -363,8 +457,9 @@ export class ReferenciaComponent implements OnInit {
       this.snack.warn(this.refDocMsg);
       return;
     }
-    if (!this.refDocTemplateFile) {
-      this.refDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+    const tplId = Number(this.refDocPlantillaId);
+    if (!Number.isFinite(tplId) || tplId <= 0) {
+      this.refDocMsg = 'Seleccione una plantilla guardada';
       this.snack.warn(this.refDocMsg);
       return;
     }
@@ -372,22 +467,21 @@ export class ReferenciaComponent implements OnInit {
     this.refDocLoading = true;
     this.refDocMsg = '';
     try {
-      const originalTemplateName = this.refDocTemplateFile?.name || null;
-      const { blob, filename } = await this.referenciaService.generarDocumentoReferencia({
-        codigo,
-        template: this.refDocTemplateFile
+      const { blob, filename } = await this.referenciaService.generarDocumentoReferenciaDesdePlantilla({
+        id: tplId,
+        codigo
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = originalTemplateName || filename || 'documento_referencia';
+      a.download = filename || 'documento_referencia';
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
       this.refDocMsg = 'Documento generado';
       this.snack.success('Documento generado');
-      this.resetGeneracionDocumentoReferencia();
+      this.limpiarSeleccionReferenciaDocumento();
     } catch (err: any) {
       this.refDocMsg = err?.message || 'No se pudo generar el documento';
       this.snack.error(this.refDocMsg);
@@ -651,6 +745,10 @@ export class ReferenciaComponent implements OnInit {
         this.codigo_material_intervalo = null;
         this.codigoIntervaloSig.set(null);
         this.consecutivoIntervaloSig.set(null);
+      } else if (tipo === 'documentos') {
+        this.formularioActivo = tipo;
+        this.resetGeneracionDocumentoReferencia();
+        this.cargarPlantillasDocumentoReferencia();
       } else {
         this.formularioActivo = tipo;
       }

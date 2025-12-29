@@ -143,4 +143,70 @@ export class ReferenciaService {
       throw new Error(String(msg || 'Error generando documento'));
     }
   }
+
+  async listarPlantillasDocumentoReferencia(): Promise<any[]> {
+    const data = await firstValueFrom(this.http.get<any>(`${this.API_REFERENCIA}/documentos/plantillas`, this.getOptions()));
+    if (Array.isArray(data)) return data;
+    return Array.isArray(data?.rows) ? data.rows : [];
+  }
+
+  async subirPlantillaDocumentoReferencia(params: { template: File; nombre?: string }): Promise<any> {
+    const template = params?.template;
+    if (!template) throw new Error('Debe seleccionar una plantilla');
+
+    const formData = new FormData();
+    formData.append('template', template);
+    const nombre = typeof params?.nombre === 'string' ? params.nombre.trim() : '';
+    if (nombre) formData.append('nombre', nombre);
+
+    return firstValueFrom(this.http.post(`${this.API_REFERENCIA}/documentos/plantillas`, formData, this.getOptions()));
+  }
+
+  async eliminarPlantillaDocumentoReferencia(id: number): Promise<any> {
+    const tplId = Number(id);
+    if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
+    return firstValueFrom(this.http.delete(`${this.API_REFERENCIA}/documentos/plantillas/${tplId}`, this.getOptions()));
+  }
+
+  async generarDocumentoReferenciaDesdePlantilla(params: { id: number; codigo: number }): Promise<{ blob: Blob; filename: string | null }> {
+    const tplId = Number(params?.id);
+    const codigo = Number(params?.codigo);
+    if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
+    if (!Number.isFinite(codigo) || codigo <= 0) throw new Error('Debe seleccionar un material');
+
+    const { headers } = this.getOptions();
+    try {
+      const resp: any = await firstValueFrom(
+        this.http.post(`${this.API_REFERENCIA}/documentos/plantillas/${tplId}/generar`, { codigo }, {
+          headers: headers.set('Content-Type', 'application/json'),
+          observe: 'response',
+          responseType: 'blob'
+        } as any)
+      );
+
+      const blob: Blob = resp?.body;
+      const cd = resp?.headers?.get?.('content-disposition') || '';
+      let filename: string | null = null;
+      const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
+      if (m && m[1]) {
+        try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
+      }
+
+      return { blob, filename };
+    } catch (err: any) {
+      let msg = err?.error?.message || err?.error?.error || err?.message || 'Error generando documento';
+      try {
+        if (err?.error instanceof Blob) {
+          const t = await err.error.text();
+          try {
+            const j = JSON.parse(t);
+            msg = j?.message || j?.error || msg;
+          } catch {
+            msg = t || msg;
+          }
+        }
+      } catch {}
+      throw new Error(String(msg || 'Error generando documento'));
+    }
+  }
 }

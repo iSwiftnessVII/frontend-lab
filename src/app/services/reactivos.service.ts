@@ -1,5 +1,37 @@
 import { authService } from './auth.service';
 const API_BASE = (window as any).__env?.API_REACTIVOS || 'http://localhost:4000/api/reactivos';
+const API_ROOT =
+  (window as any).__env?.API_BASE ||
+  String(API_BASE).replace(/\/reactivos\/?$/i, '').replace(/\/+$/g, '');
+let tplDocEndpointMissing = false;
+
+function buildTemplateUrls(path: string): string[] {
+  const bases = [
+    String(API_BASE).replace(/\/+$/g, ''),
+    String(API_ROOT).replace(/\/+$/g, '') + '/reactivos',
+    String(API_ROOT).replace(/\/+$/g, '')
+  ];
+  const seen = new Set<string>();
+  const urls: string[] = [];
+  for (const b of bases) {
+    const u = `${b}${path.startsWith('/') ? '' : '/'}${path}`;
+    if (!seen.has(u)) {
+      seen.add(u);
+      urls.push(u);
+    }
+  }
+  return urls;
+}
+
+async function fetchFirstNon404(urls: string[], init: RequestInit): Promise<Response> {
+  let last: Response | null = null;
+  for (const url of urls) {
+    const res = await fetch(url, init);
+    last = res;
+    if (res.status !== 404) return res;
+  }
+  return last as Response;
+}
 
 function authHeaders(): HeadersInit {
   const token = authService.getToken?.();
@@ -344,6 +376,100 @@ export const reactivosService = {
       try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
     }
 
+    return { blob, filename };
+  }
+  ,
+  async listarPlantillasDocumentoReactivo(): Promise<any[]> {
+    if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+    const res = await fetchFirstNon404(buildTemplateUrls('/documentos/plantillas'), {
+      method: 'GET',
+      headers: { ...authHeaders() }
+    });
+    let data: any = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok) {
+      if (res.status === 404) {
+        tplDocEndpointMissing = true;
+        throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+      }
+      throw new Error((data && (data.message || data.error)) || 'Error listando plantillas');
+    }
+    return Array.isArray(data) ? data : (data?.rows || []);
+  },
+  async subirPlantillaDocumentoReactivo(params: { nombre?: string; template: File }): Promise<any> {
+    if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+    const template = params?.template;
+    const nombre = String(params?.nombre ?? '').trim();
+    if (!template) throw new Error('Debe seleccionar una plantilla');
+
+    const fd = new FormData();
+    fd.append('template', template);
+    if (nombre) fd.append('nombre', nombre);
+
+    const res = await fetchFirstNon404(buildTemplateUrls('/documentos/plantillas'), {
+      method: 'POST',
+      headers: { ...authHeaders() },
+      body: fd
+    });
+    let data: any = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok) {
+      if (res.status === 404) {
+        tplDocEndpointMissing = true;
+        throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+      }
+      throw new Error((data && (data.message || data.error)) || 'Error subiendo plantilla');
+    }
+    return data;
+  },
+  async eliminarPlantillaDocumentoReactivo(id: number): Promise<void> {
+    if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+    const templateId = Number(id);
+    if (!Number.isFinite(templateId) || templateId <= 0) throw new Error('Plantilla inválida');
+    const res = await fetchFirstNon404(buildTemplateUrls(`/documentos/plantillas/${encodeURIComponent(String(templateId))}`), {
+      method: 'DELETE',
+      headers: { ...authHeaders() }
+    });
+    let data: any = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok) {
+      if (res.status === 404) {
+        tplDocEndpointMissing = true;
+        throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+      }
+      throw new Error((data && (data.message || data.error)) || 'Error eliminando plantilla');
+    }
+  },
+  async generarDocumentoReactivoDesdePlantilla(params: { templateId: number; codigo: string; lote?: string }): Promise<{ blob: Blob; filename: string | null }> {
+    if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+    const templateId = Number(params?.templateId);
+    const codigo = String(params?.codigo ?? '').trim();
+    const lote = String(params?.lote ?? '').trim();
+    if (!Number.isFinite(templateId) || templateId <= 0) throw new Error('Debe seleccionar una plantilla');
+    if (!codigo && !lote) throw new Error('Debe seleccionar un reactivo');
+
+    const res = await fetchFirstNon404(
+      buildTemplateUrls(`/documentos/plantillas/${encodeURIComponent(String(templateId))}/generar`),
+      {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ codigo, lote: lote || undefined })
+      }
+    );
+    if (!res.ok) {
+      if (res.status === 404) tplDocEndpointMissing = true;
+      const err: any = new Error(await readApiError(res, 'Error generando documento'));
+      err.status = res.status;
+      throw err;
+    }
+
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename: string | null = null;
+    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
+    if (m && m[1]) {
+      try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
+    }
     return { blob, filename };
   }
 };

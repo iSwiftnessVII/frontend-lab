@@ -14,8 +14,8 @@ import { authUser } from '../services/auth.service';
   styleUrls: ['./equipos.component.css'],
   imports: [CommonModule, FormsModule, RouterModule]
 })
-export class EquiposComponent implements OnInit {
-  @ViewChild('equipoDocTemplateInput') private equipoDocTemplateInput?: ElementRef<HTMLInputElement>;
+export class EquiposComponent implements OnInit, OnDestroy {
+  @ViewChild('tplEquipoDocTemplateInput') private tplEquipoDocTemplateInput?: ElementRef<HTMLInputElement>;
   public get esAuxiliar(): boolean {
     const user = authUser();
     return user?.rol === 'Auxiliar';
@@ -572,14 +572,19 @@ export class EquiposComponent implements OnInit {
   // Variable para controlar el formulario activo
   formularioActivo: string | null = null;
 
-  equipoDocFiltroTipo: string = 'todos';
-  equipoDocBusqueda: string = '';
-  equipoDocResultados: any[] = [];
-  equipoDocSeleccionado: any = null;
-  equipoDocMostrarResultados: boolean = false;
-  equipoDocTemplateFile: File | null = null;
-  equipoDocMsg: string = '';
-  equipoDocLoading: boolean = false;
+  tplEquipoDocFiltroTipo: string = 'todos';
+  tplEquipoDocBusqueda: string = '';
+  tplEquipoDocResultados: any[] = [];
+  tplEquipoDocSeleccionado: any = null;
+  tplEquipoDocPlantillas = signal<any[]>([]);
+  tplEquipoDocPlantillaId: number | null = null;
+  tplEquipoDocNombrePlantilla: string = '';
+  tplEquipoDocTemplateFile: File | null = null;
+  tplEquipoDocMsg: string = '';
+  tplEquipoDocLoading: boolean = false;
+  tplEquipoDocListLoading = signal(false);
+  tplEquipoDocUploadLoading: boolean = false;
+  tplEquipoDocDeleteLoading: Set<number> = new Set<number>();
 
   opcionesFiltroDocumentos = [
     { valor: 'todos', texto: 'Todos los campos' },
@@ -1117,22 +1122,20 @@ export class EquiposComponent implements OnInit {
     }, 200);
   }
 
-  filtrarEquiposDocumentos() {
-    const q = this.equipoDocBusqueda.toLowerCase().trim();
+  filtrarEquiposPlantillaDocumentos() {
+    const q = this.tplEquipoDocBusqueda.toLowerCase().trim();
     if (!q) {
-      this.equipoDocResultados = [];
-      this.equipoDocMostrarResultados = false;
+      this.tplEquipoDocResultados = [];
       return;
     }
 
-    this.equipoDocMostrarResultados = true;
-    this.equipoDocResultados = this.equiposRegistrados.filter((equipo) => {
+    this.tplEquipoDocResultados = this.equiposRegistrados.filter((equipo) => {
       const codigo = String(equipo?.codigo_identificacion ?? '').toLowerCase();
       const nombre = String(equipo?.nombre ?? '').toLowerCase();
       const marca = String(equipo?.marca ?? '').toLowerCase();
       const modelo = String(equipo?.modelo ?? '').toLowerCase();
 
-      switch (this.equipoDocFiltroTipo) {
+      switch (this.tplEquipoDocFiltroTipo) {
         case 'codigo':
           return codigo.includes(q);
         case 'nombre':
@@ -1148,83 +1151,149 @@ export class EquiposComponent implements OnInit {
     });
   }
 
-  seleccionarEquipoDocumento(equipo: any) {
-    this.equipoDocSeleccionado = equipo;
-    this.equipoDocBusqueda = `${equipo?.codigo_identificacion ?? ''} - ${equipo?.nombre ?? ''}`.trim();
-    this.equipoDocResultados = [];
-    this.equipoDocMostrarResultados = false;
-    this.equipoDocMsg = '';
+  seleccionarEquipoPlantillaDocumento(equipo: any) {
+    this.tplEquipoDocSeleccionado = equipo;
+    this.tplEquipoDocBusqueda = '';
+    this.tplEquipoDocResultados = [];
+    this.tplEquipoDocMsg = '';
   }
 
-  limpiarSeleccionEquipoDocumento() {
-    this.equipoDocFiltroTipo = 'todos';
-    this.equipoDocBusqueda = '';
-    this.equipoDocResultados = [];
-    this.equipoDocSeleccionado = null;
-    this.equipoDocMostrarResultados = false;
-    this.equipoDocTemplateFile = null;
-    this.equipoDocMsg = '';
-    this.equipoDocLoading = false;
+  limpiarSeleccionEquipoPlantillaDocumento() {
+    this.tplEquipoDocFiltroTipo = 'todos';
+    this.tplEquipoDocBusqueda = '';
+    this.tplEquipoDocResultados = [];
+    this.tplEquipoDocSeleccionado = null;
+    this.tplEquipoDocPlantillaId = null;
+    this.tplEquipoDocNombrePlantilla = '';
+    this.tplEquipoDocTemplateFile = null;
+    this.tplEquipoDocMsg = '';
+    this.tplEquipoDocLoading = false;
+    this.tplEquipoDocUploadLoading = false;
     try {
-      const el = this.equipoDocTemplateInput?.nativeElement;
+      const el = this.tplEquipoDocTemplateInput?.nativeElement;
       if (el) el.value = '';
     } catch {}
   }
 
-  onEquipoDocTemplateSelected(event: any) {
+  onTplEquipoDocTemplateSelected(event: any) {
     try {
       const f = event?.target?.files?.[0] || null;
-      this.equipoDocTemplateFile = f;
-      this.equipoDocMsg = '';
+      this.tplEquipoDocTemplateFile = f;
+      this.tplEquipoDocMsg = '';
     } catch {
-      this.equipoDocTemplateFile = null;
+      this.tplEquipoDocTemplateFile = null;
     }
   }
 
-  onEquipoDocFocusOut() {
-    setTimeout(() => {
-      this.equipoDocMostrarResultados = false;
-    }, 200);
-  }
-
-  async generarDocumentoEquipo(): Promise<void> {
-    if (this.equipoDocLoading) return;
-    const codigo = String(this.equipoDocSeleccionado?.codigo_identificacion || '').trim();
-    if (!codigo) {
-      this.equipoDocMsg = 'Debe seleccionar un equipo';
-      this.snack.warn(this.equipoDocMsg);
-      return;
-    }
-    if (!this.equipoDocTemplateFile) {
-      this.equipoDocMsg = 'Selecciona una plantilla .xlsx o .docx';
-      this.snack.warn(this.equipoDocMsg);
-      return;
-    }
-
-    this.equipoDocLoading = true;
-    this.equipoDocMsg = '';
+  async cargarPlantillasDocumentoEquipo(): Promise<void> {
+    if (this.tplEquipoDocListLoading()) return;
+    this.tplEquipoDocListLoading.set(true);
+    this.tplEquipoDocMsg = '';
     try {
-      const originalTemplateName = this.equipoDocTemplateFile?.name || null;
-      const { blob, filename } = await equiposService.generarDocumentoEquipo({
-        codigo,
-        template: this.equipoDocTemplateFile
+      const rows = await equiposService.listarPlantillasDocumentoEquipo();
+      this.tplEquipoDocPlantillas.set(Array.isArray(rows) ? rows : []);
+      if (this.tplEquipoDocPlantillaId != null) {
+        const exists = this.tplEquipoDocPlantillas().some((t) => Number(t?.id) === Number(this.tplEquipoDocPlantillaId));
+        if (!exists) this.tplEquipoDocPlantillaId = null;
+      }
+    } catch (err: any) {
+      this.tplEquipoDocMsg = err?.message || 'Error listando plantillas';
+      this.snack.error(this.tplEquipoDocMsg);
+    } finally {
+      this.tplEquipoDocListLoading.set(false);
+    }
+  }
+
+  async subirPlantillaDocumentoEquipo(): Promise<void> {
+    if (this.tplEquipoDocUploadLoading) return;
+    if (!this.tplEquipoDocTemplateFile) {
+      this.tplEquipoDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+      this.snack.warn(this.tplEquipoDocMsg);
+      return;
+    }
+    this.tplEquipoDocUploadLoading = true;
+    this.tplEquipoDocMsg = '';
+    try {
+      const created = await equiposService.subirPlantillaDocumentoEquipo({
+        template: this.tplEquipoDocTemplateFile,
+        nombre: this.tplEquipoDocNombrePlantilla || undefined
       });
+      await this.cargarPlantillasDocumentoEquipo();
+      const id = Number(created?.id);
+      if (Number.isFinite(id) && id > 0) this.tplEquipoDocPlantillaId = id;
+      this.tplEquipoDocNombrePlantilla = '';
+      this.tplEquipoDocTemplateFile = null;
+      try {
+        const el = this.tplEquipoDocTemplateInput?.nativeElement;
+        if (el) el.value = '';
+      } catch {}
+      this.snack.success('Plantilla guardada');
+    } catch (err: any) {
+      this.tplEquipoDocMsg = err?.message || 'Error subiendo plantilla';
+      this.snack.error(this.tplEquipoDocMsg);
+    } finally {
+      this.tplEquipoDocUploadLoading = false;
+    }
+  }
+
+  async eliminarPlantillaDocumentoEquipo(): Promise<void> {
+    const id = this.tplEquipoDocPlantillaId;
+    if (!id) {
+      this.tplEquipoDocMsg = 'Seleccione una plantilla';
+      this.snack.warn(this.tplEquipoDocMsg);
+      return;
+    }
+    if (this.tplEquipoDocDeleteLoading.has(id)) return;
+    this.tplEquipoDocDeleteLoading.add(id);
+    this.tplEquipoDocMsg = '';
+    try {
+      await equiposService.eliminarPlantillaDocumentoEquipo(id);
+      await this.cargarPlantillasDocumentoEquipo();
+      this.tplEquipoDocPlantillaId = null;
+      this.snack.success('Plantilla eliminada');
+    } catch (err: any) {
+      this.tplEquipoDocMsg = err?.message || 'Error eliminando plantilla';
+      this.snack.error(this.tplEquipoDocMsg);
+    } finally {
+      this.tplEquipoDocDeleteLoading.delete(id);
+    }
+  }
+
+  async generarDocumentoEquipoDesdePlantilla(): Promise<void> {
+    if (this.tplEquipoDocLoading) return;
+    const codigo = String(this.tplEquipoDocSeleccionado?.codigo_identificacion || '').trim();
+    if (!codigo) {
+      this.tplEquipoDocMsg = 'Debe seleccionar un equipo';
+      this.snack.warn(this.tplEquipoDocMsg);
+      return;
+    }
+    const id = this.tplEquipoDocPlantillaId;
+    if (!id) {
+      this.tplEquipoDocMsg = 'Seleccione una plantilla';
+      this.snack.warn(this.tplEquipoDocMsg);
+      return;
+    }
+
+    this.tplEquipoDocLoading = true;
+    this.tplEquipoDocMsg = '';
+    try {
+      const selected = this.tplEquipoDocPlantillas().find((t) => Number(t?.id) === Number(id));
+      const fallbackName = selected?.nombre_archivo || selected?.nombre || null;
+      const { blob, filename } = await equiposService.generarDocumentoEquipoDesdePlantilla({ id, codigo });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = originalTemplateName || filename || 'documento_equipo';
+      a.download = filename || fallbackName || 'documento_equipo';
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      this.equipoDocMsg = 'Documento generado';
       this.snack.success('Documento generado');
-      this.limpiarSeleccionEquipoDocumento();
     } catch (err: any) {
-      this.equipoDocMsg = err?.message || 'No se pudo generar el documento';
-      this.snack.error(this.equipoDocMsg);
+      this.tplEquipoDocMsg = err?.message || 'No se pudo generar el documento';
+      this.snack.error(this.tplEquipoDocMsg);
     } finally {
-      this.equipoDocLoading = false;
+      this.tplEquipoDocLoading = false;
     }
   }
 
@@ -1953,7 +2022,7 @@ toggleFormulario(tipo: string) {
     this.resetFormHistorial();
     this.resetFormIntervalo();
     this.limpiarBusqueda();
-    this.limpiarSeleccionEquipoDocumento();
+    this.limpiarSeleccionEquipoPlantillaDocumento();
 
     if (tipo === 'historial') {
       this.formularioActivo = tipo;
@@ -1971,6 +2040,11 @@ toggleFormulario(tipo: string) {
       this.consecutivoIntervaloSig.set(null);
     } else {
       this.formularioActivo = tipo;
+      if (tipo === 'equipo-documentos-plantilla') {
+        if (!this.tplEquipoDocPlantillas().length) {
+          this.cargarPlantillasDocumentoEquipo();
+        }
+      }
     }
   }
 }

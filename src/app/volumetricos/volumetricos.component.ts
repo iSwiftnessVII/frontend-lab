@@ -56,9 +56,15 @@ export class VolumetricosComponent implements OnInit {
   volDocBusqueda: string = '';
   volDocResultados: any[] = [];
   volDocSeleccionado: any = null;
+  volDocPlantillas = signal<any[]>([]);
+  volDocPlantillaId: number | null = null;
+  volDocNombrePlantilla: string = '';
   volDocTemplateFile: File | null = null;
   volDocMsg: string = '';
   volDocLoading: boolean = false;
+  volDocListLoading = signal(false);
+  volDocUploadLoading: boolean = false;
+  volDocDeleteLoading: Set<number> = new Set<number>();
 
   // Opciones para el select de filtro
   opcionesFiltro = [
@@ -576,13 +582,18 @@ export class VolumetricosComponent implements OnInit {
         this.volDocBusqueda = '';
         this.volDocResultados = [];
         this.volDocSeleccionado = null;
+        this.volDocPlantillaId = null;
+        this.volDocNombrePlantilla = '';
+        this.volDocPlantillas.set([]);
         this.volDocTemplateFile = null;
         this.volDocMsg = '';
         this.volDocLoading = false;
+        this.volDocUploadLoading = false;
         try {
           const el = this.volDocTemplateInput?.nativeElement;
           if (el) el.value = '';
         } catch {}
+        this.cargarPlantillasDocumentoVolumetrico();
       } else {
         this.formularioActivo = tipo;
       }
@@ -626,7 +637,16 @@ export class VolumetricosComponent implements OnInit {
     this.volDocSeleccionado = null;
     this.volDocBusqueda = '';
     this.volDocResultados = [];
+    this.volDocPlantillaId = null;
+    this.volDocNombrePlantilla = '';
+    this.volDocTemplateFile = null;
     this.volDocMsg = '';
+    this.volDocLoading = false;
+    this.volDocUploadLoading = false;
+    try {
+      const el = this.volDocTemplateInput?.nativeElement;
+      if (el) el.value = '';
+    } catch {}
   }
 
   onVolDocTemplateSelected(event: any): void {
@@ -639,7 +659,81 @@ export class VolumetricosComponent implements OnInit {
     }
   }
 
-  async generarDocumentoVolumetrico(): Promise<void> {
+  async cargarPlantillasDocumentoVolumetrico(): Promise<void> {
+    if (this.volDocListLoading()) return;
+    this.volDocListLoading.set(true);
+    this.volDocMsg = '';
+    try {
+      const rows = await this.volumetricosService.listarPlantillasDocumentoVolumetrico();
+      this.volDocPlantillas.set(Array.isArray(rows) ? rows : []);
+      if (this.volDocPlantillaId != null) {
+        const exists = this.volDocPlantillas().some((t) => Number(t?.id) === Number(this.volDocPlantillaId));
+        if (!exists) this.volDocPlantillaId = null;
+      }
+    } catch (err: any) {
+      this.volDocMsg = err?.message || 'Error listando plantillas';
+      this.snack.error(this.volDocMsg);
+    } finally {
+      this.volDocListLoading.set(false);
+    }
+  }
+
+  async subirPlantillaDocumentoVolumetrico(): Promise<void> {
+    if (this.volDocUploadLoading) return;
+    if (!this.volDocTemplateFile) {
+      this.volDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+      this.snack.warn(this.volDocMsg);
+      return;
+    }
+    this.volDocUploadLoading = true;
+    this.volDocMsg = '';
+    try {
+      const created = await this.volumetricosService.subirPlantillaDocumentoVolumetrico({
+        template: this.volDocTemplateFile,
+        nombre: this.volDocNombrePlantilla || undefined
+      });
+      await this.cargarPlantillasDocumentoVolumetrico();
+      const id = Number(created?.id);
+      if (Number.isFinite(id) && id > 0) this.volDocPlantillaId = id;
+      this.volDocNombrePlantilla = '';
+      this.volDocTemplateFile = null;
+      try {
+        const el = this.volDocTemplateInput?.nativeElement;
+        if (el) el.value = '';
+      } catch {}
+      this.snack.success('Plantilla guardada');
+    } catch (err: any) {
+      this.volDocMsg = err?.message || 'Error subiendo plantilla';
+      this.snack.error(this.volDocMsg);
+    } finally {
+      this.volDocUploadLoading = false;
+    }
+  }
+
+  async eliminarPlantillaDocumentoVolumetrico(): Promise<void> {
+    const id = this.volDocPlantillaId;
+    if (!id) {
+      this.volDocMsg = 'Seleccione una plantilla';
+      this.snack.warn(this.volDocMsg);
+      return;
+    }
+    if (this.volDocDeleteLoading.has(id)) return;
+    this.volDocDeleteLoading.add(id);
+    this.volDocMsg = '';
+    try {
+      await this.volumetricosService.eliminarPlantillaDocumentoVolumetrico(id);
+      await this.cargarPlantillasDocumentoVolumetrico();
+      this.volDocPlantillaId = null;
+      this.snack.success('Plantilla eliminada');
+    } catch (err: any) {
+      this.volDocMsg = err?.message || 'Error eliminando plantilla';
+      this.snack.error(this.volDocMsg);
+    } finally {
+      this.volDocDeleteLoading.delete(id);
+    }
+  }
+
+  async generarDocumentoVolumetricoDesdePlantilla(): Promise<void> {
     if (this.volDocLoading) return;
     const codigo = Number(this.volDocSeleccionado?.codigo_id);
     if (!Number.isFinite(codigo) || codigo <= 0) {
@@ -647,8 +741,9 @@ export class VolumetricosComponent implements OnInit {
       this.snack.warn(this.volDocMsg);
       return;
     }
-    if (!this.volDocTemplateFile) {
-      this.volDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+    const id = this.volDocPlantillaId;
+    if (!id) {
+      this.volDocMsg = 'Seleccione una plantilla';
       this.snack.warn(this.volDocMsg);
       return;
     }
@@ -656,28 +751,18 @@ export class VolumetricosComponent implements OnInit {
     this.volDocLoading = true;
     this.volDocMsg = '';
     try {
-      const originalTemplateName = this.volDocTemplateFile?.name || null;
-      const { blob, filename } = await this.volumetricosService.generarDocumentoVolumetrico({
-        codigo,
-        template: this.volDocTemplateFile
-      });
+      const selected = this.volDocPlantillas().find((t) => Number(t?.id) === Number(id));
+      const fallbackName = selected?.nombre_archivo || selected?.nombre || null;
+      const { blob, filename } = await this.volumetricosService.generarDocumentoVolumetricoDesdePlantilla({ id, codigo });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = originalTemplateName || filename || 'documento_volumetrico';
+      a.download = filename || fallbackName || 'documento_volumetrico';
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      this.volDocMsg = 'Documento generado';
       this.snack.success('Documento generado');
-      this.limpiarSeleccionVolumetricoDocumento();
-      this.volDocFiltroTipo = 'todos';
-      this.volDocTemplateFile = null;
-      try {
-        const el = this.volDocTemplateInput?.nativeElement;
-        if (el) el.value = '';
-      } catch {}
     } catch (err: any) {
       this.volDocMsg = err?.message || 'No se pudo generar el documento';
       this.snack.error(this.volDocMsg);

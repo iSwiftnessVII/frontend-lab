@@ -520,4 +520,145 @@ export class SolicitudesService {
 
     return { blob, filename };
   }
+
+  async listarPlantillasDocumentoSolicitud(): Promise<any[]> {
+    const res = await fetch(API + '/documentos/plantillas', {
+      method: 'GET',
+      headers: this.getAuthHeadersMultipart()
+    });
+    let data: any = null;
+    try {
+      data = await res.json();
+    } catch {}
+    if (!res.ok) {
+      const err: any = new Error((data && (data.message || data.error)) || 'Error listando plantillas');
+      err.status = res.status;
+      throw err;
+    }
+    return Array.isArray(data) ? data : (data?.rows || []);
+  }
+
+  async subirPlantillaDocumentoSolicitud(params: { template: File; nombre?: string }): Promise<any> {
+    const template = params?.template;
+    if (!template) throw new Error('Debe seleccionar una plantilla');
+
+    const fd = new FormData();
+    fd.append('template', template);
+    const nombre = typeof params?.nombre === 'string' ? params.nombre.trim() : '';
+    if (nombre) fd.append('nombre', nombre);
+
+    const res = await fetch(API + '/documentos/plantillas', {
+      method: 'POST',
+      headers: this.getAuthHeadersMultipart(),
+      body: fd
+    });
+    let data: any = null;
+    try {
+      data = await res.json();
+    } catch {}
+    if (!res.ok) {
+      const err: any = new Error((data && (data.message || data.error)) || 'Error subiendo plantilla');
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  }
+
+  async eliminarPlantillaDocumentoSolicitud(id: number): Promise<any> {
+    const tplId = Number(id);
+    if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
+
+    const res = await fetch(API + '/documentos/plantillas/' + encodeURIComponent(String(tplId)), {
+      method: 'DELETE',
+      headers: this.getAuthHeadersMultipart()
+    });
+    let data: any = null;
+    try {
+      data = await res.json();
+    } catch {}
+    if (!res.ok) {
+      const err: any = new Error((data && (data.message || data.error)) || 'Error eliminando plantilla');
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  }
+
+  async generarDocumentoDesdePlantilla(params: {
+    templateId: number;
+    solicitud_id?: number;
+    id_cliente?: number;
+  }): Promise<{ blob: Blob; filename: string | null }> {
+    const templateId = Number(params?.templateId);
+    const solicitud_id = params?.solicitud_id === undefined ? undefined : Number(params?.solicitud_id);
+    const id_cliente = params?.id_cliente === undefined ? undefined : Number(params?.id_cliente);
+    if (!Number.isFinite(templateId) || templateId <= 0) throw new Error('Debe seleccionar una plantilla');
+    const hasSolicitud = Number.isFinite(solicitud_id) && (solicitud_id as number) > 0;
+    const hasCliente = Number.isFinite(id_cliente) && (id_cliente as number) > 0;
+    if (!hasSolicitud && !hasCliente) throw new Error('Debe seleccionar un cliente o una solicitud');
+
+    const body: any = {};
+    if (hasSolicitud) body.solicitud_id = solicitud_id;
+    if (hasCliente) body.id_cliente = id_cliente;
+
+    const res = await fetch(API + '/documentos/plantillas/' + encodeURIComponent(String(templateId)) + '/generar', {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
+      err.status = res.status;
+      throw err;
+    }
+
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename: string | null = null;
+    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
+    if (m && m[1]) {
+      try {
+        filename = decodeURIComponent(m[1]);
+      } catch {
+        filename = m[1];
+      }
+    }
+
+    return { blob, filename };
+  }
+
+  async generarDocumentoSolicitudDesdePlantilla(params: {
+    templateId: number;
+    solicitud_id: number;
+  }): Promise<{ blob: Blob; filename: string | null }> {
+    const templateId = Number(params?.templateId);
+    const solicitud_id = Number(params?.solicitud_id);
+    if (!Number.isFinite(templateId) || templateId <= 0) throw new Error('Debe seleccionar una plantilla');
+    if (!Number.isFinite(solicitud_id) || solicitud_id <= 0) throw new Error('Debe seleccionar una solicitud');
+
+    const res = await fetch(API + '/documentos/plantillas/' + encodeURIComponent(String(templateId)) + '/generar', {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ solicitud_id })
+    });
+    if (!res.ok) {
+      const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
+      err.status = res.status;
+      throw err;
+    }
+
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename: string | null = null;
+    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
+    if (m && m[1]) {
+      try {
+        filename = decodeURIComponent(m[1]);
+      } catch {
+        filename = m[1];
+      }
+    }
+
+    return { blob, filename };
+  }
 }

@@ -19,6 +19,7 @@ import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
 })
 export class ReactivosComponent implements OnInit {
   @ViewChild('docTemplateInput') private docTemplateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('tplDocTemplateInput') private tplDocTemplateInput?: ElementRef<HTMLInputElement>;
 
   public get esAuxiliar(): boolean {
     const user = authUser();
@@ -136,6 +137,21 @@ export class ReactivosComponent implements OnInit {
   docBusqueda: string = '';
   docResultados: any[] = [];
   docReactivoSeleccionado: any = null;
+
+  tplDocPlantillas: any[] = [];
+  tplDocPlantillaId: number | null = null;
+  tplDocNombrePlantilla: string = '';
+  tplDocTemplateFile: File | null = null;
+  tplDocMsg: string = '';
+  tplDocLoading: boolean = false;
+  tplDocListLoading: boolean = false;
+  tplDocUploadLoading: boolean = false;
+  tplDocDeleteLoading = new Set<number>();
+
+  tplDocFiltroTipo: string = 'todos';
+  tplDocBusqueda: string = '';
+  tplDocResultados: any[] = [];
+  tplDocReactivoSeleccionado: any = null;
 
   // Reactivo form
   lote = '';
@@ -287,6 +303,19 @@ reactivoErrors: { [key: string]: string } = {};
       this.docReactivoSeleccionado = null;
       await this.cargarReactivosDocumentos();
     }
+    if (this.formularioActivo === 'documentos-plantilla') {
+      this.tplDocNombrePlantilla = '';
+      this.tplDocTemplateFile = null;
+      this.tplDocMsg = '';
+      this.tplDocLoading = false;
+      this.tplDocFiltroTipo = 'todos';
+      this.tplDocBusqueda = '';
+      this.tplDocResultados = [];
+      this.tplDocReactivoSeleccionado = null;
+      this.tplDocPlantillaId = null;
+      await this.cargarReactivosDocumentos();
+      await this.cargarPlantillasDocumentoReactivo();
+    }
   }
 
   onDocTemplateSelected(event: any) {
@@ -400,6 +429,180 @@ reactivoErrors: { [key: string]: string } = {};
     this.docLote = '';
     this.docBusqueda = '';
     this.docResultados = [];
+  }
+
+  onTplDocTemplateSelected(event: any) {
+    try {
+      const f = event?.target?.files?.[0] || null;
+      this.tplDocTemplateFile = f;
+      this.tplDocMsg = '';
+      if (f && !this.tplDocNombrePlantilla) {
+        const name = String(f.name || '').replace(/\.(xlsx|docx)$/i, '').trim();
+        this.tplDocNombrePlantilla = name;
+      }
+    } catch {
+      this.tplDocTemplateFile = null;
+    }
+  }
+
+  async cargarPlantillasDocumentoReactivo(): Promise<void> {
+    if (this.tplDocListLoading) return;
+    this.tplDocListLoading = true;
+    try {
+      const data = await reactivosService.listarPlantillasDocumentoReactivo();
+      this.tplDocPlantillas = Array.isArray(data) ? data : [];
+      if (this.tplDocPlantillas.length && !this.tplDocPlantillaId) {
+        const firstId = Number(this.tplDocPlantillas[0]?.id);
+        this.tplDocPlantillaId = Number.isFinite(firstId) ? firstId : null;
+      }
+    } catch (e: any) {
+      this.tplDocMsg = e?.message || 'No se pudieron cargar las plantillas';
+      this.snack.error(this.tplDocMsg);
+      this.tplDocPlantillas = [];
+    } finally {
+      this.tplDocListLoading = false;
+    }
+  }
+
+  async subirPlantillaDocumentoReactivo(): Promise<void> {
+    if (this.tplDocUploadLoading) return;
+    if (!this.tplDocTemplateFile) {
+      this.tplDocMsg = 'Selecciona una plantilla .xlsx o .docx';
+      this.snack.warn(this.tplDocMsg);
+      return;
+    }
+    this.tplDocUploadLoading = true;
+    this.tplDocMsg = '';
+    try {
+      const created = await reactivosService.subirPlantillaDocumentoReactivo({
+        nombre: this.tplDocNombrePlantilla || undefined,
+        template: this.tplDocTemplateFile
+      });
+      await this.cargarPlantillasDocumentoReactivo();
+      const newId = Number(created?.id);
+      if (Number.isFinite(newId) && newId > 0) this.tplDocPlantillaId = newId;
+      this.tplDocTemplateFile = null;
+      try {
+        const el = this.tplDocTemplateInput?.nativeElement;
+        if (el) el.value = '';
+      } catch {}
+      this.tplDocMsg = 'Plantilla guardada';
+      this.snack.success(this.tplDocMsg);
+    } catch (e: any) {
+      this.tplDocMsg = e?.message || 'No se pudo guardar la plantilla';
+      this.snack.error(this.tplDocMsg);
+    } finally {
+      this.tplDocUploadLoading = false;
+    }
+  }
+
+  async eliminarPlantillaDocumentoReactivo(): Promise<void> {
+    const id = Number(this.tplDocPlantillaId);
+    if (!Number.isFinite(id) || id <= 0) {
+      this.tplDocMsg = 'Debe seleccionar una plantilla';
+      this.snack.warn(this.tplDocMsg);
+      return;
+    }
+    if (this.tplDocDeleteLoading.has(id)) return;
+    const ok = window.confirm('¿Eliminar esta plantilla?');
+    if (!ok) return;
+    this.tplDocDeleteLoading.add(id);
+    this.tplDocMsg = '';
+    try {
+      await reactivosService.eliminarPlantillaDocumentoReactivo(id);
+      this.tplDocPlantillaId = null;
+      await this.cargarPlantillasDocumentoReactivo();
+      this.tplDocMsg = 'Plantilla eliminada';
+      this.snack.success(this.tplDocMsg);
+    } catch (e: any) {
+      this.tplDocMsg = e?.message || 'No se pudo eliminar la plantilla';
+      this.snack.error(this.tplDocMsg);
+    } finally {
+      this.tplDocDeleteLoading.delete(id);
+    }
+  }
+
+  filtrarReactivosPlantillaDocumentos(): void {
+    const q = (this.tplDocBusqueda || '').toLowerCase().trim();
+    if (!q) {
+      this.tplDocResultados = [];
+      return;
+    }
+    this.tplDocResultados = this.reactivosDocumentos.filter(r => {
+      const lote = (r.lote || '').toLowerCase();
+      const codigo = (r.codigo || '').toLowerCase();
+      const nombre = (r.nombre || '').toLowerCase();
+      const cas = (r.cas || '').toLowerCase();
+
+      if (this.tplDocFiltroTipo === 'todos') {
+        return lote.includes(q) || codigo.includes(q) || nombre.includes(q) || cas.includes(q);
+      } else if (this.tplDocFiltroTipo === 'codigo') {
+        return codigo.includes(q);
+      } else if (this.tplDocFiltroTipo === 'nombre') {
+        return nombre.includes(q);
+      } else if (this.tplDocFiltroTipo === 'lote') {
+        return lote.includes(q);
+      } else if (this.tplDocFiltroTipo === 'cas') {
+        return cas.includes(q);
+      }
+      return false;
+    });
+  }
+
+  seleccionarReactivoPlantillaDocumento(item: any): void {
+    this.tplDocReactivoSeleccionado = item;
+    this.tplDocResultados = [];
+    this.tplDocBusqueda = '';
+  }
+
+  limpiarSeleccionPlantillaDocumento(): void {
+    this.tplDocReactivoSeleccionado = null;
+    this.tplDocBusqueda = '';
+    this.tplDocResultados = [];
+  }
+
+  async generarDocumentoReactivoDesdePlantilla(): Promise<void> {
+    if (this.tplDocLoading) return;
+    const id = Number(this.tplDocPlantillaId);
+    if (!Number.isFinite(id) || id <= 0) {
+      this.tplDocMsg = 'Debe seleccionar una plantilla';
+      this.snack.warn(this.tplDocMsg);
+      return;
+    }
+
+    const codigo = String(this.tplDocReactivoSeleccionado?.codigo || '').trim();
+    const lote = String(this.tplDocReactivoSeleccionado?.lote || '').trim();
+    if (!codigo && !lote) {
+      this.tplDocMsg = 'Debe seleccionar un reactivo';
+      this.snack.warn(this.tplDocMsg);
+      return;
+    }
+
+    this.tplDocLoading = true;
+    this.tplDocMsg = '';
+    try {
+      const { blob, filename } = await reactivosService.generarDocumentoReactivoDesdePlantilla({
+        templateId: id,
+        codigo,
+        lote: lote || undefined
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'documento_reactivo';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.tplDocMsg = 'Documento generado';
+      this.snack.success(this.tplDocMsg);
+      this.limpiarSeleccionPlantillaDocumento();
+    } catch (e: any) {
+      this.tplDocMsg = e?.message || 'No se pudo generar el documento';
+      this.snack.error(this.tplDocMsg);
+    } finally {
+      this.tplDocLoading = false;
+    }
   }
 
   async cargarReactivosConsumo() {

@@ -171,6 +171,88 @@ export const equiposService = {
     return { blob, filename };
   },
 
+  async listarPlantillasDocumentoEquipo(): Promise<any[]> {
+    const res = await fetch(`${API}/documentos/plantillas`, {
+      method: 'GET',
+      headers: {
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      }
+    });
+    let data: any = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok) throw new Error((data && (data.message || data.error)) || 'Error listando plantillas');
+    return Array.isArray(data) ? data : (data?.rows || []);
+  },
+
+  async subirPlantillaDocumentoEquipo(params: { template: File; nombre?: string }): Promise<any> {
+    const template = params?.template;
+    if (!template) throw new Error('Debe seleccionar una plantilla');
+
+    const fd = new FormData();
+    fd.append('template', template);
+    const nombre = typeof params?.nombre === 'string' ? params.nombre.trim() : '';
+    if (nombre) fd.append('nombre', nombre);
+
+    const res = await fetch(`${API}/documentos/plantillas`, {
+      method: 'POST',
+      headers: {
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      },
+      body: fd
+    });
+    let data: any = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok) throw new Error((data && (data.message || data.error)) || 'Error subiendo plantilla');
+    return data;
+  },
+
+  async eliminarPlantillaDocumentoEquipo(id: number): Promise<any> {
+    const tplId = Number(id);
+    if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
+    const res = await fetch(`${API}/documentos/plantillas/${tplId}`, {
+      method: 'DELETE',
+      headers: {
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      }
+    });
+    let data: any = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok) throw new Error((data && (data.message || data.error)) || 'Error eliminando plantilla');
+    return data;
+  },
+
+  async generarDocumentoEquipoDesdePlantilla(params: { id: number; codigo: string }): Promise<{ blob: Blob; filename: string | null }> {
+    const tplId = Number(params?.id);
+    const codigo = String(params?.codigo ?? '').trim();
+    if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
+    if (!codigo) throw new Error('Debe seleccionar un equipo');
+
+    const res = await fetch(`${API}/documentos/plantillas/${tplId}/generar`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+      },
+      body: JSON.stringify({ codigo })
+    });
+    if (!res.ok) {
+      const errBody: any = await res.json().catch(() => ({}));
+      const err: any = new Error(errBody?.message || 'Error generando documento');
+      err.status = res.status;
+      throw err;
+    }
+
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename: string | null = null;
+    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
+    if (m && m[1]) {
+      try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
+    }
+
+    return { blob, filename };
+  },
+
   // ✅ NUEVO: Obtener fichas técnicas
   async listarFichasTecnicas() {
     const res = await fetch(`${API}/fichas-tecnicas`, {

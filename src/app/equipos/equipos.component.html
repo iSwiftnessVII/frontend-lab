@@ -26,95 +26,160 @@
       <span>Registrar Intervalo de Equipo</span>
     </div>
 
-    <div class="action-card" (click)="toggleFormulario('equipo-documentos')" [class.active]="formularioActivo === 'equipo-documentos'">
-      <i class="fas fa-file-alt"></i>
-      <span>Generar Documento Equipo</span>
+    <div class="action-card" (click)="toggleFormulario('equipo-documentos-plantilla')" [class.active]="formularioActivo === 'equipo-documentos-plantilla'">
+      <i class="fas fa-layer-group"></i>
+      <span>Generador por Plantilla</span>
     </div>
   </div>
 
-  <div *ngIf="formularioActivo === 'equipo-documentos' && !esAuxiliar" class="form-section">
-    <h2>Generación de documentos (Equipos)</h2>
+  <div *ngIf="formularioActivo === 'equipo-documentos-plantilla' && !esAuxiliar" class="form-section">
+    <h2>Generación de documentos por plantilla (Equipos)</h2>
     <section>
       <div class="form-grid">
-        <div class="full-row" style="position: relative;">
+        <div class="form-field full-row search-section tpl-doc-equipos" style="position: relative; z-index: 1001;">
           <label>Buscar y Seleccionar Equipo: *</label>
 
-          <div *ngIf="!equipoDocSeleccionado" class="campo-combinado">
-            <select
-              class="select-filtro"
-              [(ngModel)]="equipoDocFiltroTipo"
-              name="equipoDocFiltroTipo"
-              (change)="filtrarEquiposDocumentos()"
+          <div class="search-row">
+            <div class="search-control">
+              <ng-container *ngIf="!tplEquipoDocSeleccionado; else tplEquipoSeleccionadoTpl">
+                <div class="campo-combinado">
+                  <select
+                    name="tplEquipoDocFiltroTipo"
+                    [(ngModel)]="tplEquipoDocFiltroTipo"
+                    (change)="filtrarEquiposPlantillaDocumentos()"
+                    class="select-filtro"
+                  >
+                    <option *ngFor="let opcion of opcionesFiltroDocumentos" [value]="opcion.valor">
+                      {{ opcion.texto }}
+                    </option>
+                  </select>
+                  <input
+                    type="text"
+                    name="tplEquipoDocBusqueda"
+                    [(ngModel)]="tplEquipoDocBusqueda"
+                    (input)="filtrarEquiposPlantillaDocumentos()"
+                    class="input-combinado"
+                    placeholder="Buscar equipo..."
+                    autocomplete="off"
+                  />
+                </div>
+
+                <div *ngIf="tplEquipoDocBusqueda.trim() && tplEquipoDocResultados.length > 0" class="lista-resultados">
+                  <div
+                    *ngFor="let equipo of tplEquipoDocResultados"
+                    class="resultado-item"
+                    (click)="seleccionarEquipoPlantillaDocumento(equipo)"
+                  >
+                    <div class="resultado-header">
+                      <span class="codigo">{{ equipo.codigo_identificacion }}</span>
+                      <span class="nombre">{{ equipo.nombre || '—' }}</span>
+                    </div>
+                    <div class="info-adicional">
+                      <span><i class="fas fa-tag"></i> {{ equipo.marca || '—' }}</span>
+                      <span><i class="fas fa-cube"></i> {{ equipo.modelo || '—' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div *ngIf="tplEquipoDocBusqueda.trim() && tplEquipoDocResultados.length === 0" class="lista-resultados">
+                  <div class="sin-resultados">
+                    <i class="fas fa-search"></i>
+                    <span>No se encontraron resultados</span>
+                  </div>
+                </div>
+              </ng-container>
+
+              <ng-template #tplEquipoSeleccionadoTpl>
+                <div class="reactivo-seleccionado">
+                  <div class="seleccionado-info">
+                    <div class="seleccionado-content">
+                      <div class="seleccionado-header">
+                        <i class="fas fa-check-circle"></i>
+                        <strong>Equipo Seleccionado</strong>
+                      </div>
+                      <span class="codigo-nombre">
+                        {{ tplEquipoDocSeleccionado.codigo_identificacion }} — {{ tplEquipoDocSeleccionado.nombre || '—' }}
+                      </span>
+                      <div class="detalles-seleccionado">
+                        <span><i class="fas fa-tag"></i> {{ tplEquipoDocSeleccionado.marca || '—' }}</span>
+                        <span><i class="fas fa-cube"></i> {{ tplEquipoDocSeleccionado.modelo || '—' }}</span>
+                      </div>
+                    </div>
+                    <button type="button" class="btn-limpiar" (click)="limpiarSeleccionEquipoPlantillaDocumento()" title="Cambiar equipo">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+
+            <button
+              class="btn-compact"
+              type="button"
+              (click)="generarDocumentoEquipoDesdePlantilla()"
+              [disabled]="tplEquipoDocLoading || !tplEquipoDocSeleccionado || !tplEquipoDocPlantillaId"
             >
-              <option *ngFor="let opcion of opcionesFiltroDocumentos" [value]="opcion.valor">
-                {{ opcion.texto }}
-              </option>
-            </select>
-            <input
-              type="text"
-              name="equipoDocBusqueda"
-              [(ngModel)]="equipoDocBusqueda"
-              (input)="filtrarEquiposDocumentos()"
-              (focus)="equipoDocMostrarResultados = true"
-              (blur)="onEquipoDocFocusOut()"
-              class="input-combinado"
-              placeholder="Buscar equipo..."
-              autocomplete="off"
-            />
-          </div>
-
-          <div *ngIf="equipoDocMostrarResultados && equipoDocBusqueda.trim()" class="lista-resultados">
-            <div *ngIf="equipoDocResultados.length === 0" class="sin-resultados">
-              <i class="fas fa-search"></i>
-              <span>No se encontraron equipos</span>
-              <small>Intenta con otros términos de búsqueda</small>
-            </div>
-
-            <div
-              *ngFor="let equipo of equipoDocResultados"
-              class="resultado-item"
-              (mousedown)="seleccionarEquipoDocumento(equipo)"
-            >
-              <div class="resultado-header">
-                <strong class="codigo">{{ equipo.codigo_identificacion }}</strong>
-                <span class="nombre">{{ equipo.nombre }}</span>
-              </div>
-              <div class="resultado-detalles">
-                <small *ngIf="equipo.marca">Marca: {{ equipo.marca }}</small>
-                <small *ngIf="equipo.modelo">Modelo: {{ equipo.modelo }}</small>
-              </div>
-            </div>
-          </div>
-
-          <div *ngIf="equipoDocSeleccionado" class="seleccionado-info">
-            <div class="seleccionado-texto">
-              <strong>Seleccionado:</strong>
-              <span>{{ equipoDocSeleccionado.codigo_identificacion }} - {{ equipoDocSeleccionado.nombre }}</span>
-            </div>
-            <button type="button" class="btn-limpiar" (click)="limpiarSeleccionEquipoDocumento()" title="Limpiar selección">
-              <i class="fas fa-times"></i>
+              {{ tplEquipoDocLoading ? 'Generando…' : 'Generar y descargar' }}
             </button>
           </div>
         </div>
 
+        <div class="form-field full-row">
+          <label>Plantilla guardada: *</label>
+          <div class="field-with-actions">
+            <select
+              name="tplEquipoDocPlantillaId"
+              [(ngModel)]="tplEquipoDocPlantillaId"
+              class="select-plantilla"
+              [disabled]="tplEquipoDocListLoading()"
+            >
+              <option [ngValue]="null" disabled>
+                {{
+                  tplEquipoDocListLoading()
+                    ? 'Cargando plantillas…'
+                    : (tplEquipoDocPlantillas().length ? 'Seleccione una plantilla' : 'No hay plantillas')
+                }}
+              </option>
+              <option *ngFor="let t of tplEquipoDocPlantillas()" [ngValue]="t.id">
+                {{ t.nombre || t.nombre_archivo || ('Plantilla #' + t.id) }}
+              </option>
+            </select>
+            <div class="field-actions">
+              <button
+                type="button"
+                class="btn-compact"
+                (click)="eliminarPlantillaDocumentoEquipo()"
+                [disabled]="tplEquipoDocListLoading() || !tplEquipoDocPlantillaId || tplEquipoDocDeleteLoading.has(tplEquipoDocPlantillaId!)"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="form-field">
-          <label for="equipoDocTemplate">Plantilla (.xlsx o .docx): *</label>
-          <input
-            #equipoDocTemplateInput
-            id="equipoDocTemplate"
-            type="file"
-            accept=".xlsx,.docx"
-            (change)="onEquipoDocTemplateSelected($event)"
-          />
+          <label for="tplEquipoDocNombre">Nombre de plantilla</label>
+          <input id="tplEquipoDocNombre" name="tplEquipoDocNombre" [(ngModel)]="tplEquipoDocNombrePlantilla" placeholder="Ej: Hoja de vida" />
         </div>
 
-        <div class="actions">
-          <button class="btn-compact" type="button" (click)="generarDocumentoEquipo()" [disabled]="equipoDocLoading">
-            {{ equipoDocLoading ? 'Generando…' : 'Generar y descargar' }}
-          </button>
+        <div class="form-field">
+          <label for="tplEquipoDocTemplate">Subir plantilla (.xlsx o .docx)</label>
+          <div class="field-with-actions">
+            <input
+              #tplEquipoDocTemplateInput
+              id="tplEquipoDocTemplate"
+              type="file"
+              accept=".xlsx,.docx"
+              class="file-input"
+              (change)="onTplEquipoDocTemplateSelected($event)"
+            />
+            <button class="btn-compact" type="button" (click)="subirPlantillaDocumentoEquipo()" [disabled]="tplEquipoDocUploadLoading">
+              {{ tplEquipoDocUploadLoading ? 'Guardando…' : 'Guardar plantilla' }}
+            </button>
+          </div>
         </div>
 
-        <small *ngIf="equipoDocMsg" class="error-message">{{ equipoDocMsg }}</small>
+        <small *ngIf="tplEquipoDocMsg" class="error-message">{{ tplEquipoDocMsg }}</small>
       </div>
     </section>
   </div>
