@@ -212,7 +212,7 @@
   border-radius: 0 0 4px 4px;
   max-height: 300px;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 850;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
@@ -385,7 +385,7 @@
   border: 1px solid var(--border-gray);
   border-radius: 0 0 8px 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 1000;
+  z-index: 850;
   margin-top: 4px;
 }
 
