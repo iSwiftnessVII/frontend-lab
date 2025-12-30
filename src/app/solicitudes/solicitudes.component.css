@@ -947,7 +947,7 @@ div[ngIf] {
 
 .tpl-doc-solicitudes {
   position: relative;
-  z-index: 100050;
+  z-index: 800;
 }
 
 .tpl-doc-solicitudes .campo-combinado {
