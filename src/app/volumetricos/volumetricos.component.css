@@ -583,7 +583,7 @@ div[ngIf] {
   border-radius: 0 0 4px 4px;
   max-height: 300px;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 850;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
