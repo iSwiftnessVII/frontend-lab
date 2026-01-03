@@ -18,7 +18,6 @@ import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
   imports: [CommonModule, FormsModule, RouterModule, NumbersOnlyDirective, LettersOnlyDirective, AlphaNumericDirective],
 })
 export class ReactivosComponent implements OnInit {
-  @ViewChild('docTemplateInput') private docTemplateInput?: ElementRef<HTMLInputElement>;
   @ViewChild('tplDocTemplateInput') private tplDocTemplateInput?: ElementRef<HTMLInputElement>;
 
   public get esAuxiliar(): boolean {
@@ -126,17 +125,7 @@ export class ReactivosComponent implements OnInit {
   reactivoCoaFile: File | null = null;
 
   // Generación de documentos (plantillas)
-  docCodigo = '';
-  docLote = '';
-  docTemplateFile: File | null = null;
-  docMsg = '';
-  docLoading = false;
-  // Selector de reactivo para documentos (similar a consumo)
   reactivosDocumentos: any[] = [];
-  docFiltroTipo: string = 'todos';
-  docBusqueda: string = '';
-  docResultados: any[] = [];
-  docReactivoSeleccionado: any = null;
 
   tplDocPlantillas: any[] = [];
   tplDocPlantillaId: number | null = null;
@@ -291,18 +280,6 @@ reactivoErrors: { [key: string]: string } = {};
 
       await this.cargarReactivosConsumo();
     }
-    if (this.formularioActivo === 'documentos') {
-      this.docCodigo = '';
-      this.docLote = '';
-      this.docTemplateFile = null;
-      this.docMsg = '';
-      this.docLoading = false;
-      this.docFiltroTipo = 'todos';
-      this.docBusqueda = '';
-      this.docResultados = [];
-      this.docReactivoSeleccionado = null;
-      await this.cargarReactivosDocumentos();
-    }
     if (this.formularioActivo === 'documentos-plantilla') {
       this.tplDocNombrePlantilla = '';
       this.tplDocTemplateFile = null;
@@ -318,65 +295,6 @@ reactivoErrors: { [key: string]: string } = {};
     }
   }
 
-  onDocTemplateSelected(event: any) {
-    try {
-      const f = event?.target?.files?.[0] || null;
-      this.docTemplateFile = f;
-      this.docMsg = '';
-    } catch {
-      this.docTemplateFile = null;
-    }
-  }
-
-  async generarDocumentoReactivo() {
-    if (this.docLoading) return;
-    const codigo = String(this.docCodigo || this.docReactivoSeleccionado?.codigo || '').trim();
-    const lote = String(this.docLote || this.docReactivoSeleccionado?.lote || '').trim();
-    if (!codigo && !lote) {
-      this.docMsg = 'Debe seleccionar un reactivo';
-      this.snack.warn(this.docMsg);
-      return;
-    }
-    if (!this.docTemplateFile) {
-      this.docMsg = 'Selecciona una plantilla .xlsx o .docx';
-      this.snack.warn(this.docMsg);
-      return;
-    }
-
-    this.docLoading = true;
-    this.docMsg = '';
-    try {
-      const originalTemplateName = this.docTemplateFile?.name || null;
-      const { blob, filename } = await reactivosService.generarDocumentoReactivo({
-        codigo,
-        lote: lote || undefined,
-        template: this.docTemplateFile
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = originalTemplateName || filename || 'documento_reactivo';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      this.docMsg = 'Documento generado';
-      this.snack.success('Documento generado');
-      this.limpiarSeleccionDocumento();
-      this.docFiltroTipo = 'todos';
-      this.docTemplateFile = null;
-      try {
-        const el = this.docTemplateInput?.nativeElement;
-        if (el) el.value = '';
-      } catch {}
-    } catch (err: any) {
-      this.docMsg = err?.message || 'No se pudo generar el documento';
-      this.snack.error(this.docMsg);
-    } finally {
-      this.docLoading = false;
-    }
-  }
-
   async cargarReactivosDocumentos(): Promise<void> {
     try {
       const resp = await reactivosService.listarReactivos('', 0, 0);
@@ -386,49 +304,6 @@ reactivoErrors: { [key: string]: string } = {};
       console.error('Error cargando reactivos para documentos', e);
       this.reactivosDocumentos = [];
     }
-  }
-
-  filtrarReactivosDocumentos(): void {
-    const q = (this.docBusqueda || '').toLowerCase().trim();
-    if (!q) {
-      this.docResultados = [];
-      return;
-    }
-    this.docResultados = this.reactivosDocumentos.filter(r => {
-      const lote = (r.lote || '').toLowerCase();
-      const codigo = (r.codigo || '').toLowerCase();
-      const nombre = (r.nombre || '').toLowerCase();
-      const cas = (r.cas || '').toLowerCase();
-
-      if (this.docFiltroTipo === 'todos') {
-        return lote.includes(q) || codigo.includes(q) || nombre.includes(q) || cas.includes(q);
-      } else if (this.docFiltroTipo === 'codigo') {
-        return codigo.includes(q);
-      } else if (this.docFiltroTipo === 'nombre') {
-        return nombre.includes(q);
-      } else if (this.docFiltroTipo === 'lote') {
-        return lote.includes(q);
-      } else if (this.docFiltroTipo === 'cas') {
-        return cas.includes(q);
-      }
-      return false;
-    });
-  }
-
-  seleccionarReactivoDocumento(item: any): void {
-    this.docReactivoSeleccionado = item;
-    this.docCodigo = String(item?.codigo ?? '').trim();
-    this.docLote = String(item?.lote ?? '').trim();
-    this.docResultados = [];
-    this.docBusqueda = '';
-  }
-
-  limpiarSeleccionDocumento(): void {
-    this.docReactivoSeleccionado = null;
-    this.docCodigo = '';
-    this.docLote = '';
-    this.docBusqueda = '';
-    this.docResultados = [];
   }
 
   onTplDocTemplateSelected(event: any) {

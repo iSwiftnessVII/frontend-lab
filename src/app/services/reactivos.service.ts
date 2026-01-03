@@ -345,40 +345,6 @@ export const reactivosService = {
     if (!res.ok) throw new Error((data && data.error) || 'Error al cancelar suscripción');
     return data;
   },
-  async generarDocumentoReactivo(params: { codigo: string; lote?: string; template: File }): Promise<{ blob: Blob; filename: string | null }> {
-    const codigo = String(params?.codigo ?? '').trim();
-    const lote = String(params?.lote ?? '').trim();
-    const template = params?.template;
-    if (!codigo && !lote) throw new Error('Debe indicar código (y opcionalmente lote)');
-    if (!template) throw new Error('Debe seleccionar una plantilla');
-
-    const fd = new FormData();
-    fd.append('template', template);
-    if (codigo) fd.append('codigo', codigo);
-    if (lote) fd.append('lote', lote);
-
-    const res = await fetch(`${API_BASE}/documentos/generar`, {
-      method: 'POST',
-      headers: { ...authHeaders() },
-      body: fd
-    });
-    if (!res.ok) {
-      const err: any = new Error(await readApiError(res, 'Error generando documento'));
-      err.status = res.status;
-      throw err;
-    }
-
-    const blob = await res.blob();
-    const cd = res.headers.get('content-disposition') || '';
-    let filename: string | null = null;
-    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
-    if (m && m[1]) {
-      try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
-    }
-
-    return { blob, filename };
-  }
-  ,
   async listarPlantillasDocumentoReactivo(): Promise<any[]> {
     if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
     const res = await fetchFirstNon404(buildTemplateUrls('/documentos/plantillas'), {

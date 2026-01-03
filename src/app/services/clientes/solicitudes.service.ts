@@ -461,70 +461,6 @@ export class SolicitudesService {
     return data;
   }
 
-  async generarDocumentoCliente(params: { id_cliente: number; template: File }): Promise<{ blob: Blob; filename: string | null }> {
-    const id_cliente = Number(params?.id_cliente);
-    const template = params?.template;
-    if (!Number.isFinite(id_cliente) || id_cliente <= 0) throw new Error('Debe seleccionar un cliente');
-    if (!template) throw new Error('Debe seleccionar una plantilla');
-
-    const fd = new FormData();
-    fd.append('template', template);
-    fd.append('id_cliente', String(id_cliente));
-
-    const res = await fetch(API + '/clientes/documentos/generar', {
-      method: 'POST',
-      headers: this.getAuthHeadersMultipart(),
-      body: fd
-    });
-    if (!res.ok) {
-      const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
-      err.status = res.status;
-      throw err;
-    }
-
-    const blob = await res.blob();
-    const cd = res.headers.get('content-disposition') || '';
-    let filename: string | null = null;
-    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
-    if (m && m[1]) {
-      try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
-    }
-
-    return { blob, filename };
-  }
-
-  async generarDocumentoSolicitud(params: { solicitud_id: number; template: File }): Promise<{ blob: Blob; filename: string | null }> {
-    const solicitud_id = Number(params?.solicitud_id);
-    const template = params?.template;
-    if (!Number.isFinite(solicitud_id) || solicitud_id <= 0) throw new Error('Debe seleccionar una solicitud');
-    if (!template) throw new Error('Debe seleccionar una plantilla');
-
-    const fd = new FormData();
-    fd.append('template', template);
-    fd.append('solicitud_id', String(solicitud_id));
-
-    const res = await fetch(API + '/documentos/generar', {
-      method: 'POST',
-      headers: this.getAuthHeadersMultipart(),
-      body: fd
-    });
-    if (!res.ok) {
-      const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
-      err.status = res.status;
-      throw err;
-    }
-
-    const blob = await res.blob();
-    const cd = res.headers.get('content-disposition') || '';
-    let filename: string | null = null;
-    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
-    if (m && m[1]) {
-      try { filename = decodeURIComponent(m[1]); } catch { filename = m[1]; }
-    }
-
-    return { blob, filename };
-  }
-
   async listarPlantillasDocumentoSolicitud(): Promise<any[]> {
     if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
     const res = await fetch(API_DOC_PLANTILLAS_BASE, {
@@ -624,47 +560,6 @@ export class SolicitudesService {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify(body)
-    });
-    if (!res.ok) {
-      if (res.status === 404) {
-        tplDocEndpointMissing = true;
-        const err: any = new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
-        err.status = res.status;
-        throw err;
-      }
-      const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
-      err.status = res.status;
-      throw err;
-    }
-
-    const blob = await res.blob();
-    const cd = res.headers.get('content-disposition') || '';
-    let filename: string | null = null;
-    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
-    if (m && m[1]) {
-      try {
-        filename = decodeURIComponent(m[1]);
-      } catch {
-        filename = m[1];
-      }
-    }
-
-    return { blob, filename };
-  }
-
-  async generarDocumentoSolicitudDesdePlantilla(params: {
-    templateId: number;
-    solicitud_id: number;
-  }): Promise<{ blob: Blob; filename: string | null }> {
-    const templateId = Number(params?.templateId);
-    const solicitud_id = Number(params?.solicitud_id);
-    if (!Number.isFinite(templateId) || templateId <= 0) throw new Error('Debe seleccionar una plantilla');
-    if (!Number.isFinite(solicitud_id) || solicitud_id <= 0) throw new Error('Debe seleccionar una solicitud');
-
-    const res = await fetch(API_DOC_PLANTILLAS_BASE + '/' + encodeURIComponent(String(templateId)) + '/generar', {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify({ solicitud_id })
     });
     if (!res.ok) {
       if (res.status === 404) {

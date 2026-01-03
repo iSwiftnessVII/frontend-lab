@@ -50,27 +50,11 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   resultadoErrors: { [key: string]: string } = {};
   encuestaErrors: { [key: string]: string } = {};
 
-  @ViewChild('clienteDocTemplateInput') private clienteDocTemplateInput?: ElementRef<HTMLInputElement>;
-  @ViewChild('solicitudDocTemplateInput') private solicitudDocTemplateInput?: ElementRef<HTMLInputElement>;
   @ViewChild('tplSolicitudDocTemplateInput') private tplSolicitudDocTemplateInput?: ElementRef<HTMLInputElement>;
 
   clientesDocumentos: any[] = [];
-  clienteDocFiltroTipo: string = 'todos';
-  clienteDocBusqueda: string = '';
-  clienteDocResultados: any[] = [];
-  clienteDocSeleccionado: any = null;
-  clienteDocTemplateFile: File | null = null;
-  clienteDocMsg: string = '';
-  clienteDocLoading: boolean = false;
 
   solicitudesDocumentos: any[] = [];
-  solicitudDocFiltroTipo: string = 'todos';
-  solicitudDocBusqueda: string = '';
-  solicitudDocResultados: any[] = [];
-  solicitudDocSeleccionada: any = null;
-  solicitudDocTemplateFile: File | null = null;
-  solicitudDocMsg: string = '';
-  solicitudDocLoading: boolean = false;
 
   tplSolicitudDocFiltroTipo: string = 'todos';
   tplSolicitudDocBusqueda: string = '';
@@ -645,122 +629,6 @@ getTomorrowDate(): string {
     }
   }
 
-  filtrarClientesDocumentos(): void {
-    const q = (this.clienteDocBusqueda || '').toLowerCase().trim();
-    if (!q) {
-      this.clienteDocResultados = [];
-      return;
-    }
-    this.clienteDocResultados = this.clientesDocumentos.filter((c) => {
-      const nombre = (c.nombre_solicitante || '').toLowerCase();
-      const razon = (c.razon_social || '').toLowerCase();
-      const ident = (c.numero_identificacion || '').toLowerCase();
-      const correo = (c.correo_electronico || '').toLowerCase();
-      const numero = String(c.numero ?? '').toLowerCase();
-      const ciudad = (this.resolveCiudad(c) || '').toLowerCase();
-      const departamento = (this.resolveDepartamento(c) || '').toLowerCase();
-
-      if (this.clienteDocFiltroTipo === 'todos') {
-        return (
-          nombre.includes(q) ||
-          razon.includes(q) ||
-          ident.includes(q) ||
-          correo.includes(q) ||
-          numero.includes(q) ||
-          ciudad.includes(q) ||
-          departamento.includes(q)
-        );
-      } else if (this.clienteDocFiltroTipo === 'nombre') {
-        return nombre.includes(q);
-      } else if (this.clienteDocFiltroTipo === 'razon_social') {
-        return razon.includes(q);
-      } else if (this.clienteDocFiltroTipo === 'identificacion') {
-        return ident.includes(q);
-      } else if (this.clienteDocFiltroTipo === 'correo') {
-        return correo.includes(q);
-      } else if (this.clienteDocFiltroTipo === 'numero') {
-        return numero.includes(q);
-      }
-      return false;
-    });
-  }
-
-  seleccionarClienteDocumento(item: any): void {
-    this.clienteDocSeleccionado = item;
-    this.clienteDocResultados = [];
-    this.clienteDocBusqueda = '';
-  }
-
-  limpiarSeleccionClienteDocumento(): void {
-    this.clienteDocSeleccionado = null;
-    this.clienteDocBusqueda = '';
-    this.clienteDocResultados = [];
-    this.clienteDocFiltroTipo = 'todos';
-    this.clienteDocTemplateFile = null;
-    this.clienteDocMsg = '';
-    try {
-      const el = this.clienteDocTemplateInput?.nativeElement;
-      if (el) el.value = '';
-    } catch {}
-  }
-
-  onClienteDocTemplateSelected(event: any): void {
-    try {
-      const f = event?.target?.files?.[0] || null;
-      this.clienteDocTemplateFile = f;
-      this.clienteDocMsg = '';
-    } catch {
-      this.clienteDocTemplateFile = null;
-    }
-  }
-
-  async generarDocumentoCliente(): Promise<void> {
-    if (this.clienteDocLoading) return;
-    const id = Number(this.clienteDocSeleccionado?.id_cliente);
-    if (!Number.isFinite(id) || id <= 0) {
-      this.clienteDocMsg = 'Debe seleccionar un cliente';
-      this.snackbarService.warn(this.clienteDocMsg);
-      return;
-    }
-    if (!this.clienteDocTemplateFile) {
-      this.clienteDocMsg = 'Selecciona una plantilla .xlsx o .docx';
-      this.snackbarService.warn(this.clienteDocMsg);
-      return;
-    }
-
-    this.clienteDocLoading = true;
-    this.clienteDocMsg = '';
-    try {
-      const originalTemplateName = this.clienteDocTemplateFile?.name || null;
-      const { blob, filename } = await this.solicitudesService.generarDocumentoCliente({
-        id_cliente: id,
-        template: this.clienteDocTemplateFile
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = originalTemplateName || filename || 'documento_cliente';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      this.clienteDocMsg = 'Documento generado';
-      this.snackbarService.success('Documento generado');
-      this.limpiarSeleccionClienteDocumento();
-      this.clienteDocFiltroTipo = 'todos';
-      this.clienteDocTemplateFile = null;
-      try {
-        const el = this.clienteDocTemplateInput?.nativeElement;
-        if (el) el.value = '';
-      } catch {}
-    } catch (err: any) {
-      this.clienteDocMsg = err?.message || 'No se pudo generar el documento';
-      this.snackbarService.error(this.clienteDocMsg);
-    } finally {
-      this.clienteDocLoading = false;
-    }
-  }
-
   async cargarSolicitudesDocumentos(): Promise<void> {
     try {
       if (!(this.solicitudes() || []).length) {
@@ -770,119 +638,6 @@ getTomorrowDate(): string {
     } catch (e) {
       console.error('Error cargando solicitudes para documentos', e);
       this.solicitudesDocumentos = [];
-    }
-  }
-
-  filtrarSolicitudesDocumentos(): void {
-    const q = (this.solicitudDocBusqueda || '').toLowerCase().trim();
-    if (!q) {
-      this.solicitudDocResultados = [];
-      return;
-    }
-
-    this.solicitudDocResultados = this.solicitudesDocumentos.filter((s) => {
-      const id = String(s?.solicitud_id ?? s?.id_solicitud ?? '').toLowerCase();
-      const tipo = (s?.tipo_solicitud || '').toLowerCase();
-      const numeroFront = (s?.numero_solicitud_front || '').toLowerCase();
-      const solicitante = (s?.nombre_solicitante || '').toLowerCase();
-      const muestra = (s?.nombre_muestra || '').toLowerCase();
-      const analisis = (s?.analisis_requerido || '').toLowerCase();
-      const lote = (s?.lote_producto || '').toLowerCase();
-
-      if (this.solicitudDocFiltroTipo === 'todos') {
-        return (
-          id.includes(q) ||
-          tipo.includes(q) ||
-          numeroFront.includes(q) ||
-          solicitante.includes(q) ||
-          muestra.includes(q) ||
-          analisis.includes(q) ||
-          lote.includes(q)
-        );
-      } else if (this.solicitudDocFiltroTipo === 'id') {
-        return id.includes(q);
-      } else if (this.solicitudDocFiltroTipo === 'numero_front') {
-        return numeroFront.includes(q);
-      } else if (this.solicitudDocFiltroTipo === 'solicitante') {
-        return solicitante.includes(q);
-      } else if (this.solicitudDocFiltroTipo === 'muestra') {
-        return muestra.includes(q);
-      } else if (this.solicitudDocFiltroTipo === 'analisis') {
-        return analisis.includes(q);
-      } else if (this.solicitudDocFiltroTipo === 'lote') {
-        return lote.includes(q);
-      }
-      return false;
-    });
-  }
-
-  seleccionarSolicitudDocumento(item: any): void {
-    this.solicitudDocSeleccionada = item;
-    this.solicitudDocResultados = [];
-    this.solicitudDocBusqueda = '';
-  }
-
-  limpiarSeleccionSolicitudDocumento(): void {
-    this.solicitudDocSeleccionada = null;
-    this.solicitudDocBusqueda = '';
-    this.solicitudDocResultados = [];
-    this.solicitudDocFiltroTipo = 'todos';
-    this.solicitudDocTemplateFile = null;
-    this.solicitudDocMsg = '';
-    try {
-      const el = this.solicitudDocTemplateInput?.nativeElement;
-      if (el) el.value = '';
-    } catch {}
-  }
-
-  onSolicitudDocTemplateSelected(event: any): void {
-    try {
-      const f = event?.target?.files?.[0] || null;
-      this.solicitudDocTemplateFile = f;
-      this.solicitudDocMsg = '';
-    } catch {
-      this.solicitudDocTemplateFile = null;
-    }
-  }
-
-  async generarDocumentoSolicitud(): Promise<void> {
-    if (this.solicitudDocLoading) return;
-    const id = Number(this.solicitudDocSeleccionada?.solicitud_id ?? this.solicitudDocSeleccionada?.id_solicitud);
-    if (!Number.isFinite(id) || id <= 0) {
-      this.solicitudDocMsg = 'Debe seleccionar una solicitud';
-      this.snackbarService.warn(this.solicitudDocMsg);
-      return;
-    }
-    if (!this.solicitudDocTemplateFile) {
-      this.solicitudDocMsg = 'Selecciona una plantilla .xlsx o .docx';
-      this.snackbarService.warn(this.solicitudDocMsg);
-      return;
-    }
-
-    this.solicitudDocLoading = true;
-    this.solicitudDocMsg = '';
-    try {
-      const originalTemplateName = this.solicitudDocTemplateFile?.name || null;
-      const { blob, filename } = await this.solicitudesService.generarDocumentoSolicitud({
-        solicitud_id: id,
-        template: this.solicitudDocTemplateFile
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = originalTemplateName || filename || 'documento_solicitud';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      this.solicitudDocMsg = 'Documento generado';
-      this.snackbarService.success('Documento generado');
-      this.limpiarSeleccionSolicitudDocumento();
-    } catch (err: any) {
-      this.solicitudDocMsg = err?.message || 'No se pudo generar el documento';
-      this.snackbarService.error(this.solicitudDocMsg);
-    } finally {
-      this.solicitudDocLoading = false;
     }
   }
 
@@ -3217,33 +2972,7 @@ private getValorEncuesta(campo: string): any {
     } else {
       // cerrar cualquiera abierto y abrir el solicitado
       this.formularioActivo = tipo;
-      if (this.formularioActivo === 'cliente-documentos') {
-        this.clienteDocFiltroTipo = 'todos';
-        this.clienteDocBusqueda = '';
-        this.clienteDocResultados = [];
-        this.clienteDocSeleccionado = null;
-        this.clienteDocTemplateFile = null;
-        this.clienteDocMsg = '';
-        this.clienteDocLoading = false;
-        try {
-          const el = this.clienteDocTemplateInput?.nativeElement;
-          if (el) el.value = '';
-        } catch {}
-        await this.cargarClientesDocumentos();
-      } else if (this.formularioActivo === 'solicitud-documentos') {
-        this.solicitudDocFiltroTipo = 'todos';
-        this.solicitudDocBusqueda = '';
-        this.solicitudDocResultados = [];
-        this.solicitudDocSeleccionada = null;
-        this.solicitudDocTemplateFile = null;
-        this.solicitudDocMsg = '';
-        this.solicitudDocLoading = false;
-        try {
-          const el = this.solicitudDocTemplateInput?.nativeElement;
-          if (el) el.value = '';
-        } catch {}
-        await this.cargarSolicitudesDocumentos();
-      } else if (this.formularioActivo === 'solicitud-documentos-plantilla') {
+      if (this.formularioActivo === 'solicitud-documentos-plantilla') {
         this.tplSolicitudDocEntidad = 'solicitud';
         this.tplSolicitudDocFiltroTipo = 'todos';
         this.tplSolicitudDocBusqueda = '';
