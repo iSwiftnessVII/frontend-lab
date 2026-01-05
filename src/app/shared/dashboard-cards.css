@@ -7,19 +7,19 @@
 }
 
 .dashboard-cards .action-card {
-    background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%);
-    border: 3px solid var(--border-gray);
+  background: var(--app-surface, var(--primary-white));
+  border: 3px solid var(--app-border, var(--border-gray));
     border-radius: 20px;
     padding: 1.5rem;
     text-decoration: none;
-    color: var(--text-gray);
+  color: var(--app-muted, var(--text-gray));
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
     text-align: center;
-    box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm, 0 6px 18px rgba(15,23,42,0.06));
     position: relative;
     overflow: hidden;
     backdrop-filter: blur(10px);
@@ -98,4 +98,24 @@
 .dashboard-cards .action-card.active i {
   transform: scale(1.25) rotate(10deg);
   color: var(--primary-blue);
+}
+
+/* Dark mode tweaks: keep hover/active readable on dark surfaces */
+:root[data-theme="dark"] .dashboard-cards .action-card {
+  box-shadow: 0 10px 26px rgba(0,0,0,0.35);
+}
+
+:root[data-theme="dark"] .dashboard-cards .action-card:hover,
+:root[data-theme="dark"] .dashboard-cards .action-card.active {
+  color: var(--app-text-strong, #f1f5f9) !important;
+}
+
+:root[data-theme="dark"] .dashboard-cards .action-card:hover i,
+:root[data-theme="dark"] .dashboard-cards .action-card.active i {
+  color: var(--app-text-strong, #f1f5f9) !important;
+}
+
+:root[data-theme="dark"] .dashboard-cards .action-card:hover span,
+:root[data-theme="dark"] .dashboard-cards .action-card.active span {
+  color: var(--app-text-strong, #f1f5f9) !important;
 }

@@ -543,18 +543,24 @@ export class SolicitudesService {
     templateId: number;
     solicitud_id?: number;
     id_cliente?: number;
+    todos?: boolean;
+    entidad?: 'solicitud' | 'cliente';
   }): Promise<{ blob: Blob; filename: string | null }> {
     const templateId = Number(params?.templateId);
     const solicitud_id = params?.solicitud_id === undefined ? undefined : Number(params?.solicitud_id);
     const id_cliente = params?.id_cliente === undefined ? undefined : Number(params?.id_cliente);
+    const todos = !!params?.todos;
+    const entidad = params?.entidad;
     if (!Number.isFinite(templateId) || templateId <= 0) throw new Error('Debe seleccionar una plantilla');
     const hasSolicitud = Number.isFinite(solicitud_id) && (solicitud_id as number) > 0;
     const hasCliente = Number.isFinite(id_cliente) && (id_cliente as number) > 0;
-    if (!hasSolicitud && !hasCliente) throw new Error('Debe seleccionar un cliente o una solicitud');
+    if (!todos && !hasSolicitud && !hasCliente) throw new Error('Debe seleccionar un cliente o una solicitud');
 
     const body: any = {};
     if (hasSolicitud) body.solicitud_id = solicitud_id;
     if (hasCliente) body.id_cliente = id_cliente;
+    if (todos) body.todos = true;
+    if (entidad) body.entidad = entidad;
 
     const res = await fetch(API_DOC_PLANTILLAS_BASE + '/' + encodeURIComponent(String(templateId)) + '/generar', {
       method: 'POST',

@@ -440,7 +440,7 @@
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 1rem;
 }
 
@@ -449,24 +449,20 @@
   flex-direction: column;
 }
 
+@media (max-width: 900px) {
+  .form-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+  .form-grid { grid-template-columns: 1fr; }
+}
+
 .form-grid textarea {
   grid-column: 1 / -1;
 }
 
 .form-section-title {
   grid-column: 1 / -1;
-}
-
-label {
-  font-weight: 500;
-  margin-bottom: 0.3rem;
-}
-
-input, select, textarea {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1rem;
 }
 
 .actions {

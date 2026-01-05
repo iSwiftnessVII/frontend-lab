@@ -406,20 +406,21 @@ export const reactivosService = {
       throw new Error((data && (data.message || data.error)) || 'Error eliminando plantilla');
     }
   },
-  async generarDocumentoReactivoDesdePlantilla(params: { templateId: number; codigo: string; lote?: string }): Promise<{ blob: Blob; filename: string | null }> {
+  async generarDocumentoReactivoDesdePlantilla(params: { templateId: number; codigo?: string; lote?: string; todos?: boolean }): Promise<{ blob: Blob; filename: string | null }> {
     if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
     const templateId = Number(params?.templateId);
     const codigo = String(params?.codigo ?? '').trim();
     const lote = String(params?.lote ?? '').trim();
+    const todos = !!params?.todos;
     if (!Number.isFinite(templateId) || templateId <= 0) throw new Error('Debe seleccionar una plantilla');
-    if (!codigo && !lote) throw new Error('Debe seleccionar un reactivo');
+    if (!todos && !codigo && !lote) throw new Error('Debe seleccionar un reactivo');
 
     const res = await fetchFirstNon404(
       buildTemplateUrls(`/documentos/plantillas/${encodeURIComponent(String(templateId))}/generar`),
       {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ codigo, lote: lote || undefined })
+      body: JSON.stringify({ codigo, lote: lote || undefined, todos: todos || undefined })
       }
     );
     if (!res.ok) {

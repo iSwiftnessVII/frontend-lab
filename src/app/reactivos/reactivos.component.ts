@@ -141,6 +141,7 @@ export class ReactivosComponent implements OnInit {
   tplDocBusqueda: string = '';
   tplDocResultados: any[] = [];
   tplDocReactivoSeleccionado: any = null;
+  tplDocGenerarTodos: boolean = false;
 
   // Reactivo form
   lote = '';
@@ -436,6 +437,13 @@ reactivoErrors: { [key: string]: string } = {};
     this.tplDocResultados = [];
   }
 
+  onTplDocGenerarTodosChanged(): void {
+    if (this.tplDocGenerarTodos) {
+      this.limpiarSeleccionPlantillaDocumento();
+      this.tplDocMsg = '';
+    }
+  }
+
   async generarDocumentoReactivoDesdePlantilla(): Promise<void> {
     if (this.tplDocLoading) return;
     const id = Number(this.tplDocPlantillaId);
@@ -447,7 +455,7 @@ reactivoErrors: { [key: string]: string } = {};
 
     const codigo = String(this.tplDocReactivoSeleccionado?.codigo || '').trim();
     const lote = String(this.tplDocReactivoSeleccionado?.lote || '').trim();
-    if (!codigo && !lote) {
+    if (!this.tplDocGenerarTodos && !codigo && !lote) {
       this.tplDocMsg = 'Debe seleccionar un reactivo';
       this.snack.warn(this.tplDocMsg);
       return;
@@ -458,8 +466,9 @@ reactivoErrors: { [key: string]: string } = {};
     try {
       const { blob, filename } = await reactivosService.generarDocumentoReactivoDesdePlantilla({
         templateId: id,
-        codigo,
-        lote: lote || undefined
+        codigo: this.tplDocGenerarTodos ? undefined : codigo,
+        lote: this.tplDocGenerarTodos ? undefined : (lote || undefined),
+        todos: this.tplDocGenerarTodos
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

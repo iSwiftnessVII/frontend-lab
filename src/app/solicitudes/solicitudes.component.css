@@ -587,12 +587,20 @@
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 1rem;
 }
 .form-grid > div {
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 900px) {
+  .form-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+  .form-grid { grid-template-columns: 1fr; }
 }
 
 /* Helper to make a field span the full row (all grid columns) */
@@ -643,7 +651,11 @@
 }
 
 .form-field textarea {
-  padding: 0.6rem;
+  padding: 0.8rem;
+  border: 2px solid var(--app-border, var(--border-gray));
+  border-radius: 6px;
+  background: var(--app-surface, var(--primary-white));
+  color: var(--app-text, var(--text-gray));
   min-height: 110px; /* altura razonable para textareas */
   resize: vertical;
 }
@@ -659,16 +671,6 @@
 }
 .form-section-title {
   grid-column: 1 / -1;
-}
-label {
-  font-weight: 500;
-  margin-bottom: 0.3rem;
-}
-input, select, textarea {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1rem;
 }
 .actions,
 .form-actions {

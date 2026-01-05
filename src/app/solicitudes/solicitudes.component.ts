@@ -70,6 +70,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   tplSolicitudDocUploadLoading: boolean = false;
   tplSolicitudDocDeleteLoading: Set<number> = new Set<number>();
   tplSolicitudDocEntidad: 'solicitud' | 'cliente' = 'solicitud';
+  tplSolicitudDocGenerarTodos: boolean = false;
 
   opcionesFiltroSolicitudesTplDocs = [
     { valor: 'todos', texto: 'Todos los campos' },
@@ -735,6 +736,15 @@ getTomorrowDate(): string {
     this.tplSolicitudDocMsg = '';
   }
 
+  onTplSolicitudDocGenerarTodosChanged(): void {
+    if (this.tplSolicitudDocGenerarTodos) {
+      this.tplSolicitudDocBusqueda = '';
+      this.tplSolicitudDocResultados = [];
+      this.tplSolicitudDocSeleccionado = null;
+      this.tplSolicitudDocMsg = '';
+    }
+  }
+
   limpiarSeleccionSolicitudPlantillaDocumento(): void {
     this.tplSolicitudDocFiltroTipo = 'todos';
     this.tplSolicitudDocBusqueda = '';
@@ -862,16 +872,20 @@ getTomorrowDate(): string {
         this.tplSolicitudDocEntidad === 'cliente'
           ? Number(this.tplSolicitudDocSeleccionado?.id_cliente)
           : Number(this.tplSolicitudDocSeleccionado?.id_cliente ?? this.tplSolicitudDocSeleccionado?.cliente_id);
-      if (this.tplSolicitudDocEntidad === 'solicitud') {
-        if (!Number.isFinite(solicitud_id) || (solicitud_id as number) <= 0) throw new Error('Debe seleccionar una solicitud');
-      } else {
-        if (!Number.isFinite(id_cliente) || (id_cliente as number) <= 0) throw new Error('Debe seleccionar un cliente');
+      if (!this.tplSolicitudDocGenerarTodos) {
+        if (this.tplSolicitudDocEntidad === 'solicitud') {
+          if (!Number.isFinite(solicitud_id) || (solicitud_id as number) <= 0) throw new Error('Debe seleccionar una solicitud');
+        } else {
+          if (!Number.isFinite(id_cliente) || (id_cliente as number) <= 0) throw new Error('Debe seleccionar un cliente');
+        }
       }
 
       const { blob, filename } = await this.solicitudesService.generarDocumentoDesdePlantilla({
         templateId,
-        solicitud_id,
-        id_cliente
+        solicitud_id: this.tplSolicitudDocGenerarTodos ? undefined : solicitud_id,
+        id_cliente: this.tplSolicitudDocGenerarTodos ? undefined : id_cliente,
+        todos: this.tplSolicitudDocGenerarTodos,
+        entidad: this.tplSolicitudDocEntidad
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

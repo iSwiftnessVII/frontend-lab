@@ -67,17 +67,17 @@
     align-items: center;
     justify-content: center;
     padding: 5rem 2rem;
-    background: linear-gradient(135deg, var(--primary-white) 0%, var(--light-gray) 100%);
+    background: var(--app-surface, var(--primary-white));
     border-radius: 20px;
     box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-gray);
+    border: 1px solid var(--app-border, var(--border-gray));
     backdrop-filter: blur(10px);
 }
 
 .spinner {
     width: 60px;
     height: 60px;
-    border: 5px solid var(--border-gray);
+    border: 5px solid var(--app-border, var(--border-gray));
     border-left: 5px solid var(--primary-turquoise);
     border-radius: 50%;
     animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
@@ -91,7 +91,7 @@
 }
 
 .loading-container p {
-    color: var(--text-gray);
+    color: var(--app-text, var(--text-gray));
     font-size: 1.15rem;
     font-weight: 500;
     letter-spacing: 0.3px;
@@ -114,7 +114,7 @@
 .submetrics-title {
     font-size: 1.3rem;
     font-weight: 600;
-    color: var(--primary-blue);
+    color: var(--app-text-strong, var(--primary-blue));
     margin: 0 0 1rem 0;
     display: flex;
     align-items: center;
@@ -128,11 +128,11 @@
 }
 
 .submetric-card {
-    background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%);
+    background: var(--app-surface, var(--primary-white));
     border-radius: 16px;
     padding: 1rem;
     box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-gray);
+    border: 1px solid var(--app-border, var(--border-gray));
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -155,7 +155,7 @@
     border-radius: 14px;
     display: grid;
     place-items: center;
-    color: var(--primary-white);
+    color: var(--app-text-strong, var(--primary-white));
     flex: 0 0 auto;
 }
 
@@ -191,24 +191,24 @@
 .submetric-value {
     font-size: 1.4rem;
     font-weight: 800;
-    color: var(--primary-blue);
+    color: var(--app-text-strong, var(--primary-blue));
     line-height: 1;
     margin-bottom: 0.15rem;
 }
 
 .submetric-label {
     font-size: 0.85rem;
-    color: var(--text-gray);
+    color: var(--app-muted, var(--text-gray));
     font-weight: 600;
 }
 
 .metric-card {
-    background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%);
+    background: var(--app-surface, var(--primary-white));
     cursor: pointer;
     border-radius: 20px;
     padding: 1.5rem;
     box-shadow: var(--shadow-md);
-    border: 2px solid var(--border-gray);
+    border: 2px solid var(--app-border, var(--border-gray));
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
@@ -302,37 +302,37 @@
 
 .metric-icon.insumos {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: var(--primary-white);
+    color: var(--app-text-strong, var(--primary-white));
 }
 
 .metric-icon.reactivos {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: var(--primary-white);
+    color: var(--app-text-strong, var(--primary-white));
 }
 
 .metric-icon.solicitudes {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: var(--primary-white);
+    color: var(--app-text-strong, var(--primary-white));
 }
 
 .metric-icon.clientes {
     background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    color: var(--primary-white);
+    color: var(--app-text-strong, var(--primary-white));
 }
 
 .metric-icon.papeleria {
     background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
-    color: var(--primary-white);
+    color: var(--app-text-strong, var(--primary-white));
 }
 
 .metric-icon.volumetricos {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: var(--primary-white);
+    color: var(--app-text-strong, var(--primary-white));
 }
 
 .metric-icon.referencia {
     background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-    color: var(--primary-white);
+    color: var(--app-text-strong, var(--primary-white));
 }
 
 .metric-content {
@@ -356,14 +356,14 @@
 .metric-label {
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--text-gray);
+    color: var(--app-muted, var(--text-gray));
     margin-bottom: 0.25rem;
     letter-spacing: 0.3px;
 }
 
 .metric-subtitle {
     font-size: 0.8rem;
-    color: var(--text-gray);
+    color: var(--app-muted, var(--text-gray));
     opacity: 0.8;
     font-weight: 400;
     display: flex;
@@ -415,7 +415,7 @@
 .alert-section h2 {
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--primary-blue);
+    color: var(--app-text-strong, var(--primary-blue));
     margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
@@ -438,9 +438,9 @@
 
 /* Tarjetas expandibles */
 .expandible-card {
-    background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%);
+    background: var(--app-surface, var(--primary-white));
     border-radius: 15px;
-    border: 2px solid var(--border-gray);
+    border: 2px solid var(--app-border, var(--border-gray));
     box-shadow: var(--shadow-md);
     overflow: hidden;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -463,18 +463,18 @@
     align-items: center;
     padding: 1.25rem 1.5rem;
     cursor: pointer;
-    background: linear-gradient(135deg, var(--light-gray) 0%, var(--primary-white) 100%);
+    background: var(--app-bg, var(--light-gray));
     transition: background 0.3s ease;
     user-select: none;
 }
 
 .expandible-header:hover {
-    background: linear-gradient(135deg, var(--light-gray) 0%, #f0f7ff 100%);
+    background: var(--app-hover, rgba(2,6,23,0.04));
 }
 
 .expandible-card.expanded .expandible-header {
-    border-bottom: 2px solid var(--border-gray);
-    background: linear-gradient(135deg, #f0f7ff 0%, var(--primary-white) 100%);
+    border-bottom: 2px solid var(--app-border, var(--border-gray));
+    background: var(--app-bg, var(--light-gray));
 }
 
 .expandible-title {
@@ -485,13 +485,13 @@
 
 .expandible-title i {
     font-size: 1.3rem;
-    color: var(--primary-blue);
+    color: var(--app-text-strong, var(--primary-blue));
 }
 
 .expandible-title h3 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--primary-blue);
+    color: var(--app-text-strong, var(--primary-blue));
     margin: 0;
     letter-spacing: 0.3px;
 }
@@ -522,7 +522,7 @@
 /* Icono de expansión */
 .expand-icon {
     font-size: 1rem;
-    color: var(--primary-blue);
+    color: var(--app-text-strong, var(--primary-blue));
     transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
@@ -545,11 +545,11 @@
 
 /* Tarjetas de alerta dentro del contenido expandible */
 .alert-card {
-    background: linear-gradient(135deg, var(--primary-white) 0%, #fffef8 100%);
+    background: var(--app-surface, var(--primary-white));
     border-radius: 15px;
     margin: 1.5rem;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
-    border: 3px solid rgba(0, 0, 0, 0.05);
+    border: 3px solid var(--app-border, rgba(0, 0, 0, 0.05));
     position: relative;
     overflow: hidden;
     backdrop-filter: blur(10px);
@@ -594,7 +594,7 @@
 
 .alert-content p {
     margin-bottom: 1rem;
-    color: var(--text-gray);
+    color: var(--app-text, var(--text-gray));
     font-weight: 500;
     line-height: 1.6;
     padding: 0 1.5rem;
@@ -617,9 +617,9 @@
     flex-direction: column;
     gap: 0.75rem;
     padding: 1rem;
-    background: linear-gradient(135deg, var(--light-gray) 0%, var(--primary-white) 100%);
+    background: var(--app-surface, var(--primary-white));
     border-radius: 15px;
-    border: 2px solid var(--border-gray);
+    border: 2px solid var(--app-border, var(--border-gray));
     transition: all 0.3s ease;
     box-shadow: var(--shadow-sm);
     position: relative;
@@ -678,7 +678,7 @@
 
 .reactivo-name {
     font-weight: 600;
-    color: var(--primary-blue);
+    color: var(--app-text-strong, var(--primary-blue));
     font-size: 0.95rem;
     line-height: 1.3;
     flex: 1;
@@ -715,10 +715,10 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, #f0f4ff 0%, #e6f0ff 100%);
+    background: var(--app-hover, #f0f4ff);
     padding: 0.4rem 0.8rem;
     border-radius: 10px;
-    border: 2px solid rgba(0, 31, 91, 0.1);
+    border: 2px solid var(--app-border, rgba(0, 31, 91, 0.1));
     flex: 1;
     min-width: 0;
     height: 32px; /* Altura fija */
@@ -726,7 +726,7 @@
 }
 
 .reactivo-lote-container i {
-    color: var(--primary-blue);
+    color: var(--app-text-strong, var(--primary-blue));
     font-size: 0.8rem;
     opacity: 0.8;
     flex-shrink: 0;
@@ -734,7 +734,7 @@
 
 .lote-label {
     font-size: 0.75rem;
-    color: var(--text-gray);
+    color: var(--app-muted, var(--text-gray));
     font-weight: 500;
     white-space: nowrap;
     flex-shrink: 0;
@@ -742,7 +742,7 @@
 
 .lote-value {
     font-size: 0.8rem;
-    color: var(--primary-blue);
+    color: var(--app-text-strong, var(--primary-blue));
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -826,7 +826,7 @@
 }
 
 .reactivos-list::-webkit-scrollbar-track {
-    background: var(--border-gray);
+    background: var(--app-border, var(--border-gray));
     border-radius: 10px;
     margin: 4px 0;
 }
@@ -834,8 +834,44 @@
 .reactivos-list::-webkit-scrollbar-thumb {
     background: var(--primary-turquoise);
     border-radius: 10px;
-    border: 2px solid var(--border-gray);
+    border: 2px solid var(--app-border, var(--border-gray));
     transition: background 0.3s ease;
+}
+
+/* ===== Dark mode fixes (ancestor html[data-theme="dark"]) ===== */
+:host-context([data-theme="dark"]) .dashboard-page {
+    color: var(--app-text, #e5e7eb);
+}
+
+:host-context([data-theme="dark"]) .dashboard-page h1,
+:host-context([data-theme="dark"]) .submetrics-title,
+:host-context([data-theme="dark"]) .alert-section h2,
+:host-context([data-theme="dark"]) .expandible-title h3 {
+    color: var(--app-text-strong, #f1f5f9);
+}
+
+/* Metric number uses gradient text in light; force solid readable text in dark */
+:host-context([data-theme="dark"]) .metric-value {
+    background: none;
+    -webkit-text-fill-color: var(--app-text-strong, #f1f5f9);
+    color: var(--app-text-strong, #f1f5f9);
+    text-shadow: none;
+}
+
+:host-context([data-theme="dark"]) .metric-label,
+:host-context([data-theme="dark"]) .metric-subtitle,
+:host-context([data-theme="dark"]) .submetric-label,
+:host-context([data-theme="dark"]) .loading-container p {
+    color: var(--app-muted, #94a3b8);
+}
+
+:host-context([data-theme="dark"]) .expandible-header:hover {
+    background: rgba(255,255,255,0.06);
+}
+
+:host-context([data-theme="dark"]) .expandible-title i,
+:host-context([data-theme="dark"]) .expand-icon {
+    color: var(--app-text-strong, #f1f5f9);
 }
 
 .reactivos-list::-webkit-scrollbar-thumb:hover {
@@ -846,7 +882,7 @@
 @media (max-width: 1024px) {
     .dashboard-page {
         padding: 1rem;
-        background: var(--light-gray);
+        background: var(--app-bg, var(--light-gray));
     }
     
     .dashboard-page h1 {

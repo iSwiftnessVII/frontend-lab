@@ -1,0 +1,686 @@
+<div class="liba-theme container plantillas-page">
+  <h1>
+    <i class="fas fa-layer-group"></i>
+    | Plantillas
+  </h1>
+
+  <div class="dashboard-cards">
+    @if (canSeeSolicitudes()) {
+      <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'solicitudes'" (click)="activateSection('solicitudes')" (keydown.enter)="activateSection('solicitudes')" (keydown.space)="$event.preventDefault(); activateSection('solicitudes')">
+        <i class="fas fa-file-signature"></i>
+        <span>Solicitudes</span>
+      </div>
+    }
+
+    <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'reactivos'" (click)="activateSection('reactivos')" (keydown.enter)="activateSection('reactivos')" (keydown.space)="$event.preventDefault(); activateSection('reactivos')">
+      <i class="fas fa-vial"></i>
+      <span>Reactivos</span>
+    </div>
+
+    @if (canSeeEquipos()) {
+      <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'equipos'" (click)="activateSection('equipos')" (keydown.enter)="activateSection('equipos')" (keydown.space)="$event.preventDefault(); activateSection('equipos')">
+        <i class="fas fa-microscope"></i>
+        <span>Equipos</span>
+      </div>
+    }
+
+    @if (canSeeVolumetricos()) {
+      <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'volumetricos'" (click)="activateSection('volumetricos')" (keydown.enter)="activateSection('volumetricos')" (keydown.space)="$event.preventDefault(); activateSection('volumetricos')">
+        <i class="fas fa-flask"></i>
+        <span>Volumétricos</span>
+      </div>
+    }
+
+    @if (canSeeReferencia()) {
+      <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'referencia'" (click)="activateSection('referencia')" (keydown.enter)="activateSection('referencia')" (keydown.space)="$event.preventDefault(); activateSection('referencia')">
+        <i class="fas fa-ruler-combined"></i>
+        <span>Referencia</span>
+      </div>
+    }
+  </div>
+
+  <!-- ============ SOLICITUDES ============ -->
+  @if (seccionActiva === 'solicitudes') {
+    <section class="section-card form-grid">
+      <h3 class="section-title full-row">Solicitudes</h3>
+        <div class="form-field">
+          <label>Entidad</label>
+          <select [(ngModel)]="tplSolicitudEntidad" (ngModelChange)="onTplSolicitudEntidadChanged()">
+            <option value="solicitud">Solicitud</option>
+            <option value="cliente">Cliente</option>
+          </select>
+        </div>
+
+        <div class="form-field full-row search-wrap">
+          <label>Buscar</label>
+
+          <div class="search-row">
+            <div class="search-field">
+              <div class="campo-combinado campo-combinado-separado">
+                @if (tplSolicitudEntidad === 'solicitud') {
+                  <select class="select-filtro" [(ngModel)]="tplSolicitudFiltroTipo" (ngModelChange)="filtrarTplSolicitudResultados()">
+                    <option value="todos">Todos</option>
+                    <option value="id">ID</option>
+                    <option value="numero_front">N° Solicitud</option>
+                    <option value="solicitante">Solicitante</option>
+                    <option value="muestra">Muestra</option>
+                    <option value="analisis">Análisis</option>
+                    <option value="lote">Lote</option>
+                  </select>
+                } @else {
+                  <select class="select-filtro" [(ngModel)]="tplSolicitudFiltroTipo" (ngModelChange)="filtrarTplSolicitudResultados()">
+                    <option value="todos">Todos</option>
+                    <option value="nombre">Nombre</option>
+                    <option value="razon_social">Razón social</option>
+                    <option value="identificacion">Identificación</option>
+                    <option value="correo">Correo</option>
+                  </select>
+                }
+
+                <input
+                  class="input-combinado"
+                  type="text"
+                  [(ngModel)]="tplSolicitudBusqueda"
+                  (input)="onTplSolicitudSearchInput()"
+                  (focus)="onTplSolicitudSearchFocus()"
+                  (blur)="onTplSolicitudSearchBlur()"
+                  placeholder="Buscar..."
+                />
+              </div>
+
+              @if (showSolicitudDropdown && tplSolicitudBusqueda.trim()) {
+                <div class="lista-resultados">
+              @if (tplSolicitudResultados.length === 0) {
+                <div class="sin-resultados">
+                  <i class="fas fa-search"></i>
+                  <span>No se encontraron resultados</span>
+                  <small>Intenta con otros términos</small>
+                </div>
+              }
+
+              @for (it of tplSolicitudResultados; track $index) {
+                <div class="resultado-item" (mousedown)="selectTplSolicitud(it)">
+                  @if (tplSolicitudEntidad === 'solicitud') {
+                    <div class="resultado-header">
+                      <strong class="codigo">{{ it.numero || ('Solicitud ' + (it.solicitud_id ?? it.id_solicitud)) }}</strong>
+                      <span class="nombre">{{ it.nombre_solicitante || 'Sin solicitante' }}</span>
+                    </div>
+                    <div class="info-adicional">
+                      @if (it.nombre_muestra) {
+                        <span><i class="fas fa-flask"></i>{{ it.nombre_muestra }}</span>
+                      }
+                      @if (it.lote_producto) {
+                        <span><i class="fas fa-tag"></i>{{ it.lote_producto }}</span>
+                      }
+                    </div>
+                  } @else {
+                    <div class="resultado-header">
+                      <strong class="codigo">{{ it.nombre_solicitante || it.nombre || it.nombre_cliente || 'Cliente' }}</strong>
+                      <span class="nombre">{{ it.razon_social || '' }}</span>
+                    </div>
+                    <div class="info-adicional">
+                      @if (it.identificacion || it.nit) {
+                        <span><i class="fas fa-id-card"></i>{{ it.identificacion || it.nit }}</span>
+                      }
+                      @if (it.correo || it.email) {
+                        <span><i class="fas fa-envelope"></i>{{ it.correo || it.email }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <button type="button" class="btn primary" (click)="generarDocumentoSolicitud()" [disabled]="tplSolicitudLoading">
+              Generar
+            </button>
+          </div>
+        </div>
+
+        @if (tplSolicitudSeleccionado) {
+          <div class="full-row">
+            <div class="seleccionado-card">
+              <div class="seleccionado-header">
+                <i class="fas fa-check-circle"></i>
+                <strong>Seleccionado</strong>
+              </div>
+
+              @if (tplSolicitudEntidad === 'cliente') {
+                <div class="seleccionado-body">
+                  <div class="seleccionado-main">{{ tplSolicitudSeleccionado.nombre_solicitante || tplSolicitudSeleccionado.nombre || tplSolicitudSeleccionado.nombre_cliente || 'Cliente' }}</div>
+                  @if (tplSolicitudSeleccionado.razon_social) {
+                    <div class="seleccionado-sub">{{ tplSolicitudSeleccionado.razon_social }}</div>
+                  }
+                </div>
+              } @else {
+                <div class="seleccionado-body">
+                  <div class="seleccionado-main">{{ tplSolicitudSeleccionado.numero || ('Solicitud ' + (tplSolicitudSeleccionado.solicitud_id ?? tplSolicitudSeleccionado.id_solicitud)) }}</div>
+                  @if (tplSolicitudSeleccionado.nombre_solicitante) {
+                    <div class="seleccionado-sub">{{ tplSolicitudSeleccionado.nombre_solicitante }}</div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="full-row">
+          <hr class="divider" />
+        </div>
+
+        <div class="full-row plantilla-row">
+          <div class="form-field plantilla-field">
+            <label>Plantilla</label>
+            <select [(ngModel)]="tplSolicitudPlantillaId">
+              <option [ngValue]="null">-- Seleccione --</option>
+              @for (p of tplSolicitudPlantillas(); track p.id) {
+                <option [ngValue]="p.id">{{ p.nombre_archivo || p.nombre || ('Plantilla ' + p.id) }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field plantilla-actions">
+            <button type="button" class="btn danger" (click)="eliminarPlantillaSolicitud()" [disabled]="tplSolicitudDeleteLoading.has(tplSolicitudPlantillaId || 0)">
+              Eliminar
+            </button>
+          </div>
+        </div>
+
+        <div class="full-row upload-row">
+          <div class="form-field upload-block">
+            <label>Nombre (opcional)</label>
+            <input type="text" [(ngModel)]="tplSolicitudNombrePlantilla" placeholder="Nombre" />
+          </div>
+
+          <div class="form-field upload-block">
+            <label>Subir plantilla</label>
+            <input #tplSolicitudTemplateInput type="file" (change)="onTplSolicitudTemplateSelected($event)" />
+          </div>
+
+          <div class="form-field upload-actions">
+ 
+            <button type="button" class="btn" (click)="subirPlantillaSolicitud()" [disabled]="tplSolicitudUploadLoading">
+              Guardar
+            </button>
+          </div>
+        </div>
+
+        @if (tplSolicitudMsg) {
+          <div class="full-row">
+            <div class="mensaje-error">{{ tplSolicitudMsg }}</div>
+          </div>
+        }
+    </section>
+  }
+
+  <!-- ============ REACTIVOS ============ -->
+  @if (seccionActiva === 'reactivos') {
+    <section class="section-card form-grid">
+      <h3 class="section-title full-row">Reactivos</h3>
+        <div class="form-field full-row search-wrap">
+          <label>Buscar</label>
+
+          <div class="search-row">
+            <div class="search-field">
+              <div class="campo-combinado campo-combinado-separado">
+                <select class="select-filtro" [(ngModel)]="tplReactivoFiltroTipo">
+                  <option value="todos">Todos</option>
+                  <option value="codigo">Código</option>
+                  <option value="nombre">Nombre</option>
+                  <option value="lote">Lote</option>
+                  <option value="cas">CAS</option>
+                </select>
+
+                <input
+                  class="input-combinado"
+                  type="text"
+                  [(ngModel)]="tplReactivoBusqueda"
+                  (input)="onTplReactivoSearchInput()"
+                  (focus)="onTplReactivoSearchFocus()"
+                  (blur)="onTplReactivoSearchBlur()"
+                  placeholder="Buscar (mín 2 caracteres)"
+                />
+              </div>
+
+              @if (showReactivoDropdown && tplReactivoBusqueda.trim()) {
+                <div class="lista-resultados">
+              @if (tplReactivoResultados.length === 0) {
+                <div class="sin-resultados">
+                  <i class="fas fa-search"></i>
+                  <span>No se encontraron reactivos</span>
+                  <small>Intenta con otros términos</small>
+                </div>
+              }
+
+              @for (r of tplReactivoResultados; track $index) {
+                <div class="resultado-item" (mousedown)="selectTplReactivo(r)">
+                  <div class="resultado-header">
+                    <strong class="codigo">{{ r.codigo }}</strong>
+                    <span class="nombre">{{ r.nombre }}</span>
+                  </div>
+                  <div class="info-adicional">
+                    @if (r.lote) { <span><i class="fas fa-tag"></i>{{ r.lote }}</span> }
+                    @if (r.cas) { <span><i class="fas fa-hashtag"></i>{{ r.cas }}</span> }
+                  </div>
+                </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <button type="button" class="btn primary" (click)="generarDocumentoReactivo()" [disabled]="tplReactivoLoading">Generar</button>
+          </div>
+        </div>
+
+        @if (tplReactivoSeleccionado) {
+          <div class="full-row">
+            <div class="seleccionado-card">
+              <div class="seleccionado-header">
+                <i class="fas fa-check-circle"></i>
+                <strong>Seleccionado</strong>
+              </div>
+              <div class="seleccionado-body">
+                <div class="seleccionado-main">{{ tplReactivoSeleccionado.codigo }} - {{ tplReactivoSeleccionado.nombre }}</div>
+                @if (tplReactivoSeleccionado.lote) {
+                  <div class="seleccionado-sub">Lote: {{ tplReactivoSeleccionado.lote }}</div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="full-row">
+          <hr class="divider" />
+        </div>
+
+        <div class="full-row plantilla-row">
+          <div class="form-field plantilla-field">
+            <label>Plantilla</label>
+            <select [(ngModel)]="tplReactivoPlantillaId">
+              <option [ngValue]="null">-- Seleccione --</option>
+              @for (p of tplReactivoPlantillas(); track p.id) {
+                <option [ngValue]="p.id">{{ p.nombre_archivo || p.nombre || ('Plantilla ' + p.id) }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field plantilla-actions">
+            <button type="button" class="btn danger" (click)="eliminarPlantillaReactivo()" [disabled]="tplReactivoDeleteLoading.has(tplReactivoPlantillaId || 0)">Eliminar</button>
+          </div>
+        </div>
+
+        <div class="full-row upload-row">
+          <div class="form-field upload-block">
+            <label>Nombre (opcional)</label>
+            <input type="text" [(ngModel)]="tplReactivoNombrePlantilla" placeholder="Nombre" />
+          </div>
+
+          <div class="form-field upload-block">
+            <label>Subir plantilla</label>
+            <input #tplReactivoTemplateInput type="file" (change)="onTplReactivoTemplateSelected($event)" />
+          </div>
+
+          <div class="form-field upload-actions">
+            
+            <button type="button" class="btn" (click)="subirPlantillaReactivo()" [disabled]="tplReactivoUploadLoading">Guardar</button>
+          </div>
+        </div>
+
+        @if (tplReactivoMsg) {
+          <div class="full-row">
+            <div class="mensaje-error">{{ tplReactivoMsg }}</div>
+          </div>
+        }
+    </section>
+  }
+
+  <!-- ============ EQUIPOS ============ -->
+  @if (seccionActiva === 'equipos') {
+    <section class="section-card form-grid">
+      <h3 class="section-title full-row">Equipos</h3>
+        <div class="form-field full-row search-wrap">
+          <label>Buscar</label>
+
+          <div class="search-row">
+            <div class="search-field">
+              <div class="campo-combinado campo-combinado-separado">
+                <select class="select-filtro" [(ngModel)]="tplEquipoFiltroTipo" (ngModelChange)="filtrarTplEquipoResultados()">
+                  <option value="todos">Todos</option>
+                  <option value="codigo">Código</option>
+                  <option value="nombre">Nombre</option>
+                  <option value="marca">Marca</option>
+                  <option value="modelo">Modelo</option>
+                </select>
+
+                <input
+                  class="input-combinado"
+                  type="text"
+                  [(ngModel)]="tplEquipoBusqueda"
+                  (input)="onTplEquipoSearchInput()"
+                  (focus)="onTplEquipoSearchFocus()"
+                  (blur)="onTplEquipoSearchBlur()"
+                  placeholder="Buscar..."
+                />
+              </div>
+
+              @if (showEquipoDropdown && tplEquipoBusqueda.trim()) {
+                <div class="lista-resultados">
+              @if (tplEquipoResultados.length === 0) {
+                <div class="sin-resultados">
+                  <i class="fas fa-search"></i>
+                  <span>No se encontraron equipos</span>
+                  <small>Intenta con otros términos</small>
+                </div>
+              }
+
+              @for (e of tplEquipoResultados; track $index) {
+                <div class="resultado-item" (mousedown)="selectTplEquipo(e)">
+                  <div class="resultado-header">
+                    <strong class="codigo">{{ e.codigo_identificacion }}</strong>
+                    <span class="nombre">{{ e.nombre }}</span>
+                  </div>
+                  <div class="info-adicional">
+                    @if (e.marca) { <span><i class="fas fa-industry"></i>{{ e.marca }}</span> }
+                    @if (e.modelo) { <span><i class="fas fa-cube"></i>{{ e.modelo }}</span> }
+                  </div>
+                </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <button type="button" class="btn primary" (click)="generarDocumentoEquipo()" [disabled]="tplEquipoLoading">Generar</button>
+          </div>
+        </div>
+
+        @if (tplEquipoSeleccionado) {
+          <div class="full-row">
+            <div class="seleccionado-card">
+              <div class="seleccionado-header">
+                <i class="fas fa-check-circle"></i>
+                <strong>Seleccionado</strong>
+              </div>
+              <div class="seleccionado-body">
+                <div class="seleccionado-main">{{ tplEquipoSeleccionado.codigo_identificacion }} - {{ tplEquipoSeleccionado.nombre }}</div>
+                @if (tplEquipoSeleccionado.marca || tplEquipoSeleccionado.modelo) {
+                  <div class="seleccionado-sub">
+                    {{ tplEquipoSeleccionado.marca || '' }}{{ (tplEquipoSeleccionado.marca && tplEquipoSeleccionado.modelo) ? ' • ' : '' }}{{ tplEquipoSeleccionado.modelo || '' }}
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="full-row">
+          <hr class="divider" />
+        </div>
+
+        <div class="full-row plantilla-row">
+          <div class="form-field plantilla-field">
+            <label>Plantilla</label>
+            <select [(ngModel)]="tplEquipoPlantillaId">
+              <option [ngValue]="null">-- Seleccione --</option>
+              @for (p of tplEquipoPlantillas(); track p.id) {
+                <option [ngValue]="p.id">{{ p.nombre_archivo || p.nombre || ('Plantilla ' + p.id) }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field plantilla-actions">
+            <button type="button" class="btn danger" (click)="eliminarPlantillaEquipo()" [disabled]="tplEquipoDeleteLoading.has(tplEquipoPlantillaId || 0)">Eliminar</button>
+          </div>
+        </div>
+
+        <div class="full-row upload-row">
+          <div class="form-field upload-block">
+            <label>Nombre (opcional)</label>
+            <input type="text" [(ngModel)]="tplEquipoNombrePlantilla" placeholder="Nombre" />
+          </div>
+
+          <div class="form-field upload-block">
+            <label>Subir plantilla</label>
+            <input #tplEquipoTemplateInput type="file" (change)="onTplEquipoTemplateSelected($event)" />
+          </div>
+
+          <div class="form-field upload-actions">
+            <button type="button" class="btn" (click)="subirPlantillaEquipo()" [disabled]="tplEquipoUploadLoading">Guardar</button>
+          </div>
+        </div>
+
+        @if (tplEquipoMsg) {
+          <div class="full-row">
+            <div class="mensaje-error">{{ tplEquipoMsg }}</div>
+          </div>
+        }
+    </section>
+  }
+
+  <!-- ============ VOLUMÉTRICOS ============ -->
+  @if (seccionActiva === 'volumetricos') {
+    <section class="section-card form-grid">
+      <h3 class="section-title full-row">Volumétricos</h3>
+        <div class="form-field full-row search-wrap">
+          <label>Buscar</label>
+
+          <div class="search-row">
+            <div class="search-field">
+              <div class="campo-combinado campo-combinado-separado">
+                <select class="select-filtro" [(ngModel)]="tplVolFiltroTipo" (ngModelChange)="filtrarTplVolResultados()">
+                  <option value="todos">Todos</option>
+                  <option value="codigo">Código</option>
+                  <option value="nombre">Nombre</option>
+                  <option value="marca">Marca</option>
+                  <option value="modelo">Modelo</option>
+                </select>
+
+                <input
+                  class="input-combinado"
+                  type="text"
+                  [(ngModel)]="tplVolBusqueda"
+                  (input)="onTplVolSearchInput()"
+                  (focus)="onTplVolSearchFocus()"
+                  (blur)="onTplVolSearchBlur()"
+                  placeholder="Buscar..."
+                />
+              </div>
+
+              @if (showVolDropdown && tplVolBusqueda.trim()) {
+                <div class="lista-resultados">
+              @if (tplVolResultados.length === 0) {
+                <div class="sin-resultados">
+                  <i class="fas fa-search"></i>
+                  <span>No se encontraron volumétricos</span>
+                  <small>Intenta con otros términos</small>
+                </div>
+              }
+
+              @for (m of tplVolResultados; track $index) {
+                <div class="resultado-item" (mousedown)="selectTplVol(m)">
+                  <div class="resultado-header">
+                    <strong class="codigo">{{ m.codigo_id }}</strong>
+                    <span class="nombre">{{ m.nombre_material }}</span>
+                  </div>
+                </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <button type="button" class="btn primary" (click)="generarDocumentoVolumetrico()" [disabled]="tplVolLoading">Generar</button>
+          </div>
+        </div>
+
+        @if (tplVolSeleccionado) {
+          <div class="full-row">
+            <div class="seleccionado-card">
+              <div class="seleccionado-header">
+                <i class="fas fa-check-circle"></i>
+                <strong>Seleccionado</strong>
+              </div>
+              <div class="seleccionado-body">
+                <div class="seleccionado-main">{{ tplVolSeleccionado.codigo_id }} - {{ tplVolSeleccionado.nombre_material }}</div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="full-row">
+          <hr class="divider" />
+        </div>
+
+        <div class="full-row plantilla-row">
+          <div class="form-field plantilla-field">
+            <label>Plantilla</label>
+            <select [(ngModel)]="tplVolPlantillaId">
+              <option [ngValue]="null">-- Seleccione --</option>
+              @for (p of tplVolPlantillas(); track p.id) {
+                <option [ngValue]="p.id">{{ p.nombre_archivo || p.nombre || ('Plantilla ' + p.id) }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field plantilla-actions">
+            <button type="button" class="btn danger" (click)="eliminarPlantillaVolumetrico()" [disabled]="tplVolDeleteLoading.has(tplVolPlantillaId || 0)">Eliminar</button>
+          </div>
+        </div>
+
+        <div class="full-row upload-row">
+          <div class="form-field upload-block">
+            <label>Nombre (opcional)</label>
+            <input type="text" [(ngModel)]="tplVolNombrePlantilla" placeholder="Nombre" />
+          </div>
+
+          <div class="form-field upload-block">
+            <label>Subir plantilla</label>
+            <input #tplVolTemplateInput type="file" (change)="onTplVolTemplateSelected($event)" />
+          </div>
+
+          <div class="form-field upload-actions">
+            <button type="button" class="btn" (click)="subirPlantillaVolumetrico()" [disabled]="tplVolUploadLoading">Guardar</button>
+          </div>
+        </div>
+
+        @if (tplVolMsg) {
+          <div class="full-row">
+            <div class="mensaje-error">{{ tplVolMsg }}</div>
+          </div>
+        }
+    </section>
+  }
+
+  <!-- ============ REFERENCIA ============ -->
+  @if (seccionActiva === 'referencia') {
+    <section class="section-card form-grid">
+      <h3 class="section-title full-row">Referencia</h3>
+        <div class="form-field full-row search-wrap">
+          <label>Buscar</label>
+
+          <div class="search-row">
+            <div class="search-field">
+              <div class="campo-combinado campo-combinado-separado">
+                <select class="select-filtro" [(ngModel)]="tplRefFiltroTipo" (ngModelChange)="filtrarTplRefResultados()">
+                  <option value="todos">Todos</option>
+                  <option value="codigo">Código</option>
+                  <option value="nombre">Nombre</option>
+                  <option value="marca">Marca</option>
+                  <option value="serie">Serie</option>
+                </select>
+
+                <input
+                  class="input-combinado"
+                  type="text"
+                  [(ngModel)]="tplRefBusqueda"
+                  (input)="onTplRefSearchInput()"
+                  (focus)="onTplRefSearchFocus()"
+                  (blur)="onTplRefSearchBlur()"
+                  placeholder="Buscar..."
+                />
+              </div>
+
+              @if (showRefDropdown && tplRefBusqueda.trim()) {
+                <div class="lista-resultados">
+              @if (tplRefResultados.length === 0) {
+                <div class="sin-resultados">
+                  <i class="fas fa-search"></i>
+                  <span>No se encontraron referencias</span>
+                  <small>Intenta con otros términos</small>
+                </div>
+              }
+
+              @for (m of tplRefResultados; track $index) {
+                <div class="resultado-item" (mousedown)="selectTplRef(m)">
+                  <div class="resultado-header">
+                    <strong class="codigo">{{ m.codigo_id }}</strong>
+                    <span class="nombre">{{ m.nombre_material }}</span>
+                  </div>
+                </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <button type="button" class="btn primary" (click)="generarDocumentoReferencia()" [disabled]="tplRefLoading">Generar</button>
+          </div>
+        </div>
+
+        @if (tplRefSeleccionado) {
+          <div class="full-row">
+            <div class="seleccionado-card">
+              <div class="seleccionado-header">
+                <i class="fas fa-check-circle"></i>
+                <strong>Seleccionado</strong>
+              </div>
+              <div class="seleccionado-body">
+                <div class="seleccionado-main">{{ tplRefSeleccionado.codigo_id }} - {{ tplRefSeleccionado.nombre_material }}</div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="full-row">
+          <hr class="divider" />
+        </div>
+
+        <div class="full-row plantilla-row">
+          <div class="form-field plantilla-field">
+            <label>Plantilla</label>
+            <select [(ngModel)]="tplRefPlantillaId">
+              <option [ngValue]="null">-- Seleccione --</option>
+              @for (p of tplRefPlantillas(); track p.id) {
+                <option [ngValue]="p.id">{{ p.nombre_archivo || p.nombre || ('Plantilla ' + p.id) }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field plantilla-actions">
+            <button type="button" class="btn danger" (click)="eliminarPlantillaReferencia()" [disabled]="tplRefDeleteLoading.has(tplRefPlantillaId || 0)">Eliminar</button>
+          </div>
+        </div>
+
+        <div class="full-row upload-row">
+          <div class="form-field upload-block">
+            <label>Nombre (opcional)</label>
+            <input type="text" [(ngModel)]="tplRefNombrePlantilla" placeholder="Nombre" />
+          </div>
+
+          <div class="form-field upload-block">
+            <label>Subir plantilla</label>
+            <input #tplRefTemplateInput type="file" (change)="onTplRefTemplateSelected($event)" />
+          </div>
+
+          <div class="form-field upload-actions">
+            <button type="button" class="btn" (click)="subirPlantillaReferencia()" [disabled]="tplRefUploadLoading">Guardar</button>
+          </div>
+        </div>
+
+        @if (tplRefMsg) {
+          <div class="full-row">
+            <div class="mensaje-error">{{ tplRefMsg }}</div>
+          </div>
+        }
+    </section>
+  }
+</div>

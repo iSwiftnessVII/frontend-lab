@@ -17,7 +17,7 @@ export class App implements OnDestroy {
   readonly isLoggingOut = signal(false);
   readonly menuOpen = signal(false);
   readonly inventoryMenuOpen = signal(false);
-  readonly analysisMenuOpen = signal(false);
+  readonly isDarkMode = signal<boolean>(false);
   readonly currentYear = new Date().getFullYear();
   readonly isNavigating = signal(false);
   // whether footer should be shown because page needs scrolling
@@ -25,7 +25,6 @@ export class App implements OnDestroy {
   
   // NUEVO: Signals para los menús seleccionados
   readonly selectedInventory = signal<string | null>(null);
-  readonly selectedAnalysis = signal<string | null>(null);
   
   private routerSub?: any;
   private resizeHandler?: () => void;
@@ -37,6 +36,9 @@ export class App implements OnDestroy {
   constructor(private router: Router, public snack: SnackbarService) {
     // Inicializar autenticación con TU sistema
     void this.initAuth();
+
+    // Theme init (dark/light)
+    this.initTheme();
     
     // Mantener características UI del repositorio
     this.constructorEffectSetup();
@@ -73,6 +75,47 @@ export class App implements OnDestroy {
     this.setupFooterDetection();
   }
 
+  private initTheme(): void {
+    try {
+      if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+      const stored = window.localStorage?.getItem('liba.theme');
+      if (stored === 'dark' || stored === 'light') {
+        this.setTheme(stored);
+        return;
+      }
+
+      // Default: follow OS preference when no stored value exists
+      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)')?.matches;
+      this.setTheme(prefersDark ? 'dark' : 'light', { persist: false });
+    } catch {
+      // ignore
+    }
+  }
+
+  private setTheme(theme: 'dark' | 'light', opts?: { persist?: boolean }): void {
+    const persist = opts?.persist !== false;
+    try {
+      this.isDarkMode.set(theme === 'dark');
+    } catch {}
+
+    try {
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+    } catch {}
+
+    if (persist) {
+      try { window.localStorage?.setItem('liba.theme', theme); } catch {}
+    }
+  }
+
+  toggleTheme(ev?: Event): void {
+    try { ev?.stopPropagation(); } catch {}
+    const next = this.isDarkMode() ? 'light' : 'dark';
+    this.setTheme(next);
+  }
+
   // NUEVO: Método para detectar automáticamente las selecciones desde la ruta
   private setSelectionsFromRoute(url: string): void {
     const inventoryRoutes: { [key: string]: string } = {
@@ -84,11 +127,6 @@ export class App implements OnDestroy {
       '/materiales-referencia': 'referencia'
     };
 
-    const analysisRoutes: { [key: string]: string } = {
-      '/auditoria': 'auditoria',
-      '/reportes': 'reportes'
-    };
-
     // Detectar inventario
     for (const [route, inventory] of Object.entries(inventoryRoutes)) {
       if (url.startsWith(route)) {
@@ -97,23 +135,12 @@ export class App implements OnDestroy {
       }
     }
 
-    // Detectar análisis
-    for (const [route, analysis] of Object.entries(analysisRoutes)) {
-      if (url.startsWith(route)) {
-        this.selectedAnalysis.set(analysis);
-        break;
-      }
-    }
 
     // Resetear inventario si no está en ninguna ruta de inventario
     if (!Object.keys(inventoryRoutes).some(route => url.includes(route))) {
       this.selectedInventory.set(null);
     }
 
-    // Resetear análisis si no está en ninguna ruta de análisis
-    if (!Object.keys(analysisRoutes).some(route => url.includes(route))) {
-      this.selectedAnalysis.set(null);
-    }
   }
 
   // NUEVO: Métodos para Inventario
@@ -146,32 +173,9 @@ export class App implements OnDestroy {
     return names[inventory] || 'Inventario';
   }
 
-  // NUEVO: Métodos para Análisis
-  setSelectedAnalysis(analysis: string): void {
-    this.selectedAnalysis.set(analysis);
-    this.analysisMenuOpen.set(false);
-  }
-
-  getAnalysisIcon(analysis: string): string {
-    const icons: { [key: string]: string } = {
-      'auditoria': 'fa-clipboard-check',
-      'reportes': 'fa-chart-bar'
-    };
-    return icons[analysis] || 'fa-chart-line';
-  }
-
-  getAnalysisName(analysis: string): string {
-    const names: { [key: string]: string } = {
-      'auditoria': 'Auditoría',
-      'reportes': 'Reportes'
-    };
-    return names[analysis] || 'Análisis';
-  }
-
   // NUEVO: Método para resetear las selecciones (opcional)
   resetSelections(): void {
     this.selectedInventory.set(null);
-    this.selectedAnalysis.set(null);
   }
 
   // TU sistema de autenticación con checkAuth()
@@ -238,15 +242,6 @@ export class App implements OnDestroy {
     this.inventoryMenuOpen.set(false);
   }
 
-  toggleAnalysisMenu(ev?: Event) {
-    try { ev?.stopPropagation(); } catch {}
-    this.analysisMenuOpen.set(!this.analysisMenuOpen());
-  }
-
-  closeAnalysisMenu() {
-    this.analysisMenuOpen.set(false);
-  }
-
   goToPerfil() {
     try { this.menuOpen.set(false); } catch {}
     void this.router.navigate(['/perfil']);
@@ -275,12 +270,6 @@ export class App implements OnDestroy {
       const inv = document.querySelector('.nav-menu .full-width-dropdown');
       if (target && inv && !inv.contains(target)) {
         this.inventoryMenuOpen.set(false);
-      }
-
-      // Close analysis dropdown when clicking outside
-      const analysis = document.querySelector('.nav-menu .analysis-dropdown');
-      if (target && analysis && !analysis.contains(target)) {
-        this.analysisMenuOpen.set(false);
       }
     } catch (e) {
       // ignore

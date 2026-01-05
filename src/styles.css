@@ -10,10 +10,10 @@
 
 [data-theme] .detail-card,
 .detail-card {
-	background: #fff;
+	background: var(--app-surface);
 	border-radius: 10px;
 	overflow: hidden;
-	border: 1px solid var(--border-gray, #e2e8f0);
+	border: 1px solid var(--app-border);
 	box-shadow: 0 8px 18px rgba(2,6,23,0.06);
 }
 
@@ -21,7 +21,7 @@
 	background: #e9e9ea;
 	padding: 6px 8px;
 	font-size: 0.72rem;
-	color: #6b7280;
+	color: var(--app-muted);
 	text-align: center;
 }
 
@@ -29,19 +29,23 @@
 	padding: 8px 10px 10px 10px;
 	font-weight: 400;
 	font-size: 0.86rem;
-	color: #0f172a;
+	color: var(--app-text-strong);
 	text-align: center;
 }
 
 .detail-full {
 	grid-column: 1 / -1;
-	background: #fff;
+	background: var(--app-surface);
 	border-radius: 10px;
 	padding: 8px 10px;
-	border: 1px solid var(--border-gray, #e2e8f0);
+	border: 1px solid var(--app-border);
 	box-shadow: 0 6px 12px rgba(2,6,23,0.04);
 	font-size: 0.84rem;
-	color: var(--text-gray, #4a5568);
+	color: var(--app-muted);
+}
+
+:root[data-theme="dark"] .detail-card .detail-label {
+	background: rgba(255,255,255,0.04);
 }
 
 .detail-card.detail-full .detail-value {
@@ -86,6 +90,14 @@
 .hint-icon:hover { background: #e3ecff; }
 .hint-icon:focus { outline: 2px solid #98b0ff; outline-offset: 2px; }
 
+:root[data-theme="dark"] .hint-icon {
+	background: rgba(255,255,255,0.08);
+	color: var(--app-text);
+	border-color: rgba(255,255,255,0.14);
+}
+:root[data-theme="dark"] .hint-icon:hover { background: rgba(255,255,255,0.12); }
+:root[data-theme="dark"] .hint-icon:focus { outline-color: rgba(255,255,255,0.35); }
+
 /* Custom tooltip bubble above hint icon */
 .hint-icon[data-tooltip] {
 	position: relative;
@@ -111,6 +123,13 @@
 	text-align: center;
 	white-space: pre-line;
 }
+
+:root[data-theme="dark"] .hint-icon[data-tooltip]:hover::after,
+:root[data-theme="dark"] .hint-icon[data-tooltip]:focus::after {
+	background: var(--app-surface);
+	color: var(--app-text);
+	border-color: rgba(255,255,255,0.12);
+}
 .hint-icon[data-tooltip]:hover::before,
 .hint-icon[data-tooltip]:focus::before {
 	content: '';
@@ -127,6 +146,12 @@
 	border-radius: 4px;
 	rotate: 45deg;
 }
+
+:root[data-theme="dark"] .hint-icon[data-tooltip]:hover::before,
+:root[data-theme="dark"] .hint-icon[data-tooltip]:focus::before {
+	background: var(--app-surface);
+	border-color: rgba(255,255,255,0.12);
+}
 /* =====================================================
 	GLOBAL STYLES & THEME VARIABLES
 	===================================================== */
@@ -142,6 +167,34 @@
 	--text-gray: #4a5568;
 	--light-gray: #f7fafc;
 	--border-gray: #e2e8f0;
+
+	/* App-level semantic tokens (use these for surfaces/text) */
+	--app-bg: var(--light-gray);
+	--app-surface: var(--primary-white);
+	--app-text: #111827;
+	--app-text-strong: #0f172a;
+	--app-muted: var(--text-gray);
+	--app-border: var(--border-gray);
+	--app-hover: rgba(2,6,23,0.04);
+}
+
+/* Dark mode overrides: applied via <html data-theme="dark"> */
+:root[data-theme="dark"] {
+	color-scheme: dark;
+
+	/* Reuse existing palette values used in the app */
+	--app-bg: #0f172a;
+	--app-surface: #111827;
+	--app-text: #e5e7eb;
+	--app-text-strong: #f1f5f9;
+	--app-muted: #94a3b8;
+	--app-border: #233247;
+	--app-hover: rgba(255,255,255,0.06);
+
+	/* Keep legacy vars aligned where used as general UI colors */
+	--light-gray: var(--app-bg);
+	--text-gray: var(--app-muted);
+	--border-gray: var(--app-border);
 }
 
 /* html, body {
@@ -157,8 +210,8 @@ html, body {
 	font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-	background: var(--light-gray);
-	color: var(--text-gray);
+	background: var(--app-bg);
+	color: var(--app-text);
 	margin: 0;
 	padding: 0;
 	height: 100%;
@@ -190,6 +243,10 @@ body.auth-page .container {
 	color: #001F5B;
 }
 
+:root[data-theme="dark"] .liba-theme {
+	color: var(--app-text);
+}
+
 .liba-theme h2,
 .liba-theme h3 {
 	color: var(--primary-blue);
@@ -197,6 +254,11 @@ body.auth-page .container {
 	margin-bottom: 1.5rem;
 	position: relative;
 	padding-bottom: 0.5rem;
+}
+
+:root[data-theme="dark"] .liba-theme h2,
+:root[data-theme="dark"] .liba-theme h3 {
+	color: var(--app-text-strong);
 }
 
 .liba-theme h2::after {
@@ -225,7 +287,7 @@ body.auth-page .container {
    SECTIONS (solo dentro del tema LIBA)
    ===================================================== */
 .liba-theme section {
-	background: var(--primary-white);
+	background: var(--app-surface);
 	border-radius: 12px;
 	padding: 2rem;
 	margin-bottom: 2rem;
@@ -273,6 +335,10 @@ body.auth-page .container {
 	text-overflow: ellipsis;
 }
 
+:root[data-theme="dark"] .liba-theme label {
+	color: var(--app-text-strong);
+}
+
 .liba-theme label::before {
 	content: '';
 	position: absolute;
@@ -301,6 +367,58 @@ body.auth-page .container {
 	box-sizing: border-box;
 }
 
+/* Default form grid: 3 columns everywhere (unless a component overrides it).
+   Textareas are handled separately below to span full width. */
+.liba-theme .form-grid,
+.form-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 1rem;
+	align-items: end;
+}
+
+.liba-theme .form-grid > div,
+.form-grid > div {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+@media (max-width: 900px) {
+	.liba-theme .form-grid,
+	.form-grid {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+@media (max-width: 600px) {
+	.liba-theme .form-grid,
+	.form-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Form buttons: standard width/height inside forms (avoid affecting icon-only buttons) */
+.liba-theme form .actions button,
+.liba-theme form .form-actions button,
+.liba-theme form button[type="submit"]:not(.pdf-btn):not(.eliminar):not(.tab-btn):not(.pdf-action) {
+	width: fit-content;
+	min-width: 0;
+	height: 40px;
+	padding: 0.5rem 1.2rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+:root[data-theme="dark"] .liba-theme input,
+:root[data-theme="dark"] .liba-theme select,
+:root[data-theme="dark"] .liba-theme textarea {
+	background-color: var(--app-surface);
+	color: var(--app-text);
+	border-color: var(--app-border);
+}
+
 /* Custom select caret + unified base style (match Reactivos) */
 select {
 	-webkit-appearance: none;
@@ -324,6 +442,10 @@ select {
 	background-size: 18px 18px; /* slightly larger icon */
 }
 
+:root[data-theme="dark"] select {
+	--liba-select-caret: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+}
+
 /* Place a chevron on the container of any select within form grids */
 /* We now render the chevron as the select's background; hide any previous pseudo-caret */
 /* Ensure any wrapper div in form grids doesn't add an extra caret */
@@ -338,6 +460,13 @@ div[data-select-open="true"] > select,
 select[data-select-open="true"],
 select[data-open="true"] {
 	--liba-select-caret: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 15 12 9 18 15'/></svg>");
+}
+
+:root[data-theme="dark"] .form-grid > div[data-select-open="true"] > select,
+:root[data-theme="dark"] div[data-select-open="true"] > select,
+:root[data-theme="dark"] select[data-select-open="true"],
+:root[data-theme="dark"] select[data-open="true"] {
+	--liba-select-caret: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 15 12 9 18 15'/></svg>");
 }
 
 /* Keep gradient on focus without losing the caret or causing tiling */

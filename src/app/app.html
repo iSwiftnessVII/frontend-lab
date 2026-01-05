@@ -37,9 +37,17 @@
             <i class="fas fa-user" aria-hidden="true"></i>
             <span>Perfil</span>
           </button>
-          <button type="button" class="user-dropdown-item" role="menuitem">
-            <i class="fas fa-cog" aria-hidden="true"></i>
-            <span>Opciones</span>
+
+          <button
+            type="button"
+            class="user-dropdown-item theme-toggle"
+            role="menuitemcheckbox"
+            [attr.aria-checked]="isDarkMode()"
+            (click)="toggleTheme($event)"
+          >
+            <i class="fas" [class.fa-moon]="!isDarkMode()" [class.fa-sun]="isDarkMode()" aria-hidden="true"></i>
+            <span>Modo oscuro</span>
+            <span class="theme-switch" [class.on]="isDarkMode()" aria-hidden="true"></span>
           </button>
         </div>
         <hr class="dropdown-divider"/>
@@ -75,6 +83,12 @@
         <i class="fas fa-clipboard-list"></i> Solicitudes
       </a>
     }
+        
+        @if (user()?.rol === 'Administrador' || user()?.rol === 'Auxiliar' || user()?.rol === 'Superadmin') {
+          <a routerLink="/plantillas" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-layer-group"></i> Plantillas
+          </a>
+        }
 
     <!-- Inventario dropdown - CON ESTADO ACTIVO -->
     <div 
@@ -207,57 +221,14 @@
       </div>
     </div>
 
-<!-- Menú Análisis actualizado con clase específica -->
 @if (user()?.rol === 'Superadmin') {
-  <div 
-    class="nav-item dropdown analysis-dropdown" 
-    [class.is-open]="analysisMenuOpen()" 
-    [class.active]="selectedAnalysis()"
-    (click)="toggleAnalysisMenu()"
+  <a 
+    routerLink="/auditoria" 
+    routerLinkActive="active" 
+    class="nav-item"
   >
-    <button
-      type="button"
-      class="dropdown-toggle"
-      [class.has-selection]="selectedAnalysis()"
-      aria-haspopup="true"
-      [attr.aria-expanded]="analysisMenuOpen()"
-    >
-      @if (selectedAnalysis()) {
-        <!-- Estado activo: muestra el análisis seleccionado -->
-        <i class="fas" [class]="getAnalysisIcon(selectedAnalysis()!)"></i>
-        <span class="inventory-active-text">{{ getAnalysisName(selectedAnalysis()!) }}</span>
-      } @else {
-        <!-- Estado por defecto: muestra Análisis -->
-        <i class="fas fa-chart-line" aria-hidden="true"></i>
-        <span>Análisis</span>
-      }
-      <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
-    </button>
-
-    <div class="dropdown-menu" role="menu" [class.open]="analysisMenuOpen()">
-      <!-- Auditoría -->
-      <a 
-        routerLink="/auditoria" 
-        class="dropdown-item" 
-        role="menuitem"
-        (click)="setSelectedAnalysis('auditoria'); $event.stopPropagation()"
-      >
-        <i class="fas fa-clipboard-check" aria-hidden="true"></i>
-        <span>Auditoría</span>
-      </a>
-
-      <!-- Reportes -->
-      <a 
-        routerLink="/reportes" 
-        class="dropdown-item" 
-        role="menuitem"
-        (click)="setSelectedAnalysis('reportes'); $event.stopPropagation()"
-      >
-        <i class="fas fa-chart-bar" aria-hidden="true"></i>
-        <span>Reportes</span>
-      </a>
-    </div>
-  </div>
+    <i class="fas fa-clipboard-check"></i> Auditoría
+  </a>
 }
 
     @if (user()?.rol === 'Superadmin') {

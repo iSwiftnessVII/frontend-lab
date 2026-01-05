@@ -2,15 +2,6 @@
 
 /* ===== Variables CSS ===== */
 :host {
-  --primary-blue: #001f5b;
-  --primary-turquoise: #00b8b5;
-  --primary-white: #ffffff;
-  --alert-yellow: #fff3b0;
-  --alert-orange: #ffd6a5;
-  --alert-red: #ffadad;
-  --text-gray: #4a5568;
-  --light-gray: #f7fafc;
-  --border-gray: #e2e8f0;
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
@@ -83,11 +74,11 @@
 }
 
 section {
-  background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%);
+  background: var(--app-surface, var(--primary-white));
   border-radius: 20px;
   padding: 2rem;
   box-shadow: var(--shadow-md);
-  border: 2px solid var(--border-gray);
+  border: 2px solid var(--app-border, var(--border-gray));
   margin-bottom: 2rem;
   transition: all 0.4s ease;
   position: relative;
@@ -109,11 +100,19 @@ section::before {
 /* ===== Formulario ===== */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 1rem;
   align-items: end;
   position: relative;
   z-index: 1;
+}
+
+@media (max-width: 900px) {
+  .form-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+  .form-grid { grid-template-columns: 1fr; }
 }
 
 .form-grid > div {
@@ -122,37 +121,6 @@ section::before {
   gap: 0.5rem;
 }
 
-.form-grid label {
-  font-weight: 600;
-  color: var(--primary-blue);
-  font-size: 0.9rem;
-  letter-spacing: 0.3px;
-}
-
-.form-grid input,
-.form-grid select {
-  padding: 0.75rem 1rem;
-  border: 2px solid var(--border-gray);
-  border-radius: 12px;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  background: var(--primary-white);
-  color: var(--text-gray);
-  box-shadow: var(--shadow-sm);
-}
-
-.form-grid input:focus,
-.form-grid select:focus {
-  outline: none;
-  border-color: var(--primary-turquoise);
-  box-shadow: 0 0 0 4px rgba(0, 184, 181, 0.1), var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.form-grid input::placeholder {
-  color: #a0aec0;
-  font-style: italic;
-}
 
 .form-actions {
   display: flex;
@@ -168,10 +136,10 @@ section::before {
   margin-top: 0.4rem;
 }
 .btn-secondary {
-  background: linear-gradient(135deg, var(--light-gray) 0%, #e2e8f0 100%);
-  color: var(--text-gray);
+  background: var(--app-bg, var(--light-gray));
+  color: var(--app-muted, var(--text-gray));
   padding: 0.5rem 0.9rem;
-  border: 2px solid var(--border-gray);
+  border: 2px solid var(--app-border, var(--border-gray));
   border-radius: 10px;
   font-weight: 600;
   font-size: 0.9rem;
@@ -284,11 +252,12 @@ section::before {
 .filters-row input,
 .filters-row select {
   padding: 0.65rem 0.9rem;
-  border: 2px solid var(--border-gray);
+  border: 2px solid var(--app-border, var(--border-gray));
   border-radius: 10px;
   font-size: 0.9rem;
   transition: all 0.3s ease;
-  background: var(--primary-white);
+  background: var(--app-surface, var(--primary-white));
+  color: var(--app-text, var(--text-gray));
   box-shadow: var(--shadow-sm);
 }
 
@@ -305,10 +274,10 @@ section::before {
 }
 
 .btn-reset-filtros {
-  background: linear-gradient(135deg, var(--light-gray) 0%, #e2e8f0 100%);
-  color: var(--text-gray);
+  background: var(--app-bg, var(--light-gray));
+  color: var(--app-muted, var(--text-gray));
   padding: 0.65rem 1.2rem;
-  border: 2px solid var(--border-gray);
+  border: 2px solid var(--app-border, var(--border-gray));
   border-radius: 10px;
   font-weight: 600;
   font-size: 0.9rem;
@@ -345,11 +314,11 @@ section::before {
   display: flex;
   gap: 1rem;
   align-items: center;
-  background: linear-gradient(135deg, var(--primary-white) 0%, #fafbfc 100%);
+  background: var(--app-surface, var(--primary-white));
   padding: 1.2rem 1.5rem;
   border-radius: 16px;
   box-shadow: var(--shadow-md);
-  border: 2px solid var(--border-gray);
+  border: 2px solid var(--app-border, var(--border-gray));
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   flex: 1;
   min-width: 200px;
@@ -450,7 +419,7 @@ section::before {
 
 .stat-label {
   font-size: 0.85rem;
-  color: var(--text-gray);
+  color: var(--app-muted, var(--text-gray));
   font-weight: 600;
   letter-spacing: 0.3px;
 }
@@ -463,8 +432,8 @@ section::before {
 }
 
 .equipo-card {
-  background: var(--primary-white);
-  border: 2px solid var(--border-gray);
+  background: var(--app-surface, var(--primary-white));
+  border: 2px solid var(--app-border, var(--border-gray));
   border-radius: 10px;
   padding: 1.5rem;
   margin-bottom: 0.25rem;
@@ -499,12 +468,12 @@ section::before {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--light-gray);
+  background: var(--app-bg, var(--light-gray));
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
   font-size: 0.85rem;
-  color: var(--text-gray);
-  border: 1px solid var(--border-gray);
+  color: var(--app-muted, var(--text-gray));
+  border: 1px solid var(--app-border, var(--border-gray));
   white-space: nowrap;
 }
 
@@ -563,7 +532,7 @@ section::before {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background: var(--primary-white);
+  background: var(--app-surface, var(--primary-white));
   border-radius: 12px;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -586,7 +555,7 @@ section::before {
 
 .usuarios-table tbody tr {
   transition: all 0.3s ease;
-  border-bottom: 1px solid var(--border-gray);
+  border-bottom: 1px solid var(--app-border, var(--border-gray));
 }
 
 .usuarios-table tbody tr:last-child {
@@ -602,7 +571,7 @@ section::before {
 .usuarios-table td {
   padding: 1rem 0.75rem;
   text-align: left;
-  color: var(--text-gray);
+  color: var(--app-text, var(--text-gray));
   font-size: 0.9rem;
 }
 
@@ -658,9 +627,10 @@ section::before {
 
 .role-select {
   padding: 0.5rem 0.8rem;
-  border: 2px solid var(--border-gray);
+  border: 2px solid var(--app-border, var(--border-gray));
   border-radius: 10px;
-  background: var(--primary-white);
+  background: var(--app-surface, var(--primary-white));
+  color: var(--app-text, var(--text-gray));
   font-size: 0.85rem;
   font-weight: 500;
   width: 100%;
@@ -797,7 +767,7 @@ section::before {
 }
 
 .empty-message {
-  color: var(--text-gray);
+  color: var(--app-muted, var(--text-gray));
   font-size: 1.1rem;
   text-align: center;
   padding: 3rem 2rem;
@@ -805,9 +775,9 @@ section::before {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  background: linear-gradient(135deg, var(--light-gray) 0%, var(--primary-white) 100%);
+  background: var(--app-bg, var(--light-gray));
   border-radius: 12px;
-  border: 2px dashed var(--border-gray);
+  border: 2px dashed var(--app-border, var(--border-gray));
 }
 
 .empty-message i {
@@ -827,9 +797,9 @@ section::before {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #fff;
+  background: var(--app-surface, #fff);
   border-radius: 10px;
-  border: 1px solid var(--border-gray);
+  border: 1px solid var(--app-border, var(--border-gray));
   width: min(600px, 96vw);
   max-height: 90vh;
   overflow: auto;
@@ -869,12 +839,12 @@ section::before {
   gap: 12px;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid var(--border-gray);
+  border-bottom: 1px solid var(--app-border, var(--border-gray));
 }
 
 .skeleton-cell {
   height: 18px;
-  background: linear-gradient(90deg, rgba(0,0,0,0.04), rgba(0,0,0,0.08), rgba(0,0,0,0.04));
+  background: linear-gradient(90deg, var(--app-hover, rgba(0,0,0,0.04)), rgba(2,6,23,0.08), var(--app-hover, rgba(0,0,0,0.04)));
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
   border-radius: 8px;
@@ -886,9 +856,41 @@ section::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
   transform: translateX(-100%);
   animation: shimmer 1.2s linear infinite;
+}
+
+/* ===== Dark mode overrides (ancestor html[data-theme="dark"]) ===== */
+:host-context([data-theme="dark"]) .usuarios-page h2 {
+  color: var(--app-text-strong, #f1f5f9);
+}
+
+:host-context([data-theme="dark"]) .form-grid label,
+:host-context([data-theme="dark"]) .filters-row label {
+  color: var(--app-text-strong, #f1f5f9);
+}
+
+:host-context([data-theme="dark"]) .tag strong {
+  color: var(--app-text-strong, #f1f5f9);
+}
+
+:host-context([data-theme="dark"]) .stat-value {
+  background: none;
+  -webkit-text-fill-color: var(--app-text-strong, #f1f5f9);
+  color: var(--app-text-strong, #f1f5f9);
+}
+
+:host-context([data-theme="dark"]) .modal .close-btn {
+  color: var(--app-muted, #94a3b8);
+}
+
+:host-context([data-theme="dark"]) .skeleton-cell {
+  background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+}
+
+:host-context([data-theme="dark"]) .skeleton-cell::after {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
 }
 
 .skeleton-cell.short {

@@ -8,10 +8,6 @@
       <i class="fas fa-book-medical"></i>
       <span>Crear en Catálogo</span>
     </div>
-    <div class="action-card" (click)="toggleFormulario('catalogo-list')" [class.active]="formularioActivo === 'catalogo-list'">
-      <i class="fas fa-th-list"></i>
-      <span>Ver Catálogo</span>
-    </div>
     <div class="action-card" (click)="toggleFormulario('crear-reactivo')" [class.active]="formularioActivo === 'crear-reactivo'">
       <i class="fas fa-plus-circle"></i>
       <span>Crear Reactivo</span>
@@ -24,132 +20,7 @@
       <i class="fas fa-boxes"></i>
       <span>Ver Inventario</span>
     </div>
-    <div class="action-card" (click)="toggleFormulario('documentos-plantilla')" [class.active]="formularioActivo === 'documentos-plantilla'">
-      <i class="fas fa-layer-group"></i>
-      <span>Generador por Plantilla</span>
-    </div>
   </div>
-
- @if (formularioActivo === 'documentos-plantilla') {
-  <h2>Generación de documentos por plantilla</h2>
-  <section>
-    <div class="form-grid">
-      <div class="form-field full-row search-section" style="position: relative; z-index: 1001;">
-        <label>Buscar y Seleccionar Reactivo: *</label>
-
-        @if (!tplDocReactivoSeleccionado) {
-          <div class="campo-combinado">
-            <select name="tplDocFiltroTipo" [(ngModel)]="tplDocFiltroTipo" (change)="filtrarReactivosPlantillaDocumentos()" class="select-filtro">
-              <option value="todos">Todos los campos</option>
-              <option value="codigo">Código</option>
-              <option value="nombre">Nombre</option>
-              <option value="lote">Lote</option>
-              <option value="cas">CAS</option>
-            </select>
-            <input
-              type="text"
-              name="tplDocBusqueda"
-              [(ngModel)]="tplDocBusqueda"
-              (input)="filtrarReactivosPlantillaDocumentos()"
-              class="input-combinado"
-              placeholder="Buscar reactivo..."
-              autocomplete="off"
-            />
-          </div>
-
-          @if (tplDocBusqueda && tplDocResultados.length > 0) {
-            <div class="lista-resultados">
-              @for (r of tplDocResultados; track r.lote) {
-                <div class="resultado-item" (click)="seleccionarReactivoPlantillaDocumento(r)">
-                  <div class="resultado-header">
-                    <span class="codigo">{{ r.codigo }}</span>
-                    <span class="nombre">{{ r.nombre }}</span>
-                  </div>
-                  <div class="info-adicional">
-                    <span><i class="fas fa-barcode"></i> Lote: {{ r.lote }}</span>
-                    <span><i class="fas fa-flask"></i> Disp: {{ r.cantidad_total }} {{ getUnidadNombre(r.unidad_id) }}</span>
-                  </div>
-                </div>
-              }
-            </div>
-          }
-
-          @if (tplDocBusqueda && tplDocResultados.length === 0) {
-            <div class="lista-resultados">
-              <div class="sin-resultados">
-                <i class="fas fa-search"></i>
-                <span>No se encontraron resultados</span>
-              </div>
-            </div>
-          }
-        } @else {
-          <div class="reactivo-seleccionado">
-            <div class="seleccionado-info">
-              <div class="seleccionado-content">
-                <div class="seleccionado-header">
-                  <i class="fas fa-check-circle"></i>
-                  <strong>Reactivo Seleccionado</strong>
-                </div>
-                <span class="codigo-nombre">
-                  {{ tplDocReactivoSeleccionado.codigo }} - {{ tplDocReactivoSeleccionado.nombre }}
-                </span>
-                <div class="detalles-seleccionado">
-                  <span><i class="fas fa-barcode"></i> Lote: {{ tplDocReactivoSeleccionado.lote }}</span>
-                  <span><i class="fas fa-flask"></i> Disponible: {{ tplDocReactivoSeleccionado.cantidad_total }} {{ getUnidadNombre(tplDocReactivoSeleccionado.unidad_id) }}</span>
-                </div>
-              </div>
-              <button type="button" class="btn-limpiar" (click)="limpiarSeleccionPlantillaDocumento()" title="Cambiar reactivo">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-        }
-      </div>
-
-      <div class="form-field full-row">
-        <label>Plantilla guardada: *</label>
-        <div class="campo-combinado">
-          <select name="tplDocPlantillaId" [(ngModel)]="tplDocPlantillaId" class="select-filtro">
-            <option [ngValue]="null" disabled>Seleccione una plantilla</option>
-            @for (t of tplDocPlantillas; track t.id) {
-              <option [ngValue]="t.id">{{ t.nombre || t.nombre_archivo || ('Plantilla #' + t.id) }}</option>
-            }
-          </select>
-          <button type="button" class="btn-compact" (click)="cargarPlantillasDocumentoReactivo()" [disabled]="tplDocListLoading">
-            {{ tplDocListLoading ? 'Actualizando…' : 'Actualizar' }}
-          </button>
-          <button type="button" class="btn-compact" (click)="eliminarPlantillaDocumentoReactivo()" [disabled]="!tplDocPlantillaId || tplDocDeleteLoading.has(tplDocPlantillaId!)">
-            Eliminar
-          </button>
-        </div>
-      </div>
-
-      <div class="form-field">
-        <label for="tplDocNombre">Nombre de plantilla</label>
-        <input id="tplDocNombre" name="tplDocNombre" [(ngModel)]="tplDocNombrePlantilla" placeholder="Ej: Certificado interno" />
-      </div>
-
-      <div class="form-field">
-        <label for="tplDocTemplate">Subir plantilla (.xlsx o .docx)</label>
-        <input #tplDocTemplateInput id="tplDocTemplate" type="file" accept=".xlsx,.docx" (change)="onTplDocTemplateSelected($event)" />
-      </div>
-
-      <div class="actions">
-        <button class="btn-compact" type="button" (click)="subirPlantillaDocumentoReactivo()" [disabled]="tplDocUploadLoading">
-          {{ tplDocUploadLoading ? 'Guardando…' : 'Guardar plantilla' }}
-        </button>
-        <button class="btn-compact" type="button" (click)="generarDocumentoReactivoDesdePlantilla()" [disabled]="tplDocLoading">
-          {{ tplDocLoading ? 'Generando…' : 'Generar y descargar' }}
-        </button>
-      </div>
-
-      @if (tplDocMsg) {
-        <small class="error-message">{{ tplDocMsg }}</small>
-      }
-    </div>
-  </section>
- }
-
  @if (formularioActivo === 'catalogo') {
   <h2>Crear nuevo reactivo en Catálogo</h2>
   <section>

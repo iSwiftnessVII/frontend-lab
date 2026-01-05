@@ -4,6 +4,10 @@
   margin-bottom: 1rem;
   color: var(--primary-blue, #0d6efd);
 }
+
+:host-context([data-theme="dark"]) .perfil-title {
+  color: var(--app-text-strong, #f1f5f9);
+}
 .perfil-section {
   margin-bottom: 1.25rem;
 }
@@ -15,8 +19,12 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+:host-context([data-theme="dark"]) .section-title {
+  color: var(--app-text-strong, #f1f5f9);
+}
 .section-help {
-  color: #6b7280;
+  color: var(--app-muted, #6b7280);
   margin-bottom: 0.75rem;
 }
 .suscripciones-title {
@@ -28,9 +36,13 @@
   gap: 0.6rem;
   margin: 0 0 0.85rem 0;
 }
+
+:host-context([data-theme="dark"]) .suscripciones-title {
+  color: var(--app-text-strong, #f1f5f9);
+}
 .perfil-card {
-  background: #fff;
-  border: 1px solid var(--border-gray, #e5e7eb);
+  background: var(--app-surface, #fff);
+  border: 1px solid var(--app-border, var(--border-gray, #e5e7eb));
   border-radius: 12px;
   padding: 1.25rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
@@ -64,7 +76,7 @@
   font-weight: 600;
 }
 .perfil-email {
-  color: #6b7280;
+  color: var(--app-muted, #6b7280);
   font-size: 0.95rem;
 }
 .perfil-role {
@@ -72,6 +84,10 @@
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--primary-blue, #0d6efd);
+}
+
+:host-context([data-theme="dark"]) .perfil-role {
+  color: var(--app-text-strong, #f1f5f9);
 }
 .perfil-subscriptions {
   margin-top: 0.5rem;
@@ -88,6 +104,12 @@
   color: var(--primary-blue, #0d6efd);
   background: rgba(13, 110, 253, 0.12);
   border: 1px solid rgba(13, 110, 253, 0.25);
+}
+
+:host-context([data-theme="dark"]) .perfil-sub-icon {
+  color: var(--app-text-strong, #f1f5f9);
+  background: var(--app-hover, rgba(255, 255, 255, 0.06));
+  border-color: var(--app-border, rgba(255, 255, 255, 0.14));
 }
 .perfil-sub-icon i {
   font-size: 1rem;
@@ -107,13 +129,13 @@
   display: flex;
   justify-content: space-between;
   padding: 0.5rem 0;
-  border-bottom: 1px dashed var(--border-gray, #e5e7eb);
+  border-bottom: 1px dashed var(--app-border, var(--border-gray, #e5e7eb));
 }
 .perfil-row:last-child {
   border-bottom: none;
 }
 .perfil-row .label {
-  color: #6b7280;
+  color: var(--app-muted, #6b7280);
 }
 .perfil-row .value {
   font-weight: 600;
@@ -197,6 +219,12 @@
   flex: 0 0 auto;
 }
 
+:host-context([data-theme="dark"]) .suscripcion-title-icon {
+  color: var(--app-text-strong, #f1f5f9);
+  background: var(--app-hover, rgba(255, 255, 255, 0.06));
+  border-color: var(--app-border, rgba(255, 255, 255, 0.14));
+}
+
 .suscripcion-title-icon i {
   font-size: 0.95rem;
 }
@@ -223,8 +251,9 @@
   min-width: 0;
   padding: 0.6rem 0.75rem;
   border-radius: 10px;
-  border: 1px solid var(--border-gray, #e5e7eb);
-  background: #fff;
+  border: 1px solid var(--app-border, var(--border-gray, #e5e7eb));
+  background: var(--app-surface, #fff);
+  color: var(--app-text, inherit);
 }
 
 .form-field input:focus {
