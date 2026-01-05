@@ -106,19 +106,6 @@
             </div>
           </div>
         </div>
-      } @else {
-        <div class="metric-card">
-          <div class="metric-icon solicitudes">
-            <i class="fas fa-clipboard-list"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalSolicitudes) }}</div>
-            <div class="metric-label">Total Solicitudes</div>
-            <div class="metric-subtitle">
-              {{ contarSolicitudesViable() }} viables • {{ contarSolicitudesConOferta() }} con oferta
-            </div>
-          </div>
-        </div>
       }
 
       <!-- Tarjeta Clientes -->
@@ -245,74 +232,76 @@
       }
     </div>
 
-    <section class="submetrics-section">
-      <h2 class="submetrics-title">
-        <i class="fas fa-clipboard-check"></i>
-        Métricas de Solicitudes
-      </h2>
+    @if (!esAuxiliar) {
+      <section class="submetrics-section">
+        <h2 class="submetrics-title">
+          <i class="fas fa-clipboard-check"></i>
+          Métricas de Solicitudes
+        </h2>
 
-      <div class="submetrics-grid">
-        <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-          <div class="submetric-icon viable">
-            <i class="fas fa-check"></i>
+        <div class="submetrics-grid">
+          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
+            <div class="submetric-icon viable">
+              <i class="fas fa-check"></i>
+            </div>
+            <div class="submetric-content">
+              <div class="submetric-value">{{ formatearNumero(contarSolicitudesViable()) }}</div>
+              <div class="submetric-label">Viables</div>
+            </div>
           </div>
-          <div class="submetric-content">
-            <div class="submetric-value">{{ formatearNumero(contarSolicitudesViable()) }}</div>
-            <div class="submetric-label">Viables</div>
+
+          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
+            <div class="submetric-icon no-viable">
+              <i class="fas fa-times"></i>
+            </div>
+            <div class="submetric-content">
+              <div class="submetric-value">{{ formatearNumero(contarSolicitudesNoViable()) }}</div>
+              <div class="submetric-label">No viables</div>
+            </div>
+          </div>
+
+          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
+            <div class="submetric-icon revision">
+              <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="submetric-content">
+              <div class="submetric-value">{{ formatearNumero(contarSolicitudesRevisionPendiente()) }}</div>
+              <div class="submetric-label">Revisión pendiente</div>
+            </div>
+          </div>
+
+          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
+            <div class="submetric-icon oferta">
+              <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            <div class="submetric-content">
+              <div class="submetric-value">{{ formatearNumero(contarSolicitudesConOferta()) }}</div>
+              <div class="submetric-label">Con oferta</div>
+            </div>
+          </div>
+
+          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
+            <div class="submetric-icon sin-oferta">
+              <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="submetric-content">
+              <div class="submetric-value">{{ formatearNumero(contarSolicitudesSinOferta()) }}</div>
+              <div class="submetric-label">Sin oferta</div>
+            </div>
+          </div>
+
+          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
+            <div class="submetric-icon oferta-pendiente">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="submetric-content">
+              <div class="submetric-value">{{ formatearNumero(contarSolicitudesOfertaPendiente()) }}</div>
+              <div class="submetric-label">Oferta pendiente</div>
+            </div>
           </div>
         </div>
-
-        <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-          <div class="submetric-icon no-viable">
-            <i class="fas fa-times"></i>
-          </div>
-          <div class="submetric-content">
-            <div class="submetric-value">{{ formatearNumero(contarSolicitudesNoViable()) }}</div>
-            <div class="submetric-label">No viables</div>
-          </div>
-        </div>
-
-        <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-          <div class="submetric-icon revision">
-            <i class="fas fa-hourglass-half"></i>
-          </div>
-          <div class="submetric-content">
-            <div class="submetric-value">{{ formatearNumero(contarSolicitudesRevisionPendiente()) }}</div>
-            <div class="submetric-label">Revisión pendiente</div>
-          </div>
-        </div>
-
-        <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-          <div class="submetric-icon oferta">
-            <i class="fas fa-file-invoice-dollar"></i>
-          </div>
-          <div class="submetric-content">
-            <div class="submetric-value">{{ formatearNumero(contarSolicitudesConOferta()) }}</div>
-            <div class="submetric-label">Con oferta</div>
-          </div>
-        </div>
-
-        <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-          <div class="submetric-icon sin-oferta">
-            <i class="fas fa-file-invoice"></i>
-          </div>
-          <div class="submetric-content">
-            <div class="submetric-value">{{ formatearNumero(contarSolicitudesSinOferta()) }}</div>
-            <div class="submetric-label">Sin oferta</div>
-          </div>
-        </div>
-
-        <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-          <div class="submetric-icon oferta-pendiente">
-            <i class="fas fa-clock"></i>
-          </div>
-          <div class="submetric-content">
-            <div class="submetric-value">{{ formatearNumero(contarSolicitudesOfertaPendiente()) }}</div>
-            <div class="submetric-label">Oferta pendiente</div>
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
+    }
   }
 
   <!-- Sección de Alertas Expandibles -->

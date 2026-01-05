@@ -13,8 +13,6 @@ import { ReferenciaService } from '../services/referencia.service';
 
 type PlantillasSeccion = 'solicitudes' | 'reactivos' | 'equipos' | 'volumetricos' | 'referencia';
 
-type SolicitudEntidad = 'solicitud' | 'cliente';
-
 @Component({
   standalone: true,
   selector: 'app-plantillas',
@@ -49,12 +47,21 @@ export class PlantillasComponent {
   // ====== Solicitudes / Clientes ======
   @ViewChild('tplSolicitudTemplateInput') private tplSolicitudTemplateInput?: ElementRef<HTMLInputElement>;
 
-  tplSolicitudEntidad: SolicitudEntidad = 'solicitud';
+  // Selección (Solicitud)
   tplSolicitudFiltroTipo = 'todos';
   tplSolicitudBusqueda = '';
   tplSolicitudResultados: any[] = [];
   tplSolicitudSeleccionadoId: number | null = null;
   tplSolicitudSeleccionado: any = null;
+
+  // Selección (Cliente)
+  showClienteDropdown = false;
+  private clienteBlurTimer?: ReturnType<typeof setTimeout>;
+  tplClienteFiltroTipo = 'todos';
+  tplClienteBusqueda = '';
+  tplClienteResultados: any[] = [];
+  tplClienteSeleccionadoId: number | null = null;
+  tplClienteSeleccionado: any = null;
 
   tplSolicitudPlantillas = signal<any[]>([]);
   tplSolicitudPlantillaId: number | null = null;
@@ -256,26 +263,14 @@ export class PlantillasComponent {
       // ignore, handled by user actions
     }
 
-    // Load clientes only if needed
-    if (this.tplSolicitudEntidad === 'cliente') {
-      try {
-        if (!this.clientesService.clientes()?.length) {
-          await this.clientesService.loadClientes();
-        }
-      } catch {
-        // ignore
+    // Load clientes (selector independiente)
+    try {
+      if (!this.clientesService.clientes()?.length) {
+        await this.clientesService.loadClientes();
       }
+    } catch {
+      // ignore
     }
-  }
-
-  onTplSolicitudEntidadChanged(): void {
-    this.tplSolicitudFiltroTipo = 'todos';
-    this.tplSolicitudBusqueda = '';
-    this.tplSolicitudResultados = [];
-    this.tplSolicitudSeleccionado = null;
-    this.tplSolicitudSeleccionadoId = null;
-    this.tplSolicitudMsg = '';
-    void this.ensureSolicitudesDataLoaded();
   }
 
   onTplSolicitudSearchFocus(): void {
@@ -296,7 +291,7 @@ export class PlantillasComponent {
   }
 
   selectTplSolicitud(item: any): void {
-    const rawId = item?.id_cliente ?? item?.cliente_id ?? item?.solicitud_id ?? item?.id_solicitud;
+    const rawId = item?.solicitud_id ?? item?.id_solicitud;
     const id = rawId != null ? Number(rawId) : null;
     this.tplSolicitudSeleccionadoId = id;
     this.tplSolicitudSeleccionado = item || null;
@@ -307,16 +302,18 @@ export class PlantillasComponent {
 
   private formatSolicitudSelectedLabel(item: any): string {
     if (!item) return '';
-    if (this.tplSolicitudEntidad === 'cliente') {
-      const nombre = String(item?.nombre_solicitante ?? item?.nombre ?? item?.nombre_cliente ?? 'Cliente').trim();
-      const razon = String(item?.razon_social ?? '').trim();
-      return razon ? `${nombre} - ${razon}` : nombre;
-    }
     const numero = String(item?.numero ?? '').trim();
     const sid = String(item?.solicitud_id ?? item?.id_solicitud ?? '').trim();
     const solicitante = String(item?.nombre_solicitante ?? '').trim();
     const left = numero || (sid ? `Solicitud ${sid}` : 'Solicitud');
     return solicitante ? `${left} - ${solicitante}` : left;
+  }
+
+  private formatClienteSelectedLabel(item: any): string {
+    if (!item) return '';
+    const nombre = String(item?.nombre_solicitante ?? item?.nombre ?? item?.nombre_cliente ?? 'Cliente').trim();
+    const razon = String(item?.razon_social ?? '').trim();
+    return razon ? `${nombre} - ${razon}` : nombre;
   }
 
   filtrarTplSolicitudResultados(): void {
@@ -327,15 +324,47 @@ export class PlantillasComponent {
     }
 
     const filtro = this.tplSolicitudFiltroTipo;
+    const src = this.solicitudesService.solicitudes?.() || [];
+    this.tplSolicitudResultados = src.filter((s: any) => this.matchSolicitud(s, filtro, q)).slice(0, 50);
+  }
 
-    if (this.tplSolicitudEntidad === 'cliente') {
-      const src = this.clientesService.clientes?.() || [];
-      this.tplSolicitudResultados = src.filter((c: any) => this.matchCliente(c, filtro, q)).slice(0, 50);
+  onTplClienteSearchFocus(): void {
+    this.showClienteDropdown = true;
+    if (this.clienteBlurTimer) clearTimeout(this.clienteBlurTimer);
+  }
+
+  onTplClienteSearchBlur(): void {
+    if (this.clienteBlurTimer) clearTimeout(this.clienteBlurTimer);
+    this.clienteBlurTimer = setTimeout(() => {
+      this.showClienteDropdown = false;
+    }, 150);
+  }
+
+  onTplClienteSearchInput(): void {
+    this.showClienteDropdown = true;
+    this.filtrarTplClienteResultados();
+  }
+
+  selectTplCliente(item: any): void {
+    const rawId = item?.id_cliente ?? item?.cliente_id;
+    const id = rawId != null ? Number(rawId) : null;
+    this.tplClienteSeleccionadoId = id;
+    this.tplClienteSeleccionado = item || null;
+    this.tplClienteBusqueda = this.formatClienteSelectedLabel(item);
+    this.tplClienteResultados = [];
+    this.showClienteDropdown = false;
+  }
+
+  filtrarTplClienteResultados(): void {
+    const q = (this.tplClienteBusqueda || '').toLowerCase().trim();
+    if (!q) {
+      this.tplClienteResultados = [];
       return;
     }
 
-    const src = this.solicitudesService.solicitudes?.() || [];
-    this.tplSolicitudResultados = src.filter((s: any) => this.matchSolicitud(s, filtro, q)).slice(0, 50);
+    const filtro = this.tplClienteFiltroTipo;
+    const src = this.clientesService.clientes?.() || [];
+    this.tplClienteResultados = src.filter((c: any) => this.matchCliente(c, filtro, q)).slice(0, 50);
   }
 
   private matchSolicitud(s: any, filtro: string, q: string): boolean {
@@ -378,14 +407,23 @@ export class PlantillasComponent {
       return;
     }
 
-    const src = this.tplSolicitudEntidad === 'cliente'
-      ? (this.clientesService.clientes?.() || [])
-      : (this.solicitudesService.solicitudes?.() || []);
-
-    const selected = src.find((x: any) => Number(x?.id_cliente ?? x?.cliente_id ?? x?.solicitud_id ?? x?.id_solicitud) === Number(id));
+    const src = this.solicitudesService.solicitudes?.() || [];
+    const selected = src.find((x: any) => Number(x?.solicitud_id ?? x?.id_solicitud) === Number(id));
     this.tplSolicitudSeleccionado = selected || null;
     this.tplSolicitudResultados = [];
     this.showSolicitudDropdown = false;
+  }
+
+  onTplClienteSeleccionadoIdChanged(id: number | null): void {
+    if (!id) {
+      this.tplClienteSeleccionado = null;
+      return;
+    }
+    const src = this.clientesService.clientes?.() || [];
+    const selected = src.find((x: any) => Number(x?.id_cliente ?? x?.cliente_id) === Number(id));
+    this.tplClienteSeleccionado = selected || null;
+    this.tplClienteResultados = [];
+    this.showClienteDropdown = false;
   }
 
   onTplSolicitudTemplateSelected(event: any): void {
@@ -486,15 +524,15 @@ export class PlantillasComponent {
     let solicitud_id: number | undefined = undefined;
     let id_cliente: number | undefined = undefined;
 
-    if (this.tplSolicitudEntidad === 'solicitud') {
-      const idRaw = this.tplSolicitudSeleccionado?.solicitud_id ?? this.tplSolicitudSeleccionado?.id_solicitud;
-      const n = Number(idRaw);
-      if (Number.isFinite(n) && n > 0) solicitud_id = n;
-    } else {
-      const idRaw = this.tplSolicitudSeleccionado?.id_cliente ?? this.tplSolicitudSeleccionado?.cliente_id;
-      const n = Number(idRaw);
-      if (Number.isFinite(n) && n > 0) id_cliente = n;
-    }
+    const solicitudRaw = this.tplSolicitudSeleccionado?.solicitud_id ?? this.tplSolicitudSeleccionado?.id_solicitud;
+    const solicitudN = Number(solicitudRaw);
+    if (Number.isFinite(solicitudN) && solicitudN > 0) solicitud_id = solicitudN;
+
+    const clienteRaw = this.tplClienteSeleccionado?.id_cliente ?? this.tplClienteSeleccionado?.cliente_id;
+    const clienteN = Number(clienteRaw);
+    if (Number.isFinite(clienteN) && clienteN > 0) id_cliente = clienteN;
+
+    const entidad = solicitud_id ? 'solicitud' : (id_cliente ? 'cliente' : 'solicitud');
 
     this.tplSolicitudLoading = true;
     this.tplSolicitudMsg = '';
@@ -506,7 +544,7 @@ export class PlantillasComponent {
         templateId,
         solicitud_id,
         id_cliente,
-        entidad: this.tplSolicitudEntidad
+        entidad
       });
 
       this.downloadBlob(blob, filename || fallbackName);

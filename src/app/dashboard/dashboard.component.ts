@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { insumosService } from '../services/insumos.service';
 import { reactivosService } from '../services/reactivos.service';
-import { authService } from '../services/auth.service';
+import { authService, authUser } from '../services/auth.service';
 import { equiposService } from '../services/equipos.service';
 import { PapeleriaService } from '../services/papeleria.service';
 import { VolumetricosService } from '../services/volumetricos.service';
@@ -50,8 +50,8 @@ export class DashboardComponent implements OnInit {
 
   // Detectar si el usuario es auxiliar
   get esAuxiliar() {
-    const user = (window as any).authUser?.() || null;
-    return user && user.rol === 'Auxiliar';
+    const user = authUser();
+    return user?.rol === 'Auxiliar';
   }
 
   constructor(
@@ -74,16 +74,21 @@ export class DashboardComponent implements OnInit {
   async cargarDashboard() {
     try {
       // Cargar datos en paralelo - OPTIMIZADO
-      await Promise.all([
+      const tasks: Promise<void>[] = [
         this.cargarInsumos(),
         this.cargarReactivos(),
-        this.cargarSolicitudes(),
-        this.cargarClientes(),
         this.cargarPapeleria(),
         this.cargarEquipos(),
         this.cargarVolumetricos(),
-        this.cargarReferencia()
-      ]);
+        this.cargarReferencia(),
+        this.cargarClientes()
+      ];
+
+      if (!this.esAuxiliar) {
+        tasks.push(this.cargarSolicitudes());
+      }
+
+      await Promise.all(tasks);
     } catch (error) {
       console.error('Error cargando dashboard:', error);
     }

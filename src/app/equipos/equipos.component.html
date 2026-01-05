@@ -5,27 +5,29 @@
   </h1>
 
   <!-- Tarjetas de Dashboard -->
-  <div class="dashboard-cards">
-    <div class="action-card" (click)="toggleFormulario('hojaVida')" [class.active]="formularioActivo === 'hojaVida'">
-      <i class="fas fa-file-medical"></i>
-      <span>Registrar Hoja de Vida</span>
-    </div>
+  @if (!esAuxiliar) {
+    <div class="dashboard-cards">
+      <div class="action-card" (click)="toggleFormulario('hojaVida')" [class.active]="formularioActivo === 'hojaVida'">
+        <i class="fas fa-file-medical"></i>
+        <span>Registrar Hoja de Vida</span>
+      </div>
 
-    <div class="action-card" (click)="toggleFormulario('fichaTecnica')" [class.active]="formularioActivo === 'fichaTecnica'">
-      <i class="fas fa-clipboard-list"></i>
-      <span>Registrar Ficha Técnica</span>
-    </div>
+      <div class="action-card" (click)="toggleFormulario('fichaTecnica')" [class.active]="formularioActivo === 'fichaTecnica'">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Registrar Ficha Técnica</span>
+      </div>
 
-    <div class="action-card" (click)="toggleFormulario('historial')" [class.active]="formularioActivo === 'historial'">
-      <i class="fas fa-history"></i>
-      <span>Registrar Historial de Equipo</span>
-    </div>
+      <div class="action-card" (click)="toggleFormulario('historial')" [class.active]="formularioActivo === 'historial'">
+        <i class="fas fa-history"></i>
+        <span>Registrar Historial de Equipo</span>
+      </div>
 
-    <div class="action-card" (click)="toggleFormulario('intervalo')" [class.active]="formularioActivo === 'intervalo'">
-      <i class="fas fa-calendar-alt"></i>
-      <span>Registrar Intervalo de Equipo</span>
+      <div class="action-card" (click)="toggleFormulario('intervalo')" [class.active]="formularioActivo === 'intervalo'">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Registrar Intervalo de Equipo</span>
+      </div>
     </div>
-  </div>
+  }
   <!-- Formulario de Hoja de Vida -->
   <div *ngIf="formularioActivo === 'hojaVida' && !esAuxiliar" class="form-section">
     <h2>

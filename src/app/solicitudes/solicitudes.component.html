@@ -4,35 +4,37 @@
     | Solicitudes
   </h1>
   
-  <div class="dashboard-cards">
-    @if (user()?.rol === 'Administrador') {
-      <div class="action-card" (click)="toggleFormulario('revision')" [class.active]="formularioActivo === 'revision'">
-        <i class="fas fa-check-double"></i>
-        <span>Registrar Revisión</span>
-      </div>
-    } @else {
-      <div class="action-card" (click)="toggleFormulario('cliente')" [class.active]="formularioActivo === 'cliente'">
-        <i class="fas fa-user-plus"></i>
-        <span>Agregar Cliente</span>
-      </div>
-      <div class="action-card" (click)="toggleFormulario('solicitud')" [class.active]="formularioActivo === 'solicitud'">
-        <i class="fas fa-clipboard-list"></i>
-        <span>Agregar Solicitud</span>
-      </div>
-      <div class="action-card" (click)="toggleFormulario('oferta')" [class.active]="formularioActivo === 'oferta'">
-        <i class="fas fa-hand-holding-dollar"></i>
-        <span>Registrar Oferta</span>
-      </div>
-      <div class="action-card" (click)="toggleFormulario('revision')" [class.active]="formularioActivo === 'revision'">
-        <i class="fas fa-check-double"></i>
-        <span>Registrar Revisión</span>
-      </div>
-      <div class="action-card" (click)="toggleFormulario('encuesta')" [class.active]="formularioActivo === 'encuesta'">
-        <i class="fas fa-star"></i>
-        <span>Seguimiento Encuesta</span>
-      </div>
-    }
-  </div>
+  @if (user()?.rol !== 'Auxiliar') {
+    <div class="dashboard-cards">
+      @if (user()?.rol === 'Administrador') {
+        <div class="action-card" (click)="toggleFormulario('revision')" [class.active]="formularioActivo === 'revision'">
+          <i class="fas fa-check-double"></i>
+          <span>Registrar Revisión</span>
+        </div>
+      } @else {
+        <div class="action-card" (click)="toggleFormulario('cliente')" [class.active]="formularioActivo === 'cliente'">
+          <i class="fas fa-user-plus"></i>
+          <span>Agregar Cliente</span>
+        </div>
+        <div class="action-card" (click)="toggleFormulario('solicitud')" [class.active]="formularioActivo === 'solicitud'">
+          <i class="fas fa-clipboard-list"></i>
+          <span>Agregar Solicitud</span>
+        </div>
+        <div class="action-card" (click)="toggleFormulario('oferta')" [class.active]="formularioActivo === 'oferta'">
+          <i class="fas fa-hand-holding-dollar"></i>
+          <span>Registrar Oferta</span>
+        </div>
+        <div class="action-card" (click)="toggleFormulario('revision')" [class.active]="formularioActivo === 'revision'">
+          <i class="fas fa-check-double"></i>
+          <span>Registrar Revisión</span>
+        </div>
+        <div class="action-card" (click)="toggleFormulario('encuesta')" [class.active]="formularioActivo === 'encuesta'">
+          <i class="fas fa-star"></i>
+          <span>Seguimiento Encuesta</span>
+        </div>
+      }
+    </div>
+  }
 
   @if (formularioActivo === 'cliente') {
   <h2>Agregar cliente</h2>

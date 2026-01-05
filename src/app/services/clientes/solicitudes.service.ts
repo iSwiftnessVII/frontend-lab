@@ -554,7 +554,8 @@ export class SolicitudesService {
     if (!Number.isFinite(templateId) || templateId <= 0) throw new Error('Debe seleccionar una plantilla');
     const hasSolicitud = Number.isFinite(solicitud_id) && (solicitud_id as number) > 0;
     const hasCliente = Number.isFinite(id_cliente) && (id_cliente as number) > 0;
-    if (!todos && !hasSolicitud && !hasCliente) throw new Error('Debe seleccionar un cliente o una solicitud');
+    // Permitir requests vacías: si la plantilla tiene loops, el backend genera "todos".
+    // Si no hay loops, el backend devolverá un 400 con el mensaje correspondiente.
 
     const body: any = {};
     if (hasSolicitud) body.solicitud_id = solicitud_id;

@@ -5,22 +5,24 @@
   </h1>
 
   <!-- Tarjetas de Dashboard -->
-  <div class="dashboard-cards">
-    <div class="action-card" (click)="toggleFormulario('material')" [class.active]="formularioActivo === 'material'">
-      <i class="fas fa-weight"></i>
-      <span>Registrar Material de Referencia</span>
-    </div>
+  @if (!esAuxiliar) {
+    <div class="dashboard-cards">
+      <div class="action-card" (click)="toggleFormulario('material')" [class.active]="formularioActivo === 'material'">
+        <i class="fas fa-weight"></i>
+        <span>Registrar Material de Referencia</span>
+      </div>
 
-    <div class="action-card" (click)="toggleFormulario('historial')" [class.active]="formularioActivo === 'historial'">
-      <i class="fas fa-history"></i>
-      <span>Registrar Historial de Material</span>
-    </div>
+      <div class="action-card" (click)="toggleFormulario('historial')" [class.active]="formularioActivo === 'historial'">
+        <i class="fas fa-history"></i>
+        <span>Registrar Historial de Material</span>
+      </div>
 
-    <div class="action-card" (click)="toggleFormulario('intervalo')" [class.active]="formularioActivo === 'intervalo'">
-      <i class="fas fa-calendar-alt"></i>
-      <span>Registrar Intervalo de Calibración</span>
+      <div class="action-card" (click)="toggleFormulario('intervalo')" [class.active]="formularioActivo === 'intervalo'">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Registrar Intervalo de Calibración</span>
+      </div>
     </div>
-  </div>
+  }
 
   <!-- Formulario de Material de Referencia -->
   @if (formularioActivo === 'material' && !esAuxiliar) {

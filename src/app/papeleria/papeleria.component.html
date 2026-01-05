@@ -4,12 +4,14 @@
     | Gestión de Papelería
   </h1>
 
-  <div class="dashboard-cards">
-    <div class="action-card" (click)="toggleFormulario('crear')" [class.active]="formularioActivo === 'crear'">
-      <i class="fas fa-plus-circle"></i>
-      <span>Registrar Papelería</span>
+  @if (!esAuxiliar) {
+    <div class="dashboard-cards">
+      <div class="action-card" (click)="toggleFormulario('crear')" [class.active]="formularioActivo === 'crear'">
+        <i class="fas fa-plus-circle"></i>
+        <span>Registrar Papelería</span>
+      </div>
     </div>
-  </div>
+  }
 
   @if (formularioActivo === 'crear' && !esAuxiliar) {
     <div class="form-section">

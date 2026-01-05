@@ -82,6 +82,9 @@ export class ReactivosComponent implements OnInit {
   formularioActivo: string | null = null;
   
   ngOnInit() {
+    if (this.esAuxiliar) {
+      this.formularioActivo = 'inventario';
+    }
     // Ejecutar inicialización al montar el componente
     this.init();
   }
@@ -93,6 +96,10 @@ export class ReactivosComponent implements OnInit {
   catClasificacion = '';
   catalogoMsg = '';
   submittedCatalogo = false;
+
+  // Edición de catálogo
+  catalogoEditMode = false;
+  catalogoEditOriginalCodigo: string | null = null;
 
   // Catálogo búsqueda y selección
   catalogoQ = '';
@@ -267,6 +274,15 @@ reactivoErrors: { [key: string]: string } = {};
 
   async toggleFormulario(tipo: string) {
     this.formularioActivo = this.formularioActivo === tipo ? null : tipo;
+    if (this.formularioActivo === 'catalogo-list') {
+      // Asegurar que el catálogo esté cargado/refrescado al abrir la lista
+      this.catalogoCargando = true;
+      try {
+        await this.loadCatalogoInicial();
+      } catch (e) {
+        console.error('Error cargando catálogo (lista)', e);
+      }
+    }
     if (this.formularioActivo === 'consumo') {
       this.consumoForm = { lote: '', cantidad: null, uso: '' };
       this.consumoMsg = '';
@@ -1784,19 +1800,29 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   
   try {
     const safeTrim = (v: any): string => typeof v === 'string' ? v.trim() : '';
-    await reactivosService.crearCatalogo({
+
+    const payload = {
       codigo: safeTrim(this.catCodigo),
       nombre: safeTrim(this.catNombre),
       tipo_reactivo: safeTrim(this.catTipo),
       clasificacion_sga: safeTrim(this.catClasificacion)
-    });
-    this.snack.success('Catálogo creado correctamente');
+    };
+
+    if (this.catalogoEditMode && this.catalogoEditOriginalCodigo) {
+      await reactivosService.actualizarCatalogo(this.catalogoEditOriginalCodigo, payload);
+      this.snack.success('Catálogo actualizado correctamente');
+    } else {
+      await reactivosService.crearCatalogo(payload);
+      this.snack.success('Catálogo creado correctamente');
+    }
     
     // Limpiar errores después de éxito
     this.catalogoErrors = {};
     
     // limpiar
     this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = '';
+    this.catalogoEditMode = false;
+    this.catalogoEditOriginalCodigo = null;
     // Resetear estado del formulario para limpiar touched/dirty y evitar resaltar en rojo
     try { if (form) form.resetForm({ catCodigo:'', catNombre:'', catTipo:'', catClasificacion:'' }); } catch {}
     this.submittedCatalogo = false;
@@ -1812,6 +1838,47 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     this.snack.error(err?.message || 'Error creando catálogo');
   }
 }
+
+  startEditCatalogo(c: any, ev?: Event, form?: NgForm) {
+    try { ev?.stopPropagation(); } catch {}
+    if (!this.canDelete()) return;
+    const codigo = String(c?.codigo || '').trim();
+    if (!codigo) return;
+
+    // Abrir el formulario de catálogo y precargar
+    this.formularioActivo = 'catalogo';
+    this.catalogoEditMode = true;
+    this.catalogoEditOriginalCodigo = codigo;
+    this.submittedCatalogo = false;
+    this.catalogoErrors = {};
+
+    this.catCodigo = codigo;
+    this.catNombre = String(c?.nombre || '');
+    this.catTipo = String(c?.tipo_reactivo || '');
+    this.catClasificacion = String(c?.clasificacion_sga || '');
+
+    // Resetear estado visual del formulario (sin borrar valores)
+    try {
+      form?.resetForm({
+        catCodigo: this.catCodigo,
+        catNombre: this.catNombre,
+        catTipo: this.catTipo,
+        catClasificacion: this.catClasificacion
+      });
+    } catch {}
+
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
+  }
+
+  cancelEditCatalogo(form?: NgForm) {
+    this.catalogoEditMode = false;
+    this.catalogoEditOriginalCodigo = null;
+    this.submittedCatalogo = false;
+    this.catalogoErrors = {};
+    this.catalogoMsg = '';
+    this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = '';
+    try { form?.resetForm({ catCodigo:'', catNombre:'', catTipo:'', catClasificacion:'' }); } catch {}
+  }
 
   async crearReactivo(e: Event, form?: NgForm) {
   e.preventDefault();

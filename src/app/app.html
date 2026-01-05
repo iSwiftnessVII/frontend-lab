@@ -84,7 +84,7 @@
       </a>
     }
         
-        @if (user()?.rol === 'Administrador' || user()?.rol === 'Auxiliar' || user()?.rol === 'Superadmin') {
+        @if (user()?.rol === 'Administrador' || user()?.rol === 'Superadmin') {
           <a routerLink="/plantillas" routerLinkActive="active" class="nav-item">
             <i class="fas fa-layer-group"></i> Plantillas
           </a>

@@ -43,39 +43,74 @@
   @if (seccionActiva === 'solicitudes') {
     <section class="section-card form-grid">
       <h3 class="section-title full-row">Solicitudes</h3>
-        <div class="form-field">
-          <label>Entidad</label>
-          <select [(ngModel)]="tplSolicitudEntidad" (ngModelChange)="onTplSolicitudEntidadChanged()">
-            <option value="solicitud">Solicitud</option>
-            <option value="cliente">Cliente</option>
-          </select>
-        </div>
-
         <div class="form-field full-row search-wrap">
           <label>Buscar</label>
 
           <div class="search-row">
             <div class="search-field">
+              <label class="sr-only">Cliente</label>
               <div class="campo-combinado campo-combinado-separado">
-                @if (tplSolicitudEntidad === 'solicitud') {
-                  <select class="select-filtro" [(ngModel)]="tplSolicitudFiltroTipo" (ngModelChange)="filtrarTplSolicitudResultados()">
-                    <option value="todos">Todos</option>
-                    <option value="id">ID</option>
-                    <option value="numero_front">N° Solicitud</option>
-                    <option value="solicitante">Solicitante</option>
-                    <option value="muestra">Muestra</option>
-                    <option value="analisis">Análisis</option>
-                    <option value="lote">Lote</option>
-                  </select>
-                } @else {
-                  <select class="select-filtro" [(ngModel)]="tplSolicitudFiltroTipo" (ngModelChange)="filtrarTplSolicitudResultados()">
-                    <option value="todos">Todos</option>
-                    <option value="nombre">Nombre</option>
-                    <option value="razon_social">Razón social</option>
-                    <option value="identificacion">Identificación</option>
-                    <option value="correo">Correo</option>
-                  </select>
-                }
+                <select class="select-filtro" [(ngModel)]="tplClienteFiltroTipo" (ngModelChange)="filtrarTplClienteResultados()">
+                  <option value="todos">Todos</option>
+                  <option value="nombre">Nombre</option>
+                  <option value="razon_social">Razón social</option>
+                  <option value="identificacion">Identificación</option>
+                  <option value="correo">Correo</option>
+                </select>
+
+                <input
+                  class="input-combinado"
+                  type="text"
+                  [(ngModel)]="tplClienteBusqueda"
+                  (input)="onTplClienteSearchInput()"
+                  (focus)="onTplClienteSearchFocus()"
+                  (blur)="onTplClienteSearchBlur()"
+                  placeholder="Buscar cliente..."
+                />
+              </div>
+
+              @if (showClienteDropdown && tplClienteBusqueda.trim()) {
+                <div class="lista-resultados">
+                  @if (tplClienteResultados.length === 0) {
+                    <div class="sin-resultados">
+                      <i class="fas fa-search"></i>
+                      <span>No se encontraron clientes</span>
+                      <small>Intenta con otros términos</small>
+                    </div>
+                  }
+
+                  @for (c of tplClienteResultados; track $index) {
+                    <div class="resultado-item" (mousedown)="selectTplCliente(c)">
+                      <div class="resultado-header">
+                        <strong class="codigo">{{ c.nombre_solicitante || c.nombre || c.nombre_cliente || 'Cliente' }}</strong>
+                        <span class="nombre">{{ c.razon_social || '' }}</span>
+                      </div>
+                      <div class="info-adicional">
+                        @if (c.identificacion || c.nit) {
+                          <span><i class="fas fa-id-card"></i>{{ c.identificacion || c.nit }}</span>
+                        }
+                        @if (c.correo || c.email) {
+                          <span><i class="fas fa-envelope"></i>{{ c.correo || c.email }}</span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="search-field">
+              <label class="sr-only">Solicitud</label>
+              <div class="campo-combinado campo-combinado-separado">
+                <select class="select-filtro" [(ngModel)]="tplSolicitudFiltroTipo" (ngModelChange)="filtrarTplSolicitudResultados()">
+                  <option value="todos">Todos</option>
+                  <option value="id">ID</option>
+                  <option value="numero_front">N° Solicitud</option>
+                  <option value="solicitante">Solicitante</option>
+                  <option value="muestra">Muestra</option>
+                  <option value="analisis">Análisis</option>
+                  <option value="lote">Lote</option>
+                </select>
 
                 <input
                   class="input-combinado"
@@ -84,50 +119,35 @@
                   (input)="onTplSolicitudSearchInput()"
                   (focus)="onTplSolicitudSearchFocus()"
                   (blur)="onTplSolicitudSearchBlur()"
-                  placeholder="Buscar..."
+                  placeholder="Buscar solicitud..."
                 />
               </div>
 
               @if (showSolicitudDropdown && tplSolicitudBusqueda.trim()) {
                 <div class="lista-resultados">
-              @if (tplSolicitudResultados.length === 0) {
-                <div class="sin-resultados">
-                  <i class="fas fa-search"></i>
-                  <span>No se encontraron resultados</span>
-                  <small>Intenta con otros términos</small>
-                </div>
-              }
-
-              @for (it of tplSolicitudResultados; track $index) {
-                <div class="resultado-item" (mousedown)="selectTplSolicitud(it)">
-                  @if (tplSolicitudEntidad === 'solicitud') {
-                    <div class="resultado-header">
-                      <strong class="codigo">{{ it.numero || ('Solicitud ' + (it.solicitud_id ?? it.id_solicitud)) }}</strong>
-                      <span class="nombre">{{ it.nombre_solicitante || 'Sin solicitante' }}</span>
-                    </div>
-                    <div class="info-adicional">
-                      @if (it.nombre_muestra) {
-                        <span><i class="fas fa-flask"></i>{{ it.nombre_muestra }}</span>
-                      }
-                      @if (it.lote_producto) {
-                        <span><i class="fas fa-tag"></i>{{ it.lote_producto }}</span>
-                      }
-                    </div>
-                  } @else {
-                    <div class="resultado-header">
-                      <strong class="codigo">{{ it.nombre_solicitante || it.nombre || it.nombre_cliente || 'Cliente' }}</strong>
-                      <span class="nombre">{{ it.razon_social || '' }}</span>
-                    </div>
-                    <div class="info-adicional">
-                      @if (it.identificacion || it.nit) {
-                        <span><i class="fas fa-id-card"></i>{{ it.identificacion || it.nit }}</span>
-                      }
-                      @if (it.correo || it.email) {
-                        <span><i class="fas fa-envelope"></i>{{ it.correo || it.email }}</span>
-                      }
+                  @if (tplSolicitudResultados.length === 0) {
+                    <div class="sin-resultados">
+                      <i class="fas fa-search"></i>
+                      <span>No se encontraron solicitudes</span>
+                      <small>Intenta con otros términos</small>
                     </div>
                   }
-                </div>
+
+                  @for (s of tplSolicitudResultados; track $index) {
+                    <div class="resultado-item" (mousedown)="selectTplSolicitud(s)">
+                      <div class="resultado-header">
+                        <strong class="codigo">{{ s.numero || ('Solicitud ' + (s.solicitud_id ?? s.id_solicitud)) }}</strong>
+                        <span class="nombre">{{ s.nombre_solicitante || 'Sin solicitante' }}</span>
+                      </div>
+                      <div class="info-adicional">
+                        @if (s.nombre_muestra) {
+                          <span><i class="fas fa-flask"></i>{{ s.nombre_muestra }}</span>
+                        }
+                        @if (s.lote_producto) {
+                          <span><i class="fas fa-tag"></i>{{ s.lote_producto }}</span>
+                        }
+                      </div>
+                    </div>
                   }
                 </div>
               }
@@ -139,7 +159,7 @@
           </div>
         </div>
 
-        @if (tplSolicitudSeleccionado) {
+        @if (tplClienteSeleccionado || tplSolicitudSeleccionado) {
           <div class="full-row">
             <div class="seleccionado-card">
               <div class="seleccionado-header">
@@ -147,21 +167,20 @@
                 <strong>Seleccionado</strong>
               </div>
 
-              @if (tplSolicitudEntidad === 'cliente') {
-                <div class="seleccionado-body">
-                  <div class="seleccionado-main">{{ tplSolicitudSeleccionado.nombre_solicitante || tplSolicitudSeleccionado.nombre || tplSolicitudSeleccionado.nombre_cliente || 'Cliente' }}</div>
-                  @if (tplSolicitudSeleccionado.razon_social) {
-                    <div class="seleccionado-sub">{{ tplSolicitudSeleccionado.razon_social }}</div>
+              <div class="seleccionado-body">
+                @if (tplClienteSeleccionado) {
+                  <div class="seleccionado-main">Cliente: {{ tplClienteSeleccionado.nombre_solicitante || tplClienteSeleccionado.nombre || tplClienteSeleccionado.nombre_cliente || 'Cliente' }}</div>
+                  @if (tplClienteSeleccionado.razon_social) {
+                    <div class="seleccionado-sub">{{ tplClienteSeleccionado.razon_social }}</div>
                   }
-                </div>
-              } @else {
-                <div class="seleccionado-body">
-                  <div class="seleccionado-main">{{ tplSolicitudSeleccionado.numero || ('Solicitud ' + (tplSolicitudSeleccionado.solicitud_id ?? tplSolicitudSeleccionado.id_solicitud)) }}</div>
+                }
+                @if (tplSolicitudSeleccionado) {
+                  <div class="seleccionado-main">Solicitud: {{ tplSolicitudSeleccionado.numero || ('Solicitud ' + (tplSolicitudSeleccionado.solicitud_id ?? tplSolicitudSeleccionado.id_solicitud)) }}</div>
                   @if (tplSolicitudSeleccionado.nombre_solicitante) {
                     <div class="seleccionado-sub">{{ tplSolicitudSeleccionado.nombre_solicitante }}</div>
                   }
-                </div>
-              }
+                }
+              </div>
             </div>
           </div>
         }

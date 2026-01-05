@@ -4,41 +4,59 @@
     | Reactivos
   </h1>
   <div class="dashboard-cards">
-    <div class="action-card" (click)="toggleFormulario('catalogo')" [class.active]="formularioActivo === 'catalogo'">
-      <i class="fas fa-book-medical"></i>
-      <span>Crear en Catálogo</span>
+    @if (!esAuxiliar) {
+      <div class="action-card" (click)="toggleFormulario('catalogo')" [class.active]="formularioActivo === 'catalogo'">
+        <i class="fas fa-book-medical"></i>
+        <span>Crear en Catálogo</span>
+      </div>
+    }
+
+    <div class="action-card" (click)="toggleFormulario('catalogo-list')" [class.active]="formularioActivo === 'catalogo-list'">
+      <i class="fas fa-list"></i>
+      <span>Ver Catálogo</span>
     </div>
-    <div class="action-card" (click)="toggleFormulario('crear-reactivo')" [class.active]="formularioActivo === 'crear-reactivo'">
-      <i class="fas fa-plus-circle"></i>
-      <span>Crear Reactivo</span>
-    </div>
-    <div class="action-card" (click)="toggleFormulario('consumo')" [class.active]="formularioActivo === 'consumo'">
-      <i class="fas fa-syringe"></i>
-      <span>Registrar Consumo</span>
-    </div>
+
+    @if (!esAuxiliar) {
+      <div class="action-card" (click)="toggleFormulario('crear-reactivo')" [class.active]="formularioActivo === 'crear-reactivo'">
+        <i class="fas fa-plus-circle"></i>
+        <span>Crear Reactivo</span>
+      </div>
+      <div class="action-card" (click)="toggleFormulario('consumo')" [class.active]="formularioActivo === 'consumo'">
+        <i class="fas fa-syringe"></i>
+        <span>Registrar Consumo</span>
+      </div>
+    }
+
     <div class="action-card" (click)="toggleFormulario('inventario')" [class.active]="formularioActivo === 'inventario'">
       <i class="fas fa-boxes"></i>
       <span>Ver Inventario</span>
     </div>
   </div>
  @if (formularioActivo === 'catalogo') {
-  <h2>Crear nuevo reactivo en Catálogo</h2>
+    <h2>
+      @if (catalogoEditMode) { Editar reactivo en Catálogo }
+      @else { Crear nuevo reactivo en Catálogo }
+    </h2>
   <section>
     <form class="form-grid" #catalogoForm="ngForm" (ngSubmit)="crearCatalogo($event, catalogoForm)">
       
       <!-- Código (select) -->
       <div *ngIf="!esAuxiliar" class="form-field">
         <label for="catCodigo">Código: *</label>
-        <select id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" required
-          (change)="validarCampoCatalogoEnTiempoReal('codigo', $event)"
-          (blur)="validarCampoCatalogoEnTiempoReal('codigo', $event)"
-          [class.error]="catalogoErrors['codigo']">
-          <option value="">Seleccionar código</option>
-          <option value="C-001">C-001</option>
-          <option [value]="nextCodigoS">{{ nextCodigoS }}</option>
-          <option [value]="nextCodigoR">{{ nextCodigoR }}</option>
-          <option [value]="nextCodigoM">{{ nextCodigoM }}</option>
-        </select>
+        @if (catalogoEditMode) {
+          <input id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" disabled />
+        } @else {
+          <select id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" required
+            (change)="validarCampoCatalogoEnTiempoReal('codigo', $event)"
+            (blur)="validarCampoCatalogoEnTiempoReal('codigo', $event)"
+            [class.error]="catalogoErrors['codigo']">
+            <option value="">Seleccionar código</option>
+            <option value="C-001">C-001</option>
+            <option [value]="nextCodigoS">{{ nextCodigoS }}</option>
+            <option [value]="nextCodigoR">{{ nextCodigoR }}</option>
+            <option [value]="nextCodigoM">{{ nextCodigoM }}</option>
+          </select>
+        }
         @if (catalogoErrors['codigo']) {
           <small class="error-message">⚠️ {{ catalogoErrors['codigo'] }}</small>
         }
@@ -97,7 +115,10 @@
       </div>
 
       <div class="actions" *ngIf="!esAuxiliar">
-        <button class="btn-compact" type="submit">Agregar al catálogo</button>
+        <button class="btn-compact" type="submit">{{ catalogoEditMode ? 'Guardar cambios' : 'Agregar al catálogo' }}</button>
+        @if (catalogoEditMode) {
+          <button class="btn-compact" type="button" (click)="cancelEditCatalogo(catalogoForm)">Cancelar</button>
+        }
       </div>
     </form>
 
@@ -154,16 +175,27 @@
                     [innerHTML]="highlightField(c.clasificacion_sga, 'otro')"></span></span>
               </div>
               @if (canDelete()) {
-                <button
-                  type="button"
-                  class="pdf-btn delete"
-                  title="Eliminar del catálogo"
-                  aria-label="Eliminar del catálogo"
-                  (click)="onDeleteCatalogo(c, $event)"
-                  [disabled]="isDeleteCatalogoLoading(c)"
-                  [attr.aria-busy]="isDeleteCatalogoLoading(c) ? 'true' : null">
-                  <i class="fas fa-trash" aria-hidden="true"></i>
-                </button>
+                <div class="pdf-actions" (click)="$event.stopPropagation()">
+                  <button
+                    type="button"
+                    class="pdf-btn edit"
+                    title="Editar"
+                    aria-label="Editar"
+                    (click)="startEditCatalogo(c, $event)"
+                    [disabled]="isDeleteCatalogoLoading(c)">
+                    <i class="fas fa-pen" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="pdf-btn delete"
+                    title="Eliminar del catálogo"
+                    aria-label="Eliminar del catálogo"
+                    (click)="onDeleteCatalogo(c, $event)"
+                    [disabled]="isDeleteCatalogoLoading(c)"
+                    [attr.aria-busy]="isDeleteCatalogoLoading(c) ? 'true' : null">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
+                  </button>
+                </div>
               }
             </div>
             <div class="card-name" [title]="c.nombre">
