@@ -1,4 +1,4 @@
-<div class="liba-theme container equipos-page">
+<div class="liba-theme container equipos-page solicitudes-page">
   <h1>
     <i class="fas fa-clipboard-list"></i>
     | Solicitudes
@@ -273,7 +273,6 @@
           [(ngModel)]="clienteDireccion" 
           name="clienteDireccion" 
           required 
-          appAlphaNumeric
           (input)="validarCampoClienteEnTiempoReal('direccion', $event)"
           (blur)="validarCampoClienteEnTiempoReal('direccion', $event)"
           [class.error]="clienteErrors['direccion']" 
@@ -292,7 +291,7 @@
           [(ngModel)]="clienteIdDepartamento" 
           name="clienteIdDepartamento" 
           required
-          (change)="onDepartamentoChange(); validarCampoClienteEnTiempoReal('departamento', $event)"
+          (change)="onDepartamentoChange($event); validarCampoClienteEnTiempoReal('departamento', $event)"
           (blur)="validarCampoClienteEnTiempoReal('departamento', $event)"
           [class.error]="clienteErrors['departamento']">
           <option value="">Seleccionar departamento</option>
@@ -751,7 +750,7 @@
           (change)="validarCampoSolicitudEnTiempoReal('requiereVarios', $event)"
           (blur)="validarCampoSolicitudEnTiempoReal('requiereVarios', $event)"
           [class.error]="solicitudErrors['requiereVarios']">
-          <option value="">Seleccionar opción</option>
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
           <option [ngValue]="false">No</option>
         </select>
@@ -865,9 +864,9 @@
           (change)="validarCampoOfertaEnTiempoReal('solicitudId', $event)"
           (blur)="validarCampoOfertaEnTiempoReal('solicitudId', $event)"
           [class.error]="ofertaErrors['solicitudId']">
-          <option value="">Seleccionar solicitud</option>
+          <option [ngValue]="null" disabled>Seleccionar solicitud</option>
           @for (s of solicitudesFiltradas(); track s.solicitud_id) {
-            <option [value]="s.solicitud_id">
+            <option [ngValue]="s.solicitud_id">
               {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front || s.solicitud_id }}
             </option>
           }
@@ -935,7 +934,7 @@
           (change)="validarCampoOfertaEnTiempoReal('generoCotizacion', $event)"
           (blur)="validarCampoOfertaEnTiempoReal('generoCotizacion', $event)"
           [class.error]="ofertaErrors['generoCotizacion']">
-          <option value="">Seleccionar opción</option>
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
           <option [ngValue]="false">No</option>
         </select>
@@ -957,7 +956,7 @@
           (change)="validarCampoOfertaEnTiempoReal('realizoSeguimiento', $event)"
           (blur)="validarCampoOfertaEnTiempoReal('realizoSeguimiento', $event)"
           [class.error]="ofertaErrors['realizoSeguimiento']">
-          <option value="">Seleccionar opción</option>
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
           <option [ngValue]="false">No</option>
         </select>
@@ -1018,9 +1017,9 @@
           (change)="validarCampoResultadoEnTiempoReal('solicitudId', $event)"
           (blur)="validarCampoResultadoEnTiempoReal('solicitudId', $event)"
           [class.error]="resultadoErrors['solicitudId']">
-          <option value="">Seleccionar solicitud</option>
+          <option [ngValue]="null" disabled>Seleccionar solicitud</option>
           @for (s of solicitudesFiltradas(); track s.solicitud_id) {
-            <option [value]="s.solicitud_id">
+            <option [ngValue]="s.solicitud_id">
               {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front || s.solicitud_id }}
             </option>
           }
@@ -1043,7 +1042,7 @@
           (change)="validarCampoResultadoEnTiempoReal('servicioViable', $event)"
           (blur)="validarCampoResultadoEnTiempoReal('servicioViable', $event)"
           [class.error]="resultadoErrors['servicioViable']">
-          <option value="">Seleccionar opción</option>
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
           <option [ngValue]="false">No</option>
         </select>
@@ -1103,12 +1102,13 @@
           [(ngModel)]="encuestaSolicitudId" 
           name="encuestaSolicitudId" 
           required
+          (ngModelChange)="onSelectSolicitudEncuesta($event)"
           (change)="validarCampoEncuestaEnTiempoReal('solicitudId', $event)"
           (blur)="validarCampoEncuestaEnTiempoReal('solicitudId', $event)"
           [class.error]="encuestaErrors['solicitudId']">
-          <option value="">Seleccionar solicitud</option>
+          <option [ngValue]="null" disabled>Seleccionar solicitud</option>
           @for (s of solicitudesFiltradas(); track s.solicitud_id) {
-            <option [value]="s.solicitud_id">
+            <option [ngValue]="s.solicitud_id">
               {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front || s.solicitud_id }}
             </option>
           }
@@ -1171,7 +1171,7 @@
           (change)="validarCampoEncuestaEnTiempoReal('clienteRespondio', $event)"
           (blur)="validarCampoEncuestaEnTiempoReal('clienteRespondio', $event)"
           [class.error]="encuestaErrors['clienteRespondio']">
-          <option value="">Seleccionar opción</option>
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
           <option [ngValue]="false">No</option>
         </select>
@@ -1211,7 +1211,7 @@
           (change)="validarCampoEncuestaEnTiempoReal('solicitoNueva', $event)"
           (blur)="validarCampoEncuestaEnTiempoReal('solicitoNueva', $event)"
           [class.error]="encuestaErrors['solicitoNueva']">
-          <option value="">Seleccionar opción</option>
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
           <option [ngValue]="true">Sí</option>
           <option [ngValue]="false">No</option>
         </select>
@@ -1500,8 +1500,8 @@
 
   <!-- Modal editar Cliente -->
   @if (editClienteModalOpen) {
-    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:9999">
-      <div style="background:#fff;padding:16px;border-radius:8px;min-width:360px;max-width:90%">
+    <div class="client-edit-backdrop">
+      <div class="client-edit-modal">
         <h3>Editar cliente</h3>
         <div class="form-grid">
           <div class="form-field"><label>Nombre</label><input [(ngModel)]="editClienteNombre" /></div>

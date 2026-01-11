@@ -94,11 +94,14 @@ export class VolumetricosService {
   }
 
   async obtenerNextHistorial(codigo: number): Promise<{ next: number }> {
-    const response = await fetch(`${this.API_URL}/materiales/${codigo}/historial/next`, {
+    const response = await fetch(`${this.API_URL}/historial/next/${codigo}`, {
       headers: this.getHeaders()
     });
     if (!response.ok) throw new Error('Error al obtener siguiente consecutivo');
-    return response.json();
+    const data: any = await response.json();
+    const next = Number(data?.next ?? data?.nextConsecutivo ?? data?.consecutivo ?? data?.siguiente ?? NaN);
+    if (!Number.isFinite(next) || next <= 0) throw new Error('Consecutivo inválido');
+    return { next };
   }
 
   async actualizarHistorial(codigo_material: number, consecutivo: number, payload: any): Promise<any> {
@@ -131,11 +134,14 @@ export class VolumetricosService {
   }
 
   async obtenerNextIntervalo(codigo: number): Promise<{ next: number }> {
-    const response = await fetch(`${this.API_URL}/materiales/${codigo}/intervalo/next`, {
+    const response = await fetch(`${this.API_URL}/intervalo/next/${codigo}`, {
       headers: this.getHeaders()
     });
     if (!response.ok) throw new Error('Error al obtener siguiente consecutivo');
-    return response.json();
+    const data: any = await response.json();
+    const next = Number(data?.next ?? data?.nextConsecutivo ?? data?.consecutivo ?? data?.siguiente ?? NaN);
+    if (!Number.isFinite(next) || next <= 0) throw new Error('Consecutivo inválido');
+    return { next };
   }
 
   async actualizarIntervalo(codigo_material: number, consecutivo: number, payload: any): Promise<any> {

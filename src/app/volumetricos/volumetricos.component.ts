@@ -146,22 +146,22 @@ export class VolumetricosComponent implements OnInit {
     // Efectos para consecutivos
     effect(() => {
       const codigo = this.codigoHistorialSig();
-      if (this.formularioActivo === 'historial' && codigo) {
+      if (codigo) {
         volumetricosService.obtenerNextHistorial(codigo)
           .then((resp: any) => this.consecutivoHistorialSig.set(resp.next))
           .catch(() => this.snack.warn('No se pudo cargar consecutivo historial'));
-      } else if (this.formularioActivo === 'historial' && !codigo) {
+      } else {
         this.consecutivoHistorialSig.set(null);
       }
     });
 
     effect(() => {
       const codigo = this.codigoIntervaloSig();
-      if (this.formularioActivo === 'intervalo' && codigo) {
+      if (codigo) {
         volumetricosService.obtenerNextIntervalo(codigo)
           .then((resp: any) => this.consecutivoIntervaloSig.set(resp.next))
           .catch(() => this.snack.warn('No se pudo cargar consecutivo intervalo'));
-      } else if (this.formularioActivo === 'intervalo' && !codigo) {
+      } else {
         this.consecutivoIntervaloSig.set(null);
       }
     });
@@ -405,6 +405,16 @@ export class VolumetricosComponent implements OnInit {
       }).catch(console.error);
 
       this.resetFormHistorial();
+
+      // Mantener material seleccionado y refrescar consecutivo automáticamente
+      this.codigo_material_historial = codigo_material;
+      this.codigoHistorialSig.set(codigo_material);
+      try {
+        const next = await this.volumetricosService.obtenerNextHistorial(codigo_material);
+        this.consecutivoHistorialSig.set(next.next);
+      } catch {
+        // ya se notifica vía snack en el effect/servicio
+      }
       
       // Actualizar lista local
       if (this.historialPorMaterial[codigo_material]) {
@@ -440,38 +450,8 @@ export class VolumetricosComponent implements OnInit {
       }
     }
     
-    // Calcular diferencia de días si hay fechas
-    let diferenciaDias = null;
-    if (this.fecha_c1 && this.fecha_c2) {
-      const fecha1 = new Date(this.fecha_c1);
-      const fecha2 = new Date(this.fecha_c2);
-      diferenciaDias = Math.round((fecha2.getTime() - fecha1.getTime()) / (1000 * 60 * 60 * 24));
-    }
-    
-    // Calcular desviación absoluta
-    let desviacionAbs = null;
-    if (this.error_c1 !== null && this.error_c2 !== null) {
-      desviacionAbs = Math.abs(this.error_c2 - this.error_c1);
-    }
-    
-    // Calcular deriva
-    let deriva = null;
-    if (desviacionAbs !== null && diferenciaDias !== null && diferenciaDias !== 0) {
-      deriva = desviacionAbs / diferenciaDias;
-    }
-    
-    // Calcular intervalo de calibración en días
-    let intervaloDias = null;
-    if (this.tolerancia !== null && deriva !== null && deriva !== 0) {
-      intervaloDias = Math.abs(this.tolerancia / deriva);
-    }
-    
-    // Calcular intervalo en años
-    let intervaloAnos = null;
-    if (intervaloDias !== null) {
-      intervaloAnos = intervaloDias / 365;
-    }
-    
+    const calc = this.recalcularIntervalo();
+
     try {
       await this.volumetricosService.crearIntervalo({
         consecutivo: consecutivo,
@@ -481,28 +461,29 @@ export class VolumetricosComponent implements OnInit {
         error_c1: this.error_c1,
         fecha_c2: this.fecha_c2,
         error_c2: this.error_c2,
-        diferencia_tiempo_dias: diferenciaDias,
-        desviacion_abs: desviacionAbs,
-        deriva: deriva,
+        diferencia_tiempo_dias: calc.diferencia_tiempo_dias,
+        desviacion_abs: calc.desviacion_abs,
+        deriva: calc.deriva,
         tolerancia: this.tolerancia,
-        intervalo_calibracion_dias: intervaloDias,
-        intervalo_calibracion_anos: intervaloAnos,
+        intervalo_calibracion_dias: calc.intervalo_calibracion_dias,
+        intervalo_calibracion_anos: calc.intervalo_calibracion_anos,
         incertidumbre_exp: this.incertidumbre_exp
       });
-      
+
       this.snack.success('Intervalo registrado exitosamente');
 
-      // Log auditoría
-      const materialNombre = (this.materialesRegistrados || []).find(m => Number(m?.codigo_id) === Number(codigo_material))?.nombre_material || null;
-      logsService.crearLogAccion({
-        modulo: 'MAT_VOLUMETRICOS',
-        accion: 'CREAR',
-        descripcion: `Creación de intervalo para volumétrico: ${codigo_material}`,
-        detalle: { id: codigo_material, nombre_material: materialNombre, consecutivo }
-      }).catch(console.error);
-
       this.resetFormIntervalo();
-      
+
+      // Mantener material seleccionado y refrescar consecutivo automáticamente
+      this.codigo_material_intervalo = codigo_material;
+      this.codigoIntervaloSig.set(codigo_material);
+      try {
+        const next = await this.volumetricosService.obtenerNextIntervalo(codigo_material);
+        this.consecutivoIntervaloSig.set(next.next);
+      } catch {
+        // ya se notifica vía snack en el effect/servicio
+      }
+
       // Actualizar lista local
       if (this.intervaloPorMaterial[codigo_material]) {
         const data = await this.volumetricosService.listarIntervaloPorMaterial(codigo_material);
@@ -513,7 +494,6 @@ export class VolumetricosComponent implements OnInit {
     }
   }
 
-  // Reset forms
   resetFormMaterial() {
     this.codigoIdSig.set(this.nextCodigoId);
     this.nombre_material = '';
@@ -551,6 +531,82 @@ export class VolumetricosComponent implements OnInit {
     this.intervalo_calibracion_dias = null;
     this.intervalo_calibracion_anos = null;
     this.incertidumbre_exp = null;
+  }
+
+  private toFiniteNumberOrNull(value: any): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const n = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  private roundOrNull(value: number | null, decimals: number): number | null {
+    if (value === null || value === undefined) return null;
+    if (!Number.isFinite(value)) return null;
+    const factor = Math.pow(10, Math.max(0, decimals));
+    return Math.round(value * factor) / factor;
+  }
+
+  recalcularIntervalo(): {
+    diferencia_tiempo_dias: number | null;
+    desviacion_abs: number | null;
+    deriva: number | null;
+    intervalo_calibracion_dias: number | null;
+    intervalo_calibracion_anos: number | null;
+  } {
+    // Diferencia de días
+    let diferenciaDias: number | null = null;
+    if (this.fecha_c1 && this.fecha_c2) {
+      const f1 = new Date(this.fecha_c1);
+      const f2 = new Date(this.fecha_c2);
+      if (!isNaN(f1.getTime()) && !isNaN(f2.getTime())) {
+        f1.setHours(0, 0, 0, 0);
+        f2.setHours(0, 0, 0, 0);
+        if (f2 >= f1) {
+          diferenciaDias = Math.round((f2.getTime() - f1.getTime()) / (1000 * 60 * 60 * 24));
+        }
+      }
+    }
+
+    // Desviación absoluta
+    const e1 = this.toFiniteNumberOrNull(this.error_c1);
+    const e2 = this.toFiniteNumberOrNull(this.error_c2);
+    let desviacionAbs: number | null = null;
+    if (e1 !== null && e2 !== null) {
+      desviacionAbs = Math.abs(e2 - e1);
+    }
+
+    // Deriva
+    let deriva: number | null = null;
+    if (desviacionAbs !== null && diferenciaDias !== null && diferenciaDias > 0) {
+      deriva = desviacionAbs / diferenciaDias;
+    }
+
+    // Intervalo calibración
+    const tol = this.toFiniteNumberOrNull(this.tolerancia);
+    let intervaloDias: number | null = null;
+    if (tol !== null && deriva !== null && deriva !== 0) {
+      intervaloDias = Math.abs(tol / deriva);
+    }
+
+    let intervaloAnos: number | null = null;
+    if (intervaloDias !== null) {
+      intervaloAnos = intervaloDias / 365;
+    }
+
+    // Persistir en el formulario (readonly)
+    this.diferencia_tiempo_dias = diferenciaDias;
+    this.desviacion_abs = this.roundOrNull(desviacionAbs, 6);
+    this.deriva = this.roundOrNull(deriva, 9);
+    this.intervalo_calibracion_dias = this.roundOrNull(intervaloDias, 2);
+    this.intervalo_calibracion_anos = this.roundOrNull(intervaloAnos, 4);
+
+    return {
+      diferencia_tiempo_dias: this.diferencia_tiempo_dias,
+      desviacion_abs: this.desviacion_abs,
+      deriva: this.deriva,
+      intervalo_calibracion_dias: this.intervalo_calibracion_dias,
+      intervalo_calibracion_anos: this.intervalo_calibracion_anos
+    };
   }
 
   // Toggle para formularios

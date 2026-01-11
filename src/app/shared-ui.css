@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
 /* Core theme variables */
-:root{
+:root:not([data-theme="dark"]){
   --font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   --bg: #f7f9fc;
   --card-bg: #ffffff;

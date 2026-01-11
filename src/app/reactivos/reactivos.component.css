@@ -90,6 +90,70 @@
   color: var(--app-text, var(--text-gray));
 }
 
+.form-field input[readonly] {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
+.form-field select:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
+/* ===== Crear reactivo: filtro catálogo (campos separados) ===== */
+.catalogo-filtro-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+  width: 100%;
+}
+
+.catalogo-filtro-row .select-filtro,
+.catalogo-filtro-row .input-combinado {
+  padding: 0.8rem;
+  border: 2px solid var(--app-border, var(--border-gray));
+  border-radius: 6px;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+  background: var(--app-surface, var(--primary-white));
+  color: var(--app-text, var(--text-gray));
+  height: 50px;
+  box-sizing: border-box;
+}
+
+.catalogo-filtro-row .select-filtro {
+  flex: 0 0 auto;
+  width: clamp(150px, 28%, 220px);
+}
+
+.catalogo-filtro-row .input-combinado {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.catalogo-filtro-row .input-combinado::placeholder {
+  color: var(--app-muted, var(--text-gray));
+  opacity: 0.75;
+}
+
+.catalogo-filtro-row .select-filtro:focus,
+.catalogo-filtro-row .input-combinado:focus {
+  outline: none;
+  border-color: var(--primary-turquoise);
+  box-shadow: 0 0 0 3px rgba(0, 184, 181, 0.1);
+}
+
+@media (max-width: 600px) {
+  .catalogo-filtro-row {
+    flex-wrap: wrap;
+  }
+
+  .catalogo-filtro-row .select-filtro,
+  .catalogo-filtro-row .input-combinado {
+    width: 100%;
+  }
+}
+
 .form-field input:focus,
 .form-field select:focus,
 .form-field textarea:focus {
@@ -128,6 +192,10 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .btn-create:hover,
@@ -189,6 +257,10 @@
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .btn-load-more {
@@ -199,6 +271,41 @@
   border-radius: 6px;
   cursor: pointer;
   width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.btn-load-more:hover {
+  background: var(--app-hover, #f8fafc);
+}
+
+:host-context([data-theme="dark"]) .btn-load-more:hover {
+  background: var(--app-hover, rgba(255,255,255,0.06));
+}
+
+.btn-load-more:active {
+  transform: translateY(1px);
+}
+
+.btn-load-more.is-disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.ver-mas-div {
+  user-select: none;
+  font-weight: 600;
+}
+
+/* Modal form actions: ensure the submit label is centered even without .btn-* class */
+.reactivos-page .modal .actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .btn-load-more:hover:not(:disabled) {
@@ -224,6 +331,10 @@
   position: relative;
   z-index: 2;
   overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .btn-delete-all:hover:not(:disabled) {
@@ -359,11 +470,21 @@
   margin-top: 4px;
 }
 
+:host-context([data-theme="dark"]) .lista-resultados {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.55);
+}
+
 .resultado-item {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--app-border, var(--light-gray));
   cursor: pointer;
   transition: background 0.2s;
+}
+
+:host-context([data-theme="dark"]) .resultado-item {
+  border-bottom-color: var(--app-border);
 }
 
 .resultado-item:last-child {
@@ -372,6 +493,10 @@
 
 .resultado-item:hover {
   background: var(--app-hover, #f8fafc);
+}
+
+:host-context([data-theme="dark"]) .resultado-item:hover {
+  background: var(--app-hover, rgba(255,255,255,0.06));
 }
 
 .resultado-header {
@@ -385,8 +510,16 @@
   color: var(--primary-blue);
 }
 
+:host-context([data-theme="dark"]) .resultado-header .codigo {
+  color: var(--app-text-strong, #f1f5f9);
+}
+
 .resultado-header .nombre {
   color: var(--app-muted, var(--text-gray));
+}
+
+:host-context([data-theme="dark"]) .resultado-header .nombre {
+  color: var(--app-text, #e2e8f0);
 }
 
 .info-adicional {
@@ -394,6 +527,10 @@
   gap: 1rem;
   font-size: 0.85rem;
   color: var(--app-muted, #64748b);
+}
+
+:host-context([data-theme="dark"]) .info-adicional {
+  color: var(--app-muted, #94a3b8);
 }
 
 .sin-resultados {
@@ -404,6 +541,27 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+}
+
+:host-context([data-theme="dark"]) .sin-resultados {
+  color: var(--app-muted, #94a3b8);
+}
+
+.ver-mas-container {
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--app-border, var(--light-gray));
+  background: var(--app-surface, #fff);
+}
+
+:host-context([data-theme="dark"]) .ver-mas-container {
+  background: var(--app-surface);
+  border-top-color: var(--app-border);
+}
+
+/* When "Ver más" is used under the inventory cards */
+.cards-container > .ver-mas-div {
+  margin-top: 1rem;
 }
 
 /* ===== Reactivo Seleccionado ===== */
@@ -536,6 +694,34 @@
   position: relative;
 }
 
+/* ===== PDF availability pills (SDS / CoA) =====
+   These used to be <button>/<span>; now we render a <div role="button"> for the active state.
+   Define explicit styles so it doesn't rely on browser button defaults.
+*/
+.reactivo-card .card-name .name-pdfs .btn.pdf-existe {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 33px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 2px solid #16a34a;
+  background: var(--app-surface, #ffffff);
+  color: #16a34a;
+  cursor: pointer;
+  user-select: none;
+}
+.reactivo-card .card-name .name-pdfs .btn.pdf-existe:hover {
+  transform: translateY(-1px);
+}
+.reactivo-card .card-name .name-pdfs .btn.pdf-existe:active {
+  transform: none;
+}
+.reactivo-card .card-name .name-pdfs .btn.pdf-existe:focus-visible {
+  outline: 2px solid var(--primary-turquoise);
+  outline-offset: 2px;
+}
+
 /* Acrónimo dentro del botón */
 .reactivo-card .card-name .name-pdfs .btn.pdf-existe .pdf-acronym {
   font-size: 0.85rem;
@@ -597,6 +783,7 @@
   display: inline-flex;
   gap: 0.5rem;
   align-items: center;
+  z-index: 5;
 }
 
 .catalog-card .card-name .name-pdfs .pdf-availability.ok {
@@ -691,6 +878,7 @@
   right: 12px;
   top: 8px;
   transition: transform 0.18s ease;
+  pointer-events: none;
 }
 .reactivo-card .card-name .toggle-icon.open {
   transform: rotate(180deg);
@@ -855,9 +1043,9 @@
   min-width: 170px;
   max-width: 200px;
   border-radius: 6px;
-  border: 1px solid #d1d5db; /* gray-300 */
-  background-color: #f9fafb; /* gray-50 */
-  color: #374151; /* gray-700 */
+  border: 1px solid var(--app-border, #d1d5db);
+  background-color: var(--app-surface, #f9fafb);
+  color: var(--app-text, #374151);
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
@@ -868,7 +1056,7 @@
 }
 
 .select-filtro:hover {
-  background-color: #f3f4f6; /* gray-100 */
+  background-color: var(--app-hover, #f3f4f6);
 }
 
 .select-filtro:focus {
@@ -881,10 +1069,11 @@
   flex: 1;
   min-width: 0;
   border-radius: 6px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--app-border, #d1d5db);
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
-  color: #111827; /* gray-900 */
+  color: var(--app-text, #111827);
+  background-color: var(--app-surface, #ffffff);
   outline: none;
   transition: all 0.2s;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
@@ -898,14 +1087,16 @@
 
 /* Ajuste para placeholder */
 .input-combinado::placeholder {
-  color: #9ca3af; /* gray-400 */
+  color: var(--app-muted, #9ca3af);
 }
 
 /* Flex row for consumption form split */
 .consumo-flex-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
   gap: 10px;
-  align-items: flex-start;
+  align-items: start;
+  width: 100%;
   grid-column: 1 / -1; /* behave like full-row in grid */
 }
 
@@ -915,19 +1106,13 @@
 }
 
 .quantity-section {
-  flex: 0 0 150px; /* Fixed width */
-  width: 150px;
+  width: 100%;
+  grid-column: 1;
 }
 
-@media (max-width: 768px) {
-  .consumo-flex-row {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .search-section, .quantity-section {
-    width: 100%;
-    flex: none;
-  }
+.uso-section {
+  width: 100%;
+  grid-column: 2;
 }
 
 .modal-backdrop {

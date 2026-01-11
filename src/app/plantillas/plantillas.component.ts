@@ -732,8 +732,20 @@ export class PlantillasComponent {
       return;
     }
 
+    if (!this.tplReactivoSeleccionado) {
+      this.tplReactivoMsg = 'Seleccione un reactivo de la lista';
+      this.snack.warn(this.tplReactivoMsg);
+      return;
+    }
+
     const codigo = String(this.tplReactivoSeleccionado?.codigo ?? '').trim();
     const lote = String(this.tplReactivoSeleccionado?.lote ?? '').trim();
+
+    if (!codigo && !lote) {
+      this.tplReactivoMsg = 'Seleccione un reactivo válido';
+      this.snack.warn(this.tplReactivoMsg);
+      return;
+    }
 
     this.tplReactivoLoading = true;
     this.tplReactivoMsg = '';

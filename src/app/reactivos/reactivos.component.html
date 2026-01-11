@@ -220,6 +220,76 @@
   <section>
     <form class="form-grid" #reactivoForm="ngForm" (ngSubmit)="crearReactivo($event, reactivoForm)">
       
+      <!-- Buscar reactivo en catálogo (estilo Ficha Técnica - Equipos) -->
+      <div class="full-row" style="position: relative;">
+        <label for="busquedaCatalogoReactivo">Buscar reactivo en catálogo *</label>
+        <div class="catalogo-filtro-row">
+          <select
+            class="select-filtro"
+            [(ngModel)]="catalogoFiltroCampo"
+            name="catalogoFiltroCampo"
+            (change)="cambiarCatalogoFiltroCampo(catalogoFiltroCampo)"
+          >
+            <option value="mixto">Todos los campos</option>
+            <option value="codigo">Código</option>
+            <option value="nombre">Nombre</option>
+          </select>
+          <input
+            id="busquedaCatalogoReactivo"
+            name="busquedaCatalogoReactivo"
+            [(ngModel)]="catalogoQ"
+            (input)="onCatalogoQInput()"
+            (focus)="mostrarCatalogoResultados = true"
+            (blur)="onCatalogoFocusOut()"
+            [placeholder]="getCatalogoPlaceholder()"
+            autocomplete="off"
+            class="input-combinado"
+          />
+        </div>
+
+        @if (mostrarCatalogoResultados && catalogoQ.trim()) {
+          <div class="lista-resultados">
+            @if (catalogoSugerencias.length === 0) {
+              <div class="sin-resultados">
+                <i class="fas fa-search"></i>
+                <span>No se encontraron reactivos</span>
+                <small>Intenta con otros términos de búsqueda</small>
+              </div>
+            }
+            @for (s of catalogoSugerencias | slice:0:catalogoSugerenciasVisibleCount; track s.codigo) {
+              <div class="resultado-item" (mousedown)="seleccionarCatalogo(s)">
+                <div class="resultado-header">
+                  <strong class="codigo">{{ s.codigo }}</strong>
+                  <span class="nombre">{{ s.nombre }}</span>
+                </div>
+                @if (s.tipo_reactivo || s.clasificacion_sga) {
+                  <div class="info-adicional">
+                    @if (s.tipo_reactivo) { <span>{{ s.tipo_reactivo }}</span> }
+                    @if (s.clasificacion_sga) { <span>{{ s.clasificacion_sga }}</span> }
+                  </div>
+                }
+              </div>
+            }
+
+            @if (catalogoSugerencias.length > catalogoSugerenciasVisibleCount) {
+              <div class="ver-mas-container">
+                <div
+                  class="btn-load-more ver-mas-div"
+                  role="button"
+                  tabindex="0"
+                  (mousedown)="verMasCatalogoSugerencias($event)"
+                  (keydown.enter)="verMasCatalogoSugerencias()"
+                  (keydown.space)="$event.preventDefault(); verMasCatalogoSugerencias()"
+                  aria-label="Ver más reactivos"
+                >
+                  Ver más
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
       <!-- Lote -->
       <div class="field-sm field-autocomplete form-field">
         <label for="lote">Lote: *</label>
@@ -234,56 +304,30 @@
       </div>
 
       <!-- Código (catálogo) -->
-      <div class="field-autocomplete form-field">
+      <div class="form-field">
         <label for="codigo">Código (catálogo): *</label>
         <input id="codigo" [(ngModel)]="codigo" name="codigo" required appAlphaNumeric
-          (input)="onCodigoInput(); validarCampoReactivoEnTiempoReal('codigo', $event)"
-          (blur)="onCodigoBlur(); validarCampoReactivoEnTiempoReal('codigo', $event)"
-          (focus)="onCodigoFocus()"
+          [readonly]="bloquearCodigoNombreCatalogo"
+          (input)="validarCampoReactivoEnTiempoReal('codigo', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('codigo', $event)"
           [class.error]="reactivoErrors['codigo']" 
           placeholder="Ej: R-001" />
         @if (reactivoErrors['codigo']) {
           <small class="error-message">⚠️ {{ reactivoErrors['codigo'] }}</small>
         }
-
-        @if (isCodigoFocused && (codigo.trim().length>=1) && catalogoSugerencias.length && catalogoFiltroCampo==='codigo') {
-          <div class="autocomplete-panel" role="listbox">
-            @for (s of catalogoSugerencias | slice:0:8; track s) {
-              <button type="button" class="autocomplete-item" role="option" 
-                (mousedown)="$event.preventDefault()"
-                (click)="seleccionarCatalogo(s)" [title]="s.nombre">
-                <span class="code">{{ s.codigo }}</span>
-                <span class="name">{{ s.nombre }}</span>
-              </button>
-            }
-          </div>
-        }
       </div>
 
       <!-- Nombre (catálogo) -->
-      <div class="field-autocomplete form-field">
+      <div class="form-field">
         <label for="nombre">Nombre (catálogo): *</label>
         <input id="nombre" [(ngModel)]="nombre" name="nombre" required appAlphaNumeric
-          (input)="onNombreInput(); validarCampoReactivoEnTiempoReal('nombre', $event)"
-          (blur)="onNombreBlur(); validarCampoReactivoEnTiempoReal('nombre', $event)"
-          (focus)="onNombreFocus()"
+          [readonly]="bloquearCodigoNombreCatalogo"
+          (input)="validarCampoReactivoEnTiempoReal('nombre', $event)"
+          (blur)="validarCampoReactivoEnTiempoReal('nombre', $event)"
           [class.error]="reactivoErrors['nombre']" 
           placeholder="Ej: Ácido clorhídrico" />
         @if (reactivoErrors['nombre']) {
           <small class="error-message">⚠️ {{ reactivoErrors['nombre'] }}</small>
-        }
-
-        @if (isNombreFocused && (nombre.trim().length>=1) && catalogoSugerencias.length && catalogoFiltroCampo==='nombre') {
-          <div class="autocomplete-panel" role="listbox">
-            @for (s of catalogoSugerencias | slice:0:8; track s) {
-              <button type="button" class="autocomplete-item" role="option" 
-                (mousedown)="$event.preventDefault()"
-                (click)="seleccionarCatalogo(s)" [title]="s.nombre">
-                <span class="code">{{ s.codigo }}</span>
-                <span class="name">{{ s.nombre }}</span>
-              </button>
-            }
-          </div>
         }
       </div>
 
@@ -303,7 +347,7 @@
       <!-- Referencia -->
       <div class="form-field">
         <label for="referencia">Referencia: *</label>
-        <input id="referencia" [(ngModel)]="referencia" name="referencia" required appNumbersOnly
+        <input id="referencia" [(ngModel)]="referencia" name="referencia" required appAlphaNumeric
           (input)="validarCampoReactivoEnTiempoReal('referencia', $event)"
           (blur)="validarCampoReactivoEnTiempoReal('referencia', $event)"
           [class.error]="reactivoErrors['referencia']" 
@@ -413,6 +457,7 @@
       <div class="form-field">
         <label for="tipo_id">Tipo reactivo: *</label>
         <select id="tipo_id" [(ngModel)]="tipo_id" name="tipo_id" required
+          [disabled]="bloquearTipoReactivoCatalogo"
           (change)="validarCampoReactivoEnTiempoReal('tipo_id', $event)"
           (blur)="validarCampoReactivoEnTiempoReal('tipo_id', $event)"
           [class.error]="reactivoErrors['tipo_id']">
@@ -430,6 +475,7 @@
       <div class="form-field">
         <label for="clasificacion_id">Clasificación SGA: *</label>
         <select id="clasificacion_id" [(ngModel)]="clasificacion_id" name="clasificacion_id" required
+          [disabled]="bloquearClasificacionCatalogo"
           (change)="validarCampoReactivoEnTiempoReal('clasificacion_id', $event)"
           (blur)="validarCampoReactivoEnTiempoReal('clasificacion_id', $event)"
           [class.error]="reactivoErrors['clasificacion_id']"
@@ -548,11 +594,9 @@
   <section>
     <form class="form-grid" #formConsumo="ngForm" (ngSubmit)="registrarConsumo($event, formConsumo)">
       
-      <!-- Lote Selection (Búsqueda combinada) y Cantidad en misma fila -->
-      <div class="consumo-flex-row">
-        <!-- Search Field -->
-        <div class="form-field search-section" style="position: relative; z-index: 1001;">
-          <label>Buscar y Seleccionar Reactivo: *</label>
+      <!-- Search reactivo (fila completa) -->
+      <div class="form-field search-section full-row" style="position: relative; z-index: 1001;">
+        <label>Buscar y Seleccionar Reactivo: *</label>
 
           @if (!consumoReactivoSeleccionado) {
             <div class="campo-combinado">
@@ -623,30 +667,31 @@
             </div>
           }
 
-          @if (submittedConsumo && !consumoForm.lote) {
-            <small class="error-message">⚠️ Debe seleccionar un reactivo</small>
-          }
-        </div>
+        @if (submittedConsumo && !consumoForm.lote) {
+          <small class="error-message">⚠️ Debe seleccionar un reactivo</small>
+        }
+      </div>
 
-        <!-- Cantidad Field -->
+      <!-- Consumo + Uso (misma fila; Uso a la derecha de Consumo) -->
+      <div class="consumo-flex-row">
         <div class="form-field quantity-section">
           <label for="consumoCantidad">Consumo: </label>
           <input id="consumoCantidad" type="number" [(ngModel)]="consumoForm.cantidad" 
                  name="consumoCantidad" required min="0.0001" step="0.0001" 
                  placeholder="Ej: 10" />
           @if (submittedConsumo && (!consumoForm.cantidad || consumoForm.cantidad <= 0)) {
-             <small class="error-message">⚠️ Cantidad inválida</small>
+            <small class="error-message">⚠️ Cantidad inválida</small>
+          }
+        </div>
+
+        <div class="form-field uso-section">
+          <label for="consumoUso">Uso:</label>
+          <textarea id="consumoUso" [(ngModel)]="consumoForm.uso" name="consumoUso" rows="2" placeholder="Describa el uso del reactivo..." required></textarea>
+          @if (submittedConsumo && (!consumoForm.uso || !consumoForm.uso.trim())) {
+            <small class="error-message">⚠️ El uso es requerido</small>
           }
         </div>
       </div>
-
-      <div class="form-field full-row">
-         <label for="consumoUso">Uso:</label>
-         <textarea id="consumoUso" [(ngModel)]="consumoForm.uso" name="consumoUso" rows="2" placeholder="Describa el uso del reactivo..." required></textarea>
-         @if (submittedConsumo && (!consumoForm.uso || !consumoForm.uso.trim())) {
-            <small class="error-message">⚠️ El uso es requerido</small>
-         }
-       </div>
 
       <!-- Error message -->
       @if (consumoError) {
@@ -707,17 +752,6 @@
         @if (reactivos && reactivos.length) {
         <div class="catalogo-stats">
           <span>🧪 Mostrando {{ reactivosFiltrados.length }} de {{ reactivosTotal }} reactivos</span>
-            @if (!esAuxiliar) {
-              <button type="button"
-                      class="btn-export"
-                      (click)="descargarReactivosExcel()"
-                      [disabled]="exportandoExcel"
-                      [attr.aria-busy]="exportandoExcel ? 'true' : null"
-                      title="Descargar Excel con todos los reactivos">
-                <i class="fas fa-file-excel"></i>
-                {{ exportandoExcel ? 'Generando...' : 'Exportar Excel' }}
-              </button>
-            }
         </div>
         }
 
@@ -771,21 +805,24 @@
               <div class="name-pdfs" (click)="$event.stopPropagation()">
                 <div class="pdf-box pdf-sds" role="group" aria-label="SDS controls">
                   <!-- SDS combinado: icono archivo + estado habilitado/inhabilitado -->
-                  <button
+                  <div
                     *ngIf="reactivoPdfStatusSig()[r.lote] && reactivoPdfStatusSig()[r.lote].hoja===true"
-                    type="button"
                     class="btn pdf-existe"
+                    role="button"
+                    tabindex="0"
                     title="Ver hoja de seguridad (SDS)"
                     aria-label="Ver hoja de seguridad (SDS)"
-                    (click)="$event.stopPropagation(); onVerHojaReactivo(r.lote)">
+                    (click)="$event.stopPropagation(); onVerHojaReactivo(r.lote)"
+                    (keydown.enter)="$event.stopPropagation(); onVerHojaReactivo(r.lote)"
+                    (keydown.space)="$event.preventDefault(); $event.stopPropagation(); onVerHojaReactivo(r.lote)">
                     <span class="pdf-acronym" aria-hidden="true">SDS</span>
-                  </button>
-                  <span
+                  </div>
+                  <div
                     *ngIf="!(reactivoPdfStatusSig()[r.lote] && reactivoPdfStatusSig()[r.lote].hoja===true)"
                     class="tag pdf-no-existe"
                     aria-label="Hoja de seguridad no disponible">
                     <span class="pdf-acronym" aria-hidden="true">SDS</span>
-                  </span>
+                  </div>
                   <button type="button" class="pdf-btn delete" *ngIf="canDelete()" title="Eliminar hoja de seguridad"
                     aria-label="Eliminar hoja de seguridad"
                     (click)="$event.stopPropagation(); onEliminarHojaReactivo(r.lote)">
@@ -810,21 +847,24 @@
 
                 <div class="pdf-box pdf-coa" role="group" aria-label="CoA controls">
                   <!-- CoA combinado: icono archivo + estado habilitado/inhabilitado -->
-                  <button
+                  <div
                     *ngIf="reactivoPdfStatusSig()[r.lote] && reactivoPdfStatusSig()[r.lote].cert===true"
-                    type="button"
                     class="btn pdf-existe"
+                    role="button"
+                    tabindex="0"
                     title="Ver certificado de análisis (CoA)"
                     aria-label="Ver certificado de análisis (CoA)"
-                    (click)="$event.stopPropagation(); onVerCertReactivo(r.lote)">
+                    (click)="$event.stopPropagation(); onVerCertReactivo(r.lote)"
+                    (keydown.enter)="$event.stopPropagation(); onVerCertReactivo(r.lote)"
+                    (keydown.space)="$event.preventDefault(); $event.stopPropagation(); onVerCertReactivo(r.lote)">
                     <span class="pdf-acronym" aria-hidden="true">CoA</span>
-                  </button>
-                  <span
+                  </div>
+                  <div
                     *ngIf="!(reactivoPdfStatusSig()[r.lote] && reactivoPdfStatusSig()[r.lote].cert===true)"
                     class="tag pdf-no-existe"
                     aria-label="Certificado de análisis no disponible">
                     <span class="pdf-acronym" aria-hidden="true">CoA</span>
-                  </span>
+                  </div>
                   <button type="button" class="pdf-btn delete" *ngIf="canDelete()"
                     title="Eliminar certificado de análisis" aria-label="Eliminar certificado de análisis"
                     (click)="$event.stopPropagation(); onEliminarCertReactivo(r.lote)">
@@ -917,6 +957,23 @@
           </article>
           }
         </div>
+
+        @if (!allReactivosLoaded && reactivos && reactivos.length) {
+          <div
+            class="btn-load-more ver-mas-div"
+            [class.is-disabled]="reactivosLoadingMore"
+            role="button"
+            tabindex="0"
+            (click)="cargarMasReactivos()"
+            (keydown.enter)="cargarMasReactivos()"
+            (keydown.space)="$event.preventDefault(); cargarMasReactivos()"
+            [attr.aria-disabled]="reactivosLoadingMore ? 'true' : null"
+            [attr.aria-busy]="reactivosLoadingMore ? 'true' : null"
+            aria-label="Ver más reactivos"
+          >
+            {{ reactivosLoadingMore ? 'Cargando…' : 'Ver más' }}
+          </div>
+        }
 
         @if (reactivosFiltrados && reactivosFiltrados.length === 0) {
         <p>No hay reactivos que coincidan con los filtros.</p>

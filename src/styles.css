@@ -176,6 +176,13 @@
 	--app-muted: var(--text-gray);
 	--app-border: var(--border-gray);
 	--app-hover: rgba(2,6,23,0.04);
+
+	/* Cross-module compatibility vars (avoid #fff fallbacks in dark mode) */
+	--card-bg: var(--app-surface);
+	--border-color: var(--app-border);
+	--text-color: var(--app-text);
+	--hover-bg: var(--app-hover);
+	--muted: var(--app-muted);
 }
 
 /* Dark mode overrides: applied via <html data-theme="dark"> */
@@ -195,6 +202,13 @@
 	--light-gray: var(--app-bg);
 	--text-gray: var(--app-muted);
 	--border-gray: var(--app-border);
+
+	/* Cross-module compatibility vars (avoid #fff fallbacks in dark mode) */
+	--card-bg: var(--app-surface);
+	--border-color: var(--app-border);
+	--text-color: var(--app-text);
+	--hover-bg: var(--app-hover);
+	--muted: var(--app-muted);
 }
 
 /* html, body {
@@ -357,11 +371,12 @@ body.auth-page .container {
 .liba-theme textarea {
 	width: 100%;
 	padding: 0.8rem;
-	border: 2px solid var(--border-gray);
+	border: 2px solid var(--app-border);
 	border-radius: 6px;
 	font-family: inherit;
 	transition: all 0.3s ease;
-	background-color: var(--primary-white);
+	background-color: var(--app-surface);
+	color: var(--app-text);
 	font-size: 0.95rem;
 	position: relative;
 	box-sizing: border-box;
@@ -427,11 +442,12 @@ select {
 	/* Reactivos base look */
 	padding: 0.8rem; /* consistent padding */
 	padding-right: 2.2rem; /* extra space for custom caret */
-	border: 2px solid var(--border-gray);
+	border: 2px solid var(--app-border);
 	border-radius: 6px;
 	font-family: inherit;
 	font-size: 0.95rem;
-	background-color: var(--primary-white);
+	background-color: var(--app-surface);
+	color: var(--app-text);
 	transition: border-color 0.3s ease;
 	box-sizing: border-box;
 	/* caret as background layer, vertically centered */
@@ -444,6 +460,16 @@ select {
 
 :root[data-theme="dark"] select {
 	--liba-select-caret: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+	background-color: var(--app-surface);
+	color: var(--app-text);
+	border-color: var(--app-border);
+}
+
+/* When opening a native select, browsers render a separate popup list; ensure it isn't white in dark mode */
+:root[data-theme="dark"] select option,
+:root[data-theme="dark"] select optgroup {
+	background-color: var(--app-surface);
+	color: var(--app-text);
 }
 
 /* Place a chevron on the container of any select within form grids */
@@ -478,11 +504,123 @@ select:focus {
 	outline: none;
 	border-color: var(--primary-turquoise);
 	box-shadow: 0 0 0 3px rgba(0, 184, 181, 0.1);
+	background-color: var(--app-surface);
+}
+
+/* ---------- Standard dark-mode surfaces for lists/cards ---------- */
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .section,
+:root[data-theme="dark"] .box,
+:root[data-theme="dark"] .content-box,
+:root[data-theme="dark"] .table-container,
+:root[data-theme="dark"] .list-container,
+:root[data-theme="dark"] .details,
+:root[data-theme="dark"] .detalle,
+:root[data-theme="dark"] .detalle-item,
+:root[data-theme="dark"] .detalle-grid,
+:root[data-theme="dark"] .historial,
+:root[data-theme="dark"] .historial-card,
+:root[data-theme="dark"] .historial-item,
+:root[data-theme="dark"] .historial-row,
+:root[data-theme="dark"] .equipo-card,
+:root[data-theme="dark"] .equipos-grid > *,
+:root[data-theme="dark"] .solicitud-card,
+:root[data-theme="dark"] .solicitudes-grid > *,
+:root[data-theme="dark"] .reactivo-card,
+:root[data-theme="dark"] .reactivos-grid > *,
+:root[data-theme="dark"] .insumo-card,
+:root[data-theme="dark"] .insumos-grid > * {
+	background-color: var(--app-surface);
+	color: var(--app-text);
+	border-color: var(--app-border);
+}
+
+:root[data-theme="dark"] .card *,
+:root[data-theme="dark"] .panel *,
+:root[data-theme="dark"] .section *,
+:root[data-theme="dark"] .box *,
+:root[data-theme="dark"] .content-box *,
+:root[data-theme="dark"] .detalle *,
+:root[data-theme="dark"] .historial * {
+	color: inherit;
+}
+
+:root[data-theme="dark"] .list-item:hover,
+:root[data-theme="dark"] .row:hover,
+:root[data-theme="dark"] .historial-item:hover,
+:root[data-theme="dark"] .historial-row:hover,
+:root[data-theme="dark"] .table-row:hover,
+:root[data-theme="dark"] .equipos-grid > *:hover,
+:root[data-theme="dark"] .solicitudes-grid > *:hover,
+:root[data-theme="dark"] .reactivos-grid > *:hover,
+:root[data-theme="dark"] .insumos-grid > *:hover {
+	background-color: var(--app-hover);
+}
+
+:root[data-theme="dark"] .muted,
+:root[data-theme="dark"] .subtle,
+:root[data-theme="dark"] .secondary,
+:root[data-theme="dark"] .hint,
+:root[data-theme="dark"] small,
+:root[data-theme="dark"] .text-muted {
+	color: var(--app-muted);
+}
+
+:root[data-theme="dark"] hr {
+	border-color: var(--app-border);
+}
+
+/* ---------- Standard dark-mode modals (global) ---------- */
+:root[data-theme="dark"] .modal-backdrop,
+:root[data-theme="dark"] .modal-overlay {
+	background: rgba(0,0,0,0.65);
+}
+
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .modal-content,
+:root[data-theme="dark"] .edit-modal {
+	background: var(--app-surface);
+	color: var(--app-text);
+	border-color: var(--app-border);
+}
+
+:root[data-theme="dark"] .modal-body {
+	background: var(--app-surface);
+	color: var(--app-text);
+}
+
+:root[data-theme="dark"] .modal-content hr,
+:root[data-theme="dark"] .modal hr,
+:root[data-theme="dark"] .edit-modal hr {
+	border-color: var(--app-border);
+}
+
+:root[data-theme="dark"] .modal-content input,
+:root[data-theme="dark"] .modal-content select,
+:root[data-theme="dark"] .modal-content textarea,
+:root[data-theme="dark"] .modal input,
+:root[data-theme="dark"] .modal select,
+:root[data-theme="dark"] .modal textarea,
+:root[data-theme="dark"] .edit-modal input,
+:root[data-theme="dark"] .edit-modal select,
+:root[data-theme="dark"] .edit-modal textarea {
+	background-color: var(--app-surface);
+	color: var(--app-text);
+	border-color: var(--app-border);
 }
 
 /* Hover + disabled for consistency */
 select:hover:not(:focus):not(:disabled) { border-color: #cbd5e0; }
-select:disabled { background-color: #f5f7fb; color: #9aa4b2; cursor: not-allowed; opacity: 1; }
+:root[data-theme="dark"] select:hover:not(:focus):not(:disabled) { border-color: rgba(255,255,255,0.22); }
+
+select:disabled {
+	background-color: rgba(2,6,23,0.03);
+	color: var(--app-muted);
+	cursor: not-allowed;
+	opacity: 1;
+}
+:root[data-theme="dark"] select:disabled { background-color: rgba(255,255,255,0.05); }
 
 /* Contenedores de campos para evitar desbordes */
 .liba-theme form .form-grid > div,

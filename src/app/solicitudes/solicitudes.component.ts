@@ -133,7 +133,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   solicitudTipoAnalisisCustomOptions: string[] = [];
   showTipoAnalisisModal: boolean = false;
   modalTipoAnalisisText: string = '';
-  solicitudRequiereVarios: any = '';
+  solicitudRequiereVarios: boolean | null = null;
   solicitudCantidad: number | null = null;
   solicitudFechaEstimada = '';
   solicitudPuedeSuministrar: any = '';
@@ -144,25 +144,25 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   solicitudObservaciones: string = '';
   solicitudConsecutivo: number | null = null;
 
-  ofertaSolicitudId: any = '';
-  ofertaGeneroCotizacion: any = '';
+  ofertaSolicitudId: number | null = null;
+  ofertaGeneroCotizacion: boolean | null = null;
   ofertaValor: number | null = null;
   ofertaFechaEnvio = '';
-  ofertaRealizoSeguimiento: any = '';
+  ofertaRealizoSeguimiento: boolean | null = null;
   ofertaObservacion = '';
 
-  resultadoSolicitudId: any = '';
+  resultadoSolicitudId: number | null = null;
   resultadoFechaLimite = '';
-  resultadoServicioViable: any = '';
+  resultadoServicioViable: boolean | null = null;
 
-  encuestaSolicitudId: any = '';
+  encuestaSolicitudId: number | null = null;
   encuestaFecha = '';
   encuestaFechaRealizacion = ''; 
   encuestaPuntuacion: number | null = null;
   encuestaComentarios = '';
   // encuestaRecomendaria: any = '';
-  encuestaClienteRespondio: any = '';
-  encuestaSolicitoNueva: any = '';
+  encuestaClienteRespondio: boolean | null = null;
+  encuestaSolicitoNueva: boolean | null = null;
 
   // Formulario alterno: actualizar viabilidad
   viableSolicitudId: any = '';
@@ -564,11 +564,22 @@ getTomorrowDate(): string {
     }
   }
 
-  onDepartamentoChange(): void {
+  onDepartamentoChange(eventOrCodigo?: Event | string): void {
+    const codigo = typeof eventOrCodigo === 'string'
+      ? eventOrCodigo
+      : String((eventOrCodigo?.target as HTMLSelectElement | null)?.value ?? this.clienteIdDepartamento ?? '').trim();
+
+    this.clienteIdDepartamento = codigo;
     this.clienteIdCiudad = '';
+    this.locationsService.clearCiudades();
+
+    if (!codigo) {
+      return;
+    }
+
     (async () => {
       try {
-        await this.locationsService.loadCiudades(this.clienteIdDepartamento);
+        await this.locationsService.loadCiudades(codigo);
         const count = this.ciudades().length;
         if (count === 0) {
           this.snackbarService.warn('No se encontraron ciudades para el departamento seleccionado');
@@ -1133,10 +1144,11 @@ private validarCampoClienteIndividual(campo: string, valor: any): string {
       return '';
       
     case 'nit':
+      // Permitir digitar el NIT sin restringir formato durante la creación.
+      // Solo validamos que exista y que no sea excesivamente largo.
       const nitStr = (valor ?? '').toString().trim();
       if (!nitStr) return 'El NIT es obligatorio';
-      if (!/^[0-9]{9}-[0-9]$/.test(nitStr))
-        return 'Formato de NIT inválido (ej: 900123456-7)';
+      if (nitStr.length > 60) return 'El NIT no puede exceder 60 caracteres';
       return '';
       
     case 'tipoId':
@@ -2116,7 +2128,7 @@ private getValorEncuesta(campo: string): any {
     this.solicitudTipoMuestra = '';
     this.solicitudCondEmpaque = '';
     this.solicitudTipoAnalisis = '';
-    this.solicitudRequiereVarios = false;
+    this.solicitudRequiereVarios = null;
     this.solicitudCantidad = null;
     this.solicitudFechaEstimada = '';
     this.solicitudPuedeSuministrar = false;
@@ -2130,19 +2142,18 @@ private getValorEncuesta(campo: string): any {
 
   private limpiarFormularioOferta(): void {
     this.ofertaSolicitudId = null;
-    this.ofertaGeneroCotizacion = false;
+    this.ofertaGeneroCotizacion = null;
     this.ofertaValor = null;
     this.ofertaFechaEnvio = '';
-    this.ofertaRealizoSeguimiento = false;
+    this.ofertaRealizoSeguimiento = null;
     this.ofertaObservacion = '';
     this.ofertaValorDisplay = '';
   }
 
   private limpiarFormularioResultado(): void {
-    // Reset to empty string so the select shows its placeholder option
-    this.resultadoSolicitudId = '';
+    this.resultadoSolicitudId = null;
     this.resultadoFechaLimite = '';
-    this.resultadoServicioViable = false;
+    this.resultadoServicioViable = null;
   }
 
   private limpiarFormularioEncuesta(): void {
@@ -2152,8 +2163,8 @@ private getValorEncuesta(campo: string): any {
     this.encuestaComentarios = '';
     // this.encuestaRecomendaria = false;
     this.encuestaFechaRealizacion = '';
-    this.encuestaClienteRespondio = false;
-    this.encuestaSolicitoNueva = false;
+    this.encuestaClienteRespondio = null;
+    this.encuestaSolicitoNueva = null;
   }
 
   // ========== MÉTODOS UI ==========

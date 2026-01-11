@@ -331,7 +331,7 @@
 }
 
 /* ===== Variables CSS ===== */
-:root {
+:root:not([data-theme="dark"]) {
   --primary-blue: #001f5b;
   --primary-turquoise: #00b8b5;
   --primary-white: #ffffff;
@@ -452,7 +452,8 @@
   }
 
   .edit-modal {
-    background: #fff;
+    background: var(--app-surface, #fff);
+    color: var(--app-text, #111827);
     padding: 18px;
     border-radius: 8px;
     width: 900px; /* fixed width based on the largest tab (Solicitud) */
@@ -496,8 +497,9 @@
     overflow: auto;
     padding: 8px;
     border-radius: 6px;
-    border: 1px solid var(--border-gray);
-    background: var(--primary-white);
+    border: 1px solid var(--app-border, var(--border-gray));
+    background: var(--app-surface, var(--primary-white));
+    color: var(--app-text, var(--text-gray));
     transition: height 140ms ease;
     line-height: 1.4;
   }
@@ -1623,6 +1625,150 @@ input[readonly] {
   font-weight: 500;
 }
 
+/* =====================================================
+   DARK MODE: LISTS / CARDS (Solicitudes only)
+   ===================================================== */
+:root[data-theme="dark"] .solicitudes-page .equipo-tabs-menu {
+  background: var(--app-surface);
+  border-bottom-color: var(--app-border);
+}
+
+:root[data-theme="dark"] .solicitudes-page .tab-btn {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--app-border);
+  color: var(--app-muted);
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .solicitudes-page .tab-btn.active {
+  background: var(--app-surface);
+  color: var(--app-text-strong);
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .solicitudes-page .tab-btn:not(.active):hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--app-text);
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-card {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-card:hover {
+  box-shadow: 0 12px 26px rgba(0,0,0,0.28);
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-card .tag {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--app-border);
+  color: var(--app-text);
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-card .tag strong {
+  color: var(--app-text-strong);
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-info-principal {
+  background: var(--app-bg);
+}
+
+:root[data-theme="dark"] .solicitudes-page .info-label,
+:root[data-theme="dark"] .solicitudes-page .equipo-nombre strong {
+  color: var(--app-muted);
+}
+
+:root[data-theme="dark"] .solicitudes-page .info-value,
+:root[data-theme="dark"] .solicitudes-page .equipo-nombre p {
+  color: var(--app-text-strong);
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-nombre {
+  border-top-color: var(--app-border);
+}
+
+:root[data-theme="dark"] .solicitudes-page .info-expand-toggle {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+  color: var(--app-text-strong);
+}
+
+:root[data-theme="dark"] .solicitudes-page .info-expand-toggle:hover {
+  background: rgba(255,255,255,0.06);
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-info-card {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.28);
+}
+
+:root[data-theme="dark"] .solicitudes-page .detalle-item {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .solicitudes-page .detalle-item .detalle-label,
+:root[data-theme="dark"] .solicitudes-page .historial-item .historial-label {
+  background: rgba(255,255,255,0.04);
+  color: var(--app-muted);
+}
+
+:root[data-theme="dark"] .solicitudes-page .detalle-item span:not(.detalle-label) {
+  color: var(--app-text);
+}
+
+:root[data-theme="dark"] .solicitudes-page .historial-record-card {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+}
+
+:root[data-theme="dark"] .solicitudes-page .historial-item {
+  background: rgba(255,255,255,0.03);
+  border-color: var(--app-border);
+}
+
+:root[data-theme="dark"] .solicitudes-page .compact-menu {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+}
+
+:root[data-theme="dark"] .solicitudes-page .compact-menu li {
+  color: var(--app-text);
+}
+
+:root[data-theme="dark"] .solicitudes-page .compact-menu li:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-card .pdf-uploader {
+  border-color: var(--app-border);
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-card .pdf-uploader .upload-btn {
+  background: rgba(255,255,255,0.08);
+  color: var(--app-text);
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-card .pdf-uploader .upload-btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-card .pdf-uploader .type-wrap {
+  background: rgba(255,255,255,0.06);
+}
+
+:root[data-theme="dark"] .solicitudes-page .equipo-card .pdf-uploader .type-wrap .chevron {
+  color: var(--app-text);
+}
+
 .historial-item span:not(.historial-label) {
   padding: 8px 10px;
   font-size: 0.85rem;
@@ -1783,6 +1929,64 @@ input[readonly] {
   justify-content: center;
 }
 
+/* ----- Edit Cliente modal (inline styles migrated to classes) ----- */
+.client-edit-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.client-edit-modal {
+  background: var(--app-surface, #fff);
+  color: var(--app-text, #111827);
+  padding: 16px;
+  border-radius: 8px;
+  min-width: 360px;
+  max-width: 90%;
+  border: 1px solid var(--app-border, #e5e7eb);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.18);
+}
+
+:root[data-theme="dark"] .solicitudes-page .client-edit-backdrop {
+  background: rgba(0,0,0,0.65);
+}
+
+:root[data-theme="dark"] .solicitudes-page .client-edit-modal {
+  background: var(--app-surface);
+  color: var(--app-text);
+  border-color: var(--app-border);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.45);
+}
+
+/* Dark mode: ensure modal surface/text/borders are readable */
+:root[data-theme="dark"] .solicitudes-page .modal-backdrop {
+  background: rgba(0,0,0,0.65);
+}
+
+:root[data-theme="dark"] .solicitudes-page .modal-content {
+  background: var(--app-surface);
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.45);
+}
+
+:root[data-theme="dark"] .solicitudes-page .modal-body {
+  background: var(--app-surface);
+  color: var(--app-text);
+}
+
+:root[data-theme="dark"] .solicitudes-page .modal-close {
+  color: var(--app-text-strong, #f1f5f9);
+}
+
+:root[data-theme="dark"] .solicitudes-page .firma-full {
+  border-color: var(--app-border);
+}
+
 .firma-full {
   max-width: 100%;
   max-height: 70vh;
@@ -1804,6 +2008,11 @@ input[readonly] {
   border-radius: 12px;
   max-width: 500px;
   margin-right: 10px; /* give space to right controls */
+}
+
+:root[data-theme="dark"] .solicitudes-page .pdf-field {
+  background: var(--app-surface);
+  border-color: var(--app-border);
 }
 
 .pdf-icon {
@@ -1867,6 +2076,10 @@ input[readonly] {
   font-style: italic;
 }
 
+:root[data-theme="dark"] .solicitudes-page .pdf-select.placeholder {
+  color: var(--app-muted);
+}
+
 .pdf-select option[disabled] {
   color: #6b7280;
 }
@@ -1877,15 +2090,23 @@ input[readonly] {
 .form-field select.error, 
 .form-field textarea.error {
   border-color: #dc3545 !important;
-  background-color: #fff8f8 !important;
-  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15) !important;
+  /* Fondo sutil (evita que se vea "muy blanco" cuando el campo está vacío/error) */
+  background-color: rgba(220, 53, 69, 0.06) !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.12) !important;
+}
+
+:host-context([data-theme="dark"]) .form-field input.error,
+:host-context([data-theme="dark"]) .form-field select.error,
+:host-context([data-theme="dark"]) .form-field textarea.error {
+  background-color: rgba(220, 53, 69, 0.14) !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.22) !important;
 }
 
 .form-field input.error:focus,
 .form-field select.error:focus,
 .form-field textarea.error:focus {
   border-color: #dc3545 !important;
-  box-shadow: 0 0 0 0.3rem rgba(220, 53, 69, 0.25) !important;
+  box-shadow: 0 0 0 0.3rem rgba(220, 53, 69, 0.22) !important;
 }
 
 /* Mensaje de error */

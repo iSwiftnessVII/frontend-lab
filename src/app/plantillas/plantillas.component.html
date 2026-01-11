@@ -244,7 +244,7 @@
           <div class="search-row">
             <div class="search-field">
               <div class="campo-combinado campo-combinado-separado">
-                <select class="select-filtro" [(ngModel)]="tplReactivoFiltroTipo">
+                <select class="select-filtro" [(ngModel)]="tplReactivoFiltroTipo" (ngModelChange)="onTplReactivoSearchInput()">
                   <option value="todos">Todos</option>
                   <option value="codigo">Código</option>
                   <option value="nombre">Nombre</option>

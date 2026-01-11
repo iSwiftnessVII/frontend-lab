@@ -149,22 +149,22 @@ export class ReferenciaComponent implements OnInit {
     // Efectos para consecutivos
     effect(() => {
       const codigo = this.codigoHistorialSig();
-      if (this.formularioActivo === 'historial' && codigo) {
+      if (codigo) {
         referenciaService.obtenerNextHistorial(codigo)
-          .then((resp: any) => this.consecutivoHistorialSig.set(resp.next))
+          .then((resp) => this.consecutivoHistorialSig.set(resp.next))
           .catch(() => this.snack.warn('No se pudo cargar consecutivo historial'));
-      } else if (this.formularioActivo === 'historial' && !codigo) {
+      } else {
         this.consecutivoHistorialSig.set(null);
       }
     });
 
     effect(() => {
       const codigo = this.codigoIntervaloSig();
-      if (this.formularioActivo === 'intervalo' && codigo) {
+      if (codigo) {
         referenciaService.obtenerNextIntervalo(codigo)
-          .then((resp: any) => this.consecutivoIntervaloSig.set(resp.next))
+          .then((resp) => this.consecutivoIntervaloSig.set(resp.next))
           .catch(() => this.snack.warn('No se pudo cargar consecutivo intervalo'));
-      } else if (this.formularioActivo === 'intervalo' && !codigo) {
+      } else {
         this.consecutivoIntervaloSig.set(null);
       }
     });
@@ -583,6 +583,16 @@ export class ReferenciaComponent implements OnInit {
       this.snack.success('Historial registrado exitosamente');
 
       this.resetFormHistorial();
+
+      // Mantener material seleccionado y refrescar consecutivo automáticamente
+      this.codigo_material_historial = codigo_material;
+      this.codigoHistorialSig.set(codigo_material);
+      try {
+        const next = await this.referenciaService.obtenerNextHistorial(codigo_material);
+        this.consecutivoHistorialSig.set(next.next);
+      } catch {
+        // ya se notifica vía snack en el effect/servicio
+      }
       
       // Actualizar lista local
       if (this.historialPorMaterial[codigo_material]) {
@@ -671,6 +681,16 @@ export class ReferenciaComponent implements OnInit {
       this.snack.success('Intervalo registrado exitosamente');
 
       this.resetFormIntervalo();
+
+      // Mantener material seleccionado y refrescar consecutivo automáticamente
+      this.codigo_material_intervalo = codigo_material;
+      this.codigoIntervaloSig.set(codigo_material);
+      try {
+        const next = await this.referenciaService.obtenerNextIntervalo(codigo_material);
+        this.consecutivoIntervaloSig.set(next.next);
+      } catch {
+        // ya se notifica vía snack en el effect/servicio
+      }
       
       // Actualizar lista local
       if (this.intervaloPorMaterial[codigo_material]) {

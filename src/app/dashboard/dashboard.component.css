@@ -1,7 +1,7 @@
 /* Fonts loaded globally via index.html */
 
 /* ===== Variables CSS ===== */
-:root {
+:root:not([data-theme="dark"]) {
     --primary-blue: #001f5b;
     --primary-turquoise: #00b8b5;
     --primary-white: #ffffff;

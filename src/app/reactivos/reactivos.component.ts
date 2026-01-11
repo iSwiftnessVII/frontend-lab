@@ -1,12 +1,11 @@
 import { Component, OnInit, signal, ChangeDetectorRef, computed, ElementRef, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { authService, authUser } from '../services/auth.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { reactivosService } from '../services/reactivos.service';
-import { NumbersOnlyDirective } from '../directives/numbers-only.directive';
 import { LettersOnlyDirective } from '../directives/letters-only.directive';
 import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
 
@@ -15,7 +14,7 @@ import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
   selector: 'app-reactivos',
   templateUrl: './reactivos.component.html',
   styleUrls: ['./reactivos.component.css'],
-  imports: [CommonModule, FormsModule, RouterModule, NumbersOnlyDirective, LettersOnlyDirective, AlphaNumericDirective],
+  imports: [CommonModule, NgIf, FormsModule, RouterModule, LettersOnlyDirective, AlphaNumericDirective],
 })
 export class ReactivosComponent implements OnInit {
   @ViewChild('tplDocTemplateInput') private tplDocTemplateInput?: ElementRef<HTMLInputElement>;
@@ -171,6 +170,11 @@ export class ReactivosComponent implements OnInit {
   almacenamiento_id: any = '';
   tipo_recipiente_id: any = '';
 
+  // Bloqueo de campos autocompletados desde catálogo
+  bloquearCodigoNombreCatalogo: boolean = false;
+  bloquearTipoReactivoCatalogo: boolean = false;
+  bloquearClasificacionCatalogo: boolean = false;
+
   reactivoMsg = '';
   submittedReactivo = false;
   // Edición de reactivo
@@ -193,6 +197,7 @@ export class ReactivosComponent implements OnInit {
   reactivosTotal: number = 0; // total real de reactivos en BD
   allReactivosLoaded: boolean = false; // indica si ya tenemos todo el universo cargado para filtros locales
   reactivosPageSize: number = 10; // tamaño de página inicial para inventario
+  reactivosLoadingMore: boolean = false;
   // Filtros de inventario (3 campos en una fila)
   reactivosLoteQ = '';
   reactivosCodigoQ = '';
@@ -206,8 +211,13 @@ reactivoErrors: { [key: string]: string } = {};
   mostrarCatalogoFormPanel: boolean = false; // deprecado visualmente
   private catalogoDebounce: any = null;
   catalogoFiltroCampo: 'codigo' | 'nombre' | 'mixto' = 'mixto';
+
+  // Crear reactivo: dropdown overlay (estilo Ficha técnica - Equipos)
+  mostrarCatalogoResultados: boolean = false;
   isCodigoFocused: boolean = false;
   isNombreFocused: boolean = false;
+  catalogoSugerenciasVisibleCount: number = 20;
+  private catalogoSugerenciasInteracting: boolean = false;
 
   // Estado de disponibilidad de PDFs por código (catálogo)
   pdfStatus: { [codigo: string]: { hoja: boolean | null; cert: boolean | null } } = {};
@@ -750,6 +760,53 @@ reactivoErrors: { [key: string]: string } = {};
     }
   }
 
+  async cargarMasReactivos(): Promise<void> {
+    if (this.reactivosLoadingMore) return;
+    if (this.allReactivosLoaded) return;
+
+    this.reactivosLoadingMore = true;
+    try {
+      const current = this.reactivosSig();
+      const offset = current.length;
+      const resp = await reactivosService.listarReactivos(this.reactivosQ || '', this.reactivosPageSize, offset);
+
+      let rows: any[] = [];
+      if (Array.isArray(resp)) {
+        rows = resp;
+      } else {
+        rows = resp.rows || [];
+        if (typeof resp.total === 'number') this.reactivosTotal = resp.total;
+      }
+
+      const nuevos = (rows || []).filter((r: any) => this.esActivo(r));
+
+      // Append con deduplicación por lote
+      const merged = current.concat(nuevos);
+      const seen = new Set<string>();
+      const dedup: any[] = [];
+      for (const r of merged) {
+        const key = String(r?.lote || '');
+        if (!key) {
+          dedup.push(r);
+          continue;
+        }
+        if (seen.has(key)) continue;
+        seen.add(key);
+        dedup.push(r);
+      }
+
+      this.reactivosSig.set(dedup);
+      this.aplicarFiltroReactivos();
+      try { this.preloadDocsForReactivosVisible(nuevos); } catch {}
+
+      this.allReactivosLoaded = this.reactivosSig().length >= this.reactivosTotal;
+    } catch (e: any) {
+      this.snack.error(e?.message || 'Error cargando más reactivos');
+    } finally {
+      this.reactivosLoadingMore = false;
+    }
+  }
+
   async buscarCatalogo() {
     const q = this.normalizarTexto(this.catalogoQ || '');
     if (!this.catalogoBaseSig().length) {
@@ -1168,24 +1225,134 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   }
 }
 
-  seleccionarCatalogo(item: any) {
-    this.catalogoSeleccionado = item;
+  async seleccionarCatalogo(item: any) {
+    const codigoSel = String(item?.codigo || '').trim();
+    if (!codigoSel) return;
+
+    // Asegurar auxiliares (tipo/clasificación) antes de mapear
+    if (!this.tipos?.length || !this.clasif?.length) {
+      try {
+        await this.loadAux();
+      } catch {
+        // no bloquear: seguimos con lo que haya
+      }
+    }
+
+    // Traer el detalle del catálogo por código (por si el item viene incompleto)
+    let catalogoItem = item;
+    try {
+      const full = await reactivosService.obtenerCatalogo(codigoSel);
+      if (full && typeof full === 'object') catalogoItem = full;
+    } catch {
+      // silencioso: usar item original
+    }
+
+    this.catalogoSeleccionado = catalogoItem;
+
     // Rellenar campos del formulario reactivo
-    this.codigo = item.codigo || '';
-    this.nombre = item.nombre || '';
-    // Mapear tipo/clasificación por nombre a IDs de tablas auxiliares
-    const tipo = this.tipos.find(t => (t.nombre || '').toLowerCase().trim() === (item.tipo_reactivo || '').toLowerCase().trim());
-    const clasif = this.clasif.find(c => (c.nombre || '').toLowerCase().trim() === (item.clasificacion_sga || '').toLowerCase().trim());
-    this.tipo_id = tipo ? tipo.id : '';
-    this.clasificacion_id = clasif ? clasif.id : '';
+    this.codigo = String(catalogoItem?.codigo || codigoSel);
+    this.nombre = String(catalogoItem?.nombre || '');
+
+    const mapAuxId = (list: any[], nombre: any): any => {
+      const target = this.normalizarTexto(String(nombre || ''));
+      if (!target) return '';
+      const toModelId = (id: any) => {
+        if (id === null || id === undefined) return '';
+        return String(id);
+      };
+      const exact = (list || []).find(x => this.normalizarTexto(String(x?.nombre || '')) === target);
+      if (exact) return toModelId(exact.id);
+      const partial = (list || []).find(x => {
+        const n = this.normalizarTexto(String(x?.nombre || ''));
+        return n && (target.includes(n) || n.includes(target));
+      });
+      return partial ? toModelId(partial.id) : '';
+    };
+
+    // Mapear tipo/clasificación por nombre -> IDs de tablas auxiliares
+    this.tipo_id = mapAuxId(this.tipos, catalogoItem?.tipo_reactivo);
+    this.clasificacion_id = mapAuxId(this.clasif, catalogoItem?.clasificacion_sga);
+
+    // Bloquear campos que se autocompletaron
+    this.bloquearCodigoNombreCatalogo = !!(this.codigo && this.nombre);
+    this.bloquearTipoReactivoCatalogo = !!this.tipo_id;
+    this.bloquearClasificacionCatalogo = !!this.clasificacion_id;
+
+    // Avisar si no se pudo mapear (para detectar diferencias entre catálogos y auxiliares)
+    if (!this.tipo_id && catalogoItem?.tipo_reactivo) {
+      this.snack.warn(`No se pudo mapear el tipo: ${catalogoItem.tipo_reactivo}`);
+    }
+    if (!this.clasificacion_id && catalogoItem?.clasificacion_sga) {
+      this.snack.warn(`No se pudo mapear la clasificación SGA: ${catalogoItem.clasificacion_sga}`);
+    }
 
     // Cargar PDFs existentes
-    this.loadDocs(item.codigo);
+    this.loadDocs(this.codigo);
     // Ocultar panel de catálogo embebido
     this.mostrarCatalogoFormPanel = false;
     // Limpiar sugerencias para cerrar dropdowns
     this.catalogoSugerenciasSig.set([]);
-    this.catalogoQ = '';
+    this.catalogoQ = `${this.codigo} - ${this.nombre}`.trim();
+    this.mostrarCatalogoResultados = false;
+  }
+
+  // ===== Crear reactivo: filtro catálogo overlay =====
+  cambiarCatalogoFiltroCampo(tipo: 'codigo' | 'nombre' | 'mixto'): void {
+    this.catalogoFiltroCampo = tipo;
+    this.catalogoSugerenciasVisibleCount = 20;
+    if ((this.catalogoQ || '').trim()) {
+      this.onCatalogoQInput();
+    }
+  }
+
+  getCatalogoPlaceholder(): string {
+    switch (this.catalogoFiltroCampo) {
+      case 'codigo':
+        return 'Buscar por código...';
+      case 'nombre':
+        return 'Buscar por nombre...';
+      case 'mixto':
+      default:
+        return 'Buscar por código o nombre...';
+    }
+  }
+
+  async onCatalogoQInput(): Promise<void> {
+    const q = (this.catalogoQ || '').trim();
+    this.catalogoSugerenciasVisibleCount = 20;
+    if (this.catalogoDebounce) clearTimeout(this.catalogoDebounce);
+    this.catalogoDebounce = setTimeout(async () => {
+      if (q.length >= 1) {
+        await this.buscarCatalogo();
+      } else {
+        this.catalogoSugerenciasSig.set([]);
+      }
+    }, 150);
+    this.mostrarCatalogoFormPanel = false;
+  }
+
+  onCatalogoFocusOut(): void {
+    setTimeout(() => {
+      if (this.catalogoSugerenciasInteracting) {
+        this.catalogoSugerenciasInteracting = false;
+        this.mostrarCatalogoResultados = true;
+        return;
+      }
+      this.mostrarCatalogoResultados = false;
+    }, 200);
+  }
+
+  verMasCatalogoSugerencias(event?: any): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.catalogoSugerenciasInteracting = true;
+
+    const total = (this.catalogoSugerenciasSig() || []).length;
+    if (this.catalogoSugerenciasVisibleCount >= total) return;
+    this.catalogoSugerenciasVisibleCount = Math.min(this.catalogoSugerenciasVisibleCount + 20, total);
+    this.mostrarCatalogoResultados = true;
   }
 
   filtrarCatalogoCodigo() {
@@ -1596,6 +1763,10 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     const clasif = this.clasif.find(c => (c.nombre || '').toLowerCase().trim() === (item.clasificacion_sga || '').toLowerCase().trim());
     this.tipo_id = tipo ? tipo.id : '';
     this.clasificacion_id = clasif ? clasif.id : '';
+
+    this.bloquearCodigoNombreCatalogo = !!(this.codigo && this.nombre);
+    this.bloquearTipoReactivoCatalogo = !!this.tipo_id;
+    this.bloquearClasificacionCatalogo = !!this.clasificacion_id;
     this.loadDocs(item.codigo);
   }
 
@@ -1608,6 +1779,10 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     const clasif = this.clasif.find(c => (c.nombre || '').toLowerCase().trim() === (item.clasificacion_sga || '').toLowerCase().trim());
     this.tipo_id = tipo ? tipo.id : '';
     this.clasificacion_id = clasif ? clasif.id : '';
+
+    this.bloquearCodigoNombreCatalogo = !!(this.codigo && this.nombre);
+    this.bloquearTipoReactivoCatalogo = !!this.tipo_id;
+    this.bloquearClasificacionCatalogo = !!this.clasificacion_id;
     this.loadDocs(item.codigo);
   }
 
@@ -2031,12 +2206,24 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     this.presentacion = this.presentacion_cant = this.cantidad_total = null;
     this.fecha_adquisicion = this.fecha_vencimiento = this.observaciones = '';
     this.tipo_id = this.clasificacion_id = this.unidad_id = this.estado_id = this.almacenamiento_id = this.tipo_recipiente_id = '';
+    this.catalogoSeleccionado = null;
+    this.catalogoQ = '';
+    try { this.catalogoSugerenciasSig.set([]); } catch {}
+    this.mostrarCatalogoResultados = false;
+    this.bloquearCodigoNombreCatalogo = false;
+    this.bloquearTipoReactivoCatalogo = false;
+    this.bloquearClasificacionCatalogo = false;
     this.editMode = false;
     this.editOriginalLote = null;
   }
 
   // Iniciar edición tomando datos del reactivo y subiendo el formulario
   startEditReactivo(r: any) {
+    // En edición, permitir cambios
+    this.catalogoSeleccionado = null;
+    this.bloquearCodigoNombreCatalogo = false;
+    this.bloquearTipoReactivoCatalogo = false;
+    this.bloquearClasificacionCatalogo = false;
     // Cargar valores en el formulario
     this.lote = r.lote || '';
     this.codigo = r.codigo || '';

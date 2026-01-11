@@ -11,6 +11,10 @@ export class LocationsService {
   departamentos = this._departamentos.asReadonly();
   ciudades = this._ciudades.asReadonly();
 
+  clearCiudades(): void {
+    this._ciudades.set([]);
+  }
+
   private getAuthHeaders(): Record<string, string> {
     const token = authService.getToken(); // Usar tu authService existente
     const headers: Record<string, string> = {};

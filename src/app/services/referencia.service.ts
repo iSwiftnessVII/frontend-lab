@@ -49,8 +49,13 @@ export class ReferenciaService {
     return firstValueFrom(this.http.put(`${this.API_REFERENCIA}/historial/${codigo_material}/${consecutivo}`, data, this.getOptions()));
   }
 
-  async obtenerNextHistorial(codigo_material: number) {
-    return firstValueFrom(this.http.get<any>(`${this.API_REFERENCIA}/historial/next/${codigo_material}`, this.getOptions()));
+  async obtenerNextHistorial(codigo_material: number): Promise<{ next: number }> {
+    const data: any = await firstValueFrom(
+      this.http.get<any>(`${this.API_REFERENCIA}/historial/next/${codigo_material}`, this.getOptions())
+    );
+    const next = Number(data?.next ?? data?.nextConsecutivo ?? data?.consecutivo ?? data?.siguiente ?? NaN);
+    if (!Number.isFinite(next) || next <= 0) throw new Error('Consecutivo inválido');
+    return { next };
   }
 
   // Intervalo Referencia
@@ -66,8 +71,13 @@ export class ReferenciaService {
     return firstValueFrom(this.http.put(`${this.API_REFERENCIA}/intervalo/${codigo_material}/${consecutivo}`, data, this.getOptions()));
   }
 
-  async obtenerNextIntervalo(codigo_material: number) {
-    return firstValueFrom(this.http.get<any>(`${this.API_REFERENCIA}/intervalo/next/${codigo_material}`, this.getOptions()));
+  async obtenerNextIntervalo(codigo_material: number): Promise<{ next: number }> {
+    const data: any = await firstValueFrom(
+      this.http.get<any>(`${this.API_REFERENCIA}/intervalo/next/${codigo_material}`, this.getOptions())
+    );
+    const next = Number(data?.next ?? data?.nextConsecutivo ?? data?.consecutivo ?? data?.siguiente ?? NaN);
+    if (!Number.isFinite(next) || next <= 0) throw new Error('Consecutivo inválido');
+    return { next };
   }
 
   // PDFs (si aplica)

@@ -241,14 +241,15 @@
   flex-direction: row !important;
   gap: 1rem;
   align-items: center;
-  flex-wrap: nowrap !important;
-  overflow-x: auto;
+  /* Permite que el dropdown salga como overlay (sin scroll raro) */
+  flex-wrap: wrap !important;
+  overflow: visible;
 }
 
 .search-field {
   position: relative;
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 1 1 320px;
+  min-width: 260px;
 }
 
 .search-row .btn.primary {

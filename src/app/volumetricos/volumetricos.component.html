@@ -172,24 +172,24 @@
           <div class="form-section-title" style="grid-column: 1 / -1;">Calibración 1 (Penúltima)</div>
           <div>
             <label for="fecha_c1">Fecha Cal. 1 *</label>
-            <input id="fecha_c1" name="fecha_c1" type="date" [(ngModel)]="fecha_c1" />
+            <input id="fecha_c1" name="fecha_c1" type="date" [(ngModel)]="fecha_c1" (ngModelChange)="recalcularIntervalo()" />
           </div>
           <div>
             <label for="error_c1">Error Cal. 1 (mL) *</label>
             <input id="error_c1" name="error_c1" type="number" step="0.0001" 
-                   [(ngModel)]="error_c1" placeholder="Ej: 0.0012" />
+                   [(ngModel)]="error_c1" (ngModelChange)="recalcularIntervalo()" placeholder="Ej: 0.0012" />
           </div>
           
           <!-- Calibración 2 -->
           <div class="form-section-title" style="grid-column: 1 / -1;">Calibración 2 (Actual)</div>
           <div>
             <label for="fecha_c2">Fecha Cal. 2 *</label>
-            <input id="fecha_c2" name="fecha_c2" type="date" [(ngModel)]="fecha_c2" />
+            <input id="fecha_c2" name="fecha_c2" type="date" [(ngModel)]="fecha_c2" (ngModelChange)="recalcularIntervalo()" />
           </div>
           <div>
             <label for="error_c2">Error Cal. 2 (mL) *</label>
             <input id="error_c2" name="error_c2" type="number" step="0.0001" 
-                   [(ngModel)]="error_c2" placeholder="Ej: 0.0015" />
+                   [(ngModel)]="error_c2" (ngModelChange)="recalcularIntervalo()" placeholder="Ej: 0.0015" />
           </div>
           
           <!-- Cálculos -->
@@ -197,7 +197,7 @@
           <div>
             <label for="tolerancia">Tolerancia (mL)</label>
             <input id="tolerancia" name="tolerancia" type="number" step="0.0001" 
-                   [(ngModel)]="tolerancia" placeholder="Ej: 0.0020" />
+                   [(ngModel)]="tolerancia" (ngModelChange)="recalcularIntervalo()" placeholder="Ej: 0.0020" />
           </div>
           <div>
             <label for="incertidumbre_exp">Incertidumbre Expandida</label>
@@ -209,25 +209,25 @@
           <div>
             <label for="diferencia_tiempo_dias">Diferencia Tiempo (días)</label>
             <input id="diferencia_tiempo_dias" name="diferencia_tiempo_dias" 
-                   [(ngModel)]="diferencia_tiempo_dias" readonly />
+                   [(ngModel)]="diferencia_tiempo_dias" readonly placeholder="Días = fecha2 − fecha1" />
           </div>
           <div>
             <label for="desviacion_abs">Desviación Absoluta</label>
-            <input id="desviacion_abs" name="desviacion_abs" [(ngModel)]="desviacion_abs" readonly />
+            <input id="desviacion_abs" name="desviacion_abs" [(ngModel)]="desviacion_abs" readonly placeholder="|error2 − error1|" />
           </div>
           <div>
             <label for="deriva">Deriva (mL/día)</label>
-            <input id="deriva" name="deriva" [(ngModel)]="deriva" readonly />
+            <input id="deriva" name="deriva" [(ngModel)]="deriva" readonly placeholder="|error2 − error1| / días" />
           </div>
           <div>
             <label for="intervalo_calibracion_dias">Intervalo Cal. (días)</label>
             <input id="intervalo_calibracion_dias" name="intervalo_calibracion_dias" 
-                   [(ngModel)]="intervalo_calibracion_dias" readonly />
+                   [(ngModel)]="intervalo_calibracion_dias" readonly placeholder="|tolerancia / deriva|" />
           </div>
           <div>
             <label for="intervalo_calibracion_anos">Intervalo Cal. (años)</label>
             <input id="intervalo_calibracion_anos" name="intervalo_calibracion_anos" 
-                   [(ngModel)]="intervalo_calibracion_anos" readonly />
+                   [(ngModel)]="intervalo_calibracion_anos" readonly placeholder="intervalo (días) / 365" />
           </div>
           
           <div class="actions">
