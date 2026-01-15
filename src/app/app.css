@@ -505,7 +505,16 @@ body.auth-page .app-header {
 	opacity: 0.35;
 	filter: saturate(0.95) blur(1.5px);
 	transform: translateY(2px);
-	pointer-events: none;
+	/* Do not disable pointer events; it can leave the UI unclickable if the flag gets stuck */
+	pointer-events: auto;
+}
+
+/* On auth pages we must never block interactions (login inputs) */
+body.auth-page .main-content.route-navigating {
+	opacity: 1;
+	filter: none;
+	transform: none;
+	pointer-events: auto;
 }
 
 /* =====================================================

@@ -1,12 +1,14 @@
 import { Routes } from '@angular/router';
-import { authGuard, roleGuard } from './services/auth.guard';
+import { authGuard, roleGuard, guestGuard } from './services/auth.guard';
 import { InsumosComponent } from './insumos/insumos.component';
 import { PapeleriaComponent } from './papeleria/papeleria.component';
 // Equipos will be lazy-loaded like other sections
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'login', loadComponent: () => import('./login/login.component').then(m => m.LoginComponent) },
+  // Si hay sesión válida, el authGuard dejará entrar y verás dashboard.
+  // Si no, authGuard redirige a /login con returnUrl.
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: 'login', loadComponent: () => import('./login/login.component').then(m => m.LoginComponent), canActivate: [guestGuard] },
   
   // Rutas protegidas
   { 

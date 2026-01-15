@@ -1,8 +1,12 @@
 import { signal } from '@angular/core';
-// API root (e.g., http://localhost:4000/api or Vercel/ngrok value)
-const API_ROOT = (window as any).__env?.API_BASE || 'http://localhost:4000/api';
-// Auth base ensures correct /api/auth path
-const API_AUTH = `${API_ROOT}/auth`;
+
+function getApiBase(): string {
+  const apiBase = (window as any).__env?.API_AUTH;
+  if (typeof apiBase === 'string' && apiBase.trim()) return apiBase.trim();
+  const root = (window as any).__env?.API_BASE;
+  if (typeof root === 'string' && root.trim()) return `${root.trim().replace(/\/+$/g, '')}/auth`;
+  return 'http://localhost:42420/api/auth';
+}
 
 export const authUser = signal<{ 
   id: number; 
@@ -16,7 +20,7 @@ export const authInitializing = signal(false);
 
 export const authService = {
   async login(email: string, contrasena: string) {
-    const res = await fetch(`${API_AUTH}/login`, {
+    const res = await fetch(`${getApiBase()}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, contrasena })
@@ -66,7 +70,7 @@ export const authService = {
     }
 
     try {
-      const res = await fetch(`${API_AUTH}/me`, {
+      const res = await fetch(`${getApiBase()}/me`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -98,7 +102,7 @@ export const authService = {
     }
 
     try {
-      const res = await fetch(`${API_AUTH}/me`, {
+      const res = await fetch(`${getApiBase()}/me`, {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
       });

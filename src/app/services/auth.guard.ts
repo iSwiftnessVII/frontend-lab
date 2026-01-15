@@ -25,6 +25,27 @@ export const authGuard: CanActivateFn = async (_route, state) => {
   }
 };
 
+// Evita mostrar login si ya hay sesión válida
+export const guestGuard: CanActivateFn = async () => {
+  const router = inject(Router);
+
+  // Fast-path: si ya tenemos usuario en memoria
+  if (authUser()) {
+    return router.createUrlTree(['/dashboard']);
+  }
+
+  // Si hay token, intentar validar sesión
+  const token = authService.getToken();
+  if (!token) return true;
+
+  try {
+    const user = await authService.checkAuth();
+    return user ? router.createUrlTree(['/dashboard']) : true;
+  } catch {
+    return true;
+  }
+};
+
 export const roleGuard: CanActivateFn = async (route) => {
   const router = inject(Router);
 

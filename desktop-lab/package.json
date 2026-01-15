@@ -1,0 +1,38 @@
+{
+  "name": "app-lab-desktop",
+  "version": "1.0.5",
+  "private": true,
+  "main": "app/main.js",
+  "scripts": {
+    "prepare:app": "node scripts/prepare-electron.js",
+    "dist": "npm run prepare:app && electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "24.6.3"
+  },
+  "build": {
+    "appId": "com.applab.desktop",
+    "productName": "AppLab",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "app/main.js",
+      "app/preload.js",
+      "app/renderer/**"
+    ],
+    "extraResources": [
+      {
+        "from": "app/backend",
+        "to": "backend"
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  }
+}

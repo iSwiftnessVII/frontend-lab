@@ -213,6 +213,8 @@ export class App implements OnDestroy {
   logout() {
     authService.logout();
     this.menuOpen.set(false);
+    // Ensure route transition effect can't block the login inputs
+    this.isNavigating.set(false);
     this.router.navigate(['/login']);
   }
 
