@@ -21,6 +21,15 @@
     window.__env.API_PAPELERIA = window.__env.API_PAPELERIA || (API_BASE + '/papeleria');
     window.__env.API_LOGS = window.__env.API_LOGS || (API_BASE + '/logs');
   </script>
+  <script>
+    (function () {
+      const baseTitle = 'Laboratorio Integrado de Biociencias Aplicadas';
+      const version = window.__env && window.__env.APP_VERSION;
+      if (version) {
+        document.title = `${baseTitle} v${version}`;
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

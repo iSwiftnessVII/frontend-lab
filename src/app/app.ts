@@ -20,6 +20,13 @@ export class App implements OnDestroy {
   readonly isDarkMode = signal<boolean>(false);
   readonly currentYear = new Date().getFullYear();
   readonly isNavigating = signal(false);
+  readonly appVersion = (() => {
+    try {
+      return (window as any)?.__env?.APP_VERSION || '';
+    } catch {
+      return '';
+    }
+  })();
   // whether footer should be shown because page needs scrolling
   readonly footerNeeded = signal<boolean>(false);
   
