@@ -20,15 +20,12 @@ export class PerfilComponent implements OnInit {
     const u = this.user();
     return u?.rol === 'Auxiliar';
   }
-  suscripcionEmail = '';
   suscripcionMsg = '';
   suscripcionLoading = false;
   suscritoSig = signal(false);
-  solicitudEmail = '';
   solicitudMsg = '';
   solicitudLoading = false;
   suscritoSolicitudSig = signal(false);
-  revisionEmail = '';
   revisionMsg = '';
   revisionLoading = false;
   suscritoRevisionSig = signal(false);
@@ -101,11 +98,11 @@ export class PerfilComponent implements OnInit {
   });
 
   async onSuscribirse() {
-    const email = String(this.suscripcionEmail || '').trim();
+    const email = String(this.user()?.email || '').trim();
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !re.test(email)) {
-      this.suscripcionMsg = 'Ingresa un correo válido';
-      this.snack.warn('Ingresa un correo válido');
+      this.suscripcionMsg = 'No hay correo válido en la sesión';
+      this.snack.warn('No hay correo válido en la sesión');
       return;
     }
     this.suscripcionLoading = true;
@@ -113,7 +110,6 @@ export class PerfilComponent implements OnInit {
     try {
       await reactivosService.suscribirse(email);
       this.suscripcionMsg = 'Suscripción confirmada. Revisa tu correo.';
-      this.suscripcionEmail = '';
       this.suscritoSig.set(true);
       this.snack.success('Suscripción confirmada');
     } catch (err: any) {
@@ -125,11 +121,11 @@ export class PerfilComponent implements OnInit {
   }
 
   async onSuscribirseSolicitudes() {
-    const email = String(this.solicitudEmail || '').trim();
+    const email = String(this.user()?.email || '').trim();
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !re.test(email)) {
-      this.solicitudMsg = 'Ingresa un correo válido';
-      this.snack.warn('Ingresa un correo válido');
+      this.solicitudMsg = 'No hay correo válido en la sesión';
+      this.snack.warn('No hay correo válido en la sesión');
       return;
     }
     this.solicitudLoading = true;
@@ -137,7 +133,6 @@ export class PerfilComponent implements OnInit {
     try {
       await this.solicitudesService.suscribirseSolicitudes(email);
       this.solicitudMsg = 'Suscripción a solicitudes confirmada. Revisa tu correo.';
-      this.solicitudEmail = '';
       this.snack.success('Suscripción a solicitudes confirmada');
       this.suscritoSolicitudSig.set(true);
     } catch (err: any) {
@@ -149,11 +144,11 @@ export class PerfilComponent implements OnInit {
   }
 
   async onSuscribirseRevision() {
-    const email = String(this.revisionEmail || '').trim();
+    const email = String(this.user()?.email || '').trim();
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !re.test(email)) {
-      this.revisionMsg = 'Ingresa un correo válido';
-      this.snack.warn('Ingresa un correo válido');
+      this.revisionMsg = 'No hay correo válido en la sesión';
+      this.snack.warn('No hay correo válido en la sesión');
       return;
     }
     this.revisionLoading = true;
@@ -161,7 +156,6 @@ export class PerfilComponent implements OnInit {
     try {
       await this.solicitudesService.suscribirseRevision(email);
       this.revisionMsg = 'Suscripción a revisión confirmada. Revisa tu correo.';
-      this.revisionEmail = '';
       this.snack.success('Suscripción a revisión confirmada');
       this.suscritoRevisionSig.set(true);
     } catch (err: any) {

@@ -198,6 +198,7 @@ export class ReactivosComponent implements OnInit {
   allReactivosLoaded: boolean = false; // indica si ya tenemos todo el universo cargado para filtros locales
   reactivosPageSize: number = 10; // tamaño de página inicial para inventario
   reactivosLoadingMore: boolean = false;
+  reactivosOffset: number = 0; // offset bruto para paginación (evita trabas por deduplicación)
   // Filtros de inventario (3 campos en una fila)
   reactivosLoteQ = '';
   reactivosCodigoQ = '';
@@ -754,9 +755,12 @@ reactivoErrors: { [key: string]: string } = {};
     // Marcar si ya tenemos todo (cuando la cantidad cargada alcanza el total estimado)
     // Actualizar bandera de universo cargado según el contexto (limit 0 => todo cargado)
     if (!limit || limit === 0) {
+      this.reactivosOffset = rows.length;
       this.allReactivosLoaded = true;
     } else {
-      this.allReactivosLoaded = this.reactivosSig().length >= this.reactivosTotal;
+      const baseOffset = Number.isFinite(offset ?? 0) ? Number(offset ?? 0) : 0;
+      this.reactivosOffset = baseOffset + rows.length;
+      this.allReactivosLoaded = this.reactivosOffset >= this.reactivosTotal;
     }
   }
 
@@ -767,7 +771,7 @@ reactivoErrors: { [key: string]: string } = {};
     this.reactivosLoadingMore = true;
     try {
       const current = this.reactivosSig();
-      const offset = current.length;
+      const offset = this.reactivosOffset;
       const resp = await reactivosService.listarReactivos(this.reactivosQ || '', this.reactivosPageSize, offset);
 
       let rows: any[] = [];
@@ -799,7 +803,12 @@ reactivoErrors: { [key: string]: string } = {};
       this.aplicarFiltroReactivos();
       try { this.preloadDocsForReactivosVisible(nuevos); } catch {}
 
-      this.allReactivosLoaded = this.reactivosSig().length >= this.reactivosTotal;
+      this.reactivosOffset = offset + rows.length;
+      if (rows.length === 0) {
+        this.allReactivosLoaded = true;
+      } else {
+        this.allReactivosLoaded = this.reactivosOffset >= this.reactivosTotal;
+      }
     } catch (e: any) {
       this.snack.error(e?.message || 'Error cargando más reactivos');
     } finally {
