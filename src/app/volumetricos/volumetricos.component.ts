@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SnackbarService } from '../shared/snackbar.service';
+import { ConfirmService } from '../shared/confirm.service';
 // Suponiendo que hay un servicio similar para volumetricos
 import { VolumetricosService } from '../services/volumetricos.service';
 import { logsService } from '../services/logs.service';
-import { authUser } from '../services/auth.service';
+import { authService, authUser } from '../services/auth.service';
 
 @Component({
   standalone: true,
@@ -18,7 +19,8 @@ import { authUser } from '../services/auth.service';
 export class VolumetricosComponent implements OnInit {
   public get esAuxiliar(): boolean {
     const user = authUser();
-    return user?.rol === 'Auxiliar';
+    if (!user || user.rol !== 'Auxiliar') return false;
+    return !authService.canEditModule('volumetricos');
   }
   // API base URL
   API_VOLUMETRICOS = (window as any).__env?.API_VOLUMETRICOS || 'http://localhost:4000/api/volumetricos';
@@ -142,7 +144,7 @@ export class VolumetricosComponent implements OnInit {
   editMaterialMode: boolean = false;
   editingMaterialCodigo: number | null = null;
 
-  constructor(public snack: SnackbarService, private cdr: ChangeDetectorRef, public volumetricosService: VolumetricosService) {
+  constructor(public snack: SnackbarService, private cdr: ChangeDetectorRef, public volumetricosService: VolumetricosService, private confirm: ConfirmService) {
     // Efectos para consecutivos
     effect(() => {
       const codigo = this.codigoHistorialSig();
@@ -969,7 +971,14 @@ export class VolumetricosComponent implements OnInit {
     }
 
     const confirmMsg = `¿Eliminar "${item.name}"? Esta acción no se puede deshacer.`;
-    if (!window.confirm(confirmMsg)) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar PDF',
+      message: confirmMsg,
+      confirmText: 'Si, eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
 
     try {
       await this.volumetricosService.eliminarPdf(item.id);
@@ -1037,7 +1046,13 @@ export class VolumetricosComponent implements OnInit {
     const codigo = material?.codigo_id;
     if (!codigo) return;
     
-    const confirmado = window.confirm(`¿Eliminar el material "${material.nombre_material}" (${codigo})? Se eliminarán también sus historiales e intervalos.`);
+    const confirmado = await this.confirm.confirm({
+      title: 'Eliminar material',
+      message: `¿Eliminar el material "${material.nombre_material}" (${codigo})? Se eliminarán también sus historiales e intervalos.`,
+      confirmText: 'Si, eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
     if (!confirmado) return;
     
     try {

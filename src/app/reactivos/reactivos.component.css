@@ -838,6 +838,25 @@
 }
 
 /* Toast styling (bottom-right) */
+.sin-equipos {
+  text-align: center;
+  padding: 3rem;
+  background: var(--light-gray);
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+
+.sin-equipos i {
+  font-size: 4rem;
+  color: var(--border-gray);
+  margin-bottom: 1rem;
+}
+
+.sin-equipos p {
+  color: var(--text-gray);
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
 .toast {
   position: fixed;
   right: 20px;
@@ -1088,6 +1107,103 @@
 /* Ajuste para placeholder */
 .input-combinado::placeholder {
   color: var(--app-muted, #9ca3af);
+}
+
+/* ===== Consumo layout ===== */
+.consumo-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.consumo-panel {
+  min-width: 0;
+}
+
+.consumo-resumen-card {
+  height: 100%;
+  margin-bottom: 0;
+}
+
+.consumo-resumen-card .form-field {
+  margin-bottom: 0.75rem;
+}
+
+.consumo-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 1200px) {
+  .consumo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Compact cards inside consumo history */
+.consumo-resumen-card .catalog-card.reactivo-card {
+  padding: 0.9rem;
+}
+
+.consumo-resumen-card .catalog-card.reactivo-card .card-top {
+  margin-bottom: 0.6rem;
+}
+
+.consumo-resumen-card .catalog-card.reactivo-card .tags {
+  gap: 4px 6px;
+}
+
+.consumo-resumen-card .catalog-card.reactivo-card .tags .tag {
+  padding: 2px 6px;
+  font-size: 0.75rem;
+}
+
+.consumo-resumen-card .catalog-card.reactivo-card .card-name {
+  padding: 0.55rem 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.consumo-resumen-card .catalog-card.reactivo-card .card-name .name-line {
+  font-size: 0.95rem;
+}
+
+.consumo-resumen-card .catalog-card.reactivo-card .card-name .meta-line {
+  gap: 5px;
+}
+
+.consumo-resumen-card .catalog-card.reactivo-card .card-name .meta-line .chip {
+  font-size: 0.72rem;
+  padding: 2px 6px;
+}
+
+.consumo-resumen-card .catalogo-cards {
+  gap: 0.85rem;
+}
+
+.consumo-historial-card {
+  cursor: pointer;
+}
+
+.consumo-historial-card:focus-visible {
+  outline: 2px solid var(--primary-turquoise);
+  outline-offset: 2px;
+}
+
+.consumo-historial-card .consumo-detalles {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--app-border, var(--border-gray));
+}
+
+.consumo-historial-card .consumo-detalles .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+.consumo-historial-card .consumo-detalles .tag {
+  padding: 2px 6px;
+  font-size: 0.75rem;
 }
 
 /* Flex row for consumption form split */

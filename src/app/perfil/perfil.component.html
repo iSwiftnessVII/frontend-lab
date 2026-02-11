@@ -1,207 +1,242 @@
 <div class="liba-theme container perfil-page">
-  <section class="perfil-section">
-    @if (user()) {
-      <div class="perfil-card">
-        <div class="perfil-header">
-          <div class="perfil-avatar">{{ (user()?.email || '')[0] | uppercase }}</div>
-          <div class="perfil-meta">
-            <div class="perfil-name">{{ userShortName() }}</div>
-            <div class="perfil-email">{{ user()?.email }}</div>
-            <div class="perfil-role">{{ user()?.rol }}</div>
-            @if (suscritoSig() || suscritoSolicitudSig() || suscritoRevisionSig()) {
-              <div class="perfil-subscriptions">
-                @if (suscritoSig()) {
-                  <span class="perfil-sub-icon" title="Suscrito a Reactivos" aria-label="Suscrito a Reactivos">
-                    <i class="fas fa-flask" aria-hidden="true"></i>
-                  </span>
-                }
-                @if (suscritoSolicitudSig()) {
-                  <span class="perfil-sub-icon" title="Suscrito a Nuevas Solicitudes" aria-label="Suscrito a Nuevas Solicitudes">
-                    <i class="fas fa-clipboard-list" aria-hidden="true"></i>
-                  </span>
-                }
-                @if (suscritoRevisionSig()) {
-                  <span class="perfil-sub-icon" title="Suscrito a Revisión de Oferta" aria-label="Suscrito a Revisión de Oferta">
-                    <i class="fas fa-clipboard-check" aria-hidden="true"></i>
-                  </span>
-                }
-              </div>
-            }
+  <div class="perfil-shell">
+    <section class="perfil-hero">
+      @if (user()) {
+        <div class="perfil-card perfil-main">
+          <div class="perfil-header">
+            <div class="perfil-avatar">{{ (user()?.email || '')[0] | uppercase }}</div>
+            <div class="perfil-meta">
+              <div class="perfil-name">{{ userShortName() }}</div>
+              <div class="perfil-role">{{ user()?.rol }}</div>
+              <div class="perfil-email">{{ user()?.email }}</div>
+            </div>
+          </div>
+          <div class="perfil-divider"></div>
+          <div class="perfil-detail-grid">
+            <div class="perfil-detail">
+              <span class="label">Usuario</span>
+              <span class="value">{{ user()?.email }}</span>
+            </div>
+            <div class="perfil-detail">
+              <span class="label">Rol</span>
+              <span class="value">{{ user()?.rol }}</span>
+            </div>
+            <div class="perfil-detail">
+              <span class="label">Suscripciones activas</span>
+              <span class="value">
+                {{ (suscritoSig() ? 1 : 0) + (suscritoSolicitudSig() ? 1 : 0) + (suscritoRevisionSig() ? 1 : 0) }}
+              </span>
+            </div>
+          </div>
+          @if (suscritoSig() || suscritoSolicitudSig() || suscritoRevisionSig()) {
+            <div class="perfil-subscriptions">
+              @if (suscritoSig()) {
+                <span class="perfil-sub-icon" title="Suscrito a Reactivos" aria-label="Suscrito a Reactivos">
+                  <i class="fas fa-flask" aria-hidden="true"></i>
+                </span>
+              }
+              @if (suscritoSolicitudSig()) {
+                <span class="perfil-sub-icon" title="Suscrito a Nuevas Solicitudes" aria-label="Suscrito a Nuevas Solicitudes">
+                  <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+                </span>
+              }
+              @if (suscritoRevisionSig()) {
+                <span class="perfil-sub-icon" title="Suscrito a Revision de Oferta" aria-label="Suscrito a Revision de Oferta">
+                  <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+                </span>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="perfil-card perfil-main">
+          <p>No hay sesion activa.</p>
+          <div class="perfil-actions">
+            <a routerLink="/login" class="btn btn-back">Ir a Login</a>
           </div>
         </div>
-      </div>
-    } @else {
-      <div class="perfil-card">
-        <p>No hay sesión activa.</p>
-        <div class="perfil-actions">
-          <a routerLink="/login" class="btn btn-back">Ir a Login</a>
-        </div>
-      </div>
-    }
-  </section>
-  @if (!esAuxiliar) {
-    <h2 class="suscripciones-title">
-      <i class="fas fa-envelope" aria-hidden="true"></i>
-      Suscripciones de correo
-    </h2>
-    <section class="perfil-section">
-      <div class="suscripciones-flex">
-        <div class="perfil-card suscripcion-card">
-          <h3 class="section-title">
-            <span class="suscripcion-title-icon" aria-hidden="true">
-              <i class="fas fa-flask" aria-hidden="true"></i>
-            </span>
-            Suscripción a Reactivos
-          </h3>
-          <p class="section-help">
-            Recibirás correos cuando un reactivo esté próximo a vencer.
-          </p>
-          <form (submit)="onSuscribirse(); $event.preventDefault();" class="form-grid">
-            <div class="form-field">
-              <div class="perfil-actions-icon">
-                <div
-                  class="action-icon action-icon--primary"
-                  role="button"
-                  tabindex="0"
-                  [class.disabled]="suscripcionLoading"
-                  [attr.aria-disabled]="suscripcionLoading ? 'true' : null"
-                  aria-label="Suscribirse"
-                  title="Suscribirse"
-                  (click)="!suscripcionLoading && onSuscribirse()"
-                  (keydown.enter)="!suscripcionLoading && onSuscribirse()"
-                  (keydown.space)="$event.preventDefault(); !suscripcionLoading && onSuscribirse()"
-                >
-                  <i class="fas fa-bell" aria-hidden="true"></i>
-                </div>
-                <div
-                  class="action-icon action-icon--danger"
-                  role="button"
-                  tabindex="0"
-                  [class.disabled]="suscripcionLoading || !suscritoSig()"
-                  [attr.aria-disabled]="suscripcionLoading || !suscritoSig() ? 'true' : null"
-                  aria-label="Cancelar suscripción"
-                  title="Cancelar suscripción"
-                  (click)="!(suscripcionLoading || !suscritoSig()) && onCancelarSuscripcion()"
-                  (keydown.enter)="!(suscripcionLoading || !suscritoSig()) && onCancelarSuscripcion()"
-                  (keydown.space)="$event.preventDefault(); !(suscripcionLoading || !suscritoSig()) && onCancelarSuscripcion()"
-                >
-                  <i class="fas fa-ban" aria-hidden="true"></i>
-                </div>
-              </div>
-            </div>
-            @if (suscripcionMsg) {
-              <small class="form-msg" [style.color]="suscripcionMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">
-                {{ suscripcionMsg }}
-              </small>
-            }
-          </form>
-        </div>
-
-        <div class="perfil-card suscripcion-card">
-          <h3 class="section-title">
-            <span class="suscripcion-title-icon" aria-hidden="true">
-              <i class="fas fa-clipboard-list" aria-hidden="true"></i>
-            </span>
-            Suscripción a Nuevas Solicitudes
-          </h3>
-          <p class="section-help">
-            Recibirás correos cuando se registre una nueva solicitud.
-          </p>
-          <form (submit)="onSuscribirseSolicitudes(); $event.preventDefault();" class="form-grid">
-            <div class="form-field">
-              <div class="perfil-actions-icon">
-                <div
-                  class="action-icon action-icon--primary"
-                  role="button"
-                  tabindex="0"
-                  [class.disabled]="solicitudLoading"
-                  [attr.aria-disabled]="solicitudLoading ? 'true' : null"
-                  aria-label="Suscribirse"
-                  title="Suscribirse"
-                  (click)="!solicitudLoading && onSuscribirseSolicitudes()"
-                  (keydown.enter)="!solicitudLoading && onSuscribirseSolicitudes()"
-                  (keydown.space)="$event.preventDefault(); !solicitudLoading && onSuscribirseSolicitudes()"
-                >
-                  <i class="fas fa-bell" aria-hidden="true"></i>
-                </div>
-                <div
-                  class="action-icon action-icon--danger"
-                  role="button"
-                  tabindex="0"
-                  [class.disabled]="solicitudLoading || !suscritoSolicitudSig()"
-                  [attr.aria-disabled]="solicitudLoading || !suscritoSolicitudSig() ? 'true' : null"
-                  aria-label="Cancelar suscripción"
-                  title="Cancelar suscripción"
-                  (click)="!(solicitudLoading || !suscritoSolicitudSig()) && onCancelarSuscripcionSolicitudes()"
-                  (keydown.enter)="!(solicitudLoading || !suscritoSolicitudSig()) && onCancelarSuscripcionSolicitudes()"
-                  (keydown.space)="$event.preventDefault(); !(solicitudLoading || !suscritoSolicitudSig()) && onCancelarSuscripcionSolicitudes()"
-                >
-                  <i class="fas fa-ban" aria-hidden="true"></i>
-                </div>
-              </div>
-            </div>
-            @if (solicitudMsg) {
-              <small class="form-msg" [style.color]="solicitudMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">
-                {{ solicitudMsg }}
-              </small>
-            }
-          </form>
-        </div>
-
-        <div class="perfil-card suscripcion-card">
-          <h3 class="section-title">
-            <span class="suscripcion-title-icon" aria-hidden="true">
-              <i class="fas fa-clipboard-check" aria-hidden="true"></i>
-            </span>
-            Suscripción a Revisión de Oferta
-          </h3>
-          <p class="section-help">
-            Recibirás correos cuando se registre una revisión de oferta.
-          </p>
-          <form (submit)="onSuscribirseRevision(); $event.preventDefault();" class="form-grid">
-            <div class="form-field">
-              <div class="perfil-actions-icon">
-                <div
-                  class="action-icon action-icon--primary"
-                  role="button"
-                  tabindex="0"
-                  [class.disabled]="revisionLoading"
-                  [attr.aria-disabled]="revisionLoading ? 'true' : null"
-                  aria-label="Suscribirse"
-                  title="Suscribirse"
-                  (click)="!revisionLoading && onSuscribirseRevision()"
-                  (keydown.enter)="!revisionLoading && onSuscribirseRevision()"
-                  (keydown.space)="$event.preventDefault(); !revisionLoading && onSuscribirseRevision()"
-                >
-                  <i class="fas fa-bell" aria-hidden="true"></i>
-                </div>
-                <div
-                  class="action-icon action-icon--danger"
-                  role="button"
-                  tabindex="0"
-                  [class.disabled]="revisionLoading || !suscritoRevisionSig()"
-                  [attr.aria-disabled]="revisionLoading || !suscritoRevisionSig() ? 'true' : null"
-                  aria-label="Cancelar suscripción"
-                  title="Cancelar suscripción"
-                  (click)="!(revisionLoading || !suscritoRevisionSig()) && onCancelarSuscripcionRevision()"
-                  (keydown.enter)="!(revisionLoading || !suscritoRevisionSig()) && onCancelarSuscripcionRevision()"
-                  (keydown.space)="$event.preventDefault(); !(revisionLoading || !suscritoRevisionSig()) && onCancelarSuscripcionRevision()"
-                >
-                  <i class="fas fa-ban" aria-hidden="true"></i>
-                </div>
-              </div>
-            </div>
-            @if (revisionMsg) {
-              <small class="form-msg" [style.color]="revisionMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">
-                {{ revisionMsg }}
-              </small>
-            }
-          </form>
-        </div>
-        
-
-      </div>
+      }
     </section>
-  }
 
+    @if (!esAuxiliar) {
+      <div class="suscripciones-header">
+        <h2 class="suscripciones-title">
+          <i class="fas fa-envelope" aria-hidden="true"></i>
+          Suscripciones de correo
+        </h2>
+        <p class="suscripciones-subtitle">Activa o pausa las alertas segun tu necesidad.</p>
+      </div>
+      <section class="perfil-section">
+        <div class="suscripciones-flex">
+          <div class="perfil-card suscripcion-card">
+            <div class="suscripcion-header">
+              <h3 class="section-title">
+                <span class="suscripcion-title-icon" aria-hidden="true">
+                  <i class="fas fa-flask" aria-hidden="true"></i>
+                </span>
+                Suscripcion a Reactivos
+              </h3>
+              <span class="status-pill" [class.active]="suscritoSig()">
+                {{ suscritoSig() ? 'Activa' : 'Pausada' }}
+              </span>
+            </div>
+            <form (submit)="onSuscribirse(); $event.preventDefault();" class="suscripcion-form">
+              <div class="suscripcion-row">
+                <p class="section-help">
+                  Recibiras correos cuando un reactivo este proximo a vencer.
+                </p>
+                <div class="perfil-actions-icon">
+                  <div
+                    class="action-icon action-icon--primary"
+                    role="button"
+                    tabindex="0"
+                    [class.disabled]="suscripcionLoading"
+                    [attr.aria-disabled]="suscripcionLoading ? 'true' : null"
+                    aria-label="Suscribirse"
+                    title="Suscribirse"
+                    (click)="!suscripcionLoading && onSuscribirse()"
+                    (keydown.enter)="!suscripcionLoading && onSuscribirse()"
+                    (keydown.space)="$event.preventDefault(); !suscripcionLoading && onSuscribirse()"
+                  >
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                  </div>
+                  <div
+                    class="action-icon action-icon--danger"
+                    role="button"
+                    tabindex="0"
+                    [class.disabled]="suscripcionLoading || !suscritoSig()"
+                    [attr.aria-disabled]="suscripcionLoading || !suscritoSig() ? 'true' : null"
+                    aria-label="Cancelar suscripcion"
+                    title="Cancelar suscripcion"
+                    (click)="!(suscripcionLoading || !suscritoSig()) && onCancelarSuscripcion()"
+                    (keydown.enter)="!(suscripcionLoading || !suscritoSig()) && onCancelarSuscripcion()"
+                    (keydown.space)="$event.preventDefault(); !(suscripcionLoading || !suscritoSig()) && onCancelarSuscripcion()"
+                  >
+                    <i class="fas fa-ban" aria-hidden="true"></i>
+                  </div>
+                </div>
+              </div>
+              @if (suscripcionMsg) {
+                <small class="form-msg" [style.color]="suscripcionMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">
+                  {{ suscripcionMsg }}
+                </small>
+              }
+            </form>
+          </div>
+
+          <div class="perfil-card suscripcion-card">
+            <div class="suscripcion-header">
+              <h3 class="section-title">
+                <span class="suscripcion-title-icon" aria-hidden="true">
+                  <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+                </span>
+                Suscripcion a Nuevas Solicitudes
+              </h3>
+              <span class="status-pill" [class.active]="suscritoSolicitudSig()">
+                {{ suscritoSolicitudSig() ? 'Activa' : 'Pausada' }}
+              </span>
+            </div>
+            <form (submit)="onSuscribirseSolicitudes(); $event.preventDefault();" class="suscripcion-form">
+              <div class="suscripcion-row">
+                <p class="section-help">
+                  Recibiras correos cuando se registre una nueva solicitud.
+                </p>
+                <div class="perfil-actions-icon">
+                  <div
+                    class="action-icon action-icon--primary"
+                    role="button"
+                    tabindex="0"
+                    [class.disabled]="solicitudLoading"
+                    [attr.aria-disabled]="solicitudLoading ? 'true' : null"
+                    aria-label="Suscribirse"
+                    title="Suscribirse"
+                    (click)="!solicitudLoading && onSuscribirseSolicitudes()"
+                    (keydown.enter)="!solicitudLoading && onSuscribirseSolicitudes()"
+                    (keydown.space)="$event.preventDefault(); !solicitudLoading && onSuscribirseSolicitudes()"
+                  >
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                  </div>
+                  <div
+                    class="action-icon action-icon--danger"
+                    role="button"
+                    tabindex="0"
+                    [class.disabled]="solicitudLoading || !suscritoSolicitudSig()"
+                    [attr.aria-disabled]="solicitudLoading || !suscritoSolicitudSig() ? 'true' : null"
+                    aria-label="Cancelar suscripcion"
+                    title="Cancelar suscripcion"
+                    (click)="!(solicitudLoading || !suscritoSolicitudSig()) && onCancelarSuscripcionSolicitudes()"
+                    (keydown.enter)="!(solicitudLoading || !suscritoSolicitudSig()) && onCancelarSuscripcionSolicitudes()"
+                    (keydown.space)="$event.preventDefault(); !(solicitudLoading || !suscritoSolicitudSig()) && onCancelarSuscripcionSolicitudes()"
+                  >
+                    <i class="fas fa-ban" aria-hidden="true"></i>
+                  </div>
+                </div>
+              </div>
+              @if (solicitudMsg) {
+                <small class="form-msg" [style.color]="solicitudMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">
+                  {{ solicitudMsg }}
+                </small>
+              }
+            </form>
+          </div>
+
+          <div class="perfil-card suscripcion-card">
+            <div class="suscripcion-header">
+              <h3 class="section-title">
+                <span class="suscripcion-title-icon" aria-hidden="true">
+                  <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+                </span>
+                Suscripcion a Revision de Oferta
+              </h3>
+              <span class="status-pill" [class.active]="suscritoRevisionSig()">
+                {{ suscritoRevisionSig() ? 'Activa' : 'Pausada' }}
+              </span>
+            </div>
+            <form (submit)="onSuscribirseRevision(); $event.preventDefault();" class="suscripcion-form">
+              <div class="suscripcion-row">
+                <p class="section-help">
+                  Recibiras correos cuando se registre una revision de oferta.
+                </p>
+                <div class="perfil-actions-icon">
+                  <div
+                    class="action-icon action-icon--primary"
+                    role="button"
+                    tabindex="0"
+                    [class.disabled]="revisionLoading"
+                    [attr.aria-disabled]="revisionLoading ? 'true' : null"
+                    aria-label="Suscribirse"
+                    title="Suscribirse"
+                    (click)="!revisionLoading && onSuscribirseRevision()"
+                    (keydown.enter)="!revisionLoading && onSuscribirseRevision()"
+                    (keydown.space)="$event.preventDefault(); !revisionLoading && onSuscribirseRevision()"
+                  >
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                  </div>
+                  <div
+                    class="action-icon action-icon--danger"
+                    role="button"
+                    tabindex="0"
+                    [class.disabled]="revisionLoading || !suscritoRevisionSig()"
+                    [attr.aria-disabled]="revisionLoading || !suscritoRevisionSig() ? 'true' : null"
+                    aria-label="Cancelar suscripcion"
+                    title="Cancelar suscripcion"
+                    (click)="!(revisionLoading || !suscritoRevisionSig()) && onCancelarSuscripcionRevision()"
+                    (keydown.enter)="!(revisionLoading || !suscritoRevisionSig()) && onCancelarSuscripcionRevision()"
+                    (keydown.space)="$event.preventDefault(); !(revisionLoading || !suscritoRevisionSig()) && onCancelarSuscripcionRevision()"
+                  >
+                    <i class="fas fa-ban" aria-hidden="true"></i>
+                  </div>
+                </div>
+              </div>
+              @if (revisionMsg) {
+                <small class="form-msg" [style.color]="revisionMsg.includes('confirmada') ? '#0d6efd' : '#dc2626'">
+                  {{ revisionMsg }}
+                </small>
+              }
+            </form>
+          </div>
+        </div>
+      </section>
+    }
+  </div>
 </div>

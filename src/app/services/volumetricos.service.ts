@@ -294,17 +294,22 @@ export class VolumetricosService {
     return data;
   }
 
-  async generarDocumentoVolumetricoDesdePlantilla(params: { id: number; codigo: number }): Promise<{ blob: Blob; filename: string | null }> {
+  async generarDocumentoVolumetricoDesdePlantilla(params: { id: number; codigo?: number; todos?: boolean }): Promise<{ blob: Blob; filename: string | null }> {
     if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
     const tplId = Number(params?.id);
     const codigo = Number(params?.codigo);
+    const todos = !!params?.todos;
     if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
-    if (!Number.isFinite(codigo) || codigo <= 0) throw new Error('Debe seleccionar un material');
+    if (!todos && (!Number.isFinite(codigo) || codigo <= 0)) throw new Error('Debe seleccionar un material');
+
+    const body: any = {};
+    if (Number.isFinite(codigo) && codigo > 0) body.codigo = codigo;
+    if (todos) body.todos = true;
 
     const res = await fetch(`${this.API_URL}/documentos/plantillas/${tplId}/generar`, {
       method: 'POST',
       headers: { ...this.getHeaders() },
-      body: JSON.stringify({ codigo })
+      body: JSON.stringify(body)
     });
     if (!res.ok) {
       const err: any = new Error(await this.readApiError(res, 'Error generando documento'));

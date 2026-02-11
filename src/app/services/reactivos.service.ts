@@ -108,14 +108,25 @@ export const reactivosService = {
     return data;
   },
   // Reactivos
-  async listarReactivos(q: string, limit?: number, offset?: number) {
+  async listarReactivos(
+    qOrParams: string | { q?: string; lote?: string; codigo?: string; nombre?: string },
+    limit?: number,
+    offset?: number
+  ) {
     const url = new URL(API_BASE);
-    if (q) url.searchParams.set('q', q);
+    const params = typeof qOrParams === 'object' && qOrParams !== null
+      ? qOrParams
+      : { q: String(qOrParams || '') };
+
+    if (params.q) url.searchParams.set('q', params.q);
+    if (params.lote) url.searchParams.set('lote', params.lote);
+    if (params.codigo) url.searchParams.set('codigo', params.codigo);
+    if (params.nombre) url.searchParams.set('nombre', params.nombre);
     if (limit && limit > 0) {
       url.searchParams.set('limit', String(limit));
       url.searchParams.set('offset', String(offset ?? 0));
     }
-    const res = await fetch(url, { headers: { ...authHeaders() } });
+    const res = await fetch(url, { headers: { ...authHeaders() }, cache: 'no-store' });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
@@ -133,6 +144,13 @@ export const reactivosService = {
     let data: any = null; try { data = await res.json(); } catch { }
     if (!res.ok) throw new Error((data && data.message) || 'Error registrando consumo');
     return data;
+  },
+  async listarConsumos(limit = 100) {
+    const url = new URL(`${API_BASE}/consumo`);
+    if (limit && limit > 0) url.searchParams.set('limit', String(limit));
+    const res = await fetch(url, { headers: { ...authHeaders() }, cache: 'no-store' });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
   },
 
   async obtenerReactivo(lote: string) {

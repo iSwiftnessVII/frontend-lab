@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { InsumoCreateInput, InsumoUpdateInput, insumosService } from '../services/insumos.service';
 import { SnackbarService } from '../shared/snackbar.service';
+import { ConfirmService } from '../shared/confirm.service';
 import { authService, authUser } from '../services/auth.service';
 import { logsService } from '../services/logs.service';
 
@@ -19,12 +20,16 @@ export class InsumosComponent implements OnInit, OnDestroy {
 
   get esAuxiliar(): boolean {
     const u = this.user();
-    return !!u && u.rol === 'Auxiliar';
+    if (!u || u.rol !== 'Auxiliar') return false;
+    return !authService.canEditModule('insumos');
+  }
+
+  get canEditInsumos(): boolean {
+    return authService.canEditModule('insumos');
   }
 
   canDelete(): boolean {
-    const u = this.user();
-    return u?.rol === 'Administrador' || u?.rol === 'Superadmin';
+    return this.canEditInsumos;
   }
 
   formularioActivo: 'crear' | null = null;
@@ -87,7 +92,7 @@ export class InsumosComponent implements OnInit, OnDestroy {
     });
   });
 
-  constructor(public snack: SnackbarService) {}
+  constructor(public snack: SnackbarService, private confirm: ConfirmService) {}
 
   async ngOnInit(): Promise<void> {
     await this.cargar();
@@ -263,7 +268,13 @@ export class InsumosComponent implements OnInit, OnDestroy {
     const id = this.insumoId(i);
     if (!id) return;
     const nombre = (i?.nombre || '').toString().trim();
-    const ok = window.confirm(`¿Estás seguro de que quieres eliminar${nombre ? ` "${nombre}"` : ''}?`);
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar insumo',
+      message: `¿Estás seguro de que quieres eliminar${nombre ? ` "${nombre}"` : ''}?`,
+      confirmText: 'Si, eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
     if (!ok) return;
     try {
       await insumosService.eliminarInsumo(id);

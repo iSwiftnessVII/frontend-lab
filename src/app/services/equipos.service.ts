@@ -221,11 +221,16 @@ export const equiposService = {
     return data;
   },
 
-  async generarDocumentoEquipoDesdePlantilla(params: { id: number; codigo: string }): Promise<{ blob: Blob; filename: string | null }> {
+  async generarDocumentoEquipoDesdePlantilla(params: { id: number; codigo?: string; todos?: boolean }): Promise<{ blob: Blob; filename: string | null }> {
     const tplId = Number(params?.id);
     const codigo = String(params?.codigo ?? '').trim();
+    const todos = !!params?.todos;
     if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
-    if (!codigo) throw new Error('Debe seleccionar un equipo');
+    if (!todos && !codigo) throw new Error('Debe seleccionar un equipo');
+
+    const body: any = {};
+    if (codigo) body.codigo = codigo;
+    if (todos) body.todos = true;
 
     const res = await fetch(`${API}/documentos/plantillas/${tplId}/generar`, {
       method: 'POST',
@@ -233,7 +238,7 @@ export const equiposService = {
         'Content-Type': 'application/json',
         ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
       },
-      body: JSON.stringify({ codigo })
+      body: JSON.stringify(body)
     });
     if (!res.ok) {
       const errBody: any = await res.json().catch(() => ({}));

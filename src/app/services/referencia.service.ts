@@ -178,16 +178,21 @@ export class ReferenciaService {
     return firstValueFrom(this.http.delete(`${this.API_REFERENCIA}/documentos/plantillas/${tplId}`, this.getOptions()));
   }
 
-  async generarDocumentoReferenciaDesdePlantilla(params: { id: number; codigo: number }): Promise<{ blob: Blob; filename: string | null }> {
+  async generarDocumentoReferenciaDesdePlantilla(params: { id: number; codigo?: number; todos?: boolean }): Promise<{ blob: Blob; filename: string | null }> {
     const tplId = Number(params?.id);
     const codigo = Number(params?.codigo);
+    const todos = !!params?.todos;
     if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
-    if (!Number.isFinite(codigo) || codigo <= 0) throw new Error('Debe seleccionar un material');
+    if (!todos && (!Number.isFinite(codigo) || codigo <= 0)) throw new Error('Debe seleccionar un material');
+
+    const body: any = {};
+    if (Number.isFinite(codigo) && codigo > 0) body.codigo = codigo;
+    if (todos) body.todos = true;
 
     const { headers } = this.getOptions();
     try {
       const resp: any = await firstValueFrom(
-        this.http.post(`${this.API_REFERENCIA}/documentos/plantillas/${tplId}/generar`, { codigo }, {
+        this.http.post(`${this.API_REFERENCIA}/documentos/plantillas/${tplId}/generar`, body, {
           headers: headers.set('Content-Type', 'application/json'),
           observe: 'response',
           responseType: 'blob'

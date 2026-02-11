@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, Renderer2, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, Renderer2, Inject, ElementRef, ViewChild } from '@angular/core';
 import { DOCUMENT, CommonModule } from '@angular/common';
 import { authService } from '../services/auth.service';
 import { SnackbarService } from '../shared/snackbar.service';
@@ -19,6 +19,8 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   loading = false;
   triedSubmit = false;
   private returnUrl = '/dashboard';
+  @ViewChild('emailInput') emailInput?: ElementRef<HTMLInputElement>;
+  private updateStatusUnsub?: () => void;
 
   constructor(
     private router: Router,
@@ -39,16 +41,46 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     console.debug('[login] ngOnInit: adding body.auth-page');
     this.renderer.addClass(this.document.body, 'auth-page');
+
+    const onUpdateStatus = (window as any)?.__desktop?.onUpdateStatus;
+    if (typeof onUpdateStatus === 'function') {
+      this.updateStatusUnsub = onUpdateStatus((payload: any) => {
+        const status = payload?.status;
+        const version = payload?.info?.version;
+        if (status === 'checking') {
+          this.snack.info('Buscando actualizaciones...');
+          return;
+        }
+        if (status === 'available') {
+          this.snack.success(`Actualizacion disponible${version ? `: ${version}` : ''}.`);
+          return;
+        }
+        if (status === 'not-available') {
+          this.snack.info('Ya tienes la version mas reciente.');
+          return;
+        }
+        if (status === 'downloaded') {
+          this.snack.success(`Actualizacion lista${version ? `: ${version}` : ''}.`);
+          return;
+        }
+        if (status === 'error') {
+          this.snack.error(payload?.message || 'No se pudo buscar actualizaciones.');
+        }
+      });
+    }
   }
 
   ngAfterViewInit(): void {
     // Crear partículas después de que la vista se haya renderizado
     this.createParticles();
+    // Ensure focus after logout routing and Electron focus quirks
+    setTimeout(() => this.emailInput?.nativeElement?.focus?.(), 60);
   }
 
   ngOnDestroy(): void {
     console.debug('[login] ngOnDestroy: removing body.auth-page');
     this.renderer.removeClass(this.document.body, 'auth-page');
+    try { this.updateStatusUnsub?.(); } catch {}
   }
 
   createParticles(): void {
@@ -97,5 +129,20 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   onGoogleSignIn() {
     // implement OAuth redirect or popup here
     console.log('Google sign-in clicked');
+  }
+
+  async onCheckUpdates() {
+    const updater = (window as any)?.__desktop?.checkForUpdates;
+    if (typeof updater !== 'function') {
+      this.snack.warn('Actualizaciones disponibles solo en la app de escritorio.' );
+      return;
+    }
+
+    const result = await updater();
+    if (result?.ok) {
+      this.snack.info('Revisando releases en GitHub...');
+    } else {
+      this.snack.error(result?.error || 'No se pudo buscar actualizaciones.');
+    }
   }
 }

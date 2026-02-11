@@ -1,9 +1,4 @@
 <div class="liba-theme container equipos-page solicitudes-page">
-  <h1>
-    <i class="fas fa-clipboard-list"></i>
-    | Solicitudes
-  </h1>
-  
   @if (user()?.rol !== 'Auxiliar') {
     <div class="dashboard-cards">
       @if (user()?.rol === 'Administrador') {

@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { authService, authUser } from '../services/auth.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { usuariosService } from '../services/usuarios.service'
+import { ConfirmService } from '../shared/confirm.service';
 
 @Component({
   standalone: true,
@@ -52,7 +53,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
 
   private filtrosEffectStop?: EffectRef;
 
-  constructor(public snack: SnackbarService) {
+  constructor(public snack: SnackbarService, private confirm: ConfirmService) {
     this.filtrosEffectStop = effect(() => {
       const _ = this.usuariosSig();
       const __e = this.emailQSig();
@@ -76,6 +77,18 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   editNuevaContrasena: string = '';
   editNuevaContrasena2: string = '';
   editSubmitted = false;
+  auxPermsSig = signal<Record<number, Record<string, boolean>>>({});
+  auxPermSavingSig = signal<Record<number, boolean>>({});
+  auxPermsExpandedSig = signal<Record<number, boolean>>({});
+  auxPermModules = [
+    { key: 'reactivos', label: 'Reactivos' },
+    { key: 'plantillas', label: 'Plantillas' },
+    { key: 'equipos', label: 'Equipos' },
+    { key: 'referencia', label: 'Materiales referencia' },
+    { key: 'volumetricos', label: 'Materiales volumetricos' },
+    { key: 'insumos', label: 'Insumos' },
+    { key: 'papeleria', label: 'Papeleria' }
+  ];
 
   // ========== CARGAR DATOS ==========
 
@@ -92,6 +105,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
       this.usuariosSig.set(this.usuarios);
       this.usuariosFiltrados = this.usuarios.slice();
       this.usuariosFiltradosSig.set(this.usuariosFiltrados);
+      await this.loadAuxPermsForUsers();
       this.aplicarFiltros();
     } catch (err) {
       console.error('Error en precarga de usuarios/roles:', err);
@@ -119,6 +133,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
       // asegurar que la lista filtrada también se inicializa inmediatamente
       this.usuariosFiltrados = this.usuarios.slice();
       this.usuariosFiltradosSig.set(this.usuariosFiltrados);
+      await this.loadAuxPermsForUsers();
       this.aplicarFiltros();
     } catch (err) {
       console.error('Error cargando usuarios:', err);
@@ -168,7 +183,13 @@ export class UsuariosComponent implements OnInit, OnDestroy {
 
   async cambiarEstado(usuario: any, nuevoEstado: 'ACTIVO' | 'INACTIVO') {
     const accion = nuevoEstado === 'ACTIVO' ? 'activar' : 'desactivar';
-    if (!confirm(`¿Está seguro de ${accion} a ${usuario.email}?`)) return;
+    const ok = await this.confirm.confirm({
+      title: `Confirmar ${accion}`,
+      message: `¿Está seguro de ${accion} a ${usuario.email}?`,
+      confirmText: 'Confirmar',
+      cancelText: 'Cancelar'
+    });
+    if (!ok) return;
 
     try {
       await usuariosService.cambiarEstado(usuario.id_usuario, nuevoEstado);
@@ -182,9 +203,14 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   // ========== ELIMINAR USUARIO ==========
 
   async eliminarUsuario(id: number) {
-    if (!confirm('¿Está seguro de eliminar este usuario?\n\nEsta acción no se puede deshacer.')) {
-      return;
-    }
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar usuario',
+      message: '¿Está seguro de eliminar este usuario?\n\nEsta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
 
     try {
       await usuariosService.eliminarUsuario(id);
@@ -313,8 +339,15 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     return this.usuarios.filter(u => u.estado === estado).length;
   }
 
-  logout() {
-    if (confirm('¿Cerrar sesión?')) {
+  async logout() {
+    const ok = await this.confirm.confirm({
+      title: 'Cerrar sesion',
+      message: '¿Cerrar sesión?',
+      confirmText: 'Si, salir',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (ok) {
       authService.logout();
     }
   }
@@ -323,6 +356,106 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   canChangeRole(): boolean {
     const user = authUser();
     return user?.rol === 'Superadmin';
+  }
+
+  canEditAuxPerms(): boolean {
+    return this.canChangeRole();
+  }
+
+  private defaultAuxPerms(): Record<string, boolean> {
+    const perms: Record<string, boolean> = {};
+    for (const mod of this.auxPermModules) perms[mod.key] = true;
+    return perms;
+  }
+
+  private normalizeAuxPerms(perms: Record<string, boolean> | null | undefined): Record<string, boolean> {
+    const base = this.defaultAuxPerms();
+    if (!perms) return base;
+    for (const mod of this.auxPermModules) {
+      if (Object.prototype.hasOwnProperty.call(perms, mod.key)) {
+        base[mod.key] = !!perms[mod.key];
+      }
+    }
+    return base;
+  }
+
+  private setAuxPermsLocal(userId: number, perms: Record<string, boolean>) {
+    const current = { ...this.auxPermsSig() };
+    current[userId] = perms;
+    this.auxPermsSig.set(current);
+  }
+
+  private setAuxPermSaving(userId: number, saving: boolean) {
+    const current = { ...this.auxPermSavingSig() };
+    current[userId] = saving;
+    this.auxPermSavingSig.set(current);
+  }
+
+  getAuxPermValue(userId: number, key: string): boolean {
+    const perms = this.auxPermsSig()[userId];
+    if (!perms) return true;
+    return perms[key] !== false;
+  }
+
+  isAuxPermSaving(userId: number): boolean {
+    return !!this.auxPermSavingSig()[userId];
+  }
+
+  isAuxPermsExpanded(userId: number): boolean {
+    const expanded = this.auxPermsExpandedSig()[userId];
+    return expanded === true;
+  }
+
+  toggleAuxPermsExpanded(userId: number) {
+    const current = { ...this.auxPermsExpandedSig() };
+    current[userId] = !this.isAuxPermsExpanded(userId);
+    this.auxPermsExpandedSig.set(current);
+  }
+
+  handleAuxCardClick(ev: Event, usuario: any) {
+    if (!usuario || usuario.rol_nombre !== 'Auxiliar' || !this.canEditAuxPerms()) return;
+    const target = ev.target as HTMLElement | null;
+    if (!target) return;
+    if (target.closest('button, a, input, select, textarea, label')) return;
+    this.toggleAuxPermsExpanded(usuario.id_usuario);
+  }
+
+  private async loadAuxPermsForUsers() {
+    if (!this.canEditAuxPerms()) return;
+    const auxUsers = this.usuarios.filter(u => (u.rol_nombre || '').toLowerCase() === 'auxiliar');
+    if (!auxUsers.length) return;
+
+    const updates: Record<number, Record<string, boolean>> = { ...this.auxPermsSig() };
+    await Promise.all(auxUsers.map(async (u) => {
+      try {
+        const data = await usuariosService.getPermisosAuxiliares(u.id_usuario);
+        updates[u.id_usuario] = this.normalizeAuxPerms(data?.permisos);
+      } catch (err) {
+        updates[u.id_usuario] = this.defaultAuxPerms();
+      }
+    }));
+    this.auxPermsSig.set(updates);
+  }
+
+  async toggleAuxPerm(usuario: any, key: string, ev: Event) {
+    if (!this.canEditAuxPerms()) return;
+    const input = ev.target as HTMLInputElement | null;
+    const checked = !!input?.checked;
+    const userId = usuario.id_usuario;
+    const prev = this.normalizeAuxPerms(this.auxPermsSig()[userId]);
+    const next = { ...prev, [key]: checked };
+
+    this.setAuxPermsLocal(userId, next);
+    this.setAuxPermSaving(userId, true);
+    try {
+      await usuariosService.setPermisosAuxiliares(userId, next);
+      this.snack.success('Permisos auxiliares actualizados');
+    } catch (err: any) {
+      this.setAuxPermsLocal(userId, prev);
+      this.snack.error(err?.message || 'Error actualizando permisos auxiliares');
+    } finally {
+      this.setAuxPermSaving(userId, false);
+    }
   }
 
   // Función para cambiar el rol

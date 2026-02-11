@@ -2,10 +2,11 @@ import { Component, signal, effect, OnInit, OnDestroy, ChangeDetectorRef, Elemen
 import { equiposService } from '../services/equipos.service';
 import { logsService } from '../services/logs.service';
 import { SnackbarService } from '../shared/snackbar.service';
+import { ConfirmService } from '../shared/confirm.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { authUser } from '../services/auth.service';
+import { authService, authUser } from '../services/auth.service';
 
 @Component({
   standalone: true,
@@ -18,7 +19,8 @@ export class EquiposComponent implements OnInit, OnDestroy {
   @ViewChild('tplEquipoDocTemplateInput') private tplEquipoDocTemplateInput?: ElementRef<HTMLInputElement>;
   public get esAuxiliar(): boolean {
     const user = authUser();
-    return user?.rol === 'Auxiliar';
+    if (!user || user.rol !== 'Auxiliar') return false;
+    return !authService.canEditModule('equipos');
   }
   // Map to keep references to event handlers for cleanup
   private _dropdownToggleHandler: EventListener | null = null;
@@ -516,7 +518,14 @@ export class EquiposComponent implements OnInit, OnDestroy {
       }
 
       const confirmMsg = `¿Eliminar "${item.name}"? Esta acción no se puede deshacer.`;
-      if (!window.confirm(confirmMsg)) return;
+      const ok = await this.confirm.confirm({
+        title: 'Eliminar PDF',
+        message: confirmMsg,
+        confirmText: 'Si, eliminar',
+        cancelText: 'Cancelar',
+        danger: true
+      });
+      if (!ok) return;
 
       try {
         await equiposService.eliminarPdf(item.id);
@@ -740,7 +749,7 @@ export class EquiposComponent implements OnInit, OnDestroy {
   codigoIntervaloSig = signal<string>('');
   consecutivoIntervaloSig = signal<number | null>(null);
 
-  constructor(public snack: SnackbarService, private cdr: ChangeDetectorRef) {
+  constructor(public snack: SnackbarService, private cdr: ChangeDetectorRef, private confirm: ConfirmService) {
     // Efecto: cuando cambia el código de historial, obtener siguiente consecutivo
     effect(() => {
       const codigo = this.codigoHistorialSig();
@@ -1906,7 +1915,13 @@ export class EquiposComponent implements OnInit, OnDestroy {
     if (event) event.stopPropagation();
     const codigo = equipo?.codigo_identificacion;
     if (!codigo) return;
-    const confirmado = window.confirm(`¿Eliminar el equipo "${equipo.nombre}" (${codigo})? Se eliminarán también sus historiales, intervalos y ficha técnica.`);
+    const confirmado = await this.confirm.confirm({
+      title: 'Eliminar equipo',
+      message: `¿Eliminar el equipo "${equipo.nombre}" (${codigo})? Se eliminarán también sus historiales, intervalos y ficha técnica.`,
+      confirmText: 'Si, eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
     if (!confirmado) return;
     try {
       await equiposService.eliminarEquipo(codigo);

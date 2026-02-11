@@ -146,6 +146,7 @@
           <div class="form-group">
             <label for="email">Correo electrónico</label>
             <input id="email" name="email" type="email" autocomplete="email" placeholder="tu@ejemplo.com"
+              #emailInput
               [(ngModel)]="email" #emailCtrl="ngModel" required email>
             @if ((emailCtrl.touched || triedSubmit) && emailCtrl.errors?.['required']) {
               <small class="field-error">El correo es requerido</small>
@@ -175,6 +176,9 @@
             <button class="btn primary" type="submit" [disabled]="loading">
               @if (loading) { <span class="spinner-circle" aria-hidden="true"></span> }
               <span>{{ loading ? 'Ingresando...' : 'Iniciar sesión' }}</span>
+            </button>
+            <button class="btn secondary" type="button" (click)="onCheckUpdates()">
+              Buscar actualizaciones
             </button>
           </div>
         </form>

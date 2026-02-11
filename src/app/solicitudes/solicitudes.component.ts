@@ -12,6 +12,7 @@ import { logsService } from '../services/logs.service';
 import { NumbersOnlyDirective } from '../directives/numbers-only.directive';
 import { LettersOnlyDirective } from '../directives/letters-only.directive';
 import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
+import { ConfirmService } from '../shared/confirm.service';
 
 @Component({
   standalone: true,
@@ -28,6 +29,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   private locationsService = inject(LocationsService);
   private utilsService = inject(UtilsService);
   private snackbarService = inject(SnackbarService);
+  private confirm = inject(ConfirmService);
 
   // Signals desde servicios
   clientes = this.clientesService.clientes;
@@ -1982,7 +1984,14 @@ private getValorEncuesta(campo: string): any {
   }
 
   async deleteCliente(id: number): Promise<void> {
-    if (!confirm('¿Estás seguro de que quieres eliminar este cliente?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar cliente',
+      message: '¿Estás seguro de que quieres eliminar este cliente?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     
     if (!this.canDelete()) {
       const errorMsg = this.utilsService.getDeleteErrorMessage();
@@ -2012,7 +2021,14 @@ private getValorEncuesta(campo: string): any {
   }
 
   async deleteSolicitud(id: number): Promise<void> {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta solicitud?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar solicitud',
+      message: '¿Estás seguro de que quieres eliminar esta solicitud?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     
     if (!this.canDelete()) {
       const errorMsg = this.utilsService.getDeleteErrorMessage();

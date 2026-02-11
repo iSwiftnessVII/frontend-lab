@@ -21,7 +21,7 @@ export const routes: Routes = [
     path: 'plantillas',
     loadComponent: () => import('./plantillas/plantillas.component').then(m => m.PlantillasComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['Administrador', 'Superadmin'] }
+    data: { roles: ['Administrador', 'Auxiliar', 'Superadmin'] }
   },
   { 
     path: 'solicitudes', 

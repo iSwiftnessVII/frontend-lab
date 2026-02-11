@@ -1,10 +1,6 @@
 ﻿﻿﻿<div class="liba-theme container reactivos-page">
-  <h1>
-    <i class="fas fa-flask"></i>
-    | Reactivos
-  </h1>
   <div class="dashboard-cards">
-    @if (!esAuxiliar) {
+    @if (canEditReactivos) {
       <div class="action-card" (click)="toggleFormulario('catalogo')" [class.active]="formularioActivo === 'catalogo'">
         <i class="fas fa-book-medical"></i>
         <span>Crear en Catálogo</span>
@@ -16,7 +12,7 @@
       <span>Ver Catálogo</span>
     </div>
 
-    @if (!esAuxiliar) {
+    @if (canEditReactivos) {
       <div class="action-card" (click)="toggleFormulario('crear-reactivo')" [class.active]="formularioActivo === 'crear-reactivo'">
         <i class="fas fa-plus-circle"></i>
         <span>Crear Reactivo</span>
@@ -41,7 +37,7 @@
     <form class="form-grid" #catalogoForm="ngForm" (ngSubmit)="crearCatalogo($event, catalogoForm)">
       
       <!-- Código (select) -->
-      <div *ngIf="!esAuxiliar" class="form-field">
+      <div *ngIf="canEditReactivos" class="form-field">
         <label for="catCodigo">Código: *</label>
         @if (catalogoEditMode) {
           <input id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" disabled />
@@ -114,7 +110,7 @@
         }
       </div>
 
-      <div class="actions" *ngIf="!esAuxiliar">
+      <div class="actions" *ngIf="canEditReactivos">
         <button class="btn-compact" type="submit">{{ catalogoEditMode ? 'Guardar cambios' : 'Agregar al catálogo' }}</button>
         @if (catalogoEditMode) {
           <button class="btn-compact" type="button" (click)="cancelEditCatalogo(catalogoForm)">Cancelar</button>
@@ -143,11 +139,6 @@
           <input id="catalogoNombreQ" [(ngModel)]="nombreFiltro" (input)="filtrarCatalogoPorCampos()"
             placeholder="Ej: ácido acético" />
         </div>
-        <div class="reset-cell">
-          <button type="button" class="btn-load-more" (click)="cargarMasCatalogo()"
-            [disabled]="catalogoResultados.length >= (catalogoTotal || 0)" aria-label="Cargar más reactivos">Cargar más
-            reactivos</button>
-        </div>
       </div>
 
       <div class="cards-container">
@@ -174,7 +165,7 @@
                 <span class="tag"><strong>Clasificación: </strong> <span
                     [innerHTML]="highlightField(c.clasificacion_sga, 'otro')"></span></span>
               </div>
-              @if (canDelete()) {
+              @if (canEditReactivos) {
                 <div class="pdf-actions" (click)="$event.stopPropagation()">
                   <button
                     type="button"
@@ -205,6 +196,20 @@
           }
         </div>
 
+        @if (!catalogoCargando && catalogoResultados.length && catalogoResultados.length < (catalogoTotal || 0)) {
+          <div
+            class="btn-load-more ver-mas-div"
+            role="button"
+            tabindex="0"
+            (click)="cargarMasCatalogo()"
+            (keydown.enter)="cargarMasCatalogo()"
+            (keydown.space)="$event.preventDefault(); cargarMasCatalogo()"
+            aria-label="Ver más reactivos"
+          >
+            Ver más
+          </div>
+        }
+
         @if (!catalogoCargando && !catalogoResultados.length) {
         <p>No hay elementos en el catálogo.</p>
         }
@@ -215,7 +220,7 @@
 
   <!-- Inventario de reactivos -->
  <!-- Inventario de reactivos -->
-@if (formularioActivo === 'crear-reactivo' && !esAuxiliar) {
+@if (formularioActivo === 'crear-reactivo' && canEditReactivos) {
   <h2>Crear reactivo</h2>
   <section>
     <form class="form-grid" #reactivoForm="ngForm" (ngSubmit)="crearReactivo($event, reactivoForm)">
@@ -592,7 +597,81 @@
 @if (formularioActivo === 'consumo') {
   <h2>Registrar Consumo de Reactivo</h2>
   <section>
-    <form class="form-grid" #formConsumo="ngForm" (ngSubmit)="registrarConsumo($event, formConsumo)">
+    <div class="consumo-grid">
+      <div class="consumo-panel">
+        <div class="seleccionado-card consumo-resumen-card">
+          <div class="seleccionado-header">
+            <i class="fas fa-clipboard-list"></i>
+            <strong>Historial de consumo</strong>
+          </div>
+          <div class="seleccionado-body">
+            <div class="form-field">
+         
+              <input type="text" [(ngModel)]="consumoHistorialFiltro" name="consumoHistorialFiltro" placeholder="Buscar por código" />
+            </div>
+            <div class="cards-container">
+              @if (consumoHistorialLoading) {
+                <div class="sin-equipos">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <p>Cargando consumos...</p>
+                </div>
+              } @else {
+                @if (consumoHistorialFiltrado.length === 0) {
+                  <p>Aún no hay consumos registrados.</p>
+                } @else {
+                  <div class="catalogo-cards">
+                    @for (c of consumoHistorialVisibleList; track $index) {
+                      <article
+                        class="catalog-card reactivo-card consumo-historial-card"
+                        role="button"
+                        tabindex="0"
+                        [attr.aria-expanded]="isConsumoHistorialExpanded(c, $index)"
+                        (click)="toggleConsumoHistorial(c, $index)"
+                        (keydown.enter)="toggleConsumoHistorial(c, $index)"
+                        (keydown.space)="$event.preventDefault(); toggleConsumoHistorial(c, $index)"
+                      >
+                        <div class="card-name" [title]="c.nombre || 'Reactivo'">
+                          <div class="name-line">{{ c.nombre || 'Reactivo' }}</div>
+                          <div class="meta-line">
+                            <span class="chip">Consumido: {{ c.cantidad }} {{ getUnidadNombre(c.unidad_id) }}</span>
+                            <span class="chip">Residual: {{ (c.residual ?? c.cantidad_total) ?? 'N/D' }} {{ getUnidadNombre(c.unidad_id) }}</span>
+                          </div>
+                        </div>
+                        @if (isConsumoHistorialExpanded(c, $index)) {
+                          <div class="consumo-detalles">
+                            <div class="tags">
+                              <span class="tag"><strong>Código:</strong> {{ c.codigo || '—' }}</span>
+                              <span class="tag"><strong>Lote:</strong> {{ c.lote || '—' }}</span>
+                              <span class="tag"><strong>Usuario:</strong> {{ c.usuario || 'Sistema' }}</span>
+                              <span class="tag"><strong>Fecha:</strong> {{ c.fecha | date:'short' }}</span>
+                              <span class="tag"><strong>Uso:</strong> {{ c.uso || 'Sin uso' }}</span>
+                            </div>
+                          </div>
+                        }
+                      </article>
+                    }
+                  </div>
+                  @if (consumoHistorialCanShowMore) {
+                    <div
+                      class="btn-load-more ver-mas-div"
+                      role="button"
+                      tabindex="0"
+                      (click)="verMasConsumos()"
+                      (keydown.enter)="verMasConsumos()"
+                      (keydown.space)="$event.preventDefault(); verMasConsumos()"
+                      aria-label="Ver más consumos"
+                    >
+                      Ver más
+                    </div>
+                  }
+                }
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="consumo-panel">
+        <form class="form-grid consumo-form" #formConsumo="ngForm" (ngSubmit)="registrarConsumo($event, formConsumo)">
       
       <!-- Search reactivo (fila completa) -->
       <div class="form-field search-section full-row" style="position: relative; z-index: 1001;">
@@ -704,7 +783,9 @@
         <button class="btn-compact" type="submit">Registrar Consumo</button>
       </div>
 
-    </form>
+        </form>
+      </div>
+    </div>
   </section>
 }
 
@@ -726,7 +807,7 @@
           <label for="reactNombreQ">Filtrar por Nombre</label>
           <input id="reactNombreQ" [(ngModel)]="reactivosNombreQ" (input)="filtrarReactivos()" />
         </div>
-        @if (canDelete()) {
+        @if (canEditReactivos) {
         <div class="reset-cell">
           <div class="bulk-delete-wrapper">
             <button type="button"
@@ -777,7 +858,7 @@
 
               <div class="pdf-actions" aria-label="Acciones del reactivo" (click)="$event.stopPropagation()">
                 <div class="pdf-group">
-                  <button *ngIf="!esAuxiliar" type="button" class="pdf-btn view" title="Editar reactivo" aria-label="Editar reactivo"
+                  <button *ngIf="canEditReactivos" type="button" class="pdf-btn view" title="Editar reactivo" aria-label="Editar reactivo"
                     (click)="$event.stopPropagation(); openEditModal(r)">
                     <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
                       <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z" fill="currentColor" />
@@ -785,7 +866,7 @@
                         fill="currentColor" />
                     </svg>
                   </button>
-                  <button type="button" class="pdf-btn delete" *ngIf="canDelete()" title="Eliminar reactivo"
+                  <button type="button" class="pdf-btn delete" *ngIf="canEditReactivos" title="Eliminar reactivo"
                     aria-label="Eliminar reactivo"
                     (click)="$event.stopPropagation(); eliminarReactivo(r.lote)"
                     [disabled]="isDeletingReactivo(r.lote)"
@@ -823,14 +904,14 @@
                     aria-label="Hoja de seguridad no disponible">
                     <span class="pdf-acronym" aria-hidden="true">SDS</span>
                   </div>
-                  <button type="button" class="pdf-btn delete" *ngIf="canDelete()" title="Eliminar hoja de seguridad"
+                  <button type="button" class="pdf-btn delete" *ngIf="canEditReactivos" title="Eliminar hoja de seguridad"
                     aria-label="Eliminar hoja de seguridad"
                     (click)="$event.stopPropagation(); onEliminarHojaReactivo(r.lote)">
                     <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
                       <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                     </svg>
                   </button>
-                  <ng-container *ngIf="!esAuxiliar">
+                  <ng-container *ngIf="canEditReactivos">
                     <input type="file" accept="application/pdf" (change)="onSubirHojaReactivo($event, r.lote)" #sdsInput
                       style="display:none" />
                     <button type="button" class="pdf-btn upload" title="Subir hoja de seguridad"
@@ -865,14 +946,14 @@
                     aria-label="Certificado de análisis no disponible">
                     <span class="pdf-acronym" aria-hidden="true">CoA</span>
                   </div>
-                  <button type="button" class="pdf-btn delete" *ngIf="canDelete()"
+                  <button type="button" class="pdf-btn delete" *ngIf="canEditReactivos"
                     title="Eliminar certificado de análisis" aria-label="Eliminar certificado de análisis"
                     (click)="$event.stopPropagation(); onEliminarCertReactivo(r.lote)">
                     <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
                       <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                     </svg>
                   </button>
-                  <ng-container *ngIf="!esAuxiliar">
+                  <ng-container *ngIf="canEditReactivos">
                     <input type="file" accept="application/pdf" (change)="onSubirCertReactivo($event, r.lote)" #coaInput
                       style="display:none" />
                     <button type="button" class="pdf-btn upload" title="Subir certificado de análisis"
@@ -987,7 +1068,7 @@
   }
 
   <!-- Modal de edición de reactivo -->
-  @if (editModalOpen && !esAuxiliar) {
+  @if (editModalOpen && canEditReactivos) {
   <div class="modal-backdrop" (click)="closeEditModal()"></div>
   <div class="modal" role="dialog" aria-modal="true" aria-label="Editar reactivo" (click)="$event.stopPropagation()">
     <div class="modal-header">

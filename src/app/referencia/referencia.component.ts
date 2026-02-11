@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SnackbarService } from '../shared/snackbar.service';
+import { ConfirmService } from '../shared/confirm.service';
 import { ReferenciaService } from '../services/referencia.service';
-import { authUser } from '../services/auth.service';
+import { authService, authUser } from '../services/auth.service';
 import { logsService } from '../services/logs.service';
 
 @Component({
@@ -18,7 +19,8 @@ import { logsService } from '../services/logs.service';
 export class ReferenciaComponent implements OnInit {
   public get esAuxiliar(): boolean {
     const user = authUser();
-    return user?.rol === 'Auxiliar';
+    if (!user || user.rol !== 'Auxiliar') return false;
+    return !authService.canEditModule('referencia');
   }
   // Tabs para la información del material de referencia
   referenciaTabs = [
@@ -144,7 +146,8 @@ export class ReferenciaComponent implements OnInit {
   constructor(
     public snack: SnackbarService, 
     private cdr: ChangeDetectorRef, 
-    public referenciaService: ReferenciaService
+    public referenciaService: ReferenciaService,
+    private confirm: ConfirmService
   ) {
     // Efectos para consecutivos
     effect(() => {
@@ -916,7 +919,14 @@ export class ReferenciaComponent implements OnInit {
     }
 
     const confirmMsg = `¿Eliminar "${item.name}"? Esta acción no se puede deshacer.`;
-    if (!window.confirm(confirmMsg)) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar PDF',
+      message: confirmMsg,
+      confirmText: 'Si, eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
 
     try {
       await this.referenciaService.eliminarPdf(item.id);
@@ -984,7 +994,13 @@ export class ReferenciaComponent implements OnInit {
     const codigo = material?.codigo_id;
     if (!codigo) return;
     
-    const confirmado = window.confirm(`¿Eliminar el material "${material.nombre_material}" (${codigo})? Se eliminarán también sus historiales e intervalos.`);
+    const confirmado = await this.confirm.confirm({
+      title: 'Eliminar material',
+      message: `¿Eliminar el material "${material.nombre_material}" (${codigo})? Se eliminarán también sus historiales e intervalos.`,
+      confirmText: 'Si, eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
     if (!confirmado) return;
     
     try {

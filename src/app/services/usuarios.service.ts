@@ -161,5 +161,42 @@ export const usuariosService = {
       throw new Error((data && data.message) || 'Error cambiando contraseña');
     }
     return data;
+  },
+
+  async getPermisosAuxiliares(id: number): Promise<{ permisos: Record<string, boolean> }> {
+    const res = await fetch(`${API_BASE}/permisos/${id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() } as HeadersInit
+    });
+
+    let data: any = null;
+    try {
+      data = await res.json();
+    } catch {}
+
+    if (!res.ok) {
+      throw new Error((data && data.message) || 'Error obteniendo permisos auxiliares');
+    }
+
+    return data;
+  },
+
+  async setPermisosAuxiliares(id: number, permisos: Record<string, boolean>): Promise<any> {
+    const res = await fetch(`${API_BASE}/permisos/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() } as HeadersInit,
+      body: JSON.stringify({ permisos })
+    });
+
+    let data: any = null;
+    try {
+      data = await res.json();
+    } catch {}
+
+    if (!res.ok) {
+      throw new Error((data && data.message) || 'Error actualizando permisos auxiliares');
+    }
+
+    return data;
   }
 };

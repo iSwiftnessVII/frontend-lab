@@ -3,6 +3,8 @@ import { RouterOutlet, Router, RouterModule, NavigationStart, NavigationEnd, Nav
 import { SnackbarService } from './shared/snackbar.service';
 import { CommonModule, NgIf } from '@angular/common';
 import { authService, authUser } from './services/auth.service';
+import { reactivosService } from './services/reactivos.service';
+import { ConfirmService } from './shared/confirm.service';
 
 @Component({
   selector: 'app-root',
@@ -29,6 +31,35 @@ export class App implements OnDestroy {
   })();
   // whether footer should be shown because page needs scrolling
   readonly footerNeeded = signal<boolean>(false);
+  readonly reactivosPorVencerCount = signal<number>(0);
+  readonly reactivosVencidosCount = signal<number>(0);
+  readonly reactivosAlertLoading = signal<boolean>(false);
+  readonly reactivosPorVencerList = signal<any[]>([]);
+  readonly reactivosVencidosList = signal<any[]>([]);
+  readonly notifVencidosOpen = signal<boolean>(false);
+  readonly notifPorVencerOpen = signal<boolean>(false);
+
+  readonly updatesModalOpen = signal(false);
+  readonly updatesDetailOpen = signal(false);
+  readonly selectedUpdate = signal<{ id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean } | null>(null);
+  readonly updatesNotes = signal<Array<{ id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean }>>([
+    {
+      id: 1,
+      date: '2026-02-10',
+      title: 'Plantillas: loops y permisos auxiliares',
+      summary: 'Se habilitaron loops por modulo y el control de acceso para auxiliares.',
+      detail: 'Se agregaron botones de Generar loop en los apartados de Plantillas.\nSe habilito el manejo de loops en backend para Equipos, Volumetricos y Referencia.\nSe agrego el permiso Plantillas para auxiliares y el modo solo lectura en la UI.\nSe habilito el acceso a Plantillas para Auxiliar en el menu y las rutas.',
+      hasNotes: true
+    },
+    {
+      id: 3,
+      date: '2026-02-10',
+      title: 'Guia de llaves: apartados ampliados',
+      summary: 'Se ampliaron guias con llaves y mini menus por modulo.',
+      detail: 'Se agregaron apartados con llaves detalladas para Equipos, Volumetricos y Referencia.\nSe organizaron mini menus por bloque (material, historial e intervalos).\nSe ajusto el panel de ayuda para facilitar la navegacion.',
+      hasNotes: true
+    }
+  ]);
   
   // NUEVO: Signals para los menús seleccionados
   readonly selectedInventory = signal<string | null>(null);
@@ -40,9 +71,20 @@ export class App implements OnDestroy {
   private handleSelectFocusOutRef = (ev: FocusEvent) => this.handleSelectFocusOut(ev);
   private handleSelectKeydownRef = (ev: KeyboardEvent) => this.handleSelectKeydown(ev);
 
-  constructor(private router: Router, public snack: SnackbarService) {
+  constructor(private router: Router, public snack: SnackbarService, public confirm: ConfirmService) {
     // Inicializar autenticación con TU sistema
     void this.initAuth();
+
+    // Mantener alertas de reactivos sincronizadas con la sesión
+    effect(() => {
+      const u = this.user();
+      if (u) {
+        void this.cargarReactivosAlertas();
+      } else {
+        this.reactivosPorVencerCount.set(0);
+        this.reactivosVencidosCount.set(0);
+      }
+    });
 
     // Theme init (dark/light)
     this.initTheme();
@@ -80,6 +122,66 @@ export class App implements OnDestroy {
 
     // Setup footer visibility detection (show footer only when page is scrollable)
     this.setupFooterDetection();
+
+    this.hydrateUpdatesNotes();
+  }
+
+  hasUpdateNotes(): boolean {
+    return this.updatesNotes().some((note) => !!note.hasNotes);
+  }
+
+  openUpdatesModal(): void {
+    this.menuOpen.set(false);
+    this.updatesModalOpen.set(true);
+  }
+
+  closeUpdatesModal(): void {
+    this.updatesModalOpen.set(false);
+  }
+
+  openUpdateDetail(note: { id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean }): void {
+    this.updatesModalOpen.set(false);
+    if (note?.hasNotes) {
+      this.markUpdateAsRead(note.id);
+      const updated = this.hydrateUpdatesNotes();
+      this.updatesNotes.set(updated);
+      const normalized = updated.find((item) => item.id === note.id) || note;
+      this.selectedUpdate.set(normalized);
+    } else {
+      this.selectedUpdate.set(note);
+    }
+    this.updatesDetailOpen.set(true);
+  }
+
+  private hydrateUpdatesNotes(): Array<{ id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean }> {
+    const readIds = this.getReadUpdateIds();
+    return this.updatesNotes().map((item) => (
+      readIds.has(item.id) ? { ...item, hasNotes: false } : item
+    ));
+  }
+
+  private getReadUpdateIds(): Set<number> {
+    try {
+      const raw = window.localStorage?.getItem('liba.updates.read') || '[]';
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return new Set(parsed.map((id) => Number(id)).filter((id) => Number.isFinite(id)));
+      }
+    } catch {}
+    return new Set();
+  }
+
+  private markUpdateAsRead(id: number): void {
+    try {
+      const readIds = this.getReadUpdateIds();
+      readIds.add(id);
+      window.localStorage?.setItem('liba.updates.read', JSON.stringify(Array.from(readIds)));
+    } catch {}
+  }
+
+  closeUpdateDetail(): void {
+    this.updatesDetailOpen.set(false);
+    this.selectedUpdate.set(null);
   }
 
   private initTheme(): void {
@@ -194,6 +296,74 @@ export class App implements OnDestroy {
     }
   }
 
+  private isReactivoActivo(val: any): boolean {
+    if (val === undefined || val === null) return true;
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'number') return val === 1;
+    const s = String(val).trim().toLowerCase();
+    return s === '1' || s === 'true' || s === 't' || s === 'yes' || s === 'y';
+  }
+
+  private async cargarReactivosAlertas(): Promise<void> {
+    if (!this.user()) return;
+    this.reactivosAlertLoading.set(true);
+    try {
+      const resp = await reactivosService.listarReactivos('', 1000);
+      const reactivos = Array.isArray(resp) ? resp : (resp?.rows || []);
+      const visibles = reactivos.filter((r: any) => this.isReactivoActivo(r?.activo));
+
+      const hoy = new Date();
+      const limite = new Date();
+      limite.setDate(hoy.getDate() + 30);
+
+      const porVencer = visibles.filter((reactivo: any) => {
+        if (!reactivo.fecha_vencimiento) return false;
+        const fechaVenc = new Date(reactivo.fecha_vencimiento);
+        return fechaVenc <= limite && fechaVenc >= hoy;
+      });
+
+      const vencidos = visibles.filter((reactivo: any) => {
+        if (!reactivo.fecha_vencimiento) return false;
+        const fechaVenc = new Date(reactivo.fecha_vencimiento);
+        return fechaVenc < hoy;
+      });
+
+      this.reactivosPorVencerCount.set(porVencer.length);
+      this.reactivosVencidosCount.set(vencidos.length);
+      this.reactivosPorVencerList.set(porVencer);
+      this.reactivosVencidosList.set(vencidos);
+    } catch (error) {
+      console.error('Error cargando alertas de reactivos:', error);
+      this.reactivosPorVencerCount.set(0);
+      this.reactivosVencidosCount.set(0);
+      this.reactivosPorVencerList.set([]);
+      this.reactivosVencidosList.set([]);
+    } finally {
+      this.reactivosAlertLoading.set(false);
+    }
+  }
+
+  toggleNotifVencidos(ev?: Event): void {
+    try { ev?.stopPropagation(); } catch {}
+    this.notifVencidosOpen.set(!this.notifVencidosOpen());
+    if (this.notifVencidosOpen()) {
+      this.notifPorVencerOpen.set(false);
+    }
+  }
+
+  toggleNotifPorVencer(ev?: Event): void {
+    try { ev?.stopPropagation(); } catch {}
+    this.notifPorVencerOpen.set(!this.notifPorVencerOpen());
+    if (this.notifPorVencerOpen()) {
+      this.notifVencidosOpen.set(false);
+    }
+  }
+
+  closeNotifPanels(): void {
+    this.notifVencidosOpen.set(false);
+    this.notifPorVencerOpen.set(false);
+  }
+
   // Mantener el effect para debug (opcional)
   constructorEffectSetup() {
     effect(() => {
@@ -227,7 +397,13 @@ export class App implements OnDestroy {
 
   async onLogout() {
     if (this.isLoggingOut()) return;
-    const confirmLogout = window.confirm('¿Deseas cerrar sesión?');
+    const confirmLogout = await this.confirm.confirm({
+      title: 'Cerrar sesion',
+      message: '¿Deseas cerrar sesion?',
+      confirmText: 'Si, salir',
+      cancelText: 'Cancelar',
+      danger: true
+    });
     if (!confirmLogout) return;
     try {
       this.isLoggingOut.set(true);
@@ -273,6 +449,11 @@ export class App implements OnDestroy {
       const target = ev.target as Node | null;
       if (target && menu && !menu.contains(target)) {
         this.menuOpen.set(false);
+      }
+
+      const notif = document.querySelector('#app-header .header-notifs');
+      if (target && notif && !notif.contains(target)) {
+        this.closeNotifPanels();
       }
 
       // Close inventory dropdown when clicking outside

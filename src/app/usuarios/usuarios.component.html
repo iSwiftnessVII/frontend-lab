@@ -127,7 +127,14 @@
                 <div class="equipos-grid">
                     <div class="fade-in">
                         @for (usuario of usuariosFiltradosList; track usuario.id_usuario) {
-                            <article class="equipo-card usuario-card" [class.usuario-inactivo]="usuario.estado === 'INACTIVO'">
+                            <article class="equipo-card usuario-card"
+                                [class.usuario-inactivo]="usuario.estado === 'INACTIVO'"
+                                [class.aux-card-toggle]="usuario.rol_nombre === 'Auxiliar' && canEditAuxPerms()"
+                                (click)="handleAuxCardClick($event, usuario)"
+                                (keydown.enter)="handleAuxCardClick($event, usuario)"
+                                (keydown.space)="$event.preventDefault(); handleAuxCardClick($event, usuario)"
+                                tabindex="0"
+                            >
                                 <div class="card-top">
                                     <div class="tags">
                                         <span class="tag"><strong>ID:</strong> {{ usuario.id_usuario }}</span>
@@ -178,6 +185,31 @@
                                         {{ usuario.email }}
                                     </div>
                                 </div>
+
+                                @if (usuario.rol_nombre === 'Auxiliar' && canEditAuxPerms() && isAuxPermsExpanded(usuario.id_usuario)) {
+                                    <div class="aux-perms">
+                                        @if (isAuxPermSaving(usuario.id_usuario)) {
+                                            <div class="aux-saving"><i class="fas fa-spinner fa-spin"></i> Guardando</div>
+                                        }
+                                        <div class="aux-perms-body">
+                                            <div class="aux-perms-grid">
+                                                @for (mod of auxPermModules; track mod.key) {
+                                                    <label class="aux-toggle">
+                                                        <input
+                                                            type="checkbox"
+                                                            [checked]="getAuxPermValue(usuario.id_usuario, mod.key)"
+                                                            (change)="toggleAuxPerm(usuario, mod.key, $event)"
+                                                        />
+                                                        <span class="aux-label">{{ mod.label }}</span>
+                                                        <span class="aux-state">
+                                                            {{ getAuxPermValue(usuario.id_usuario, mod.key) ? 'Activo' : 'Solo lectura' }}
+                                                        </span>
+                                                    </label>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                             </article>
                         }
                     </div>

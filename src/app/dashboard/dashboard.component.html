@@ -1,11 +1,7 @@
 <div class="container dashboard-page">
-  <h1>
-    <i class="fas fa-chart-line"></i>
-    Dashboard del Laboratorio
-    @if (esAuxiliar) {
-      <span class="auxiliar-label">(Solo visualización)</span>
-    }
-  </h1>
+  @if (esAuxiliar) {
+    <div class="auxiliar-label">(Solo visualización)</div>
+  }
 
   <!-- Estado de carga -->
   @if (cargando()) {
@@ -17,219 +13,84 @@
 
   <!-- Métricas Principales -->
   @if (!cargando()) {
-    <div class="metrics-grid">
-      <!-- Tarjeta Insumos -->
-      @if (!esAuxiliar) {
-        <div class="metric-card" (click)="navigate('/insumos')">
-          <div class="metric-icon insumos">
-            <i class="fas fa-boxes"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalInsumos) }}</div>
-            <div class="metric-label">Total Insumos</div>
-            <div class="metric-subtitle">Inventario actual</div>
-          </div>
+    <div class="metrics-grid metrics-grid--primary">
+      <div class="metric-pie-card metric-pie-card--xl" [class.clickable]="!esAuxiliar" (click)="navigate('/reactivos')">
+        <div class="metric-pie-top">
+          <div class="metric-pie-icon reactivos"><i class="fas fa-flask"></i></div>
+          <div class="metric-pie-title">Reactivos</div>
+          <div class="metric-pie-total">{{ formatearNumero(metricas().totalReactivos) }}</div>
         </div>
-      } @else {
-        <div class="metric-card">
-          <div class="metric-icon insumos">
-            <i class="fas fa-boxes"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalInsumos) }}</div>
-            <div class="metric-label">Total Insumos</div>
-            <div class="metric-subtitle">Inventario actual</div>
-          </div>
-        </div>
-      }
-
-      <!-- Tarjeta Reactivos -->
-      @if (!esAuxiliar) {
-        <div class="metric-card" (click)="navigate('/reactivos')">
-          <div class="metric-icon reactivos">
-            <i class="fas fa-flask"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalReactivos) }}</div>
-            <div class="metric-label">Total Reactivos</div>
-            <div class="metric-subtitle">
-              @if (reactivosProximosVencer().length > 0) {
-                <span class="warning-badge">
-                  <i class="fas fa-clock"></i>
-                  {{ reactivosProximosVencer().length }} por vencer
-                </span>
+        <div class="metric-pie-body">
+          <div class="metric-pie" [style.background]="getReactivosPieStyle()"></div>
+          <div class="metric-pie-legend">
+            @if (getReactivosPieSegments(); as segs) {
+              @if (segs.length) {
+                @for (seg of segs; track seg.label) {
+                  <div class="metric-pie-item">
+                    <span class="metric-pie-dot" [style.background]="seg.color"></span>
+                    <span class="metric-pie-label">{{ seg.label }}</span>
+                    <span class="metric-pie-value">{{ formatearNumero(seg.value) }}</span>
+                  </div>
+                }
               } @else {
-                <span class="success-badge">
-                  <i class="fas fa-check-circle"></i>
-                  Al día
-                </span>
+                <div class="metric-pie-empty">Sin datos</div>
               }
-            </div>
+            }
           </div>
         </div>
-      } @else {
-        <div class="metric-card">
-          <div class="metric-icon reactivos">
-            <i class="fas fa-flask"></i>
+        <div class="metric-pie-foot">
+          <div class="metric-foot-item">
+            <span class="metric-foot-label">Vencidos</span>
+            <span class="metric-foot-value">{{ formatearNumero(reactivosVencidos().length) }}</span>
           </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalReactivos) }}</div>
-            <div class="metric-label">Total Reactivos</div>
-            <div class="metric-subtitle">
-              @if (reactivosProximosVencer().length > 0) {
-                <span class="warning-badge">
-                  <i class="fas fa-clock"></i>
-                  {{ reactivosProximosVencer().length }} por vencer
-                </span>
+          <div class="metric-foot-item">
+            <span class="metric-foot-label">Por vencer</span>
+            <span class="metric-foot-value">{{ formatearNumero(reactivosProximosVencer().length) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-pie-card metric-pie-card--xl">
+        <div class="metric-pie-top">
+          <div class="metric-pie-icon consumo"><i class="fas fa-syringe"></i></div>
+          <div class="metric-pie-title">Consumo de Reactivos</div>
+          <div class="metric-pie-total">{{ formatearNumero(getConsumoTotal()) }}</div>
+        </div>
+        <div class="metric-pie-body">
+          <div class="metric-pie" [style.background]="getConsumoPieStyle()"></div>
+          <div class="metric-pie-legend">
+            @if (getConsumoPieSegments(); as segs) {
+              @if (segs.length) {
+                @for (seg of segs; track seg.label) {
+                  <div class="metric-pie-item">
+                    <span class="metric-pie-dot" [style.background]="seg.color"></span>
+                    <span class="metric-pie-label">{{ seg.label }}</span>
+                    <span class="metric-pie-value">{{ formatearNumero(seg.value) }}</span>
+                  </div>
+                }
               } @else {
-                <span class="success-badge">
-                  <i class="fas fa-check-circle"></i>
-                  Al día
-                </span>
+                <div class="metric-pie-empty">Sin datos</div>
               }
-            </div>
+            }
           </div>
         </div>
-      }
-
-      <!-- Tarjeta Solicitudes -->
-      @if (!esAuxiliar) {
-        <div class="metric-card" (click)="navigate('/solicitudes')">
-          <div class="metric-icon solicitudes">
-            <i class="fas fa-clipboard-list"></i>
+        <div class="metric-pie-foot">
+          <div class="metric-foot-item">
+            <span class="metric-foot-label">Registros</span>
+            <span class="metric-foot-value">{{ formatearNumero(getConsumoTotal()) }}</span>
           </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalSolicitudes) }}</div>
-            <div class="metric-label">Total Solicitudes</div>
-            <div class="metric-subtitle">
-              {{ contarSolicitudesViable() }} viables • {{ contarSolicitudesConOferta() }} con oferta
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- Tarjeta Clientes -->
-      @if (!esAuxiliar) {
-        <div class="metric-card">
-          <div class="metric-icon clientes">
-            <i class="fas fa-users"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalClientes) }}</div>
-            <div class="metric-label">Total Clientes</div>
+          <div class="metric-foot-item">
+            <span class="metric-foot-label">Ultimo</span>
+            <span class="metric-foot-value">
+              @if (getConsumoUltimaFecha(); as fecha) {
+                {{ fecha | date:'dd/MM/yyyy' }}
+              } @else {
+                —
+              }
+            </span>
           </div>
         </div>
-      } @else {
-        <div class="metric-card">
-          <div class="metric-icon clientes">
-            <i class="fas fa-users"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalClientes) }}</div>
-            <div class="metric-label">Total Clientes</div>
-          </div>
-        </div>
-      }
-
-      <!-- Tarjeta Papelería -->
-      @if (!esAuxiliar) {
-        <div class="metric-card" (click)="navigate('/papeleria')">
-          <div class="metric-icon papeleria">
-            <i class="fas fa-file-alt"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalPapeleria) }}</div>
-            <div class="metric-label">Total Papelería</div>
-            <div class="metric-subtitle">Ítems de catálogo</div>
-          </div>
-        </div>
-      } @else {
-        <div class="metric-card">
-          <div class="metric-icon papeleria">
-            <i class="fas fa-file-alt"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalPapeleria) }}</div>
-            <div class="metric-label">Total Papelería</div>
-            <div class="metric-subtitle">Ítems de catálogo</div>
-          </div>
-        </div>
-      }
-
-      <!-- Tarjeta Equipos -->
-      @if (!esAuxiliar) {
-        <div class="metric-card" (click)="navigate('/equipos')">
-          <div class="metric-icon equipos">
-            <i class="fas fa-microscope"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalEquipos) }}</div>
-            <div class="metric-label">Total Equipos</div>
-            <div class="metric-subtitle">Instrumentos registrados</div>
-          </div>
-        </div>
-      } @else {
-        <div class="metric-card">
-          <div class="metric-icon equipos">
-            <i class="fas fa-microscope"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalEquipos) }}</div>
-            <div class="metric-label">Total Equipos</div>
-            <div class="metric-subtitle">Instrumentos registrados</div>
-          </div>
-        </div>
-      }
-
-      <!-- Tarjeta Materiales Volumétricos -->
-      @if (!esAuxiliar) {
-        <div class="metric-card" (click)="navigate('/materiales-volumetricos')">
-          <div class="metric-icon volumetricos">
-            <i class="fas fa-vial"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalVolumetricos) }}</div>
-            <div class="metric-label">Materiales Volumétricos</div>
-            <div class="metric-subtitle">Unidades registradas</div>
-          </div>
-        </div>
-      } @else {
-        <div class="metric-card">
-          <div class="metric-icon volumetricos">
-            <i class="fas fa-vial"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalVolumetricos) }}</div>
-            <div class="metric-label">Materiales Volumétricos</div>
-            <div class="metric-subtitle">Unidades registradas</div>
-          </div>
-        </div>
-      }
-
-      <!-- Tarjeta Materiales Referencia -->
-      @if (!esAuxiliar) {
-        <div class="metric-card" (click)="navigate('/materiales-referencia')">
-          <div class="metric-icon referencia">
-            <i class="fas fa-weight"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalReferencia) }}</div>
-            <div class="metric-label">Materiales Referencia</div>
-            <div class="metric-subtitle">Unidades registradas</div>
-          </div>
-        </div>
-      } @else {
-        <div class="metric-card">
-          <div class="metric-icon referencia">
-            <i class="fas fa-weight"></i>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ formatearNumero(metricas().totalReferencia) }}</div>
-            <div class="metric-label">Materiales Referencia</div>
-            <div class="metric-subtitle">Unidades registradas</div>
-          </div>
-        </div>
-      }
+      </div>
     </div>
 
     @if (!esAuxiliar) {
@@ -239,170 +100,99 @@
           Métricas de Solicitudes
         </h2>
 
-        <div class="submetrics-grid">
-          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-            <div class="submetric-icon viable">
-              <i class="fas fa-check"></i>
+        <div class="solicitudes-charts">
+          <article class="chart-card">
+            <div class="chart-header">
+              <span>Viabilidad</span>
+              <span class="chart-total">{{ formatearNumero(getSolicitudesTotal()) }} total</span>
             </div>
-            <div class="submetric-content">
-              <div class="submetric-value">{{ formatearNumero(contarSolicitudesViable()) }}</div>
-              <div class="submetric-label">Viables</div>
-            </div>
-          </div>
+            @if (getSolicitudesTotal() === 0) {
+              <p class="chart-empty">Sin solicitudes para graficar.</p>
+            } @else {
+              <div class="bar-chart">
+                <div class="bar-item">
+                  <div class="bar bar-viable" [style.--bar]="getPctRounded(contarSolicitudesViable()) + '%'">
+                    <span class="bar-value">{{ formatearNumero(contarSolicitudesViable()) }}</span>
+                  </div>
+                  <div class="bar-label">Viables {{ getPctRounded(contarSolicitudesViable()) }}%</div>
+                </div>
+                <div class="bar-item">
+                  <div class="bar bar-no-viable" [style.--bar]="getPctRounded(contarSolicitudesNoViable()) + '%'">
+                    <span class="bar-value">{{ formatearNumero(contarSolicitudesNoViable()) }}</span>
+                  </div>
+                  <div class="bar-label">No viables {{ getPctRounded(contarSolicitudesNoViable()) }}%</div>
+                </div>
+                <div class="bar-item">
+                  <div class="bar bar-revision" [style.--bar]="getPctRounded(contarSolicitudesRevisionPendiente()) + '%'">
+                    <span class="bar-value">{{ formatearNumero(contarSolicitudesRevisionPendiente()) }}</span>
+                  </div>
+                  <div class="bar-label">Revision {{ getPctRounded(contarSolicitudesRevisionPendiente()) }}%</div>
+                </div>
+              </div>
+            }
+          </article>
 
-          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-            <div class="submetric-icon no-viable">
-              <i class="fas fa-times"></i>
+          <article class="chart-card">
+            <div class="chart-header">
+              <span>Ofertas</span>
+              <span class="chart-total">{{ formatearNumero(getSolicitudesTotal()) }} total</span>
             </div>
-            <div class="submetric-content">
-              <div class="submetric-value">{{ formatearNumero(contarSolicitudesNoViable()) }}</div>
-              <div class="submetric-label">No viables</div>
-            </div>
-          </div>
+            @if (getSolicitudesTotal() === 0) {
+              <p class="chart-empty">Sin solicitudes para graficar.</p>
+            } @else {
+              <div class="pie-wrap">
+                <div class="pie-chart" [style.background]="getOfertaPieStyle()"></div>
+                <div class="pie-legend">
+                  <div class="legend-item">
+                    <span class="legend-dot dot-oferta"></span>
+                    Con oferta {{ getPctRounded(contarSolicitudesConOferta()) }}%
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-dot dot-sin-oferta"></span>
+                    Sin oferta {{ getPctRounded(contarSolicitudesSinOferta()) }}%
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-dot dot-oferta-pendiente"></span>
+                    Pendiente {{ getPctRounded(contarSolicitudesOfertaPendiente()) }}%
+                  </div>
+                </div>
+              </div>
+            }
+          </article>
 
-          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-            <div class="submetric-icon revision">
-              <i class="fas fa-hourglass-half"></i>
+          <article class="chart-card">
+            <div class="chart-header">
+              <span>Avance del proceso</span>
+              <span class="chart-total">{{ formatearNumero(getSolicitudesTotal()) }} total</span>
             </div>
-            <div class="submetric-content">
-              <div class="submetric-value">{{ formatearNumero(contarSolicitudesRevisionPendiente()) }}</div>
-              <div class="submetric-label">Revisión pendiente</div>
-            </div>
-          </div>
-
-          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-            <div class="submetric-icon oferta">
-              <i class="fas fa-file-invoice-dollar"></i>
-            </div>
-            <div class="submetric-content">
-              <div class="submetric-value">{{ formatearNumero(contarSolicitudesConOferta()) }}</div>
-              <div class="submetric-label">Con oferta</div>
-            </div>
-          </div>
-
-          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-            <div class="submetric-icon sin-oferta">
-              <i class="fas fa-file-invoice"></i>
-            </div>
-            <div class="submetric-content">
-              <div class="submetric-value">{{ formatearNumero(contarSolicitudesSinOferta()) }}</div>
-              <div class="submetric-label">Sin oferta</div>
-            </div>
-          </div>
-
-          <div class="submetric-card" [class.clickable]="!esAuxiliar" (click)="navigate('/solicitudes')">
-            <div class="submetric-icon oferta-pendiente">
-              <i class="fas fa-clock"></i>
-            </div>
-            <div class="submetric-content">
-              <div class="submetric-value">{{ formatearNumero(contarSolicitudesOfertaPendiente()) }}</div>
-              <div class="submetric-label">Oferta pendiente</div>
-            </div>
-          </div>
+            @if (getSolicitudesTotal() === 0) {
+              <p class="chart-empty">Sin solicitudes para graficar.</p>
+            } @else {
+              <div class="bar-chart">
+                <div class="bar-item">
+                  <div class="bar bar-total" [style.--bar]="'100%'">
+                    <span class="bar-value">{{ formatearNumero(getSolicitudesTotal()) }}</span>
+                  </div>
+                  <div class="bar-label">Total 100%</div>
+                </div>
+                <div class="bar-item">
+                  <div class="bar bar-viable" [style.--bar]="getPctRounded(contarSolicitudesViable()) + '%'">
+                    <span class="bar-value">{{ formatearNumero(contarSolicitudesViable()) }}</span>
+                  </div>
+                  <div class="bar-label">Viables {{ getPctRounded(contarSolicitudesViable()) }}%</div>
+                </div>
+                <div class="bar-item">
+                  <div class="bar bar-oferta" [style.--bar]="getPctRounded(contarSolicitudesConOferta()) + '%'">
+                    <span class="bar-value">{{ formatearNumero(contarSolicitudesConOferta()) }}</span>
+                  </div>
+                  <div class="bar-label">Con oferta {{ getPctRounded(contarSolicitudesConOferta()) }}%</div>
+                </div>
+              </div>
+            }
+          </article>
         </div>
       </section>
     }
   }
-
-  <!-- Sección de Alertas Expandibles -->
-  @if (!cargando() && (reactivosProximosVencer().length > 0 || reactivosVencidos().length > 0)) {
-    <div class="alert-section">
-      <h2>
-        <i class="fas fa-exclamation-triangle"></i>
-        Alertas Importantes
-      </h2>
-
-      <div class="expandible-alerts-container">
-        <!-- Tarjeta expandible para Reactivos Próximos a Vencer -->
-        @if (reactivosProximosVencer().length > 0) {
-          <div class="expandible-card" [class.expanded]="proximosVencerExpanded">
-            <div class="expandible-header" (click)="toggleProximosVencer()">
-              <div class="expandible-title">
-                <i class="fas fa-clock"></i>
-                <h3>Reactivos Próximos a Vencer</h3>
-                <span class="alert-count warning">{{ reactivosProximosVencer().length }}</span>
-              </div>
-              <i class="fas fa-chevron-down expand-icon" [class.rotated]="proximosVencerExpanded"></i>
-            </div>
-            
-            <div class="expandible-content" [class.visible]="proximosVencerExpanded">
-              <div class="alert-card warning">
-                <div class="alert-content">
-                  <p>Tienes <strong>{{ reactivosProximosVencer().length }}</strong> reactivos que vencen en los próximos 30 días:</p>
-                  <div class="reactivos-list">
-                    @for (reactivo of reactivosProximosVencer(); track $index) {
-                      <div class="reactivo-item">
-                        <div class="reactivo-header">
-                          <i class="fas fa-flask reactivo-icon"></i>
-                          <span class="reactivo-name">{{ reactivo.nombre }}</span>
-                        </div>
-                        <div class="reactivo-footer">
-                          <div class="reactivo-lote-container">
-                            <i class="fas fa-barcode"></i>
-                            <span class="lote-label">Lote:</span>
-                            <span class="lote-value">{{ reactivo.lote }}</span>
-                          </div>
-                          <div class="reactivo-fecha-container advertencia">
-                            <i class="fas fa-calendar-exclamation"></i>
-                            <span class="fecha-label">Vence:</span>
-                            <span class="fecha-value">{{ reactivo.fecha_vencimiento | date:'dd/MM/yyyy' }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- Tarjeta expandible para Reactivos Vencidos -->
-        @if (reactivosVencidos().length > 0) {
-          <div class="expandible-card" [class.expanded]="vencidosExpanded">
-            <div class="expandible-header" (click)="toggleVencidos()">
-              <div class="expandible-title">
-                <i class="fas fa-exclamation-circle"></i>
-                <h3>Reactivos Vencidos</h3>
-                <span class="alert-count danger">{{ reactivosVencidos().length }}</span>
-              </div>
-              <i class="fas fa-chevron-down expand-icon" [class.rotated]="vencidosExpanded"></i>
-            </div>
-            
-            <div class="expandible-content" [class.visible]="vencidosExpanded">
-              <div class="alert-card danger">
-                <div class="alert-content">
-                  <p>Hay <strong>{{ reactivosVencidos().length }}</strong> reactivos vencidos:</p>
-                  <div class="reactivos-list">
-                    @for (reactivo of reactivosVencidos(); track $index) {
-                      <div class="reactivo-item">
-                        <div class="reactivo-header">
-                          <i class="fas fa-flask reactivo-icon"></i>
-                          <span class="reactivo-name">{{ reactivo.nombre }}</span>
-                        </div>
-                        <div class="reactivo-footer">
-                          <div class="reactivo-lote-container">
-                            <i class="fas fa-barcode"></i>
-                            <span class="lote-label">Lote:</span>
-                            <span class="lote-value">{{ reactivo.lote }}</span>
-                          </div>
-                          <div class="reactivo-fecha-container peligro">
-                            <span class="fecha-label">Vencido:</span>
-                            <span class="fecha-value">{{ reactivo.fecha_vencimiento | date:'dd/MM/yyyy' }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-  }
-
-
 
 </div>

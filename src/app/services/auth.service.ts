@@ -17,6 +17,14 @@ export const authUser = signal<{
 
 // Mantener authInitializing del repositorio para compatibilidad UI
 export const authInitializing = signal(false);
+const auxPerms = signal<Record<string, boolean> | null>(null);
+let auxPermsUserId: number | null = null;
+
+function getUsuariosApiBase(): string {
+  const apiBase = (window as any).__env?.API_USUARIOS;
+  if (typeof apiBase === 'string' && apiBase.trim()) return apiBase.trim();
+  return 'http://localhost:42420/api/usuarios';
+}
 
 export const authService = {
   async login(email: string, contrasena: string) {
@@ -56,6 +64,8 @@ export const authService = {
     authUser.set(userData);
     localStorage.setItem('user', JSON.stringify(userData));
 
+    await this.loadAuxPerms();
+
     return dataJson;
   },
 
@@ -80,6 +90,7 @@ export const authService = {
       if (res.ok) {
         const user = await res.json();
         authUser.set(user);
+        await this.loadAuxPerms();
         return user;
       } else {
         this.logout();
@@ -129,6 +140,8 @@ export const authService = {
       };
       authUser.set(userData);
       localStorage.setItem('user', JSON.stringify(userData));
+
+      await this.loadAuxPerms();
       
       return data;
     } catch (error) {
@@ -158,11 +171,49 @@ export const authService = {
     return this.hasRole(['Auxiliar', 'Administrador', 'Superadmin']);
   },
 
+  canEditModule(moduleKey: string): boolean {
+    const user = authUser();
+    if (!user) return false;
+    if (user.rol !== 'Auxiliar') return true;
+    const perms = auxPerms();
+    if (!perms) return true;
+    return perms[moduleKey] !== false;
+  },
+
+  async loadAuxPerms(): Promise<void> {
+    const user = authUser();
+    if (!user || user.rol !== 'Auxiliar') {
+      auxPerms.set(null);
+      auxPermsUserId = null;
+      return;
+    }
+    if (auxPermsUserId === user.id && auxPerms()) return;
+
+    const token = this.getToken();
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${getUsuariosApiBase()}/permisos/${user.id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data && data.permisos) {
+        auxPerms.set(data.permisos);
+        auxPermsUserId = user.id;
+      }
+    } catch {
+      // ignore: default to full access in UI
+    }
+  },
+
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     authUser.set(null);
     authInitializing.set(false);
+    auxPerms.set(null);
+    auxPermsUserId = null;
   },
 
   getToken() {

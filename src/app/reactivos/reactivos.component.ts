@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ChangeDetectorRef, computed, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule, NgIf } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -8,6 +8,7 @@ import { SnackbarService } from '../shared/snackbar.service';
 import { reactivosService } from '../services/reactivos.service';
 import { LettersOnlyDirective } from '../directives/letters-only.directive';
 import { AlphaNumericDirective } from '../directives/alpha-numeric.directive';
+import { ConfirmService } from '../shared/confirm.service';
 
 @Component({
   standalone: true,
@@ -24,35 +25,39 @@ export class ReactivosComponent implements OnInit {
     return user?.rol === 'Auxiliar';
   }
 
+  public get canEditReactivos(): boolean {
+    return authService.canEditModule('reactivos');
+  }
+
   // Signals separadas para catálogo
   catalogoCompletoSig = signal<Array<any>>([]); // Para códigos consecutivos (siempre todos los reactivos)
   catalogoBaseSig = signal<Array<any>>([]); // Para filtrado y visualización
   reactivosSig = signal<Array<any>>([]);
 
-  // Computed para códigos consecutivos que se actualizan automáticamente
-  nextCodigosSig = computed(() => {
-    const catalogo = this.catalogoCompletoSig(); // Usar catalogoCompletoSig en lugar de catalogoBaseSig
-    const inventario = this.reactivosSig();
-    const codigos = [...catalogo, ...inventario].map(r => r.codigo).filter(Boolean);
-    
+  nextCodigosSig = signal({ S: 'S-001', R: 'R-001', M: 'M-001' });
+
+  private recomputeNextCodigos(): void {
+    const catalogo = this.catalogoCompletoSig();
+    const codigos = (catalogo || []).map(r => r.codigo).filter(Boolean);
+
     const maxCodigo = (tipo: string) => {
       const prefix = tipo + '-';
       const nums = codigos
         .filter(c => c && c.startsWith(prefix))
         .map(c => {
-          const numStr = c.replace(prefix, '');
+          const numStr = String(c).replace(prefix, '');
           return parseInt(numStr, 10);
         })
         .filter(n => !isNaN(n) && n > 0);
       return nums.length ? Math.max(...nums) : 0;
     };
-    
-    return {
+
+    this.nextCodigosSig.set({
       S: 'S-' + String(maxCodigo('S') + 1).padStart(3, '0'),
       R: 'R-' + String(maxCodigo('R') + 1).padStart(3, '0'),
       M: 'M-' + String(maxCodigo('M') + 1).padStart(3, '0')
-    };
-  });
+    });
+  }
 
   // Getters para usar en el template
   get nextCodigoS(): string {
@@ -80,8 +85,9 @@ export class ReactivosComponent implements OnInit {
   // Control which form is currently active via dashboard action cards
   formularioActivo: string | null = null;
   
-  ngOnInit() {
-    if (this.esAuxiliar) {
+  async ngOnInit() {
+    await authService.loadAuxPerms();
+    if (this.esAuxiliar && !this.canEditReactivos) {
       this.formularioActivo = 'inventario';
     }
     // Ejecutar inicialización al montar el componente
@@ -205,6 +211,8 @@ export class ReactivosComponent implements OnInit {
   reactivosNombreQ = '';
   reactivosFiltradosSig = signal<Array<any>>([]);
   reactivosQ = '';
+  reactivosServerFilterActive: boolean = false;
+  reactivosFilterParams: { lote: string; codigo: string; nombre: string } = { lote: '', codigo: '', nombre: '' };
 
   catalogoErrors: { [key: string]: string } = {};
 reactivoErrors: { [key: string]: string } = {};
@@ -265,6 +273,12 @@ reactivoErrors: { [key: string]: string } = {};
   consumoError = '';
   submittedConsumo = false;
   reactivosConsumo: any[] = [];
+  consumoHistorial: any[] = [];
+  consumoHistorialLoading = false;
+  consumoHistorialFiltro = '';
+  consumoHistorialPageSize = 5;
+  consumoHistorialVisible = 5;
+  private consumoHistorialExpanded = new Set<string>();
 
   // Filtro de consumo
   consumoFiltroTipo: string = 'todos';
@@ -272,7 +286,88 @@ reactivoErrors: { [key: string]: string } = {};
   consumoResultados: any[] = [];
   consumoReactivoSeleccionado: any = null;
 
-  constructor(private sanitizer: DomSanitizer, private cdr: ChangeDetectorRef, public snack: SnackbarService) {}
+  get consumoTotalReactivos(): number {
+    return Array.isArray(this.reactivosConsumo) ? this.reactivosConsumo.length : 0;
+  }
+
+  get consumoTotalDisponible(): number {
+    if (!Array.isArray(this.reactivosConsumo) || !this.reactivosConsumo.length) return 0;
+    return this.reactivosConsumo.reduce((sum, r: any) => sum + (Number(r?.cantidad_total) || 0), 0);
+  }
+
+  get consumoSeleccionadoDisponible(): number | null {
+    if (!this.consumoReactivoSeleccionado) return null;
+    const v = Number(this.consumoReactivoSeleccionado?.cantidad_total);
+    return Number.isFinite(v) ? v : null;
+  }
+
+  get consumoSeleccionadoUnidad(): string {
+    if (!this.consumoReactivoSeleccionado) return '';
+    return this.getUnidadNombre(this.consumoReactivoSeleccionado?.unidad_id);
+  }
+
+  get consumoRestanteEstimado(): number | null {
+    if (!this.consumoReactivoSeleccionado) return null;
+    const disponible = Number(this.consumoReactivoSeleccionado?.cantidad_total);
+    const consumo = Number(this.consumoForm?.cantidad);
+    if (!Number.isFinite(disponible) || !Number.isFinite(consumo)) return null;
+    return disponible - consumo;
+  }
+
+  get consumoHistorialFiltrado(): any[] {
+    const rows = Array.isArray(this.consumoHistorial) ? this.consumoHistorial : [];
+    const q = String(this.consumoHistorialFiltro || '').toLowerCase().trim();
+    if (!q) return rows;
+    return rows.filter((c) => {
+      const codigo = String(c?.codigo || '').toLowerCase();
+      return codigo.includes(q);
+    });
+  }
+
+  get consumoHistorialVisibleList(): any[] {
+    const rows = this.consumoHistorialFiltrado;
+    const limit = Number(this.consumoHistorialVisible) || this.consumoHistorialPageSize;
+    return rows.slice(0, Math.max(0, limit));
+  }
+
+  get consumoHistorialCanShowMore(): boolean {
+    return this.consumoHistorialVisibleList.length < this.consumoHistorialFiltrado.length;
+  }
+
+  verMasConsumos() {
+    this.consumoHistorialVisible += this.consumoHistorialPageSize;
+  }
+
+  private getConsumoHistorialKey(item: any, index: number): string {
+    const lote = String(item?.lote ?? '');
+    const fecha = String(item?.fecha ?? '');
+    const cantidad = String(item?.cantidad ?? '');
+    const usuario = String(item?.usuario ?? '');
+    const codigo = String(item?.codigo ?? '');
+    const base = `${lote}|${fecha}|${cantidad}|${usuario}|${codigo}`.trim();
+    return base ? base : `idx-${index}`;
+  }
+
+  isConsumoHistorialExpanded(item: any, index: number): boolean {
+    return this.consumoHistorialExpanded.has(this.getConsumoHistorialKey(item, index));
+  }
+
+  toggleConsumoHistorial(item: any, index: number): void {
+    const key = this.getConsumoHistorialKey(item, index);
+    if (this.consumoHistorialExpanded.has(key)) {
+      this.consumoHistorialExpanded.delete(key);
+    } else {
+      this.consumoHistorialExpanded.add(key);
+    }
+  }
+
+
+  constructor(
+    private sanitizer: DomSanitizer,
+    private cdr: ChangeDetectorRef,
+    public snack: SnackbarService,
+    private confirm: ConfirmService
+  ) {}
 
   private esActivo(item: any): boolean {
     const v = item?.activo;
@@ -299,6 +394,7 @@ reactivoErrors: { [key: string]: string } = {};
       this.consumoMsg = '';
       this.consumoError = '';
       this.submittedConsumo = false;
+      this.consumoHistorialExpanded.clear();
       
       this.consumoFiltroTipo = 'todos';
       this.consumoBusqueda = '';
@@ -307,6 +403,7 @@ reactivoErrors: { [key: string]: string } = {};
 
 
       await this.cargarReactivosConsumo();
+      await this.cargarConsumosHistorial();
     }
     if (this.formularioActivo === 'documentos-plantilla') {
       this.tplDocNombrePlantilla = '';
@@ -407,7 +504,13 @@ reactivoErrors: { [key: string]: string } = {};
       return;
     }
     if (this.tplDocDeleteLoading.has(id)) return;
-    const ok = window.confirm('¿Eliminar esta plantilla?');
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar plantilla',
+      message: '¿Eliminar esta plantilla?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
     if (!ok) return;
     this.tplDocDeleteLoading.add(id);
     this.tplDocMsg = '';
@@ -526,6 +629,22 @@ reactivoErrors: { [key: string]: string } = {};
     }
   }
 
+  async cargarConsumosHistorial() {
+    if (this.consumoHistorialLoading) return;
+    this.consumoHistorialLoading = true;
+    try {
+      const rows = await reactivosService.listarConsumos(200);
+      this.consumoHistorial = Array.isArray(rows) ? rows : [];
+      this.consumoHistorialVisible = this.consumoHistorialPageSize;
+      this.consumoHistorialExpanded.clear();
+    } catch (e) {
+      console.error('Error cargando historial de consumos', e);
+      this.consumoHistorial = [];
+    } finally {
+      this.consumoHistorialLoading = false;
+    }
+  }
+
   filtrarReactivosConsumo() {
     const q = (this.consumoBusqueda || '').toLowerCase().trim();
     if (!q) {
@@ -593,9 +712,17 @@ reactivoErrors: { [key: string]: string } = {};
       });
       
       this.snack.success('Consumo registrado exitosamente');
-      this.toggleFormulario('consumo'); // Cierra el formulario
+      // Mantener el bloque de consumo abierto
+      this.consumoForm = { lote: '', cantidad: null, uso: '' };
+      this.submittedConsumo = false;
+      this.consumoReactivoSeleccionado = null;
+      this.consumoBusqueda = '';
+      this.consumoResultados = [];
+      try { form.resetForm(); } catch {}
       
       // Actualizar listas
+      await this.cargarConsumosHistorial();
+      await this.cargarReactivosConsumo();
       this.loadReactivos(this.reactivosPageSize, 0); 
     } catch (err: any) {
       this.consumoError = err.message || 'Error al registrar consumo';
@@ -627,6 +754,7 @@ reactivoErrors: { [key: string]: string } = {};
       await this.loadAux();
       await this.loadReactivos(10, 0);
       await this.loadCatalogoInicial();
+      await this.cargarConsumosHistorial();
       // Asegurar re-render de tarjetas una vez que auxiliares y reactivos estén listos
       // Esto fuerza a recalcular nombres (tipo/unidad/estado/SGA) y evita depender de un clic
       this.aplicarFiltroReactivos();
@@ -725,8 +853,25 @@ reactivoErrors: { [key: string]: string } = {};
     this.almacen = data.almacen || [];
   }
 
-  async loadReactivos(limit?: number, offset?: number) {
-    const resp = await reactivosService.listarReactivos(this.reactivosQ || '', limit, offset);
+  private getReactivosFilters(): { lote?: string; codigo?: string; nombre?: string } {
+    const lote = (this.reactivosLoteQ || '').trim();
+    const codigo = (this.reactivosCodigoQ || '').trim();
+    const nombre = (this.reactivosNombreQ || '').trim();
+    const filters: { lote?: string; codigo?: string; nombre?: string } = {};
+    if (lote) filters.lote = lote;
+    if (codigo) filters.codigo = codigo;
+    if (nombre) filters.nombre = nombre;
+    return filters;
+  }
+
+  private hasReactivosFilters(filters?: { lote?: string; codigo?: string; nombre?: string }): boolean {
+    const f = filters || this.getReactivosFilters();
+    return !!(f.lote || f.codigo || f.nombre);
+  }
+
+  async loadReactivos(limit?: number, offset?: number, filters?: { lote?: string; codigo?: string; nombre?: string }) {
+    const params = filters && this.hasReactivosFilters(filters) ? { ...filters } : null;
+    const resp = await reactivosService.listarReactivos(params || (this.reactivosQ || ''), limit, offset);
     let rows: any[] = [];
     if (Array.isArray(resp)) {
       rows = resp;
@@ -737,12 +882,16 @@ reactivoErrors: { [key: string]: string } = {};
     }
     const visibleRows = (rows || []).filter((r: any) => this.esActivo(r));
     this.reactivosSig.set(visibleRows);
-    this.aplicarFiltroReactivos();
+    if (params) {
+      this.reactivosFiltradosSig.set(visibleRows.slice());
+    } else {
+      this.aplicarFiltroReactivos();
+    }
     // Preload PDF availability for items in inventory (by lote)
     try { this.preloadDocsForReactivosVisible(this.reactivosSig()); } catch (e) { /* non-fatal */ }
 
     // Fallback: si el total coincide artificialmente con el tamaño de página y limit se pidió, obtener total real
-    if (limit && limit > 0 && this.reactivosTotal === rows.length) {
+    if (!params && limit && limit > 0 && this.reactivosTotal === rows.length) {
       try {
         const t = await reactivosService.totalReactivos();
         if (t && typeof t.total === 'number' && t.total >= rows.length) {
@@ -772,7 +921,9 @@ reactivoErrors: { [key: string]: string } = {};
     try {
       const current = this.reactivosSig();
       const offset = this.reactivosOffset;
-      const resp = await reactivosService.listarReactivos(this.reactivosQ || '', this.reactivosPageSize, offset);
+      const filters = this.getReactivosFilters();
+      const params = this.hasReactivosFilters(filters) ? { ...filters } : null;
+      const resp = await reactivosService.listarReactivos(params || (this.reactivosQ || ''), this.reactivosPageSize, offset);
 
       let rows: any[] = [];
       if (Array.isArray(resp)) {
@@ -800,7 +951,11 @@ reactivoErrors: { [key: string]: string } = {};
       }
 
       this.reactivosSig.set(dedup);
-      this.aplicarFiltroReactivos();
+      if (params) {
+        this.reactivosFiltradosSig.set(dedup);
+      } else {
+        this.aplicarFiltroReactivos();
+      }
       try { this.preloadDocsForReactivosVisible(nuevos); } catch {}
 
       this.reactivosOffset = offset + rows.length;
@@ -848,6 +1003,7 @@ reactivoErrors: { [key: string]: string } = {};
       // Actualizar ambas signals
       this.catalogoCompletoSig.set(base); // Para códigos consecutivos
       this.catalogoBaseSig.set(base);     // Para filtrado
+      this.recomputeNextCodigos();
       
       this.catalogoTotal = base.length;
       // Mostrar solo los primeros N en el catálogo (independiente del dropdown)
@@ -1490,7 +1646,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     }
   }
   async onEliminarHojaCatalogo(codigo: string) {
-    if (!confirm('¿Eliminar hoja de seguridad?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar hoja',
+      message: '¿Eliminar hoja de seguridad?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     try {
       await reactivosService.eliminarHojaSeguridad(codigo);
   this.snack.success(`Hoja de seguridad eliminada para ${codigo}`);
@@ -1519,7 +1682,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     }
   }
   async onEliminarCertCatalogo(codigo: string) {
-    if (!confirm('¿Eliminar certificado de análisis?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar certificado',
+      message: '¿Eliminar certificado de análisis?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     try {
       await reactivosService.eliminarCertAnalisis(codigo);
   this.snack.success(`Certificado de análisis eliminado para ${codigo}`);
@@ -1550,7 +1720,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     }
   }
   async onEliminarHojaReactivo(lote: string) {
-    if (!confirm('¿Eliminar hoja de seguridad?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar hoja',
+      message: '¿Eliminar hoja de seguridad?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     try {
       await reactivosService.eliminarHojaSeguridadReactivo(lote);
   this.snack.success(`Hoja de seguridad eliminada para lote ${lote}`);
@@ -1579,7 +1756,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     }
   }
   async onEliminarCertReactivo(lote: string) {
-    if (!confirm('¿Eliminar certificado de análisis?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar certificado',
+      message: '¿Eliminar certificado de análisis?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     try {
       await reactivosService.eliminarCertAnalisisReactivo(lote);
   this.snack.success(`Certificado de análisis eliminado para lote ${lote}`);
@@ -1923,7 +2107,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   }
   async eliminarHoja() {
     if (!this.catalogoSeleccionado?.codigo) return;
-    if (!confirm('¿Eliminar hoja de seguridad?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar hoja',
+      message: '¿Eliminar hoja de seguridad?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     try {
       await reactivosService.eliminarHojaSeguridad(this.catalogoSeleccionado.codigo);
       this.hojaUrl = null;
@@ -1953,7 +2144,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   }
   async eliminarCert() {
     if (!this.catalogoSeleccionado?.codigo) return;
-    if (!confirm('¿Eliminar certificado de análisis?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar certificado',
+      message: '¿Eliminar certificado de análisis?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     try {
       await reactivosService.eliminarCertAnalisis(this.catalogoSeleccionado.codigo);
       this.certUrl = null;
@@ -2121,6 +2319,9 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       // Actualizar: usar lote original como clave en la URL
       await reactivosService.actualizarReactivo(this.editOriginalLote, payload);
       this.snack.success('Reactivo actualizado correctamente');
+      if (payload.lote && this.reactivosQ && this.reactivosQ.trim().toLowerCase() === this.editOriginalLote.trim().toLowerCase()) {
+        this.reactivosQ = String(payload.lote || '').trim();
+      }
     } else {
       await reactivosService.crearReactivo(payload);
       this.snack.success('Reactivo creado correctamente');
@@ -2148,7 +2349,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       this.snack.warn('Reactivo creado pero ocurrió un error subiendo documentos');
     }
     
-    await this.loadReactivos();
+      const filters = this.getReactivosFilters();
+      const hasFilters = this.hasReactivosFilters(filters);
+      if (!hasFilters) {
+        this.reactivosQ = '';
+        await this.loadReactivos(this.reactivosPageSize, 0);
+      } else {
+        await this.loadReactivos(this.reactivosPageSize, 0, filters);
+      }
     // Limpiar modelo y restablecer estado visual del formulario (pristine/untouched)
     this.resetReactivoForm();
     this.submittedReactivo = false;
@@ -2175,7 +2383,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     const codigo = c?.codigo;
     const nombre = c?.nombre || '';
     if (!codigo) return;
-    if (!confirm(`¿Eliminar del catálogo el reactivo "${nombre || codigo}"?`)) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar del catalogo',
+      message: `¿Eliminar del catálogo el reactivo "${nombre || codigo}"?`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     this.catalogoDeleting.add(codigo);
     try {
       await reactivosService.eliminarCatalogo(codigo);
@@ -2343,10 +2558,21 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
         this.snack.warn('Por favor completa Lote, Código y Nombre.');
         return;
       }
-      await reactivosService.actualizarReactivo(this.editFormData.loteOriginal, payload);
+      const oldLote = String(this.editFormData.loteOriginal || '').trim();
+      await reactivosService.actualizarReactivo(oldLote, payload);
       this.snack.success('Reactivo actualizado correctamente');
       this.closeEditModal();
-      await this.loadReactivos();
+      if (payload.lote && this.reactivosQ && oldLote && this.reactivosQ.trim().toLowerCase() === oldLote.toLowerCase()) {
+        this.reactivosQ = String(payload.lote || '').trim();
+      }
+      const filters = this.getReactivosFilters();
+      const hasFilters = this.hasReactivosFilters(filters);
+      if (!hasFilters) {
+        this.reactivosQ = '';
+        await this.loadReactivos(this.reactivosPageSize, 0);
+      } else {
+        await this.loadReactivos(this.reactivosPageSize, 0, filters);
+      }
     } catch (e: any) {
       this.snack.error(e?.message || 'Error actualizando reactivo');
     }
@@ -2413,17 +2639,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     const hayFiltro = !!(qLote || qCod || qNom);
 
     if (hayFiltro) {
-      // Construir consulta base para el backend (usa OR sobre lote/codigo/nombre/marca)
-      // Prioriza un campo si solo hay uno; si hay varios, usa el primero no vacío para reducir dataset
-      const q = qLote || qCod || qNom;
-      this.reactivosQ = q;
       try {
-        await this.loadReactivos(0, 0); // sin límite: obtener solo coincidencias del backend
+        this.reactivosQ = '';
+        this.reactivosOffset = 0;
+        this.allReactivosLoaded = false;
+        await this.loadReactivos(this.reactivosPageSize, 0, this.getReactivosFilters());
       } catch (e) {
         console.error('No se pudo cargar coincidencias desde el servidor para filtrar', e);
       }
-      // Aplicar filtro local adicional (AND) sobre los tres campos
-      this.aplicarFiltroReactivos();
       return;
     }
 
@@ -2464,7 +2687,9 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
 
   async mostrarTodosReactivos() {
     this.reactivosQ = '';
-    await this.loadReactivos(); // sin límite => todos
+    this.reactivosOffset = 0;
+    this.allReactivosLoaded = false;
+    await this.loadReactivos(this.reactivosPageSize, 0);
   }
 
   private reactivoDeleting = new Set<string>();
@@ -2478,22 +2703,32 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     const key = String(lote ?? '').trim();
     if (!key) return;
     if (this.reactivoDeleting.has(key)) return;
-    if (!confirm('¿Eliminar reactivo ' + lote + '?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar reactivo',
+      message: '¿Eliminar reactivo ' + lote + '?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     this.reactivoDeleting.add(key);
     const snapshot = this.reactivosSig();
     try {
       const next = snapshot.filter(r => String(r.lote) !== String(key));
       this.reactivosSig.set(next);
-      this.aplicarFiltroReactivos();
+      const hasFilters = !!(this.reactivosLoteQ || this.reactivosCodigoQ || this.reactivosNombreQ);
+      if (hasFilters) {
+        const filteredNext = this.reactivosFiltradosSig().filter(r => String(r.lote) !== String(key));
+        this.reactivosFiltradosSig.set(filteredNext);
+      } else {
+        this.reactivosFiltradosSig.set(next);
+      }
 
       await reactivosService.eliminarReactivo(key);
-      await this.filtrarReactivos();
-      const stillExists = (this.reactivosSig() || []).some(r => String(r.lote) === String(key));
-      if (stillExists) {
-        this.snack.error('No se pudo eliminar el reactivo (sigue apareciendo en la lista)');
-      } else {
-        this.snack.success('Reactivo eliminado correctamente');
+      if (typeof this.reactivosTotal === 'number') {
+        this.reactivosTotal = Math.max(0, this.reactivosTotal - 1);
       }
+      this.snack.success('Reactivo eliminado correctamente');
     } catch (e: any) {
       this.snack.error(e?.message || 'Error eliminando reactivo');
       try {
@@ -2512,28 +2747,34 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   exportandoExcel: boolean = false;
   async eliminarReactivosListado() {
     if (!this.canDelete()) return;
+    const filters = this.getReactivosFilters();
+    const hasFilters = this.hasReactivosFilters(filters);
     // Construir lista global filtrada: si el total real supera lo cargado actualmente, traer todos sin límite
     let lista = this.reactivosFiltradosSig();
     let usedFullDataset = false;
     if (this.reactivosTotal > this.reactivosSig().length) {
       try {
-        const respAll = await reactivosService.listarReactivos(this.reactivosQ || '', 0, 0); // sin límite
+        const respAll = await reactivosService.listarReactivos(hasFilters ? filters : (this.reactivosQ || ''), 0, 0); // sin límite
         const allRows = Array.isArray(respAll) ? respAll : (respAll.rows || []);
         usedFullDataset = true;
-        // Reaplicar filtros locales (lote, codigo, nombre)
-        const normalizar = (v: string) => (v || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').trim();
-        const qLote = normalizar(this.reactivosLoteQ || '');
-        const qCod = normalizar(this.reactivosCodigoQ || '');
-        const qNom = normalizar(this.reactivosNombreQ || '');
-        lista = allRows.filter((r: any) => {
-          const lote = normalizar(String(r.lote ?? ''));
-          const codigo = normalizar(String(r.codigo ?? ''));
-          const nombre = normalizar(String(r.nombre ?? ''));
-          if (qLote && !lote.includes(qLote)) return false;
-          if (qCod && !codigo.includes(qCod)) return false;
-          if (qNom && !nombre.includes(qNom)) return false;
-          return true;
-        });
+        if (hasFilters) {
+          lista = (allRows || []).filter((r: any) => this.esActivo(r));
+        } else {
+          // Reaplicar filtros locales (lote, codigo, nombre)
+          const normalizar = (v: string) => (v || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').trim();
+          const qLote = normalizar(this.reactivosLoteQ || '');
+          const qCod = normalizar(this.reactivosCodigoQ || '');
+          const qNom = normalizar(this.reactivosNombreQ || '');
+          lista = allRows.filter((r: any) => {
+            const lote = normalizar(String(r.lote ?? ''));
+            const codigo = normalizar(String(r.codigo ?? ''));
+            const nombre = normalizar(String(r.nombre ?? ''));
+            if (qLote && !lote.includes(qLote)) return false;
+            if (qCod && !codigo.includes(qCod)) return false;
+            if (qNom && !nombre.includes(qNom)) return false;
+            return true;
+          });
+        }
       } catch (e) {
         console.error('Fallo obteniendo lista completa para borrado masivo, se usa subset cargado', e);
       }
@@ -2542,7 +2783,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       this.snack.warn('No hay reactivos filtrados para eliminar');
       return;
     }
-    if (!confirm(`¿Eliminar ${lista.length} reactivo(s) filtrado(s) de un total de ${this.reactivosTotal}? Esta acción no se puede deshacer.`)) return;
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar reactivos',
+      message: `¿Eliminar ${lista.length} reactivo(s) filtrado(s) de un total de ${this.reactivosTotal}? Esta acción no se puede deshacer.`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     this.bulkDeletingReactivos = true;
     this.bulkDeleteProgress = 0;
     this.bulkDeleteTotal = lista.length;

@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { reactivosService } from '../services/reactivos.service';
 import { SnackbarService } from '../shared/snackbar.service';
 import { SolicitudesService } from '../services/clientes/solicitudes.service';
+import { ConfirmService } from '../shared/confirm.service';
 
 @Component({
   standalone: true,
@@ -32,7 +33,7 @@ export class PerfilComponent implements OnInit {
   private solicitudesService = inject(SolicitudesService);
   
   
-  constructor(public snack: SnackbarService) {}
+  constructor(public snack: SnackbarService, private confirm: ConfirmService) {}
 
   userShortName(): string {
     try {
@@ -172,7 +173,14 @@ export class PerfilComponent implements OnInit {
       this.snack.warn('No hay usuario autenticado');
       return;
     }
-    if (!window.confirm('¿Cancelar la suscripción a vencimiento de reactivos?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Cancelar suscripcion',
+      message: '¿Cancelar la suscripción a vencimiento de reactivos?',
+      confirmText: 'Si, cancelar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     this.suscripcionLoading = true;
     try {
       await reactivosService.cancelarSuscripcion(email);
@@ -194,7 +202,14 @@ export class PerfilComponent implements OnInit {
       this.snack.warn('No hay usuario autenticado');
       return;
     }
-    if (!window.confirm('¿Cancelar la suscripción a nuevas solicitudes?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Cancelar suscripcion',
+      message: '¿Cancelar la suscripción a nuevas solicitudes?',
+      confirmText: 'Si, cancelar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     this.solicitudLoading = true;
     try {
       await this.solicitudesService.cancelarSuscripcionSolicitudes(email);
@@ -216,7 +231,14 @@ export class PerfilComponent implements OnInit {
       this.snack.warn('No hay usuario autenticado');
       return;
     }
-    if (!window.confirm('¿Cancelar la suscripción a revisión de oferta?')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Cancelar suscripcion',
+      message: '¿Cancelar la suscripción a revisión de oferta?',
+      confirmText: 'Si, cancelar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) return;
     this.revisionLoading = true;
     try {
       await this.solicitudesService.cancelarSuscripcionRevision(email);

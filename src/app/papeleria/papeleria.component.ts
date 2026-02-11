@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SnackbarService } from '../shared/snackbar.service';
-import { authUser } from '../services/auth.service';
+import { ConfirmService } from '../shared/confirm.service';
+import { authService, authUser } from '../services/auth.service';
 import { PapeleriaCreateInput, PapeleriaPresentacion, PapeleriaService, PapeleriaUpdateInput } from '../services/papeleria.service';
 import { logsService } from '../services/logs.service';
 
@@ -19,7 +20,12 @@ export class PapeleriaComponent implements OnInit {
 
   get esAuxiliar(): boolean {
     const u = this.user();
-    return !!u && u.rol === 'Auxiliar';
+    if (!u || u.rol !== 'Auxiliar') return false;
+    return !authService.canEditModule('papeleria');
+  }
+
+  get canEditPapeleria(): boolean {
+    return authService.canEditModule('papeleria');
   }
 
   formularioActivo: 'crear' | null = null;
@@ -82,7 +88,8 @@ export class PapeleriaComponent implements OnInit {
 
   constructor(
     private papeleriaService: PapeleriaService,
-    public snack: SnackbarService
+    public snack: SnackbarService,
+    private confirm: ConfirmService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -95,8 +102,7 @@ export class PapeleriaComponent implements OnInit {
   }
 
   canDelete(): boolean {
-    const u = this.user();
-    return u?.rol === 'Administrador' || u?.rol === 'Superadmin';
+    return this.canEditPapeleria;
   }
 
   async cargarPapeleria(): Promise<void> {
@@ -324,7 +330,13 @@ export class PapeleriaComponent implements OnInit {
     const id = this.papeleriaId(p);
     if (!id) return;
     const nombre = (p?.nombre || '').toString().trim();
-    const ok = window.confirm(`¿Estás seguro de que quieres eliminar${nombre ? ` "${nombre}"` : ''}?`);
+    const ok = await this.confirm.confirm({
+      title: 'Eliminar papeleria',
+      message: `¿Estás seguro de que quieres eliminar${nombre ? ` "${nombre}"` : ''}?`,
+      confirmText: 'Si, eliminar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
     if (!ok) return;
     try {
       await this.papeleriaService.eliminar(id);

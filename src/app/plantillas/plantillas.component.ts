@@ -1,9 +1,10 @@
-import { Component, ElementRef, ViewChild, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SnackbarService } from '../shared/snackbar.service';
 import { authUser } from '../services/auth.service';
+import { usuariosService } from '../services/usuarios.service';
 import { SolicitudesService } from '../services/clientes/solicitudes.service';
 import { ClientesService } from '../services/clientes/clientes.service';
 import { equiposService } from '../services/equipos.service';
@@ -12,6 +13,11 @@ import { VolumetricosService } from '../services/volumetricos.service';
 import { ReferenciaService } from '../services/referencia.service';
 
 type PlantillasSeccion = 'solicitudes' | 'reactivos' | 'equipos' | 'volumetricos' | 'referencia';
+type HelpTab = 'reactivos' | 'solicitudes' | 'equipos' | 'volumetricos' | 'referencia' | 'tutoriales';
+type HelpSubtabSolicitudes = 'solicitud' | 'cliente' | 'oferta' | 'revision' | 'seguimiento';
+type HelpSubtabEquipos = 'equipo' | 'ficha' | 'historial' | 'intervalos';
+type HelpSubtabVolumetricos = 'material' | 'historial' | 'intervalos';
+type HelpSubtabReferencia = 'material' | 'historial' | 'intervalos';
 
 @Component({
   standalone: true,
@@ -22,6 +28,16 @@ type PlantillasSeccion = 'solicitudes' | 'reactivos' | 'equipos' | 'volumetricos
 })
 export class PlantillasComponent {
   readonly user = authUser;
+
+  helpTab: HelpTab = 'reactivos';
+  helpSubtabSolicitudes: HelpSubtabSolicitudes = 'solicitud';
+  helpSubtabEquipos: HelpSubtabEquipos = 'equipo';
+  helpSubtabVolumetricos: HelpSubtabVolumetricos = 'material';
+  helpSubtabReferencia: HelpSubtabReferencia = 'material';
+
+  plantillasCanEdit = true;
+  plantillasPermLoading = false;
+  private lastPermUserId: number | null = null;
 
   // ====== Dropdowns (coincidencias tipo Ficha Técnica) ======
   showSolicitudDropdown = false;
@@ -46,6 +62,7 @@ export class PlantillasComponent {
 
   // ====== Solicitudes / Clientes ======
   @ViewChild('tplSolicitudTemplateInput') private tplSolicitudTemplateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('helpDetails') private helpDetails?: ElementRef<HTMLDetailsElement>;
 
   // Selección (Solicitud)
   tplSolicitudFiltroTipo = 'todos';
@@ -160,6 +177,15 @@ export class PlantillasComponent {
     private volumetricosService: VolumetricosService,
     private referenciaService: ReferenciaService
   ) {
+    effect(() => {
+      const u = this.user();
+      const userId = Number(u?.id);
+      if (!Number.isFinite(userId) || userId <= 0) return;
+      if (this.lastPermUserId === userId) return;
+      this.lastPermUserId = userId;
+      void this.loadPlantillasPerm();
+    });
+
     // Default section based on role
     if (!this.esAuxiliar) {
       // keep reactivos default
@@ -193,6 +219,28 @@ export class PlantillasComponent {
     this.tplEquipoMsg = '';
     this.tplVolMsg = '';
     this.tplRefMsg = '';
+  }
+
+  canEditPlantillas(): boolean {
+    return !this.esAuxiliar || this.plantillasCanEdit;
+  }
+
+  private async loadPlantillasPerm(): Promise<void> {
+    if (!this.esAuxiliar) return;
+    const u = this.user();
+    const userId = Number(u?.id);
+    if (!Number.isFinite(userId) || userId <= 0) return;
+
+    this.plantillasPermLoading = true;
+    try {
+      const data = await usuariosService.getPermisosAuxiliares(userId);
+      const perm = data?.permisos?.['plantillas'];
+      this.plantillasCanEdit = perm !== false;
+    } catch {
+      this.plantillasCanEdit = true;
+    } finally {
+      this.plantillasPermLoading = false;
+    }
   }
 
   canSeeSolicitudes(): boolean {
@@ -247,6 +295,30 @@ export class PlantillasComponent {
     } catch (err: any) {
       this.snack.error(err?.message || 'Error cargando datos');
     }
+  }
+
+  setHelpTab(tab: HelpTab): void {
+    this.helpTab = tab;
+  }
+
+  setHelpSubtabSolicitudes(tab: HelpSubtabSolicitudes): void {
+    this.helpSubtabSolicitudes = tab;
+  }
+
+  setHelpSubtabEquipos(tab: HelpSubtabEquipos): void {
+    this.helpSubtabEquipos = tab;
+  }
+
+  setHelpSubtabVolumetricos(tab: HelpSubtabVolumetricos): void {
+    this.helpSubtabVolumetricos = tab;
+  }
+
+  setHelpSubtabReferencia(tab: HelpSubtabReferencia): void {
+    this.helpSubtabReferencia = tab;
+  }
+
+  closeHelpPanel(): void {
+    this.helpDetails?.nativeElement?.removeAttribute('open');
   }
 
   // ================================
@@ -557,6 +629,36 @@ export class PlantillasComponent {
     }
   }
 
+  async generarDocumentoSolicitudLoop(): Promise<void> {
+    if (this.tplSolicitudLoading) return;
+    const templateId = this.tplSolicitudPlantillaId;
+    if (!templateId) {
+      this.tplSolicitudMsg = 'Seleccione una plantilla';
+      this.snack.warn(this.tplSolicitudMsg);
+      return;
+    }
+
+    this.tplSolicitudLoading = true;
+    this.tplSolicitudMsg = '';
+    try {
+      const selectedTpl = this.tplSolicitudPlantillas().find((t) => Number(t?.id) === Number(templateId));
+      const fallbackName = selectedTpl?.nombre_archivo || selectedTpl?.nombre || 'solicitudes';
+
+      const { blob, filename } = await this.solicitudesService.generarDocumentoDesdePlantilla({
+        templateId,
+        todos: true
+      });
+
+      this.downloadBlob(blob, filename || fallbackName);
+      this.snack.success('Documento generado');
+    } catch (err: any) {
+      this.tplSolicitudMsg = err?.message || 'No se pudo generar el documento';
+      this.snack.error(this.tplSolicitudMsg);
+    } finally {
+      this.tplSolicitudLoading = false;
+    }
+  }
+
   // ================================
   // Reactivos section
   // ================================
@@ -769,6 +871,40 @@ export class PlantillasComponent {
     }
   }
 
+  async generarDocumentoReactivoLoop(): Promise<void> {
+    if (this.tplReactivoLoading) return;
+    const templateId = this.tplReactivoPlantillaId;
+    if (!templateId) {
+      this.tplReactivoMsg = 'Seleccione una plantilla';
+      this.snack.warn(this.tplReactivoMsg);
+      return;
+    }
+
+    this.tplReactivoLoading = true;
+    this.tplReactivoMsg = '';
+    try {
+      const selectedTpl = this.tplReactivoPlantillas().find((t) => Number(t?.id) === Number(templateId));
+      const fallbackName = selectedTpl?.nombre_archivo || selectedTpl?.nombre || 'reactivos';
+
+      if (selectedTpl?.nombre_archivo && !/\.xlsx$/i.test(String(selectedTpl.nombre_archivo))) {
+        this.snack.warn('La plantilla no es .xlsx; se generará en su formato original');
+      }
+
+      const { blob, filename } = await reactivosService.generarDocumentoReactivoDesdePlantilla({
+        templateId,
+        todos: true
+      });
+
+      this.downloadBlob(blob, filename || fallbackName);
+      this.snack.success('Documento generado');
+    } catch (err: any) {
+      this.tplReactivoMsg = err?.message || 'No se pudo generar el documento';
+      this.snack.error(this.tplReactivoMsg);
+    } finally {
+      this.tplReactivoLoading = false;
+    }
+  }
+
   // ================================
   // Equipos section
   // ================================
@@ -952,6 +1088,36 @@ export class PlantillasComponent {
       const fallbackName = selectedTpl?.nombre_archivo || selectedTpl?.nombre || 'documento_equipo';
 
       const { blob, filename } = await equiposService.generarDocumentoEquipoDesdePlantilla({ id: templateId, codigo });
+      this.downloadBlob(blob, filename || fallbackName);
+      this.snack.success('Documento generado');
+    } catch (err: any) {
+      this.tplEquipoMsg = err?.message || 'No se pudo generar el documento';
+      this.snack.error(this.tplEquipoMsg);
+    } finally {
+      this.tplEquipoLoading = false;
+    }
+  }
+
+  async generarDocumentoEquipoLoop(): Promise<void> {
+    if (this.tplEquipoLoading) return;
+    const templateId = this.tplEquipoPlantillaId;
+    if (!templateId) {
+      this.tplEquipoMsg = 'Seleccione una plantilla';
+      this.snack.warn(this.tplEquipoMsg);
+      return;
+    }
+
+    this.tplEquipoLoading = true;
+    this.tplEquipoMsg = '';
+    try {
+      const selectedTpl = this.tplEquipoPlantillas().find((t) => Number(t?.id) === Number(templateId));
+      const fallbackName = selectedTpl?.nombre_archivo || selectedTpl?.nombre || 'equipos';
+
+      const { blob, filename } = await equiposService.generarDocumentoEquipoDesdePlantilla({
+        id: templateId,
+        todos: true
+      });
+
       this.downloadBlob(blob, filename || fallbackName);
       this.snack.success('Documento generado');
     } catch (err: any) {
@@ -1150,6 +1316,36 @@ export class PlantillasComponent {
     }
   }
 
+  async generarDocumentoVolumetricoLoop(): Promise<void> {
+    if (this.tplVolLoading) return;
+    const templateId = this.tplVolPlantillaId;
+    if (!templateId) {
+      this.tplVolMsg = 'Seleccione una plantilla';
+      this.snack.warn(this.tplVolMsg);
+      return;
+    }
+
+    this.tplVolLoading = true;
+    this.tplVolMsg = '';
+    try {
+      const selectedTpl = this.tplVolPlantillas().find((t) => Number(t?.id) === Number(templateId));
+      const fallbackName = selectedTpl?.nombre_archivo || selectedTpl?.nombre || 'volumetricos';
+
+      const { blob, filename } = await this.volumetricosService.generarDocumentoVolumetricoDesdePlantilla({
+        id: templateId,
+        todos: true
+      });
+
+      this.downloadBlob(blob, filename || fallbackName);
+      this.snack.success('Documento generado');
+    } catch (err: any) {
+      this.tplVolMsg = err?.message || 'No se pudo generar el documento';
+      this.snack.error(this.tplVolMsg);
+    } finally {
+      this.tplVolLoading = false;
+    }
+  }
+
   // ================================
   // Referencia section
   // ================================
@@ -1328,6 +1524,36 @@ export class PlantillasComponent {
       const fallbackName = selectedTpl?.nombre_archivo || selectedTpl?.nombre || 'documento_referencia';
 
       const { blob, filename } = await this.referenciaService.generarDocumentoReferenciaDesdePlantilla({ id: templateId, codigo });
+      this.downloadBlob(blob, filename || fallbackName);
+      this.snack.success('Documento generado');
+    } catch (err: any) {
+      this.tplRefMsg = err?.message || 'No se pudo generar el documento';
+      this.snack.error(this.tplRefMsg);
+    } finally {
+      this.tplRefLoading = false;
+    }
+  }
+
+  async generarDocumentoReferenciaLoop(): Promise<void> {
+    if (this.tplRefLoading) return;
+    const templateId = this.tplRefPlantillaId;
+    if (!templateId) {
+      this.tplRefMsg = 'Seleccione una plantilla';
+      this.snack.warn(this.tplRefMsg);
+      return;
+    }
+
+    this.tplRefLoading = true;
+    this.tplRefMsg = '';
+    try {
+      const selectedTpl = this.tplRefPlantillas().find((t) => Number(t?.id) === Number(templateId));
+      const fallbackName = selectedTpl?.nombre_archivo || selectedTpl?.nombre || 'referencias';
+
+      const { blob, filename } = await this.referenciaService.generarDocumentoReferenciaDesdePlantilla({
+        id: templateId,
+        todos: true
+      });
+
       this.downloadBlob(blob, filename || fallbackName);
       this.snack.success('Documento generado');
     } catch (err: any) {

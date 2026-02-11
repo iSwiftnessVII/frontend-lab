@@ -1,43 +1,606 @@
 <div class="liba-theme container plantillas-page">
-  <h1>
-    <i class="fas fa-layer-group"></i>
-    | Plantillas
-  </h1>
+  <div class="plantillas-topbar">
+    <div class="dashboard-cards">
+      @if (canSeeSolicitudes()) {
+        <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'solicitudes'" (click)="activateSection('solicitudes')" (keydown.enter)="activateSection('solicitudes')" (keydown.space)="$event.preventDefault(); activateSection('solicitudes')">
+          <i class="fas fa-file-signature"></i>
+          <span>Solicitudes</span>
+        </div>
+      }
 
-  <div class="dashboard-cards">
-    @if (canSeeSolicitudes()) {
-      <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'solicitudes'" (click)="activateSection('solicitudes')" (keydown.enter)="activateSection('solicitudes')" (keydown.space)="$event.preventDefault(); activateSection('solicitudes')">
-        <i class="fas fa-file-signature"></i>
-        <span>Solicitudes</span>
+      <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'reactivos'" (click)="activateSection('reactivos')" (keydown.enter)="activateSection('reactivos')" (keydown.space)="$event.preventDefault(); activateSection('reactivos')">
+        <i class="fas fa-vial"></i>
+        <span>Reactivos</span>
       </div>
-    }
 
-    <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'reactivos'" (click)="activateSection('reactivos')" (keydown.enter)="activateSection('reactivos')" (keydown.space)="$event.preventDefault(); activateSection('reactivos')">
-      <i class="fas fa-vial"></i>
-      <span>Reactivos</span>
+      @if (canSeeEquipos()) {
+        <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'equipos'" (click)="activateSection('equipos')" (keydown.enter)="activateSection('equipos')" (keydown.space)="$event.preventDefault(); activateSection('equipos')">
+          <i class="fas fa-microscope"></i>
+          <span>Equipos</span>
+        </div>
+      }
+
+      @if (canSeeVolumetricos()) {
+        <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'volumetricos'" (click)="activateSection('volumetricos')" (keydown.enter)="activateSection('volumetricos')" (keydown.space)="$event.preventDefault(); activateSection('volumetricos')">
+          <i class="fas fa-flask"></i>
+          <span>Volumétricos</span>
+        </div>
+      }
+
+      @if (canSeeReferencia()) {
+        <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'referencia'" (click)="activateSection('referencia')" (keydown.enter)="activateSection('referencia')" (keydown.space)="$event.preventDefault(); activateSection('referencia')">
+          <i class="fas fa-ruler-combined"></i>
+          <span>Referencia</span>
+        </div>
+      }
     </div>
 
-    @if (canSeeEquipos()) {
-      <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'equipos'" (click)="activateSection('equipos')" (keydown.enter)="activateSection('equipos')" (keydown.space)="$event.preventDefault(); activateSection('equipos')">
-        <i class="fas fa-microscope"></i>
-        <span>Equipos</span>
-      </div>
-    }
+    <details class="plantillas-help" #helpDetails>
+      <summary class="help-trigger" aria-label="Guia de llaves">
+        <span class="help-dot">?</span>
+        <span class="help-text">Guia de llaves</span>
+      </summary>
+      <div class="help-backdrop" (click)="closeHelpPanel()"></div>
+      <div class="help-panel">
+        <div class="help-title">Guia completa de llaves</div>
+        <p class="help-subtitle">
+          Una llave siempre tiene dos partes: apartado + campo. Ejemplo: <code>{{'{{'}}reactivo.nombre{{'}}'}}</code>.
+          Si es una lista (varios registros), usa un loop: <code>{{'{{'}}#reactivos{{'}}'}}</code> ... <code>{{'{{'}}/reactivos{{'}}'}}</code>.
+          Dentro del loop puedes usar las llaves del item: <code>{{'{{'}}reactivos.nombre{{'}}'}}</code>.
+        </p>
+        
 
-    @if (canSeeVolumetricos()) {
-      <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'volumetricos'" (click)="activateSection('volumetricos')" (keydown.enter)="activateSection('volumetricos')" (keydown.space)="$event.preventDefault(); activateSection('volumetricos')">
-        <i class="fas fa-flask"></i>
-        <span>Volumétricos</span>
-      </div>
-    }
+        <div class="help-tabs" role="tablist" aria-label="Apartados de llaves">
+          <div class="equipo-tabs-menu" role="tablist">
+            <button class="tab-btn" type="button" role="tab" [class.active]="helpTab === 'reactivos'" (click)="setHelpTab('reactivos')">Reactivos</button>
+            <button class="tab-btn" type="button" role="tab" [class.active]="helpTab === 'solicitudes'" (click)="setHelpTab('solicitudes')">Solicitudes</button>
+            <button class="tab-btn" type="button" role="tab" [class.active]="helpTab === 'equipos'" (click)="setHelpTab('equipos')">Equipos</button>
+            <button class="tab-btn" type="button" role="tab" [class.active]="helpTab === 'volumetricos'" (click)="setHelpTab('volumetricos')">Volumetricos</button>
+            <button class="tab-btn" type="button" role="tab" [class.active]="helpTab === 'referencia'" (click)="setHelpTab('referencia')">Referencia</button>
+            <button class="tab-btn tab-btn--right" type="button" role="tab" [class.active]="helpTab === 'tutoriales'" (click)="setHelpTab('tutoriales')">Tutoriales</button>
+          </div>
 
-    @if (canSeeReferencia()) {
-      <div class="action-card" role="button" tabindex="0" [class.active]="seccionActiva === 'referencia'" (click)="activateSection('referencia')" (keydown.enter)="activateSection('referencia')" (keydown.space)="$event.preventDefault(); activateSection('referencia')">
-        <i class="fas fa-ruler-combined"></i>
-        <span>Referencia</span>
+          <div class="help-tab-panels">
+            <div class="help-tab-panel help-tab-panel--reactivos" role="tabpanel" [class.is-active]="helpTab === 'reactivos'">
+              <div class="help-section">
+                <div class="help-section-title">Reactivos</div>
+                <div class="help-section-sub">Formato: <code>{{'{{'}}reactivo.campo{{'}}'}}</code> o en loop <code>{{'{{'}}reactivos.campo{{'}}'}}</code>.</div>
+                <div class="help-list">
+                  <div class="help-item"><code>{{'{{'}}reactivo.codigo{{'}}'}}</code><span>Codigo del reactivo.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.nombre{{'}}'}}</code><span>Nombre del reactivo.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.marca{{'}}'}}</code><span>Marca del reactivo.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.lote{{'}}'}}</code><span>Lote del reactivo.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.referencia{{'}}'}}</code><span>Referencia del reactivo.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.cas{{'}}'}}</code><span>Numero CAS.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.presentacion{{'}}'}}</code><span>Presentacion.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.presentacion_cant{{'}}'}}</code><span>Cantidad por presentacion.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.cantidad_total{{'}}'}}</code><span>Cantidad total.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.fecha_adquisicion{{'}}'}}</code><span>Fecha de adquisicion.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.fecha_vencimiento{{'}}'}}</code><span>Fecha de vencimiento.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.tipo{{'}}'}}</code><span>Tipo de reactivo.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.clasificacion{{'}}'}}</code><span>Clasificacion SGA.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.unidad{{'}}'}}</code><span>Unidad.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.unidad_simbolo{{'}}'}}</code><span>Simbolo de unidad.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.estado{{'}}'}}</code><span>Estado fisico.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.almacenamiento{{'}}'}}</code><span>Almacenamiento.</span></div>
+                  <div class="help-item"><code>{{'{{'}}reactivo.tipo_recipiente{{'}}'}}</code><span>Tipo de recipiente.</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="help-tab-panel help-tab-panel--solicitudes" role="tabpanel" [class.is-active]="helpTab === 'solicitudes'">
+              <div class="help-section">
+                <div class="help-section-title">Solicitudes</div>
+                <div class="help-section-sub">Formato: <code>{{'{{'}}solicitud.campo{{'}}'}}</code> y <code>{{'{{'}}cliente.campo{{'}}'}}</code>. Loops: <code>{{'{{'}}#solicitudes{{'}}'}}</code>, <code>{{'{{'}}#clientes{{'}}'}}</code>.</div>
+                <div class="help-subtabs" role="tablist" aria-label="Bloques de solicitudes">
+                  <div class="help-subtabs-layout">
+                    <div class="help-subtabs-menu" role="tablist">
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabSolicitudes === 'solicitud'" (click)="setHelpSubtabSolicitudes('solicitud')">Solicitud</button>
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabSolicitudes === 'cliente'" (click)="setHelpSubtabSolicitudes('cliente')">Cliente</button>
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabSolicitudes === 'oferta'" (click)="setHelpSubtabSolicitudes('oferta')">Oferta</button>
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabSolicitudes === 'revision'" (click)="setHelpSubtabSolicitudes('revision')">Revision</button>
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabSolicitudes === 'seguimiento'" (click)="setHelpSubtabSolicitudes('seguimiento')">Seguimiento</button>
+                    </div>
+
+                    <div class="help-subtabs-panels">
+                      <div class="help-subtab-panel help-subtab-panel--solicitud" role="tabpanel" [class.is-active]="helpSubtabSolicitudes === 'solicitud'">
+                        <div class="help-block">
+                          <div class="help-block-title">Solicitud</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}solicitud.solicitud_id{{'}}'}}</code><span>ID de solicitud.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.id_cliente{{'}}'}}</code><span>ID del cliente.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.tipo_solicitud{{'}}'}}</code><span>Tipo de solicitud.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.nombre_muestra{{'}}'}}</code><span>Nombre de la muestra.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.fecha_solicitud{{'}}'}}</code><span>Fecha de solicitud.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.lote_producto{{'}}'}}</code><span>Lote del producto.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.fecha_vencimiento_muestra{{'}}'}}</code><span>Vencimiento de muestra.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.tipo_muestra{{'}}'}}</code><span>Tipo de muestra.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.tipo_empaque{{'}}'}}</code><span>Tipo de empaque.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.analisis_requerido{{'}}'}}</code><span>Analisis requerido.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.req_analisis{{'}}'}}</code><span>Requiere analisis (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.cant_muestras{{'}}'}}</code><span>Cantidad de muestras.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.solicitud_recibida{{'}}'}}</code><span>Solicitud recibida.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.fecha_entrega_muestra{{'}}'}}</code><span>Fecha entrega muestra.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.recibe_personal{{'}}'}}</code><span>Recibe personal.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.cargo_personal{{'}}'}}</code><span>Cargo del personal.</span></div>
+                            <div class="help-item"><code>{{'{{'}}solicitud.observaciones{{'}}'}}</code><span>Observaciones.</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="help-subtab-panel help-subtab-panel--cliente" role="tabpanel" [class.is-active]="helpSubtabSolicitudes === 'cliente'">
+                        <div class="help-block">
+                          <div class="help-block-title">Cliente</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}cliente.id_cliente{{'}}'}}</code><span>ID del cliente.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.numero{{'}}'}}</code><span>Numero interno.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.fecha_vinculacion{{'}}'}}</code><span>Fecha de vinculacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.tipo_usuario{{'}}'}}</code><span>Tipo de usuario.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.razon_social{{'}}'}}</code><span>Razon social.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.nit{{'}}'}}</code><span>NIT.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.nombre_solicitante{{'}}'}}</code><span>Nombre del solicitante.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.tipo_identificacion{{'}}'}}</code><span>Tipo de identificacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.numero_identificacion{{'}}'}}</code><span>Numero de identificacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.sexo{{'}}'}}</code><span>Sexo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.tipo_poblacion{{'}}'}}</code><span>Tipo de poblacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.direccion{{'}}'}}</code><span>Direccion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.id_ciudad{{'}}'}}</code><span>ID ciudad.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.id_departamento{{'}}'}}</code><span>ID departamento.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.ciudad_codigo{{'}}'}}</code><span>Codigo ciudad.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.departamento_codigo{{'}}'}}</code><span>Codigo departamento.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.ciudad{{'}}'}}</code><span>Ciudad.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.departamento{{'}}'}}</code><span>Departamento.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.celular{{'}}'}}</code><span>Celular.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.telefono{{'}}'}}</code><span>Telefono.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.correo_electronico{{'}}'}}</code><span>Correo electronico.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.tipo_vinculacion{{'}}'}}</code><span>Tipo de vinculacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.registro_realizado_por{{'}}'}}</code><span>Registro realizado por.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.observaciones{{'}}'}}</code><span>Observaciones.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.activo{{'}}'}}</code><span>Activo (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.created_at{{'}}'}}</code><span>Fecha de creacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.updated_at{{'}}'}}</code><span>Fecha de actualizacion.</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="help-subtab-panel help-subtab-panel--oferta" role="tabpanel" [class.is-active]="helpSubtabSolicitudes === 'oferta'">
+                        <div class="help-block">
+                          <div class="help-block-title">Oferta</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}oferta.id_oferta{{'}}'}}</code><span>ID de oferta.</span></div>
+                            <div class="help-item"><code>{{'{{'}}oferta.id_solicitud{{'}}'}}</code><span>ID de solicitud.</span></div>
+                            <div class="help-item"><code>{{'{{'}}oferta.genero_cotizacion{{'}}'}}</code><span>Genero cotizacion (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}oferta.valor_cotizacion{{'}}'}}</code><span>Valor de cotizacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}oferta.fecha_envio_oferta{{'}}'}}</code><span>Fecha envio oferta.</span></div>
+                            <div class="help-item"><code>{{'{{'}}oferta.realizo_seguimiento_oferta{{'}}'}}</code><span>Seguimiento de oferta.</span></div>
+                            <div class="help-item"><code>{{'{{'}}oferta.observacion_oferta{{'}}'}}</code><span>Observacion de oferta.</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="help-subtab-panel help-subtab-panel--revision" role="tabpanel" [class.is-active]="helpSubtabSolicitudes === 'revision'">
+                        <div class="help-block">
+                          <div class="help-block-title">Revision</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}revision.id_revision{{'}}'}}</code><span>ID de revision.</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.id_solicitud{{'}}'}}</code><span>ID de solicitud.</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.fecha_limite_entrega{{'}}'}}</code><span>Fecha limite de entrega.</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.servicio_es_viable{{'}}'}}</code><span>Servicio viable (Si/No).</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="help-subtab-panel help-subtab-panel--seguimiento" role="tabpanel" [class.is-active]="helpSubtabSolicitudes === 'seguimiento'">
+                        <div class="help-block">
+                          <div class="help-block-title">Seguimiento encuesta</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}seguimiento_encuesta.id_encuesta{{'}}'}}</code><span>ID de encuesta.</span></div>
+                            <div class="help-item"><code>{{'{{'}}seguimiento_encuesta.id_solicitud{{'}}'}}</code><span>ID de solicitud.</span></div>
+                            <div class="help-item"><code>{{'{{'}}seguimiento_encuesta.fecha_encuesta{{'}}'}}</code><span>Fecha de encuesta.</span></div>
+                            <div class="help-item"><code>{{'{{'}}seguimiento_encuesta.comentarios{{'}}'}}</code><span>Comentarios.</span></div>
+                            <div class="help-item"><code>{{'{{'}}seguimiento_encuesta.recomendaria_servicio{{'}}'}}</code><span>Recomendaria servicio (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}seguimiento_encuesta.cliente_respondio{{'}}'}}</code><span>Cliente respondio (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}seguimiento_encuesta.solicito_nueva_encuesta{{'}}'}}</code><span>Solicito nueva encuesta (Si/No).</span></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="help-tab-panel help-tab-panel--equipos" role="tabpanel" [class.is-active]="helpTab === 'equipos'">
+              <div class="help-section">
+                <div class="help-section-title">Equipos</div>
+                <div class="help-section-sub">Primero eliges el origen y luego el campo. Ejemplos: <code>{{'{{'}}equipo.marca{{'}}'}}</code> (datos del equipo) o <code>{{'{{'}}ficha.fabricante{{'}}'}}</code> (datos de ficha tecnica).</div>
+                <div class="help-note">
+                  Para listas usa loops: <code>{{'{{'}}#historial{{'}}'}}</code> ... <code>{{'{{'}}/historial{{'}}'}}</code> y <code>{{'{{'}}#intervalos{{'}}'}}</code> ... <code>{{'{{'}}/intervalos{{'}}'}}</code>.
+                  Cada item dentro del loop usa <code>{{'{{'}}historial.campo{{'}}'}}</code> o <code>{{'{{'}}intervalos.campo{{'}}'}}</code>.
+                  Si solo necesitas el ultimo registro, usa <code>{{'{{'}}historial_ultimo.campo{{'}}'}}</code> o <code>{{'{{'}}intervalo_ultimo.campo{{'}}'}}</code>.
+                </div>
+                <div class="help-note">Fuentes de datos: <strong>hv_equipos</strong> (equipo), <strong>ficha_tecnica_de_equipos</strong> (ficha), <strong>historial_hv</strong> (historial), <strong>intervalo_hv</strong> (intervalos).</div>
+
+                <div class="help-subtabs" role="tablist" aria-label="Bloques de equipos">
+                  <div class="help-subtabs-layout">
+                    <div class="help-subtabs-menu" role="tablist">
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabEquipos === 'equipo'" (click)="setHelpSubtabEquipos('equipo')">Equipo</button>
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabEquipos === 'ficha'" (click)="setHelpSubtabEquipos('ficha')">Ficha tecnica</button>
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabEquipos === 'historial'" (click)="setHelpSubtabEquipos('historial')">Historial</button>
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabEquipos === 'intervalos'" (click)="setHelpSubtabEquipos('intervalos')">Intervalos</button>
+                    </div>
+
+                    <div class="help-subtabs-panels">
+                      <div class="help-subtab-panel help-subtab-panel--equipo" role="tabpanel" [class.is-active]="helpSubtabEquipos === 'equipo'">
+                        <div class="help-block">
+                          <div class="help-block-title">Equipo (hv_equipos)</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}equipo.codigo_identificacion{{'}}'}}</code><span>Codigo de identificacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.nombre{{'}}'}}</code><span>Nombre del equipo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.modelo{{'}}'}}</code><span>Modelo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.marca{{'}}'}}</code><span>Marca.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.inventario_sena{{'}}'}}</code><span>Inventario SENA.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.ubicacion{{'}}'}}</code><span>Ubicacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.acreditacion{{'}}'}}</code><span>Acreditacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.tipo_manual{{'}}'}}</code><span>Tipo de manual.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.numero_serie{{'}}'}}</code><span>Numero de serie.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.tipo{{'}}'}}</code><span>Tipo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.clasificacion{{'}}'}}</code><span>Clasificacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.manual_usuario{{'}}'}}</code><span>Manual de usuario.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.puesta_en_servicio{{'}}'}}</code><span>Puesta en servicio.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.fecha_adquisicion{{'}}'}}</code><span>Fecha de adquisicion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.requerimientos_equipo{{'}}'}}</code><span>Requerimientos del equipo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.elementos_electricos{{'}}'}}</code><span>Elementos electricos.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.voltaje{{'}}'}}</code><span>Voltaje.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.elementos_mecanicos{{'}}'}}</code><span>Elementos mecanicos.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.frecuencia{{'}}'}}</code><span>Frecuencia.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.campo_medicion{{'}}'}}</code><span>Campo de medicion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.exactitud{{'}}'}}</code><span>Exactitud.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.sujeto_verificar{{'}}'}}</code><span>Sujeto a verificacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.sujeto_calibracion{{'}}'}}</code><span>Sujeto a calibracion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.resolucion_division{{'}}'}}</code><span>Resolucion o division.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.sujeto_calificacion{{'}}'}}</code><span>Sujeto a calificacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}equipo.accesorios{{'}}'}}</code><span>Accesorios.</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="help-subtab-panel help-subtab-panel--ficha" role="tabpanel" [class.is-active]="helpSubtabEquipos === 'ficha'">
+                        <div class="help-block">
+                          <div class="help-block-title">Ficha tecnica (ficha_tecnica_de_equipos)</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}ficha.fabricante{{'}}'}}</code><span>Fabricante.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.uso{{'}}'}}</code><span>Uso.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.fecha_adq{{'}}'}}</code><span>Fecha de adquisicion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.fecha_func{{'}}'}}</code><span>Fecha de puesta en funcionamiento.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.precio{{'}}'}}</code><span>Precio.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.manual_ope{{'}}'}}</code><span>Manual de operacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.idioma_manual{{'}}'}}</code><span>Idioma del manual.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.magnitud{{'}}'}}</code><span>Magnitud.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.resolucion{{'}}'}}</code><span>Resolucion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.accesorios{{'}}'}}</code><span>Accesorios.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.precision_med{{'}}'}}</code><span>Precision de medicion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.rango_de_medicion{{'}}'}}</code><span>Rango de medicion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.rango_de_uso{{'}}'}}</code><span>Rango de uso.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.potencia{{'}}'}}</code><span>Potencia.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.amperaje{{'}}'}}</code><span>Amperaje.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.ancho{{'}}'}}</code><span>Ancho.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.alto{{'}}'}}</code><span>Alto.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.peso_kg{{'}}'}}</code><span>Peso (kg).</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.profundidad{{'}}'}}</code><span>Profundidad.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.temperatura_c{{'}}'}}</code><span>Temperatura (C).</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.humedad_porcentaje{{'}}'}}</code><span>Humedad (%).</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.limitaciones_e_interferencias{{'}}'}}</code><span>Limitaciones e interferencias.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.otros{{'}}'}}</code><span>Otros.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.especificaciones_software{{'}}'}}</code><span>Especificaciones de software.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.proveedor{{'}}'}}</code><span>Proveedor.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.email{{'}}'}}</code><span>Email.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.telefono{{'}}'}}</code><span>Telefono.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.fecha_de_instalacion{{'}}'}}</code><span>Fecha de instalacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.alcance_del_servicio{{'}}'}}</code><span>Alcance del servicio.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.garantia{{'}}'}}</code><span>Garantia.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.observaciones{{'}}'}}</code><span>Observaciones.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.recibido_por{{'}}'}}</code><span>Recibido por.</span></div>
+                            <div class="help-item"><code>{{'{{'}}ficha.fecha{{'}}'}}</code><span>Fecha de registro.</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="help-subtab-panel help-subtab-panel--historial" role="tabpanel" [class.is-active]="helpSubtabEquipos === 'historial'">
+                        <div class="help-block">
+                          <div class="help-block-title">Historial (historial_hv)</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}historial.consecutivo{{'}}'}}</code><span>Consecutivo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.equipo_id{{'}}'}}</code><span>ID del equipo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.fecha{{'}}'}}</code><span>Fecha.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.tipo_historial{{'}}'}}</code><span>Tipo de historial.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.codigo_registro{{'}}'}}</code><span>Codigo de registro.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.tolerancia_g{{'}}'}}</code><span>Tolerancia (g).</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.tolerancia_error_g{{'}}'}}</code><span>Tolerancia error (g).</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.incertidumbre_u{{'}}'}}</code><span>Incertidumbre (u).</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.realizo{{'}}'}}</code><span>Realizo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.superviso{{'}}'}}</code><span>Superviso.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.observaciones{{'}}'}}</code><span>Observaciones.</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="help-subtab-panel help-subtab-panel--intervalos" role="tabpanel" [class.is-active]="helpSubtabEquipos === 'intervalos'">
+                        <div class="help-block">
+                          <div class="help-block-title">Intervalos (intervalo_hv)</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}intervalos.consecutivo{{'}}'}}</code><span>Consecutivo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.equipo_id{{'}}'}}</code><span>ID del equipo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.unidad_nominal_g{{'}}'}}</code><span>Unidad nominal (g).</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.calibracion_1{{'}}'}}</code><span>Calibracion 1.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.fecha_c1{{'}}'}}</code><span>Fecha C1.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.error_c1_g{{'}}'}}</code><span>Error C1 (g).</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.calibracion_2{{'}}'}}</code><span>Calibracion 2.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.fecha_c2{{'}}'}}</code><span>Fecha C2.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.error_c2_g{{'}}'}}</code><span>Error C2 (g).</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.diferencia_dias{{'}}'}}</code><span>Diferencia de dias.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.desviacion{{'}}'}}</code><span>Desviacion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.deriva{{'}}'}}</code><span>Deriva.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.tolerancia_g{{'}}'}}</code><span>Tolerancia (g).</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.intervalo_calibraciones_dias{{'}}'}}</code><span>Intervalo de calibraciones (dias).</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.intervalo_calibraciones_anios{{'}}'}}</code><span>Intervalo de calibraciones (anios).</span></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="help-tab-panel help-tab-panel--volumetricos" role="tabpanel" [class.is-active]="helpTab === 'volumetricos'">
+              <div class="help-section">
+                <div class="help-section-title">Volumetricos</div>
+                <div class="help-section-sub">Primero eliges el origen y luego el campo. Ejemplo: <code>{{'{{'}}material.nombre_material{{'}}'}}</code>.</div>
+                <div class="help-note">
+                  Para listas usa loops: <code>{{'{{'}}#historial{{'}}'}}</code> ... <code>{{'{{'}}/historial{{'}}'}}</code> y <code>{{'{{'}}#intervalos{{'}}'}}</code> ... <code>{{'{{'}}/intervalos{{'}}'}}</code>.
+                  Dentro del loop usa <code>{{'{{'}}historial.campo{{'}}'}}</code> o <code>{{'{{'}}intervalos.campo{{'}}'}}</code>.
+                  Para el ultimo registro: <code>{{'{{'}}historial_ultimo.campo{{'}}'}}</code> o <code>{{'{{'}}intervalo_ultimo.campo{{'}}'}}</code>.
+                </div>
+                <div class="help-note">Fuentes de datos: <strong>material_volumetrico</strong> (material), <strong>historial_volumetrico</strong> (historial), <strong>intervalo_volumetrico</strong> (intervalos).</div>
+
+                <div class="help-subtabs" role="tablist" aria-label="Bloques de volumetricos">
+                  <div class="help-subtabs-layout">
+                    <div class="help-subtabs-menu" role="tablist">
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabVolumetricos === 'material'" (click)="setHelpSubtabVolumetricos('material')">Material</button>
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabVolumetricos === 'historial'" (click)="setHelpSubtabVolumetricos('historial')">Historial</button>
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabVolumetricos === 'intervalos'" (click)="setHelpSubtabVolumetricos('intervalos')">Intervalos</button>
+                    </div>
+
+                    <div class="help-subtabs-panels">
+                      <div class="help-subtab-panel help-subtab-panel--material" role="tabpanel" [class.is-active]="helpSubtabVolumetricos === 'material'">
+                        <div class="help-block">
+                          <div class="help-block-title">Material (material_volumetrico)</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}material.codigo_id{{'}}'}}</code><span>Codigo del material.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.nombre_material{{'}}'}}</code><span>Nombre del material.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.volumen_nominal{{'}}'}}</code><span>Volumen nominal.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.rango_volumen{{'}}'}}</code><span>Rango de volumen.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.marca{{'}}'}}</code><span>Marca.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.resolucion{{'}}'}}</code><span>Resolucion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.error_max_permitido{{'}}'}}</code><span>Error maximo permitido.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.modelo{{'}}'}}</code><span>Modelo.</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="help-subtab-panel help-subtab-panel--historial" role="tabpanel" [class.is-active]="helpSubtabVolumetricos === 'historial'">
+                        <div class="help-block">
+                          <div class="help-block-title">Historial (historial_volumetrico)</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}historial.consecutivo{{'}}'}}</code><span>Consecutivo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.codigo_material{{'}}'}}</code><span>Codigo del material.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.fecha{{'}}'}}</code><span>Fecha.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.tipo_historial_instrumento{{'}}'}}</code><span>Tipo de historial del instrumento.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.codigo_registro{{'}}'}}</code><span>Codigo de registro.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.realizo{{'}}'}}</code><span>Realizo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.superviso{{'}}'}}</code><span>Superviso.</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="help-subtab-panel help-subtab-panel--intervalos" role="tabpanel" [class.is-active]="helpSubtabVolumetricos === 'intervalos'">
+                        <div class="help-block">
+                          <div class="help-block-title">Intervalos (intervalo_volumetrico)</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}intervalos.consecutivo{{'}}'}}</code><span>Consecutivo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.codigo_material{{'}}'}}</code><span>Codigo del material.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.valor_nominal{{'}}'}}</code><span>Valor nominal.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.fecha_c1{{'}}'}}</code><span>Fecha C1.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.error_c1{{'}}'}}</code><span>Error C1.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.fecha_c2{{'}}'}}</code><span>Fecha C2.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.error_c2{{'}}'}}</code><span>Error C2.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.diferencia_tiempo_dias{{'}}'}}</code><span>Diferencia de tiempo (dias).</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.desviacion_abs{{'}}'}}</code><span>Desviacion absoluta.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.deriva{{'}}'}}</code><span>Deriva.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.tolerancia{{'}}'}}</code><span>Tolerancia.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.intervalo_calibracion_dias{{'}}'}}</code><span>Intervalo de calibracion (dias).</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.intervalo_calibracion_anos{{'}}'}}</code><span>Intervalo de calibracion (anios).</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.incertidumbre_exp{{'}}'}}</code><span>Incertidumbre expandida.</span></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="help-tab-panel help-tab-panel--referencia" role="tabpanel" [class.is-active]="helpTab === 'referencia'">
+              <div class="help-section">
+                <div class="help-section-title">Referencia</div>
+                <div class="help-section-sub">Primero eliges el origen y luego el campo. Ejemplo: <code>{{'{{'}}material.nombre_material{{'}}'}}</code>.</div>
+                <div class="help-note">
+                  Para listas usa loops: <code>{{'{{'}}#historial{{'}}'}}</code> ... <code>{{'{{'}}/historial{{'}}'}}</code> y <code>{{'{{'}}#intervalos{{'}}'}}</code> ... <code>{{'{{'}}/intervalos{{'}}'}}</code>.
+                  Dentro del loop usa <code>{{'{{'}}historial.campo{{'}}'}}</code> o <code>{{'{{'}}intervalos.campo{{'}}'}}</code>.
+                  Para el ultimo registro: <code>{{'{{'}}historial_ultimo.campo{{'}}'}}</code> o <code>{{'{{'}}intervalo_ultimo.campo{{'}}'}}</code>.
+                </div>
+                <div class="help-note">Fuentes de datos: <strong>material_referencia</strong> (material), <strong>historial_referencia</strong> (historial), <strong>intervalo_referencia</strong> (intervalos).</div>
+
+                <div class="help-subtabs" role="tablist" aria-label="Bloques de referencia">
+                  <div class="help-subtabs-layout">
+                    <div class="help-subtabs-menu" role="tablist">
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabReferencia === 'material'" (click)="setHelpSubtabReferencia('material')">Material</button>
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabReferencia === 'historial'" (click)="setHelpSubtabReferencia('historial')">Historial</button>
+                      <button class="help-subtab-btn" type="button" role="tab" [class.is-active]="helpSubtabReferencia === 'intervalos'" (click)="setHelpSubtabReferencia('intervalos')">Intervalos</button>
+                    </div>
+
+                    <div class="help-subtabs-panels">
+                      <div class="help-subtab-panel help-subtab-panel--material" role="tabpanel" [class.is-active]="helpSubtabReferencia === 'material'">
+                        <div class="help-block">
+                          <div class="help-block-title">Material (material_referencia)</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}material.codigo_id{{'}}'}}</code><span>Codigo del material.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.nombre_material{{'}}'}}</code><span>Nombre del material.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.rango_medicion{{'}}'}}</code><span>Rango de medicion.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.marca{{'}}'}}</code><span>Marca.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.serie{{'}}'}}</code><span>Serie.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.error_max_permitido{{'}}'}}</code><span>Error maximo permitido.</span></div>
+                            <div class="help-item"><code>{{'{{'}}material.modelo{{'}}'}}</code><span>Modelo.</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="help-subtab-panel help-subtab-panel--historial" role="tabpanel" [class.is-active]="helpSubtabReferencia === 'historial'">
+                        <div class="help-block">
+                          <div class="help-block-title">Historial (historial_referencia)</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}historial.consecutivo{{'}}'}}</code><span>Consecutivo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.codigo_material{{'}}'}}</code><span>Codigo del material.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.fecha{{'}}'}}</code><span>Fecha.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.tipo_historial_instrumento{{'}}'}}</code><span>Tipo de historial del instrumento.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.codigo_registro{{'}}'}}</code><span>Codigo de registro.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.realizo{{'}}'}}</code><span>Realizo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}historial.superviso{{'}}'}}</code><span>Superviso.</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="help-subtab-panel help-subtab-panel--intervalos" role="tabpanel" [class.is-active]="helpSubtabReferencia === 'intervalos'">
+                        <div class="help-block">
+                          <div class="help-block-title">Intervalos (intervalo_referencia)</div>
+                          <div class="help-list">
+                            <div class="help-item"><code>{{'{{'}}intervalos.consecutivo{{'}}'}}</code><span>Consecutivo.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.codigo_material{{'}}'}}</code><span>Codigo del material.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.valor_nominal{{'}}'}}</code><span>Valor nominal.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.fecha_c1{{'}}'}}</code><span>Fecha C1.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.error_c1{{'}}'}}</code><span>Error C1.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.fecha_c2{{'}}'}}</code><span>Fecha C2.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.error_c2{{'}}'}}</code><span>Error C2.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.diferencia_tiempo_dias{{'}}'}}</code><span>Diferencia de tiempo (dias).</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.desviacion_abs{{'}}'}}</code><span>Desviacion absoluta.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.deriva{{'}}'}}</code><span>Deriva.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.tolerancia{{'}}'}}</code><span>Tolerancia.</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.intervalo_calibracion_dias{{'}}'}}</code><span>Intervalo de calibracion (dias).</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.intervalo_calibracion_anos{{'}}'}}</code><span>Intervalo de calibracion (anios).</span></div>
+                            <div class="help-item"><code>{{'{{'}}intervalos.incertidumbre_exp{{'}}'}}</code><span>Incertidumbre expandida.</span></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="help-tab-panel help-tab-panel--tutoriales" role="tabpanel" [class.is-active]="helpTab === 'tutoriales'">
+              <div class="help-section">
+                <div class="help-section-title">Tutoriales rapidos</div>
+                <div class="help-section-sub">Ejemplos visuales para poner llaves en celdas (Excel) y en Word. Todo con loops y llaves simples.</div>
+
+                <div class="tutorial-grid">
+                  <div class="tutorial-card">
+                    <div class="tutorial-title">Excel: tabla con loop</div>
+                    <div class="tutorial-steps">
+                      <div class="tutorial-step">1. Crea el encabezado (por ejemplo: Codigo, Nombre, Cantidad).</div>
+                      <div class="tutorial-sheet">
+                        <div class="tutorial-row">
+                          <div class="tutorial-cell is-head">Codigo</div>
+                          <div class="tutorial-cell is-head">Nombre</div>
+                          <div class="tutorial-cell is-head">Cantidad</div>
+                        </div>
+                        <div class="tutorial-row">
+                          <div class="tutorial-cell">{{'{{'}}#reactivos{{'}}'}}
+{{'{{'}}reactivos.codigo{{'}}'}}</div>
+                          <div class="tutorial-cell">{{'{{'}}reactivos.nombre{{'}}'}}</div>
+                          <div class="tutorial-cell">{{'{{'}}reactivos.cantidad_total{{'}}'}}
+{{'{{'}}/reactivos{{'}}'}}</div>
+                        </div>
+                      </div>
+                      <div class="tutorial-step">2. En la fila de datos escribe un loop y las llaves:</div>
+                      <pre class="tutorial-code"><code>{{'{{'}}#reactivos{{'}}'}}
+{{'{{'}}reactivos.codigo{{'}}'}} | {{'{{'}}reactivos.nombre{{'}}'}} | {{'{{'}}reactivos.cantidad_total{{'}}'}}
+{{'{{'}}/reactivos{{'}}'}}</code></pre>
+                      <div class="tutorial-step">3. El sistema duplicara la fila por cada reactivo.</div>
+                    </div>
+                  </div>
+
+                  <div class="tutorial-card">
+                    <div class="tutorial-title">Word: dato unico</div>
+                    <div class="tutorial-steps">
+                      <div class="tutorial-step">1. Escribe una frase normal en tu documento.</div>
+                      <div class="tutorial-doc">
+                        <div class="tutorial-doc-line">Reactivo: <span>{{'{{'}}reactivo.nombre{{'}}'}}</span></div>
+                        <div class="tutorial-doc-line">Lote: <span>{{'{{'}}reactivo.lote{{'}}'}}</span></div>
+                        <div class="tutorial-doc-line">Cantidad: <span>{{'{{'}}reactivo.cantidad_total{{'}}'}} {{'{{'}}reactivo.unidad_simbolo{{'}}'}}</span></div>
+                      </div>
+                      <div class="tutorial-step">2. Inserta la llave en el lugar correcto:</div>
+                      <pre class="tutorial-code"><code>Reactivo: {{'{{'}}reactivo.nombre{{'}}'}}
+Lote: {{'{{'}}reactivo.lote{{'}}'}}
+Cantidad: {{'{{'}}reactivo.cantidad_total{{'}}'}} {{'{{'}}reactivo.unidad_simbolo{{'}}'}}</code></pre>
+                      <div class="tutorial-step">3. Genera y veras la info llena.</div>
+                    </div>
+                  </div>
+
+                  <div class="tutorial-card">
+                    <div class="tutorial-title">Historial e intervalos</div>
+                    <div class="tutorial-steps">
+                      <div class="tutorial-step">1. Abre el apartado (Equipos, Volumetricos o Referencia).</div>
+                      <div class="tutorial-sheet is-compact">
+                        <div class="tutorial-row">
+                          <div class="tutorial-cell is-head">Fecha</div>
+                          <div class="tutorial-cell is-head">Codigo</div>
+                        </div>
+                        <div class="tutorial-row">
+                          <div class="tutorial-cell">{{'{{'}}#historial{{'}}'}}
+{{'{{'}}historial.fecha{{'}}'}}</div>
+                          <div class="tutorial-cell">{{'{{'}}historial.codigo_registro{{'}}'}}
+{{'{{'}}/historial{{'}}'}}</div>
+                        </div>
+                      </div>
+                      <div class="tutorial-step">2. Usa loops para repetir filas:</div>
+                      <pre class="tutorial-code"><code>{{'{{'}}#historial{{'}}'}}
+{{'{{'}}historial.fecha{{'}}'}} | {{'{{'}}historial.codigo_registro{{'}}'}}
+{{'{{'}}/historial{{'}}'}}</code></pre>
+                      <div class="tutorial-step">3. Para solo el ultimo registro:</div>
+                      <pre class="tutorial-code"><code>{{'{{'}}historial_ultimo.fecha{{'}}'}}</code></pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="help-note">Tip: selecciona un registro y luego genera para ver las llaves llenas.</div>
       </div>
-    }
+      <div class="help-float-tip" role="status">
+        Tip rapido: las llaves simples pintan un solo registro. Los loops repiten el bloque por cada registro.
+      </div>
+    </details>
   </div>
+
+  @if (esAuxiliar && !canEditPlantillas()) {
+    <div class="plantillas-readonly">
+      <i class="fas fa-eye"></i>
+      Modo solo lectura para plantillas
+    </div>
+  }
 
   <!-- ============ SOLICITUDES ============ -->
   @if (seccionActiva === 'solicitudes') {
@@ -153,9 +716,12 @@
               }
             </div>
 
-            <button type="button" class="btn primary" (click)="generarDocumentoSolicitud()" [disabled]="tplSolicitudLoading">
-              Generar
-            </button>
+            <div class="button-group">
+              <button type="button" class="btn primary" (click)="generarDocumentoSolicitud()" [disabled]="tplSolicitudLoading || !canEditPlantillas()">
+                Generar
+              </button>
+              <button type="button" class="btn" (click)="generarDocumentoSolicitudLoop()" [disabled]="tplSolicitudLoading || !tplSolicitudPlantillaId || !canEditPlantillas()">Generar loop</button>
+            </div>
           </div>
         </div>
 
@@ -201,7 +767,7 @@
           </div>
 
           <div class="form-field plantilla-actions">
-            <button type="button" class="btn danger" (click)="eliminarPlantillaSolicitud()" [disabled]="tplSolicitudDeleteLoading.has(tplSolicitudPlantillaId || 0)">
+            <button type="button" class="btn danger" (click)="eliminarPlantillaSolicitud()" [disabled]="tplSolicitudDeleteLoading.has(tplSolicitudPlantillaId || 0) || !canEditPlantillas()">
               Eliminar
             </button>
           </div>
@@ -215,12 +781,12 @@
 
           <div class="form-field upload-block">
             <label>Subir plantilla</label>
-            <input #tplSolicitudTemplateInput type="file" (change)="onTplSolicitudTemplateSelected($event)" />
+            <input #tplSolicitudTemplateInput type="file" (change)="onTplSolicitudTemplateSelected($event)" [disabled]="!canEditPlantillas()" />
           </div>
 
           <div class="form-field upload-actions">
  
-            <button type="button" class="btn" (click)="subirPlantillaSolicitud()" [disabled]="tplSolicitudUploadLoading">
+            <button type="button" class="btn" (click)="subirPlantillaSolicitud()" [disabled]="tplSolicitudUploadLoading || !canEditPlantillas()">
               Guardar
             </button>
           </div>
@@ -289,7 +855,10 @@
               }
             </div>
 
-            <button type="button" class="btn primary" (click)="generarDocumentoReactivo()" [disabled]="tplReactivoLoading">Generar</button>
+            <div class="button-group">
+              <button type="button" class="btn primary" (click)="generarDocumentoReactivo()" [disabled]="tplReactivoLoading || !canEditPlantillas()">Generar</button>
+              <button type="button" class="btn" (click)="generarDocumentoReactivoLoop()" [disabled]="tplReactivoLoading || !tplReactivoPlantillaId || !canEditPlantillas()">Generar loop</button>
+            </div>
           </div>
         </div>
 
@@ -326,7 +895,7 @@
           </div>
 
           <div class="form-field plantilla-actions">
-            <button type="button" class="btn danger" (click)="eliminarPlantillaReactivo()" [disabled]="tplReactivoDeleteLoading.has(tplReactivoPlantillaId || 0)">Eliminar</button>
+            <button type="button" class="btn danger" (click)="eliminarPlantillaReactivo()" [disabled]="tplReactivoDeleteLoading.has(tplReactivoPlantillaId || 0) || !canEditPlantillas()">Eliminar</button>
           </div>
         </div>
 
@@ -338,12 +907,12 @@
 
           <div class="form-field upload-block">
             <label>Subir plantilla</label>
-            <input #tplReactivoTemplateInput type="file" (change)="onTplReactivoTemplateSelected($event)" />
+            <input #tplReactivoTemplateInput type="file" (change)="onTplReactivoTemplateSelected($event)" [disabled]="!canEditPlantillas()" />
           </div>
 
           <div class="form-field upload-actions">
             
-            <button type="button" class="btn" (click)="subirPlantillaReactivo()" [disabled]="tplReactivoUploadLoading">Guardar</button>
+            <button type="button" class="btn" (click)="subirPlantillaReactivo()" [disabled]="tplReactivoUploadLoading || !canEditPlantillas()">Guardar</button>
           </div>
         </div>
 
@@ -410,7 +979,10 @@
               }
             </div>
 
-            <button type="button" class="btn primary" (click)="generarDocumentoEquipo()" [disabled]="tplEquipoLoading">Generar</button>
+            <div class="button-group">
+              <button type="button" class="btn primary" (click)="generarDocumentoEquipo()" [disabled]="tplEquipoLoading || !canEditPlantillas()">Generar</button>
+              <button type="button" class="btn" (click)="generarDocumentoEquipoLoop()" [disabled]="tplEquipoLoading || !tplEquipoPlantillaId || !canEditPlantillas()">Generar loop</button>
+            </div>
           </div>
         </div>
 
@@ -449,7 +1021,7 @@
           </div>
 
           <div class="form-field plantilla-actions">
-            <button type="button" class="btn danger" (click)="eliminarPlantillaEquipo()" [disabled]="tplEquipoDeleteLoading.has(tplEquipoPlantillaId || 0)">Eliminar</button>
+            <button type="button" class="btn danger" (click)="eliminarPlantillaEquipo()" [disabled]="tplEquipoDeleteLoading.has(tplEquipoPlantillaId || 0) || !canEditPlantillas()">Eliminar</button>
           </div>
         </div>
 
@@ -461,11 +1033,11 @@
 
           <div class="form-field upload-block">
             <label>Subir plantilla</label>
-            <input #tplEquipoTemplateInput type="file" (change)="onTplEquipoTemplateSelected($event)" />
+            <input #tplEquipoTemplateInput type="file" (change)="onTplEquipoTemplateSelected($event)" [disabled]="!canEditPlantillas()" />
           </div>
 
           <div class="form-field upload-actions">
-            <button type="button" class="btn" (click)="subirPlantillaEquipo()" [disabled]="tplEquipoUploadLoading">Guardar</button>
+            <button type="button" class="btn" (click)="subirPlantillaEquipo()" [disabled]="tplEquipoUploadLoading || !canEditPlantillas()">Guardar</button>
           </div>
         </div>
 
@@ -528,7 +1100,10 @@
               }
             </div>
 
-            <button type="button" class="btn primary" (click)="generarDocumentoVolumetrico()" [disabled]="tplVolLoading">Generar</button>
+            <div class="button-group">
+              <button type="button" class="btn primary" (click)="generarDocumentoVolumetrico()" [disabled]="tplVolLoading || !canEditPlantillas()">Generar</button>
+              <button type="button" class="btn" (click)="generarDocumentoVolumetricoLoop()" [disabled]="tplVolLoading || !tplVolPlantillaId || !canEditPlantillas()">Generar loop</button>
+            </div>
           </div>
         </div>
 
@@ -562,7 +1137,7 @@
           </div>
 
           <div class="form-field plantilla-actions">
-            <button type="button" class="btn danger" (click)="eliminarPlantillaVolumetrico()" [disabled]="tplVolDeleteLoading.has(tplVolPlantillaId || 0)">Eliminar</button>
+            <button type="button" class="btn danger" (click)="eliminarPlantillaVolumetrico()" [disabled]="tplVolDeleteLoading.has(tplVolPlantillaId || 0) || !canEditPlantillas()">Eliminar</button>
           </div>
         </div>
 
@@ -574,11 +1149,11 @@
 
           <div class="form-field upload-block">
             <label>Subir plantilla</label>
-            <input #tplVolTemplateInput type="file" (change)="onTplVolTemplateSelected($event)" />
+            <input #tplVolTemplateInput type="file" (change)="onTplVolTemplateSelected($event)" [disabled]="!canEditPlantillas()" />
           </div>
 
           <div class="form-field upload-actions">
-            <button type="button" class="btn" (click)="subirPlantillaVolumetrico()" [disabled]="tplVolUploadLoading">Guardar</button>
+            <button type="button" class="btn" (click)="subirPlantillaVolumetrico()" [disabled]="tplVolUploadLoading || !canEditPlantillas()">Guardar</button>
           </div>
         </div>
 
@@ -641,7 +1216,10 @@
               }
             </div>
 
-            <button type="button" class="btn primary" (click)="generarDocumentoReferencia()" [disabled]="tplRefLoading">Generar</button>
+            <div class="button-group">
+              <button type="button" class="btn primary" (click)="generarDocumentoReferencia()" [disabled]="tplRefLoading || !canEditPlantillas()">Generar</button>
+              <button type="button" class="btn" (click)="generarDocumentoReferenciaLoop()" [disabled]="tplRefLoading || !tplRefPlantillaId || !canEditPlantillas()">Generar loop</button>
+            </div>
           </div>
         </div>
 
@@ -675,7 +1253,7 @@
           </div>
 
           <div class="form-field plantilla-actions">
-            <button type="button" class="btn danger" (click)="eliminarPlantillaReferencia()" [disabled]="tplRefDeleteLoading.has(tplRefPlantillaId || 0)">Eliminar</button>
+            <button type="button" class="btn danger" (click)="eliminarPlantillaReferencia()" [disabled]="tplRefDeleteLoading.has(tplRefPlantillaId || 0) || !canEditPlantillas()">Eliminar</button>
           </div>
         </div>
 
@@ -687,11 +1265,11 @@
 
           <div class="form-field upload-block">
             <label>Subir plantilla</label>
-            <input #tplRefTemplateInput type="file" (change)="onTplRefTemplateSelected($event)" />
+            <input #tplRefTemplateInput type="file" (change)="onTplRefTemplateSelected($event)" [disabled]="!canEditPlantillas()" />
           </div>
 
           <div class="form-field upload-actions">
-            <button type="button" class="btn" (click)="subirPlantillaReferencia()" [disabled]="tplRefUploadLoading">Guardar</button>
+            <button type="button" class="btn" (click)="subirPlantillaReferencia()" [disabled]="tplRefUploadLoading || !canEditPlantillas()">Guardar</button>
           </div>
         </div>
 
