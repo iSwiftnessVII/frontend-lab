@@ -496,6 +496,20 @@
         }
       </div>
 
+      @if (canEditSolicitudEstado()) {
+      <div class="form-field">
+        <label for="solicitudAdminId">Asignar administradora:</label>
+        <select id="solicitudAdminId"
+          [(ngModel)]="solicitudAdminId"
+          name="solicitudAdminId">
+          <option [ngValue]="null">Sin asignar</option>
+          @for (admin of adminUsuarios; track admin.id_usuario) {
+            <option [ngValue]="admin.id_usuario">{{ formatAdminLabel(admin) || ('ID ' + admin.id_usuario) }}</option>
+          }
+        </select>
+      </div>
+      }
+
       <!-- Tipo de solicitud -->
       <div class="form-field">
         <label for="solicitudTipo">Tipo de solicitud: *</label>
@@ -525,7 +539,7 @@
           [(ngModel)]="solicitudNombre" 
           name="solicitudNombre" 
           required 
-          appAlphaNumeric
+          appAlphaNumericSpaces
           (input)="validarCampoSolicitudEnTiempoReal('nombre', $event)"
           (blur)="validarCampoSolicitudEnTiempoReal('nombre', $event)"
           [class.error]="solicitudErrors['nombre']" 
@@ -862,7 +876,7 @@
           <option [ngValue]="null" disabled>Seleccionar solicitud</option>
           @for (s of solicitudesFiltradas(); track s.solicitud_id) {
             <option [ngValue]="s.solicitud_id">
-              {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front || s.solicitud_id }}
+              {{ s.numero_solicitud_front || s.solicitud_id }} - {{ s.nombre_muestra || '—' }}
             </option>
           }
         </select>
@@ -1015,7 +1029,7 @@
           <option [ngValue]="null" disabled>Seleccionar solicitud</option>
           @for (s of solicitudesFiltradas(); track s.solicitud_id) {
             <option [ngValue]="s.solicitud_id">
-              {{ s.nombre_solicitante }} - {{ s.numero_solicitud_front || s.solicitud_id }}
+              {{ s.numero_solicitud_front || s.solicitud_id }} - {{ s.nombre_muestra || '—' }}
             </option>
           }
         </select>
@@ -1026,30 +1040,8 @@
         }
       </div>
 
-      <!-- Viabilidad del servicio -->
-      <div class="form-field">
-        <label for="resultadoServicioViable">¿El servicio es viable? *</label>
-        <select id="resultadoServicioViable" 
-          [(ngModel)]="resultadoServicioViable" 
-          name="resultadoServicioViable" 
-          required
-          [disabled]="revisionLocked"
-          (change)="validarCampoResultadoEnTiempoReal('servicioViable', $event)"
-          (blur)="validarCampoResultadoEnTiempoReal('servicioViable', $event)"
-          [class.error]="resultadoErrors['servicioViable']">
-          <option [ngValue]="null" disabled>Seleccionar opción</option>
-          <option [ngValue]="true">Sí</option>
-          <option [ngValue]="false">No</option>
-        </select>
-        @if (resultadoErrors['servicioViable']) {
-          <small class="error-message">
-            ⚠️ {{ resultadoErrors['servicioViable'] }}
-          </small>
-        }
-      </div>
-
       <!-- Fecha límite (Solo si es viable) -->
-      @if (resultadoServicioViable === true) {
+      @if (resultadoConceptoFinal === 'SOLICITUD_VIABLE' || resultadoConceptoFinal === 'SOLICITUD_VIABLE_CON_OBSERVACIONES') {
         <div class="form-field">
           <label for="resultadoFechaLimite">Fecha estimada inicio de análisis: *</label>
           <input id="resultadoFechaLimite" 
@@ -1068,6 +1060,256 @@
           }
         </div>
       }
+
+      <div class="form-field">
+        <label for="resultadoTipoMuestraEspecificado">¿Tipo de muestra especificado? *</label>
+        <select id="resultadoTipoMuestraEspecificado"
+          [(ngModel)]="resultadoTipoMuestraEspecificado"
+          name="resultadoTipoMuestraEspecificado"
+          required
+          [disabled]="revisionLocked"
+          (change)="validarCampoResultadoEnTiempoReal('tipoMuestraEspecificado', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('tipoMuestraEspecificado', $event)"
+          [class.error]="resultadoErrors['tipoMuestraEspecificado']">
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
+          @for (opt of tipoMuestraEspecificadoOptions; track opt.value) {
+            <option [ngValue]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        @if (resultadoErrors['tipoMuestraEspecificado']) {
+          <small class="error-message">
+            ⚠️ {{ resultadoErrors['tipoMuestraEspecificado'] }}
+          </small>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="resultadoEnsayosClaros">¿Ensayos requeridos claros? *</label>
+        <select id="resultadoEnsayosClaros"
+          [(ngModel)]="resultadoEnsayosClaros"
+          name="resultadoEnsayosClaros"
+          required
+          [disabled]="revisionLocked"
+          (change)="validarCampoResultadoEnTiempoReal('ensayosClaros', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('ensayosClaros', $event)"
+          [class.error]="resultadoErrors['ensayosClaros']">
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
+        @if (resultadoErrors['ensayosClaros']) {
+          <small class="error-message">
+            ⚠️ {{ resultadoErrors['ensayosClaros'] }}
+          </small>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="resultadoEquiposCalibrados">¿Equipos calibrados? *</label>
+        <select id="resultadoEquiposCalibrados"
+          [(ngModel)]="resultadoEquiposCalibrados"
+          name="resultadoEquiposCalibrados"
+          required
+          [disabled]="revisionLocked"
+          (change)="validarCampoResultadoEnTiempoReal('equiposCalibrados', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('equiposCalibrados', $event)"
+          [class.error]="resultadoErrors['equiposCalibrados']">
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
+        @if (resultadoErrors['equiposCalibrados']) {
+          <small class="error-message">
+            ⚠️ {{ resultadoErrors['equiposCalibrados'] }}
+          </small>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="resultadoPersonalCompetente">¿Personal competente? *</label>
+        <select id="resultadoPersonalCompetente"
+          [(ngModel)]="resultadoPersonalCompetente"
+          name="resultadoPersonalCompetente"
+          required
+          [disabled]="revisionLocked"
+          (change)="validarCampoResultadoEnTiempoReal('personalCompetente', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('personalCompetente', $event)"
+          [class.error]="resultadoErrors['personalCompetente']">
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
+        @if (resultadoErrors['personalCompetente']) {
+          <small class="error-message">
+            ⚠️ {{ resultadoErrors['personalCompetente'] }}
+          </small>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="resultadoInfraestructuraAdecuada">¿Infraestructura adecuada? *</label>
+        <select id="resultadoInfraestructuraAdecuada"
+          [(ngModel)]="resultadoInfraestructuraAdecuada"
+          name="resultadoInfraestructuraAdecuada"
+          required
+          [disabled]="revisionLocked"
+          (change)="validarCampoResultadoEnTiempoReal('infraestructuraAdecuada', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('infraestructuraAdecuada', $event)"
+          [class.error]="resultadoErrors['infraestructuraAdecuada']">
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
+        @if (resultadoErrors['infraestructuraAdecuada']) {
+          <small class="error-message">
+            ⚠️ {{ resultadoErrors['infraestructuraAdecuada'] }}
+          </small>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="resultadoInsumosVigentes">¿Insumos vigentes? *</label>
+        <select id="resultadoInsumosVigentes"
+          [(ngModel)]="resultadoInsumosVigentes"
+          name="resultadoInsumosVigentes"
+          required
+          [disabled]="revisionLocked"
+          (change)="validarCampoResultadoEnTiempoReal('insumosVigentes', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('insumosVigentes', $event)"
+          [class.error]="resultadoErrors['insumosVigentes']">
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
+        @if (resultadoErrors['insumosVigentes']) {
+          <small class="error-message">
+            ⚠️ {{ resultadoErrors['insumosVigentes'] }}
+          </small>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="resultadoCumpleTiempos">¿Cumple tiempos de entrega? *</label>
+        <select id="resultadoCumpleTiempos"
+          [(ngModel)]="resultadoCumpleTiempos"
+          name="resultadoCumpleTiempos"
+          required
+          [disabled]="revisionLocked"
+          (change)="validarCampoResultadoEnTiempoReal('cumpleTiempos', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('cumpleTiempos', $event)"
+          [class.error]="resultadoErrors['cumpleTiempos']">
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
+        @if (resultadoErrors['cumpleTiempos']) {
+          <small class="error-message">
+            ⚠️ {{ resultadoErrors['cumpleTiempos'] }}
+          </small>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="resultadoNormasMetodos">¿Normas y métodos especificados? *</label>
+        <select id="resultadoNormasMetodos"
+          [(ngModel)]="resultadoNormasMetodos"
+          name="resultadoNormasMetodos"
+          required
+          [disabled]="revisionLocked"
+          (change)="validarCampoResultadoEnTiempoReal('normasMetodos', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('normasMetodos', $event)"
+          [class.error]="resultadoErrors['normasMetodos']">
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
+        @if (resultadoErrors['normasMetodos']) {
+          <small class="error-message">
+            ⚠️ {{ resultadoErrors['normasMetodos'] }}
+          </small>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="resultadoMetodoValidado">¿Método validado/verificado? *</label>
+        <select id="resultadoMetodoValidado"
+          [(ngModel)]="resultadoMetodoValidado"
+          name="resultadoMetodoValidado"
+          required
+          [disabled]="revisionLocked"
+          (change)="validarCampoResultadoEnTiempoReal('metodoValidado', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('metodoValidado', $event)"
+          [class.error]="resultadoErrors['metodoValidado']">
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
+        @if (resultadoErrors['metodoValidado']) {
+          <small class="error-message">
+            ⚠️ {{ resultadoErrors['metodoValidado'] }}
+          </small>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="resultadoMetodoAdecuado">¿Método adecuado? *</label>
+        <select id="resultadoMetodoAdecuado"
+          [(ngModel)]="resultadoMetodoAdecuado"
+          name="resultadoMetodoAdecuado"
+          required
+          [disabled]="revisionLocked"
+          (change)="validarCampoResultadoEnTiempoReal('metodoAdecuado', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('metodoAdecuado', $event)"
+          [class.error]="resultadoErrors['metodoAdecuado']">
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
+          <option [ngValue]="true">Sí</option>
+          <option [ngValue]="false">No</option>
+        </select>
+        @if (resultadoErrors['metodoAdecuado']) {
+          <small class="error-message">
+            ⚠️ {{ resultadoErrors['metodoAdecuado'] }}
+          </small>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="resultadoConceptoFinal">Concepto final *</label>
+        <select id="resultadoConceptoFinal"
+          [(ngModel)]="resultadoConceptoFinal"
+          name="resultadoConceptoFinal"
+          required
+          [disabled]="revisionLocked"
+          (change)="validarCampoResultadoEnTiempoReal('conceptoFinal', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('conceptoFinal', $event)"
+          [class.error]="resultadoErrors['conceptoFinal']">
+          <option [ngValue]="null" disabled>Seleccionar opción</option>
+          @for (opt of conceptoFinalOptions; track opt.value) {
+            <option [ngValue]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        @if (resultadoErrors['conceptoFinal']) {
+          <small class="error-message">
+            ⚠️ {{ resultadoErrors['conceptoFinal'] }}
+          </small>
+        }
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field full">
+        <label for="resultadoObservacionesTecnicas">Observaciones técnicas</label>
+        <textarea id="resultadoObservacionesTecnicas"
+          [(ngModel)]="resultadoObservacionesTecnicas"
+          name="resultadoObservacionesTecnicas"
+          [disabled]="revisionLocked"
+          (input)="validarCampoResultadoEnTiempoReal('observacionesTecnicas', $event)"
+          (blur)="validarCampoResultadoEnTiempoReal('observacionesTecnicas', $event)"
+          [class.error]="resultadoErrors['observacionesTecnicas']"
+          placeholder="Observaciones técnicas"></textarea>
+        @if (resultadoErrors['observacionesTecnicas']) {
+          <small class="error-message">⚠️ {{ resultadoErrors['observacionesTecnicas'] }}</small>
+        }
+      </div>
     </div>
     
     <div class="form-actions">
@@ -1251,7 +1493,6 @@
 
   <!-- El resto del HTML permanece igual (listas de solicitudes, clientes, modales) -->
   <!-- SECCIÓN: Lista rápida de solicitudes -->
-  @if (user()?.rol !== 'Administrador') {
   <h2>Catalogo de Solicitudes</h2>
   <section>
     <div class="search-container">
@@ -1295,6 +1536,12 @@
             <div class="tags">
               <span class="tag"><strong>Código:</strong> {{ s.numero_solicitud_front || '—' }}</span>
               <span class="tag"><strong>ID:</strong> {{ s.solicitud_id }}</span>
+              <span class="tag"><strong>Estado:</strong>
+                <span class="estado-badge" [ngClass]="getEstadoClass(s.nombre_estado || s.estado || s.estado_solicitud)">
+                  <i class="fas" [class]="getEstadoIcon(s.nombre_estado || s.estado || s.estado_solicitud)"></i>
+                  {{ formatEstadoLabel(s.nombre_estado || s.estado || s.estado_solicitud || '—') }}
+                </span>
+              </span>
               <span class="tag"><strong>Cliente:</strong> {{ s.nombre_solicitante || '—' }}</span>
               <span class="tag"><strong>Tipo:</strong> {{ s.tipo_solicitud || '—' }}</span>
               <span class="tag"><strong>Muestra:</strong> {{ s.nombre_muestra || '—' }}</span>
@@ -1327,6 +1574,42 @@
               <span class="chip">Cliente: {{ s.nombre_solicitante || '—' }}</span>
               <span class="chip">Tipo: {{ s.tipo_solicitud || '—' }}</span>
             </div>
+            @if (canEditSolicitudEstado()) {
+            <div class="card-right-controls" (click)="$event.stopPropagation()">
+              <div class="type-wrap estado-select">
+                <div class="select-stack">
+                  <span class="select-label">Estado actual</span>
+                <select class="estado-select-native"
+                  [ngModel]="s.id_estado"
+                  [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="updateSolicitudEstado(s, $event)"
+                  aria-label="Estado solicitud"
+                  title="Estado">
+                  <option [ngValue]="null">Estado</option>
+                  @for (estado of estadosSolicitud; track estado.id_estado) {
+                    <option [ngValue]="estado.id_estado">{{ formatEstadoLabel(estado.nombre_estado || estado.nombre) }}</option>
+                  }
+                </select>
+                </div>
+              </div>
+              <div class="type-wrap asignar-select">
+                <div class="select-stack">
+                  <span class="select-label">Asignado a</span>
+                <select class="asignar-select-native"
+                  [ngModel]="s.id_admin ?? null"
+                  [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="updateSolicitudAsignacion(s, $event)"
+                  aria-label="Asignar administradora"
+                  title="Asignar">
+                  <option [ngValue]="null">Asignar</option>
+                  @for (admin of adminUsuarios; track admin.id_usuario) {
+                    <option [ngValue]="admin.id_usuario">{{ formatAdminLabel(admin) || ('ID ' + admin.id_usuario) }}</option>
+                  }
+                </select>
+                </div>
+              </div>
+            </div>
+            }
             <span class="toggle-icon" [class.open]="isSolicitudExpanded(s)" aria-hidden="true">▾</span>
           </div>
           
@@ -1334,15 +1617,19 @@
             <div class="equipo-detalles" (click)="$event.stopPropagation()">
               <div class="equipo-tabs-menu">
                 @for (tab of solicitudTabs; track tab.key) {
-                  <button type="button" 
-                          class="tab-btn" 
-                          [class.active]="activeSolicitudTab[s.solicitud_id] === tab.key" 
-                          (click)="selectSolicitudTab(s.solicitud_id, tab.key); $event.stopPropagation()">
-                    {{ tab.label }}
-                    @if (hasTabCompleted(s, tab.key)) {
-                      <i class="fas fa-check-circle done-icon" aria-hidden="true" title="Completado"></i>
-                    }
-                  </button>
+                  @if (user()?.rol === 'Administrador' && (tab.key === 'oferta' || tab.key === 'encuesta')) {
+                    
+                  } @else {
+                    <button type="button" 
+                            class="tab-btn" 
+                            [class.active]="activeSolicitudTab[s.solicitud_id] === tab.key" 
+                            (click)="selectSolicitudTab(s.solicitud_id, tab.key); $event.stopPropagation()">
+                      {{ tab.label }}
+                      @if (hasTabCompleted(s, tab.key)) {
+                        <i class="fas fa-check-circle done-icon" aria-hidden="true" title="Completado"></i>
+                      }
+                    </button>
+                  }
                 }
               </div>
               
@@ -1431,12 +1718,64 @@
                       <div class="seccion-titulo">Revisión</div>
                       <div class="detalle-grid-compacto">
                         <div class="detalle-item">
+                          <div class="detalle-label">Concepto final</div>
+                          <span>
+                            {{ s.concepto_final === 'SOLICITUD_VIABLE' ? 'Solicitud viable'
+                              : (s.concepto_final === 'SOLICITUD_VIABLE_CON_OBSERVACIONES' ? 'Viable con observaciones'
+                              : (s.concepto_final === 'SOLICITUD_NO_VIABLE' ? 'Solicitud no viable' : '—')) }}
+                          </span>
+                        </div>
+                        <div class="detalle-item">
                           <div class="detalle-label">Fecha estimada inicio de análisis:</div>
                           <span>{{ formatValue(s.fecha_limite_entrega) }}</span>
                         </div>
                         <div class="detalle-item">
-                          <div class="detalle-label">Servicio viable</div>
-                          <span>{{ s.servicio_es_viable === null || s.servicio_es_viable === undefined ? '—' : (s.servicio_es_viable ? 'Sí' : 'No') }}</span>
+                          <div class="detalle-label">Tipo muestra especificado</div>
+                          <span>
+                            {{ s.tipo_muestra_especificado === 'SI' ? 'Sí'
+                              : (s.tipo_muestra_especificado === 'NO' ? 'No'
+                              : (s.tipo_muestra_especificado === 'NO_APLICA' ? 'No aplica' : '—')) }}
+                          </span>
+                        </div>
+                        <div class="detalle-item">
+                          <div class="detalle-label">Ensayos claros</div>
+                          <span>{{ s.ensayos_requeridos_claros === null || s.ensayos_requeridos_claros === undefined ? '—' : (s.ensayos_requeridos_claros ? 'Sí' : 'No') }}</span>
+                        </div>
+                        <div class="detalle-item">
+                          <div class="detalle-label">Equipos calibrados</div>
+                          <span>{{ s.equipos_calibrados === null || s.equipos_calibrados === undefined ? '—' : (s.equipos_calibrados ? 'Sí' : 'No') }}</span>
+                        </div>
+                        <div class="detalle-item">
+                          <div class="detalle-label">Personal competente</div>
+                          <span>{{ s.personal_competente === null || s.personal_competente === undefined ? '—' : (s.personal_competente ? 'Sí' : 'No') }}</span>
+                        </div>
+                        <div class="detalle-item">
+                          <div class="detalle-label">Infraestructura adecuada</div>
+                          <span>{{ s.infraestructura_adecuada === null || s.infraestructura_adecuada === undefined ? '—' : (s.infraestructura_adecuada ? 'Sí' : 'No') }}</span>
+                        </div>
+                        <div class="detalle-item">
+                          <div class="detalle-label">Insumos vigentes</div>
+                          <span>{{ s.insumos_vigentes === null || s.insumos_vigentes === undefined ? '—' : (s.insumos_vigentes ? 'Sí' : 'No') }}</span>
+                        </div>
+                        <div class="detalle-item">
+                          <div class="detalle-label">Cumple tiempos</div>
+                          <span>{{ s.cumple_tiempos_entrega === null || s.cumple_tiempos_entrega === undefined ? '—' : (s.cumple_tiempos_entrega ? 'Sí' : 'No') }}</span>
+                        </div>
+                        <div class="detalle-item">
+                          <div class="detalle-label">Normas/metodos</div>
+                          <span>{{ s.normas_metodos_especificados === null || s.normas_metodos_especificados === undefined ? '—' : (s.normas_metodos_especificados ? 'Sí' : 'No') }}</span>
+                        </div>
+                        <div class="detalle-item">
+                          <div class="detalle-label">Metodo validado</div>
+                          <span>{{ s.metodo_validado_verificado === null || s.metodo_validado_verificado === undefined ? '—' : (s.metodo_validado_verificado ? 'Sí' : 'No') }}</span>
+                        </div>
+                        <div class="detalle-item">
+                          <div class="detalle-label">Metodo adecuado</div>
+                          <span>{{ s.metodo_adecuado === null || s.metodo_adecuado === undefined ? '—' : (s.metodo_adecuado ? 'Sí' : 'No') }}</span>
+                        </div>
+                        <div class="detalle-item detalle-item-full">
+                          <div class="detalle-label">Observaciones técnicas</div>
+                          <span>{{ s.observaciones_tecnicas || '—' }}</span>
                         </div>
                       </div>
                     </div>
@@ -1491,7 +1830,6 @@
       }
     </div>
   </section>
-  }
 
   <!-- Modal editar Cliente -->
   @if (editClienteModalOpen) {
@@ -1659,12 +1997,87 @@
               <div class="form-grid">
                 <div class="form-field"><label>Fecha estimada inicio de análisis:</label><input type="date" [(ngModel)]="editRevisionFechaLimite" /></div>
                 <!-- Código informe resultados removed per request -->
-                <div class="form-field"><label>Servicio viable</label>
-                  <select [(ngModel)]="editRevisionServicioViable">
+                <div class="form-field"><label>Tipo muestra especificado</label>
+                  <select [(ngModel)]="editRevisionTipoMuestraEspecificado">
+                    <option [ngValue]="null">—</option>
+                    @for (opt of tipoMuestraEspecificadoOptions; track opt.value) {
+                      <option [ngValue]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-field"><label>Ensayos requeridos claros</label>
+                  <select [(ngModel)]="editRevisionEnsayosClaros">
                     <option [ngValue]="null">—</option>
                     <option [ngValue]="true">Sí</option>
                     <option [ngValue]="false">No</option>
                   </select>
+                </div>
+                <div class="form-field"><label>Equipos calibrados</label>
+                  <select [(ngModel)]="editRevisionEquiposCalibrados">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Personal competente</label>
+                  <select [(ngModel)]="editRevisionPersonalCompetente">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Infraestructura adecuada</label>
+                  <select [(ngModel)]="editRevisionInfraestructuraAdecuada">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Insumos vigentes</label>
+                  <select [(ngModel)]="editRevisionInsumosVigentes">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Cumple tiempos entrega</label>
+                  <select [(ngModel)]="editRevisionCumpleTiempos">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Normas/metodos especificados</label>
+                  <select [(ngModel)]="editRevisionNormasMetodos">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Metodo validado/verificado</label>
+                  <select [(ngModel)]="editRevisionMetodoValidado">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Metodo adecuado</label>
+                  <select [(ngModel)]="editRevisionMetodoAdecuado">
+                    <option [ngValue]="null">—</option>
+                    <option [ngValue]="true">Sí</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Concepto final</label>
+                  <select [(ngModel)]="editRevisionConceptoFinal">
+                    <option [ngValue]="null">—</option>
+                    @for (opt of conceptoFinalOptions; track opt.value) {
+                      <option [ngValue]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-field span-full"><label>Observaciones técnicas</label>
+                  <textarea rows="3" [(ngModel)]="editRevisionObservacionesTecnicas" (input)="autoResizeTextarea($event)"></textarea>
                 </div>
               </div>
             }

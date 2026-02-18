@@ -107,6 +107,13 @@
             <span>Perfil</span>
           </button>
 
+          @if (user()?.rol === 'Administrador' || user()?.rol === 'Superadmin') {
+            <button type="button" class="user-dropdown-item" role="menuitem" (click)="openExcelModal()">
+              <i class="fas fa-file-excel" aria-hidden="true"></i>
+              <span>Excel</span>
+            </button>
+          }
+
           <button type="button" class="user-dropdown-item" role="menuitem" (click)="openUpdatesModal()">
             <i class="fas fa-envelope" aria-hidden="true"></i>
             <span>Notificaciones</span>
@@ -343,7 +350,7 @@
       @if (!updatesNotes().length) {
         <div class="updates-empty">No hay actualizaciones recientes.</div>
       } @else {
-        @for (note of updatesNotes(); track note.id) {
+        @for (note of updatesNotesSorted; track note.id) {
           <button type="button" class="update-card" (click)="openUpdateDetail(note)">
             <div class="update-date">{{ note.date | date:'dd/MM/yyyy' }}</div>
             <div class="update-title">{{ note.title }}</div>
@@ -375,6 +382,83 @@
     <div class="updates-detail-body">
       <p class="updates-detail-summary">{{ selectedUpdate()?.summary }}</p>
       <pre class="updates-detail-text">{{ selectedUpdate()?.detail }}</pre>
+    </div>
+  </div>
+}
+
+@if (excelModalOpen()) {
+  <div class="excel-modal-backdrop" (click)="closeExcelModal()"></div>
+  <div class="excel-modal" role="dialog" aria-modal="true" aria-label="Herramientas de Excel" (click)="$event.stopPropagation()">
+    <div class="excel-modal-header">
+      <div>
+        <h3>Herramientas de Excel</h3>
+        <p>Bloquear o desbloquear hojas de un archivo</p>
+      </div>
+      <button type="button" class="close-btn" (click)="closeExcelModal()" aria-label="Cerrar">×</button>
+    </div>
+
+    <div class="excel-modal-body">
+      <label class="excel-file">
+        <input type="file" accept=".xlsx,.xlsm" multiple (change)="onExcelFileSelected($event)" #excelInput />
+        <span class="excel-file-name">
+          @if (excelFileName) {
+            {{ excelFileName }}
+          } @else {
+            Seleccionar archivo .xlsx o .xlsm
+          }
+        </span>
+      </label>
+
+      @if (excelFiles.length) {
+        <div class="excel-file-list" role="list">
+          @for (f of excelFilesSorted; track f.name) {
+            <div class="excel-file-item" role="listitem">
+              <i class="fas fa-file-excel" aria-hidden="true"></i>
+              <span class="excel-file-label" [title]="f.name">{{ f.name }}</span>
+              <span class="excel-file-size">{{ formatBytes(f.size) }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      @if (excelFiles.length) {
+        <div class="excel-file-meta">
+          <span>{{ excelFiles.length }} archivo(s) seleccionados · {{ excelFilesTotalSize }}</span>
+          <button type="button" class="excel-clear" (click)="clearExcelFile(excelInput)" [disabled]="excelBusy() !== null">
+            Limpiar seleccion
+          </button>
+        </div>
+      }
+
+      <label class="excel-password">
+        <span>Contraseña para bloquear hojas (opcional)</span>
+        <input type="text" [(ngModel)]="excelPassword" placeholder="Escribe la contraseña" />
+      </label>
+
+      @if (excelMsg) {
+        <div class="excel-msg">{{ excelMsg }}</div>
+      }
+    </div>
+
+    <div class="excel-modal-actions">
+      <button type="button" class="excel-action excel-unlock" (click)="unlockExcelFile(excelInput)" [disabled]="excelBusy() !== null">
+        @if (excelBusy() === 'unlock') {
+          <i class="fas fa-spinner fa-spin"></i>
+          Desbloqueando...
+        } @else {
+          <i class="fas fa-unlock"></i>
+          Desbloquear
+        }
+      </button>
+      <button type="button" class="excel-action excel-lock" (click)="lockExcelFile(excelInput)" [disabled]="excelBusy() !== null">
+        @if (excelBusy() === 'lock') {
+          <i class="fas fa-spinner fa-spin"></i>
+          Bloqueando...
+        } @else {
+          <i class="fas fa-lock"></i>
+          Bloquear celdas con datos
+        }
+      </button>
     </div>
   </div>
 }

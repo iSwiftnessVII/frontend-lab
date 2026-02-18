@@ -1,15 +1,18 @@
-import { Component, signal, effect, OnDestroy } from '@angular/core';
+import { Component, signal, effect, OnDestroy, untracked } from '@angular/core';
 import { RouterOutlet, Router, RouterModule, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
 import { SnackbarService } from './shared/snackbar.service';
 import { CommonModule, NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { authService, authUser } from './services/auth.service';
 import { reactivosService } from './services/reactivos.service';
 import { ConfirmService } from './shared/confirm.service';
+import { excelService } from './services/excel.service';
+import { notificationsService } from './services/notifications.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterModule, CommonModule],
+  imports: [RouterOutlet, RouterModule, CommonModule, FormsModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -42,6 +45,22 @@ export class App implements OnDestroy {
   readonly updatesModalOpen = signal(false);
   readonly updatesDetailOpen = signal(false);
   readonly selectedUpdate = signal<{ id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean } | null>(null);
+  readonly readUpdateIds = signal<Set<number>>(new Set());
+  readonly excelModalOpen = signal(false);
+  readonly excelBusy = signal<'unlock' | 'lock' | null>(null);
+  excelFiles: File[] = [];
+  excelFileName: string = '';
+  excelPassword = '';
+  excelMsg = '';
+
+  get excelFilesSorted(): File[] {
+    return [...this.excelFiles].sort((a, b) => (a?.name || '').localeCompare(b?.name || '', 'es', { sensitivity: 'base' }));
+  }
+
+  get excelFilesTotalSize(): string {
+    const total = this.excelFiles.reduce((sum, f) => sum + (Number(f?.size) || 0), 0);
+    return this.formatBytes(total);
+  }
   readonly updatesNotes = signal<Array<{ id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean }>>([
     {
       id: 1,
@@ -58,8 +77,24 @@ export class App implements OnDestroy {
       summary: 'Se ampliaron guias con llaves y mini menus por modulo.',
       detail: 'Se agregaron apartados con llaves detalladas para Equipos, Volumetricos y Referencia.\nSe organizaron mini menus por bloque (material, historial e intervalos).\nSe ajusto el panel de ayuda para facilitar la navegacion.',
       hasNotes: true
+    },
+    {
+      id: 4,
+      date: '2026-02-16',
+      title: 'Excel: bloqueo y desbloqueo de hojas',
+      summary: 'Nuevo modal para bloquear o desbloquear hojas Excel desde el menu de perfil.',
+      detail: 'Se agrego un modal de Excel con soporte para multiples archivos.\nDesbloquea la proteccion de hojas con contraseña y bloquea solo celdas con informacion dejando vacias editables.\nPermite definir una contraseña al bloquear hojas.\nLa opcion solo esta visible para Administrador y Superadmin.',
+      hasNotes: true
     }
   ]);
+
+  get updatesNotesSorted() {
+    return [...this.updatesNotes()].sort((a, b) => {
+      const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return (b.id || 0) - (a.id || 0);
+    });
+  }
   
   // NUEVO: Signals para los menús seleccionados
   readonly selectedInventory = signal<string | null>(null);
@@ -84,6 +119,18 @@ export class App implements OnDestroy {
         this.reactivosPorVencerCount.set(0);
         this.reactivosVencidosCount.set(0);
       }
+    });
+
+    effect(() => {
+      const u = this.user();
+      untracked(() => {
+        if (u) {
+          void this.loadUpdateReads();
+        } else {
+          this.readUpdateIds.set(new Set());
+          this.updatesNotes.set(this.hydrateUpdatesNotes());
+        }
+      });
     });
 
     // Theme init (dark/light)
@@ -123,7 +170,7 @@ export class App implements OnDestroy {
     // Setup footer visibility detection (show footer only when page is scrollable)
     this.setupFooterDetection();
 
-    this.hydrateUpdatesNotes();
+    this.updatesNotes.set(this.hydrateUpdatesNotes());
   }
 
   hasUpdateNotes(): boolean {
@@ -135,14 +182,118 @@ export class App implements OnDestroy {
     this.updatesModalOpen.set(true);
   }
 
+  openExcelModal(): void {
+    const rol = this.user()?.rol;
+    if (rol !== 'Administrador' && rol !== 'Superadmin') {
+      this.snack.warn('No tienes permisos para usar Excel');
+      return;
+    }
+    this.menuOpen.set(false);
+    this.excelModalOpen.set(true);
+    this.excelMsg = '';
+  }
+
+  closeExcelModal(): void {
+    if (this.excelBusy()) return;
+    this.excelModalOpen.set(false);
+  }
+
+  onExcelFileSelected(ev: Event): void {
+    const input = ev.target as HTMLInputElement | null;
+    const files = input?.files ? Array.from(input.files) : [];
+    this.excelFiles = files;
+    if (files.length === 1) {
+      this.excelFileName = files[0].name || '';
+    } else if (files.length > 1) {
+      this.excelFileName = `${files.length} archivos seleccionados`;
+    } else {
+      this.excelFileName = '';
+    }
+    this.excelMsg = '';
+  }
+
+  clearExcelFile(input?: HTMLInputElement): void {
+    this.excelFiles = [];
+    this.excelFileName = '';
+    this.excelPassword = '';
+    this.excelMsg = '';
+    if (input) input.value = '';
+  }
+
+  private downloadExcel(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  formatBytes(bytes: number): string {
+    const value = Number(bytes) || 0;
+    if (value <= 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const idx = Math.min(units.length - 1, Math.floor(Math.log(value) / Math.log(1024)));
+    const sized = value / Math.pow(1024, idx);
+    return `${sized.toFixed(sized >= 10 || idx === 0 ? 0 : 1)} ${units[idx]}`;
+  }
+
+  async unlockExcelFile(input?: HTMLInputElement): Promise<void> {
+    if (!this.excelFiles.length) {
+      this.snack.warn('Selecciona un archivo Excel');
+      return;
+    }
+    this.excelBusy.set('unlock');
+    this.excelMsg = '';
+    try {
+      for (const file of this.excelFiles) {
+        const { blob, filename } = await excelService.unlockExcel(file);
+        this.downloadExcel(blob, filename);
+      }
+      this.excelMsg = this.excelFiles.length > 1 ? 'Archivos desbloqueados.' : 'Archivo desbloqueado.';
+      this.snack.success(this.excelMsg);
+      this.clearExcelFile(input);
+    } catch (err: any) {
+      const msg = err?.message || 'No se pudo desbloquear el archivo';
+      this.excelMsg = msg;
+      this.snack.error(msg);
+    } finally {
+      this.excelBusy.set(null);
+    }
+  }
+
+  async lockExcelFile(input?: HTMLInputElement): Promise<void> {
+    if (!this.excelFiles.length) {
+      this.snack.warn('Selecciona un archivo Excel');
+      return;
+    }
+    this.excelBusy.set('lock');
+    this.excelMsg = '';
+    try {
+      for (const file of this.excelFiles) {
+        const { blob, filename } = await excelService.lockExcel(file, this.excelPassword);
+        this.downloadExcel(blob, filename);
+      }
+      this.excelMsg = this.excelFiles.length > 1 ? 'Archivos bloqueados.' : 'Archivo bloqueado.';
+      this.snack.success(this.excelMsg);
+      this.clearExcelFile(input);
+    } catch (err: any) {
+      const msg = err?.message || 'No se pudo bloquear el archivo';
+      this.excelMsg = msg;
+      this.snack.error(msg);
+    } finally {
+      this.excelBusy.set(null);
+    }
+  }
+
   closeUpdatesModal(): void {
     this.updatesModalOpen.set(false);
   }
 
-  openUpdateDetail(note: { id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean }): void {
+  async openUpdateDetail(note: { id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean }): Promise<void> {
     this.updatesModalOpen.set(false);
     if (note?.hasNotes) {
-      this.markUpdateAsRead(note.id);
+      await this.markUpdateAsRead(note.id);
       const updated = this.hydrateUpdatesNotes();
       this.updatesNotes.set(updated);
       const normalized = updated.find((item) => item.id === note.id) || note;
@@ -154,29 +305,39 @@ export class App implements OnDestroy {
   }
 
   private hydrateUpdatesNotes(): Array<{ id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean }> {
-    const readIds = this.getReadUpdateIds();
-    return this.updatesNotes().map((item) => (
-      readIds.has(item.id) ? { ...item, hasNotes: false } : item
-    ));
+    const readIds = this.readUpdateIds();
+    return this.updatesNotes().map((item) => ({
+      ...item,
+      hasNotes: !readIds.has(item.id)
+    }));
   }
 
-  private getReadUpdateIds(): Set<number> {
+  private async loadUpdateReads(): Promise<void> {
     try {
-      const raw = window.localStorage?.getItem('liba.updates.read') || '[]';
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        return new Set(parsed.map((id) => Number(id)).filter((id) => Number.isFinite(id)));
-      }
-    } catch {}
-    return new Set();
+      const ids = await notificationsService.getReadUpdateIds();
+      this.readUpdateIds.set(new Set(ids));
+    } catch {
+      // keep local state if backend is unavailable
+    } finally {
+      this.updatesNotes.set(this.hydrateUpdatesNotes());
+    }
   }
 
-  private markUpdateAsRead(id: number): void {
+  private async markUpdateAsRead(id: number): Promise<void> {
+    const prev = new Set(this.readUpdateIds());
+    if (prev.has(id)) return;
+    const next = new Set(prev);
+    next.add(id);
+    this.readUpdateIds.set(next);
+    this.updatesNotes.set(this.hydrateUpdatesNotes());
+
     try {
-      const readIds = this.getReadUpdateIds();
-      readIds.add(id);
-      window.localStorage?.setItem('liba.updates.read', JSON.stringify(Array.from(readIds)));
-    } catch {}
+      await notificationsService.markUpdatesRead([id]);
+    } catch (err: any) {
+      this.readUpdateIds.set(prev);
+      this.updatesNotes.set(this.hydrateUpdatesNotes());
+      this.snack.error(err?.message || 'No se pudo guardar la notificacion como leida');
+    }
   }
 
   closeUpdateDetail(): void {

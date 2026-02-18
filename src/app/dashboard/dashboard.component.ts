@@ -10,7 +10,8 @@ import { VolumetricosService } from '../services/volumetricos.service';
 import { ReferenciaService } from '../services/referencia.service';
 import { HttpClientModule } from '@angular/common/http';
 
-const API_SOLICITUDES = (window as any).__env?.API_SOLICITUDES || 'http://localhost:42420/api/solicitudes';
+const API_SOLICITUDES_BASE = (window as any).__env?.API_SOLICITUDES || 'http://localhost:42420/api/solicitudes';
+const API_SOLICITUDES_DETALLE_LISTA = (window as any).__env?.API_SOLICITUDES_DETALLE_LISTA || (API_SOLICITUDES_BASE + '/detalle/lista');
 
 @Component({
   standalone: true,
@@ -225,7 +226,7 @@ export class DashboardComponent implements OnInit {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch(API_SOLICITUDES, { headers });
+      const res = await fetch(API_SOLICITUDES_DETALLE_LISTA, { headers });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const payload = await res.json();
       const solicitudes = Array.isArray(payload) ? payload : (payload?.rows || payload?.data || []);
@@ -246,7 +247,7 @@ export class DashboardComponent implements OnInit {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch(API_SOLICITUDES + '/clientes', { headers });
+      const res = await fetch(API_SOLICITUDES_BASE + '/clientes', { headers });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const clientes = await res.json();
       this.clientesData.set(clientes);
@@ -264,6 +265,10 @@ export class DashboardComponent implements OnInit {
 
   private isUnset(val: any): boolean {
     return val === null || val === undefined || val === '';
+  }
+
+  private getConceptoFinal(val: any): string {
+    return String(val || '').trim().toUpperCase();
   }
 
   private isActiveFlag(val: any): boolean | null {
@@ -496,6 +501,9 @@ export class DashboardComponent implements OnInit {
 
   contarSolicitudesViable(): number {
     return this.solicitudesData().filter(s => {
+      const concepto = this.getConceptoFinal((s as any).concepto_final);
+      if (concepto === 'SOLICITUD_VIABLE' || concepto === 'SOLICITUD_VIABLE_CON_OBSERVACIONES') return true;
+      if (concepto === 'SOLICITUD_NO_VIABLE') return false;
       return this.isTruthyFlag((s as any).servicio_es_viable);
     }).length;
   }
@@ -508,13 +516,20 @@ export class DashboardComponent implements OnInit {
 
   contarSolicitudesNoViable(): number {
     return this.solicitudesData().filter(s => {
+      const concepto = this.getConceptoFinal((s as any).concepto_final);
+      if (concepto === 'SOLICITUD_NO_VIABLE') return true;
+      if (concepto === 'SOLICITUD_VIABLE' || concepto === 'SOLICITUD_VIABLE_CON_OBSERVACIONES') return false;
       const val = (s as any).servicio_es_viable;
       return !this.isUnset(val) && !this.isTruthyFlag(val);
     }).length;
   }
 
   contarSolicitudesRevisionPendiente(): number {
-    return this.solicitudesData().filter(s => this.isUnset((s as any).servicio_es_viable)).length;
+    return this.solicitudesData().filter(s => {
+      const concepto = this.getConceptoFinal((s as any).concepto_final);
+      if (concepto) return false;
+      return this.isUnset((s as any).servicio_es_viable);
+    }).length;
   }
 
   contarSolicitudesOfertaPendiente(): number {

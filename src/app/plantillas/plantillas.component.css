@@ -585,8 +585,19 @@
 
 .plantillas-page .button-group {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.75rem;
+  align-items: center;
+}
+
+.plantillas-page .button-group .btn {
+  width: auto;
+}
+
+@media (max-width: 720px) {
+  .plantillas-page .button-group {
+    flex-wrap: wrap;
+  }
 }
 
 .section-card {

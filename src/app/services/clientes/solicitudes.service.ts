@@ -4,6 +4,8 @@ import { authService } from '../auth.service';
 const API = (window as any).__env?.API_SOLICITUDES || 'http://localhost:4000/api/solicitudes';
 const API_DETALLE_LISTA = (window as any).__env?.API_SOLICITUDES_DETALLE_LISTA || 
                          'http://localhost:4000/api/solicitudes/detalle/lista';
+const API_DETALLE = (window as any).__env?.API_SOLICITUDES_DETALLE || (API + '/detalle');
+const API_ESTADOS = (window as any).__env?.API_SOLICITUDES_ESTADOS || (API + '/estados');
 const API_DOC_PLANTILLAS_BASE = String(
   (window as any).__env?.API_SOLICITUDES_DOC_PLANTILLAS ?? (API + '/documentos/plantillas')
 ).replace(/\/+$/g, '');
@@ -89,6 +91,30 @@ export class SolicitudesService {
     }
   }
 
+  async getSolicitudDetalleById(id: number): Promise<any> {
+    const res = await fetch(`${API_DETALLE}/${id}`, {
+      headers: this.getAuthHeaders()
+    });
+    if (res.status === 401) {
+      throw new Error('No autorizado - Token inválido o expirado');
+    }
+    if (!res.ok) {
+      throw new Error(`Error ${res.status}: ${await res.text()}`);
+    }
+    const data = await res.json();
+    const normalized = this.normalizeSolicitud(data);
+    try {
+      const current = this._solicitudes();
+      const next = current.map((s) => {
+        const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
+        return sid === Number(id) ? normalized : s;
+      });
+      const has = next.some((s) => Number(s?.solicitud_id ?? s?.id_solicitud ?? 0) === Number(id));
+      this._solicitudes.set(has ? next : [normalized, ...next]);
+    } catch {}
+    return normalized;
+  }
+
   // Normalización corregida
   private normalizeSolicitud(s: any): any {
     if (!s || typeof s !== 'object') return s;
@@ -105,13 +131,53 @@ export class SolicitudesService {
     // IMPORTANTE: Los campos vienen directamente del JOIN en solicitudesController.js
     // Usamos los nombres exactos que devuelve la consulta SQL
     
+    const parseNumericString = (value: string): number | null => {
+      const rawInput = String(value || '').replace(/[^0-9,.-]/g, '').trim();
+      if (!rawInput) return null;
+      const negative = rawInput.startsWith('-');
+      const raw = rawInput.replace(/-/g, '');
+      const hasComma = raw.includes(',');
+      const hasDot = raw.includes('.');
+      const lastDot = raw.lastIndexOf('.');
+      const lastComma = raw.lastIndexOf(',');
+      let intPart = '';
+      let decPart = '';
+
+      if (hasComma && (!hasDot || lastComma > lastDot)) {
+        const normalized = raw.replace(/\./g, '').replace(/,/g, '.');
+        const parts = normalized.split('.');
+        intPart = parts[0] || '';
+        decPart = parts[1] || '';
+      } else if (hasDot) {
+        const digitsAfterDot = raw.length - lastDot - 1;
+        if (digitsAfterDot > 2) {
+          intPart = raw.replace(/\./g, '');
+        } else {
+          intPart = raw.slice(0, lastDot).replace(/\./g, '');
+          decPart = raw.slice(lastDot + 1).replace(/\./g, '');
+        }
+      } else {
+        intPart = raw;
+      }
+
+      const normalizedValue = decPart ? `${intPart}.${decPart}` : intPart;
+      if (!normalizedValue) return null;
+      const parsed = Number(normalizedValue);
+      if (isNaN(parsed)) return null;
+      return negative ? -parsed : parsed;
+    };
+
     // Procesar valor_cotizacion
     let valor_cotizacion = s?.valor_cotizacion ?? null;
     if (typeof valor_cotizacion === 'string') {
-      const cleaned = valor_cotizacion.replace(/[^0-9.,-]/g, '').replace(/\./g, '').replace(',', '.');
-      const parsed = parseFloat(cleaned);
-      valor_cotizacion = isNaN(parsed) ? null : parsed;
+      const parsed = parseNumericString(valor_cotizacion);
+      valor_cotizacion = parsed === null ? null : parsed;
     }
+
+    const toBoolOrNull = (val: any): boolean | null => {
+      if (val === null || val === undefined) return null;
+      return Number(val) === 1 || val === true;
+    };
 
     return {
       ...s,
@@ -121,6 +187,10 @@ export class SolicitudesService {
       fecha_solicitud: fecha,
       nombre_solicitante: nombreSolicitante,
       nombre_muestra: nombreMuestra,
+      id_estado: s?.id_estado ?? null,
+      nombre_estado: s?.nombre_estado ?? s?.estado_solicitud ?? null,
+      id_admin: s?.id_admin ?? null,
+      admin_email: s?.admin_email ?? null,
 
       // Campos básicos de la solicitud
       lote_producto: s?.lote_producto ?? null,
@@ -128,7 +198,7 @@ export class SolicitudesService {
       tipo_muestra: s?.tipo_muestra ?? null,
       tipo_empaque: s?.tipo_empaque ?? null,
       analisis_requerido: s?.analisis_requerido ?? null,
-      req_analisis: s?.req_analisis === null ? null : (Number(s.req_analisis) === 1 || s.req_analisis === true),
+      req_analisis: toBoolOrNull(s?.req_analisis),
       cant_muestras: s?.cant_muestras ?? null,
       solicitud_recibida: s?.solicitud_recibida ?? null,
       fecha_entrega_muestra: s?.fecha_entrega_muestra ?? null,
@@ -137,22 +207,37 @@ export class SolicitudesService {
       observaciones: s?.observaciones ?? null,
 
       // Oferta - nombres exactos del JOIN
-      genero_cotizacion: s?.genero_cotizacion === null ? null : (Number(s.genero_cotizacion) === 1 || s.genero_cotizacion === true),
+      genero_cotizacion: toBoolOrNull(s?.genero_cotizacion),
       valor_cotizacion: valor_cotizacion,
       fecha_envio_oferta: s?.fecha_envio_oferta ?? null,
-      realizo_seguimiento_oferta: s?.realizo_seguimiento_oferta === null ? null : (Number(s.realizo_seguimiento_oferta) === 1 || s.realizo_seguimiento_oferta === true),
+      realizo_seguimiento_oferta: toBoolOrNull(s?.realizo_seguimiento_oferta),
       observacion_oferta: s?.observacion_oferta ?? null,
 
       // Revisión - nombres exactos del JOIN
       fecha_limite_entrega: s?.fecha_limite_entrega ?? null,
-      servicio_es_viable: s?.servicio_es_viable === null ? null : (Number(s.servicio_es_viable) === 1 || s.servicio_es_viable === true),
+      tipo_muestra_especificado: s?.tipo_muestra_especificado ?? null,
+      ensayos_requeridos_claros: toBoolOrNull(s?.ensayos_requeridos_claros),
+      equipos_calibrados: toBoolOrNull(s?.equipos_calibrados),
+      personal_competente: toBoolOrNull(s?.personal_competente),
+      infraestructura_adecuada: toBoolOrNull(s?.infraestructura_adecuada),
+      insumos_vigentes: toBoolOrNull(s?.insumos_vigentes),
+      cumple_tiempos_entrega: toBoolOrNull(s?.cumple_tiempos_entrega),
+      normas_metodos_especificados: toBoolOrNull(s?.normas_metodos_especificados),
+      metodo_validado_verificado: toBoolOrNull(s?.metodo_validado_verificado),
+      metodo_adecuado: toBoolOrNull(s?.metodo_adecuado),
+      observaciones_tecnicas: s?.observaciones_tecnicas ?? null,
+      concepto_final: s?.concepto_final ?? null,
+      servicio_es_viable: s?.servicio_es_viable === null || s?.servicio_es_viable === undefined
+        ? (s?.concepto_final === 'SOLICITUD_VIABLE' || s?.concepto_final === 'SOLICITUD_VIABLE_CON_OBSERVACIONES')
+        : (Number(s.servicio_es_viable) === 1 || s.servicio_es_viable === true),
 
       // Encuesta - nombres exactos del JOIN
       fecha_encuesta: s?.fecha_encuesta ?? null,
+      fecha_realizacion_encuesta: s?.fecha_realizacion_encuesta ?? null,
       comentarios: s?.comentarios ?? null,
-      recomendaria_servicio: s?.recomendaria_servicio === null ? null : (Number(s.recomendaria_servicio) === 1 || s.recomendaria_servicio === true),
-      cliente_respondio: s?.cliente_respondio === null ? null : (Number(s.cliente_respondio) === 1 || s.cliente_respondio === true),
-      solicito_nueva_encuesta: s?.solicito_nueva_encuesta === null ? null : (Number(s.solicito_nueva_encuesta) === 1 || s.solicito_nueva_encuesta === true)
+      recomendaria_servicio: toBoolOrNull(s?.recomendaria_servicio),
+      cliente_respondio: toBoolOrNull(s?.cliente_respondio),
+      solicito_nueva_encuesta: toBoolOrNull(s?.solicito_nueva_encuesta)
     };
   }
 
@@ -202,6 +287,45 @@ export class SolicitudesService {
       return optimistic;
   }
 
+  async listarEstadosSolicitud(): Promise<any[]> {
+    const res = await fetch(API_ESTADOS, { headers: this.getAuthHeaders() });
+    if (res.status === 401) {
+      throw new Error('No autorizado - Token inválido o expirado');
+    }
+    if (!res.ok) {
+      throw new Error(await this.readApiError(res, 'Error cargando estados'));
+    }
+    return res.json();
+  }
+
+  async actualizarEstadoSolicitud(id: number, id_estado: number): Promise<void> {
+    const res = await fetch(`${API}/${id}/estado`, {
+      method: 'PATCH',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ id_estado })
+    });
+    if (res.status === 401) {
+      throw new Error('No autorizado - Token inválido o expirado');
+    }
+    if (!res.ok) {
+      throw new Error(await this.readApiError(res, 'Error actualizando estado'));
+    }
+  }
+
+  async asignarSolicitud(id: number, id_admin: number | null): Promise<void> {
+    const res = await fetch(`${API}/${id}/asignacion`, {
+      method: 'PATCH',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ id_admin })
+    });
+    if (res.status === 401) {
+      throw new Error('No autorizado - Token inválido o expirado');
+    }
+    if (!res.ok) {
+      throw new Error(await this.readApiError(res, 'Error actualizando asignación'));
+    }
+  }
+
   async upsertOferta(id_solicitud: number, body: any): Promise<void> {
     const url = API + '/oferta/' + id_solicitud;
     const res = await fetch(url, {
@@ -242,8 +366,6 @@ export class SolicitudesService {
       });
       this._solicitudes.set(next);
     } catch {}
-    // Refresh in background
-    this.loadSolicitudes().catch(err => console.warn('Refresh after upsertOferta failed', err));
   }
 
   async upsertRevision(id_solicitud: number, body: any): Promise<void> {
@@ -270,14 +392,24 @@ export class SolicitudesService {
         const merged = {
           ...s,
           fecha_limite_entrega: body?.fecha_limite_entrega ?? s?.fecha_limite_entrega ?? null,
+          tipo_muestra_especificado: body?.tipo_muestra_especificado ?? s?.tipo_muestra_especificado ?? null,
+          ensayos_requeridos_claros: body?.ensayos_requeridos_claros ?? s?.ensayos_requeridos_claros ?? null,
+          equipos_calibrados: body?.equipos_calibrados ?? s?.equipos_calibrados ?? null,
+          personal_competente: body?.personal_competente ?? s?.personal_competente ?? null,
+          infraestructura_adecuada: body?.infraestructura_adecuada ?? s?.infraestructura_adecuada ?? null,
+          insumos_vigentes: body?.insumos_vigentes ?? s?.insumos_vigentes ?? null,
+          cumple_tiempos_entrega: body?.cumple_tiempos_entrega ?? s?.cumple_tiempos_entrega ?? null,
+          normas_metodos_especificados: body?.normas_metodos_especificados ?? s?.normas_metodos_especificados ?? null,
+          metodo_validado_verificado: body?.metodo_validado_verificado ?? s?.metodo_validado_verificado ?? null,
+          metodo_adecuado: body?.metodo_adecuado ?? s?.metodo_adecuado ?? null,
+          observaciones_tecnicas: body?.observaciones_tecnicas ?? s?.observaciones_tecnicas ?? null,
+          concepto_final: body?.concepto_final ?? s?.concepto_final ?? null,
           servicio_es_viable: body?.servicio_es_viable ?? s?.servicio_es_viable ?? null
         };
         return this.normalizeSolicitud(merged);
       });
       this._solicitudes.set(next);
     } catch {}
-    // Refresh in background to reconcile with DB (joined data)
-    this.loadSolicitudes().catch(err => console.warn('Refresh after upsertRevision failed', err));
   }
 
   async upsertSeguimientoEncuesta(id_solicitud: number, body: any): Promise<void> {
@@ -314,8 +446,6 @@ export class SolicitudesService {
       });
       this._solicitudes.set(next);
     } catch {}
-    // Refresh in background
-    this.loadSolicitudes().catch(err => console.warn('Refresh after upsertSeguimientoEncuesta failed', err));
   }
 
   async updateSolicitud(id: any, body: any): Promise<void> {

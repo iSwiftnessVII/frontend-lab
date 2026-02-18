@@ -91,8 +91,36 @@ export class UtilsService {
       let num: number;
       if (typeof val === 'number') num = val;
       else {
-        const cleaned = String(val).replace(/[^0-9,.-]/g, '').replace(/,/g, '.');
-        num = parseFloat(cleaned);
+        const rawInput = String(val || '').replace(/[^0-9,.-]/g, '').trim();
+        const negative = rawInput.startsWith('-');
+        const raw = rawInput.replace(/-/g, '');
+        const hasComma = raw.includes(',');
+        const hasDot = raw.includes('.');
+        const lastDot = raw.lastIndexOf('.');
+        const lastComma = raw.lastIndexOf(',');
+        let intPart = '';
+        let decPart = '';
+
+        if (hasComma && (!hasDot || lastComma > lastDot)) {
+          const normalized = raw.replace(/\./g, '').replace(/,/g, '.');
+          const parts = normalized.split('.');
+          intPart = parts[0] || '';
+          decPart = parts[1] || '';
+        } else if (hasDot) {
+          const digitsAfterDot = raw.length - lastDot - 1;
+          if (digitsAfterDot > 2) {
+            intPart = raw.replace(/\./g, '');
+          } else {
+            intPart = raw.slice(0, lastDot).replace(/\./g, '');
+            decPart = raw.slice(lastDot + 1).replace(/\./g, '');
+          }
+        } else {
+          intPart = raw;
+        }
+
+        const normalizedValue = decPart ? `${intPart}.${decPart}` : intPart;
+        num = normalizedValue ? Number(normalizedValue) : NaN;
+        if (negative && !isNaN(num)) num = -num;
       }
       if (isNaN(num)) return String(val);
       // Use 'es-CO' locale to get '.' as thousands separator and ',' as decimals

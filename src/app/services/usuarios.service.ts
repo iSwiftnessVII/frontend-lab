@@ -181,6 +181,39 @@ export const usuariosService = {
     return data;
   },
 
+  async getPermisosAuxiliaresBatch(ids: number[]): Promise<Record<number, Record<string, boolean>>> {
+    const clean = Array.from(new Set((ids || [])
+      .map((v) => (typeof v === 'number' ? v : parseInt(String(v), 10)))
+      .filter((v) => Number.isFinite(v))));
+
+    if (!clean.length) return {};
+
+    const qs = encodeURIComponent(clean.join(','));
+    const res = await fetch(`${API_BASE}/permisos?ids=${qs}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() } as HeadersInit
+    });
+
+    let data: any = null;
+    try {
+      data = await res.json();
+    } catch {}
+
+    if (!res.ok) {
+      throw new Error((data && data.message) || 'Error obteniendo permisos auxiliares');
+    }
+
+    const rows = Array.isArray(data) ? data : (data?.rows || []);
+    const map: Record<number, Record<string, boolean>> = {};
+    for (const row of rows) {
+      const uid = Number(row?.usuario_id);
+      if (!Number.isFinite(uid)) continue;
+      map[uid] = row?.permisos || {};
+    }
+
+    return map;
+  },
+
   async setPermisosAuxiliares(id: number, permisos: Record<string, boolean>): Promise<any> {
     const res = await fetch(`${API_BASE}/permisos/${id}`, {
       method: 'PATCH',

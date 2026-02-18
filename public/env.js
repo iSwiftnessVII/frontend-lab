@@ -29,10 +29,11 @@
   window.__env.API_SOLICITUDES = window.__env.API_SOLICITUDES || (window.__env.API_BASE + '/solicitudes');
   window.__env.API_VOLUMETRICOS = window.__env.API_VOLUMETRICOS || (window.__env.API_BASE + '/volumetricos');
   window.__env.API_REFERENCIA = window.__env.API_REFERENCIA || (window.__env.API_BASE + '/referencia');
+  window.__env.API_EXCEL = window.__env.API_EXCEL || (window.__env.API_BASE + '/excel');
   window.__env.API_SOLICITUDES_DETALLE = window.__env.API_SOLICITUDES_DETALLE || (window.__env.API_SOLICITUDES + '/detalle');
   window.__env.API_SOLICITUDES_DETALLE_LISTA = window.__env.API_SOLICITUDES_DETALLE_LISTA || (window.__env.API_SOLICITUDES_DETALLE + '/lista');
   window.__env.API_HISTORIAL_HV = window.__env.API_HISTORIAL_HV || (window.__env.API_EQUIPOS + '/historial');
   window.__env.API_INTERVALO_HV = window.__env.API_INTERVALO_HV || (window.__env.API_EQUIPOS + '/intervalo');
   window.__env.API_FICHA_TECNICA = window.__env.API_FICHA_TECNICA || (window.__env.API_EQUIPOS + '/ficha-tecnica');
-    window.__env.APP_VERSION = window.__env.APP_VERSION || '1.2.1';
+    window.__env.APP_VERSION = window.__env.APP_VERSION || '1.2.5';
 }(window));

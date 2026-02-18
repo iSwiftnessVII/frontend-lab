@@ -105,8 +105,9 @@ export class UsuariosComponent implements OnInit, OnDestroy {
       this.usuariosSig.set(this.usuarios);
       this.usuariosFiltrados = this.usuarios.slice();
       this.usuariosFiltradosSig.set(this.usuariosFiltrados);
-      await this.loadAuxPermsForUsers();
       this.aplicarFiltros();
+      // Cargar permisos auxiliares en segundo plano para no bloquear la lista
+      void this.loadAuxPermsForUsers();
     } catch (err) {
       console.error('Error en precarga de usuarios/roles:', err);
       this.snack.error('Error cargando datos de usuarios');
@@ -133,8 +134,9 @@ export class UsuariosComponent implements OnInit, OnDestroy {
       // asegurar que la lista filtrada también se inicializa inmediatamente
       this.usuariosFiltrados = this.usuarios.slice();
       this.usuariosFiltradosSig.set(this.usuariosFiltrados);
-      await this.loadAuxPermsForUsers();
       this.aplicarFiltros();
+      // Cargar permisos auxiliares en segundo plano para no bloquear la lista
+      void this.loadAuxPermsForUsers();
     } catch (err) {
       console.error('Error cargando usuarios:', err);
       this.snack.error('Error cargando usuarios');
@@ -426,6 +428,20 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     if (!auxUsers.length) return;
 
     const updates: Record<number, Record<string, boolean>> = { ...this.auxPermsSig() };
+    const ids = auxUsers.map(u => Number(u.id_usuario)).filter(n => Number.isFinite(n));
+
+    try {
+      const batch = await usuariosService.getPermisosAuxiliaresBatch(ids);
+      for (const id of ids) {
+        const perms = batch[id];
+        updates[id] = this.normalizeAuxPerms(perms);
+      }
+      this.auxPermsSig.set(updates);
+      return;
+    } catch {
+      // fallback: per-user requests
+    }
+
     await Promise.all(auxUsers.map(async (u) => {
       try {
         const data = await usuariosService.getPermisosAuxiliares(u.id_usuario);
@@ -460,16 +476,24 @@ export class UsuariosComponent implements OnInit, OnDestroy {
 
   // Función para cambiar el rol
   async cambiarRol(usuario: any, nuevoRolId: number) {
-    const rolSeleccionado = this.roles.find(r => r.id_rol === nuevoRolId);
+    const rolId = Number(nuevoRolId);
+    const rolSeleccionado = this.roles.find(r => Number(r.id_rol) === rolId);
     const nombreRol = rolSeleccionado ? rolSeleccionado.nombre : 'Desconocido';
 
-    if (!confirm(`¿Está seguro de cambiar el rol de ${usuario.email} a ${nombreRol}?`)) {
+    const ok = await this.confirm.confirm({
+      title: 'Cambiar rol',
+      message: `¿Está seguro de cambiar el rol de ${usuario.email} a ${nombreRol}?`,
+      confirmText: 'Confirmar',
+      cancelText: 'Cancelar',
+      danger: true
+    });
+    if (!ok) {
       await this.loadUsuarios();
       return;
     }
 
     try {
-      await usuariosService.cambiarRol(usuario.id_usuario, nuevoRolId);
+      await usuariosService.cambiarRol(usuario.id_usuario, rolId);
       this.snack.success('Rol actualizado correctamente');
       await this.loadUsuarios();
     } catch (err: any) {
