@@ -8,6 +8,27 @@ function authHeaders(): Record<string, string> {
 }
 
 export const usuariosService = {
+    /**
+     * Cambiar nombre de un usuario
+     */
+    async cambiarNombre(id: number, nombre: string): Promise<any> {
+      const res = await fetch(`${API_BASE}/nombre/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() } as HeadersInit,
+        body: JSON.stringify({ nombre })
+      });
+
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {}
+
+      if (!res.ok) {
+        throw new Error((data && data.message) || 'Error actualizando nombre');
+      }
+
+      return data;
+    },
   /**
    * Listar todos los usuarios
    */
@@ -47,6 +68,7 @@ export const usuariosService = {
    */
   async crearUsuario(usuario: {
     email: string;
+    nombre: string;
     contrasena: string;
     rol_id: number;
   }): Promise<any> {

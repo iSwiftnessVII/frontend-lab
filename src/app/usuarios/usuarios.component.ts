@@ -20,6 +20,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
 
   // Formulario crear usuario
   email: string = '';
+  nombre: string = '';
   contrasena: string = '';
   rol_id: any = '';
   mensaje: string = '';
@@ -74,6 +75,8 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   editUserModalOpen = false;
   editUserId: number | null = null;
   editUserEmail: string = '';
+  editNombre: string = '';
+  editNombreOriginal: string = '';
   editNuevaContrasena: string = '';
   editNuevaContrasena2: string = '';
   editSubmitted = false;
@@ -151,8 +154,9 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     e.preventDefault();
     this.mensaje = '';
 
+
     // Validaciones
-    if (!this.email.trim() || !this.contrasena.trim() || !this.rol_id) {
+    if (!this.email.trim() || !this.nombre.trim() || !this.contrasena.trim() || !this.rol_id) {
       this.snack.warn('Todos los campos son requeridos');
       return;
     }
@@ -170,6 +174,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     try {
       await usuariosService.crearUsuario({
         email: this.email.trim(),
+        nombre: this.nombre.trim(),
         contrasena: this.contrasena,
         rol_id: parseInt(this.rol_id)
       });
@@ -226,6 +231,8 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   abrirModalEditar(usuario: any) {
     this.editUserId = usuario.id_usuario;
     this.editUserEmail = usuario.email;
+    this.editNombre = usuario.nombre || '';
+    this.editNombreOriginal = usuario.nombre || '';
     this.editNuevaContrasena = '';
     this.editNuevaContrasena2 = '';
     this.editSubmitted = false;
@@ -237,35 +244,52 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.editSubmitted = false;
     this.editUserId = null;
     this.editUserEmail = '';
+    this.editNombre = '';
+    this.editNombreOriginal = '';
     this.editNuevaContrasena = '';
     this.editNuevaContrasena2 = '';
   }
 
-  async guardarNuevaContrasena(form?: NgForm) {
+  async guardarEdicionUsuario(form?: NgForm) {
     this.editSubmitted = true;
     if (form && form.invalid) {
       try { form.control.markAllAsTouched(); } catch {}
       return;
     }
+    const nombre = (this.editNombre || '').trim();
     const p1 = (this.editNuevaContrasena || '').trim();
     const p2 = (this.editNuevaContrasena2 || '').trim();
-    if (!p1 || !p2) return;
-    if (p1.length < 6) {
+    if (this.editUserId == null) return;
+    if (!nombre || nombre.length > 150) {
+      this.snack.warn('Nombre inválido');
+      return;
+    }
+    if ((p1 || p2) && p1.length < 6) {
       this.snack.warn('La contraseña debe tener al menos 6 caracteres');
       return;
     }
-    if (p1 !== p2) {
+    if ((p1 || p2) && p1 !== p2) {
       this.snack.warn('Las contraseñas no coinciden');
       return;
     }
-    if (this.editUserId == null) return;
+    const nombreCambio = nombre !== (this.editNombreOriginal || '');
+    const passwordCambio = !!p1 || !!p2;
+    if (!nombreCambio && !passwordCambio) {
+      this.snack.warn('No hay cambios para guardar');
+      return;
+    }
     try {
-      await usuariosService.cambiarContrasena(this.editUserId, p1);
-      this.snack.success('Contraseña actualizada correctamente');
+      if (nombreCambio) {
+        await usuariosService.cambiarNombre(this.editUserId, nombre);
+      }
+      if (passwordCambio) {
+        await usuariosService.cambiarContrasena(this.editUserId, p1);
+      }
+      this.snack.success('Usuario actualizado correctamente');
       this.cerrarModalEditar();
       await this.loadUsuarios();
     } catch (err: any) {
-      this.snack.error(err?.message || 'Error actualizando contraseña');
+      this.snack.error(err?.message || 'Error actualizando usuario');
     }
   }
 
@@ -307,6 +331,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
 
   resetForm() {
     this.email = '';
+    this.nombre = '';
     this.contrasena = '';
     this.rol_id = '';
     this.mensaje = '';

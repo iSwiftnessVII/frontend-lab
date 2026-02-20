@@ -11,6 +11,12 @@
             </div>
 
             <div>
+                <label for="nombre">Nombre *</label>
+                <input id="nombre" type="text" [(ngModel)]="nombre" name="nombre" required maxlength="150"
+                    placeholder="Nombre completo del usuario" />
+            </div>
+
+            <div>
                 <label for="contrasena">Contraseña *</label>
                 <input id="contrasena" type="password" [(ngModel)]="contrasena" name="contrasena" required minlength="6"
                     placeholder="Mínimo 6 caracteres" />
@@ -182,6 +188,11 @@
                                 <div class="card-name">
                                     <div class="name-line">
                                         <i class="fas fa-user-tie" aria-hidden="true"></i>
+                                        <span *ngIf="usuario.nombre; else noNombre">{{ usuario.nombre }}</span>
+                                        <ng-template #noNombre><em>Sin nombre</em></ng-template>
+                                    </div>
+                                    <div class="name-line email-line">
+                                        <i class="fas fa-envelope" aria-hidden="true"></i>
                                         {{ usuario.email }}
                                     </div>
                                 </div>
@@ -225,50 +236,69 @@
         </div>
     </section>
 
-    @if (editUserModalOpen) {
-    <div class="modal-backdrop" (click)="cerrarModalEditar()"></div>
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Editar usuario" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>Cambiar contraseña</h3>
-        <button type="button" class="close-btn" (click)="cerrarModalEditar()" aria-label="Cerrar">×</button>
-      </div>
-      <form class="form-grid" #editForm="ngForm" (ngSubmit)="guardarNuevaContrasena(editForm)">
-        <div>
-          <label for="edit_email">Usuario</label>
-          <input id="edit_email" [value]="editUserEmail" name="edit_email" readonly />
-        </div>
-        <div>
-          <label for="edit_pass1">Nueva contraseña</label>
-          <input id="edit_pass1" type="password" [(ngModel)]="editNuevaContrasena" name="edit_pass1" #editP1Ctrl="ngModel" required minlength="6"
-            [class.invalid]="editP1Ctrl.invalid && (editP1Ctrl.touched || editSubmitted)" />
-          @if (editP1Ctrl.errors?.['required'] && (editP1Ctrl.touched || editSubmitted)) {
-            <span class="field-error">Requerido</span>
-          }
-          @if (editP1Ctrl.errors?.['minlength'] && (editP1Ctrl.touched || editSubmitted)) {
-            <span class="field-error">Mínimo 6 caracteres</span>
-          }
-        </div>
-        <div>
-          <label for="edit_pass2">Confirmar contraseña</label>
-          <input id="edit_pass2" type="password" [(ngModel)]="editNuevaContrasena2" name="edit_pass2" #editP2Ctrl="ngModel" required
-            [class.invalid]="(editP2Ctrl.invalid || editNuevaContrasena2 !== editNuevaContrasena) && (editP2Ctrl.touched || editSubmitted)" />
-          @if (editP2Ctrl.errors?.['required'] && (editP2Ctrl.touched || editSubmitted)) {
-            <span class="field-error">Requerido</span>
-          }
-          @if ((editNuevaContrasena2 || '') && editNuevaContrasena2 !== editNuevaContrasena && (editP2Ctrl.touched || editSubmitted)) {
-            <span class="field-error">No coincide</span>
-          }
-        </div>
-        <div class="actions">
-          <button type="submit" class="btn-primary">
-            <i class="fas fa-save"></i> Guardar
-          </button>
-          <button type="button" class="btn-secondary" (click)="cerrarModalEditar()">
-            Cancelar
-          </button>
-        </div>
-      </form>
-    </div>
-    }
+        @if (editUserModalOpen) {
+                <div class="modal-backdrop" (click)="cerrarModalEditar()"></div>
+                <div class="modal modal-lg" role="dialog" aria-modal="true" aria-label="Editar usuario" (click)="$event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3>Editar usuario</h3>
+                        <button type="button" class="close-btn" (click)="cerrarModalEditar()" aria-label="Cerrar">×</button>
+                    </div>
+                    <form class="modal-form" #editForm="ngForm" (ngSubmit)="guardarEdicionUsuario(editForm)">
+                        <div class="modal-section">
+                            <h4 class="modal-section-title">Datos del usuario</h4>
+                            <div class="modal-section-grid">
+                                <div>
+                                    <label for="edit_email">Usuario</label>
+                                    <input id="edit_email" [value]="editUserEmail" name="edit_email" readonly />
+                                </div>
+                                <div>
+                                    <label for="edit_nombre">Nombre</label>
+                                    <input id="edit_nombre" type="text" [(ngModel)]="editNombre" name="edit_nombre" required maxlength="150"
+                                        placeholder="Nombre completo del usuario" #editNombreCtrl="ngModel"
+                                        [class.invalid]="editNombreCtrl.invalid && (editNombreCtrl.touched || editSubmitted)" />
+                                    @if (editNombreCtrl.errors?.['required'] && (editNombreCtrl.touched || editSubmitted)) {
+                                        <span class="field-error">Requerido</span>
+                                    }
+                                    @if (editNombreCtrl.errors?.['maxlength'] && (editNombreCtrl.touched || editSubmitted)) {
+                                        <span class="field-error">Máximo 150 caracteres</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-section">
+                            <h4 class="modal-section-title">Seguridad</h4>
+                            <div class="modal-section-grid">
+                                <div>
+                                    <label for="edit_pass1">Nueva contraseña</label>
+                                    <input id="edit_pass1" type="password" [(ngModel)]="editNuevaContrasena" name="edit_pass1" #editP1Ctrl="ngModel" minlength="6"
+                                        placeholder="Opcional" [class.invalid]="(editP1Ctrl.touched || editSubmitted) && editNuevaContrasena && editNuevaContrasena.length < 6" />
+                                    @if ((editP1Ctrl.touched || editSubmitted) && editNuevaContrasena && editNuevaContrasena.length < 6) {
+                                        <span class="field-error">Mínimo 6 caracteres</span>
+                                    }
+                                </div>
+                                <div>
+                                    <label for="edit_pass2">Confirmar contraseña</label>
+                                    <input id="edit_pass2" type="password" [(ngModel)]="editNuevaContrasena2" name="edit_pass2" #editP2Ctrl="ngModel"
+                                        placeholder="Opcional" [class.invalid]="(editP2Ctrl.touched || editSubmitted) && ((editNuevaContrasena && !editNuevaContrasena2) || (editNuevaContrasena2 && editNuevaContrasena2 !== editNuevaContrasena))" />
+                                    @if ((editP2Ctrl.touched || editSubmitted) && editNuevaContrasena && !editNuevaContrasena2) {
+                                        <span class="field-error">Debe confirmar la contraseña</span>
+                                    }
+                                    @if ((editP2Ctrl.touched || editSubmitted) && editNuevaContrasena2 && editNuevaContrasena2 !== editNuevaContrasena) {
+                                        <span class="field-error">No coincide</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="actions modal-actions">
+                            <button type="submit" class="btn-primary">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
+                            <button type="button" class="btn-secondary" (click)="cerrarModalEditar()">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+        }
 
 </div>

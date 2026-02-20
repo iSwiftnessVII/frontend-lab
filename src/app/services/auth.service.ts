@@ -13,6 +13,7 @@ export const authUser = signal<{
   email: string; 
   rol: string;
   id_rol: number;
+  nombre?: string;
 } | null>(null);
 
 // Mantener authInitializing del repositorio para compatibilidad UI
@@ -58,7 +59,8 @@ export const authService = {
       id: dataJson.id_usuario, 
       email: dataJson.email,
       rol: dataJson.rol,
-      id_rol: dataJson.id_rol
+      id_rol: dataJson.id_rol,
+      nombre: dataJson.nombre
     };
     
     authUser.set(userData);
@@ -136,7 +138,8 @@ export const authService = {
         id: data.id, 
         email: data.email,
         rol: data.rol,
-        id_rol: data.id_rol
+        id_rol: data.id_rol,
+        nombre: data.nombre
       };
       authUser.set(userData);
       localStorage.setItem('user', JSON.stringify(userData));

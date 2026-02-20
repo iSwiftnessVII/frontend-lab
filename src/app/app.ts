@@ -595,7 +595,12 @@ export class App implements OnDestroy {
 
   userShortName(): string {
     try {
-      const email = this.user()?.email ?? '';
+      const u = this.user();
+      const nombre = String(u?.nombre ?? '').trim();
+      if (nombre) {
+        return nombre.replace(/\s+/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+      }
+      const email = u?.email ?? '';
       if (!email) return '';
       const local = String(email).split('@')[0] || '';
       return local.replace(/[._]/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());

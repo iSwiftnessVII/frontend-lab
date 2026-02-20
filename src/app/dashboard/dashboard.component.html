@@ -14,80 +14,84 @@
   <!-- Métricas Principales -->
   @if (!cargando()) {
     <div class="metrics-grid metrics-grid--primary">
-      <div class="metric-pie-card metric-pie-card--xl" [class.clickable]="!esAuxiliar" (click)="navigate('/reactivos')">
-        <div class="metric-pie-top">
-          <div class="metric-pie-icon reactivos"><i class="fas fa-flask"></i></div>
-          <div class="metric-pie-title">Reactivos</div>
-          <div class="metric-pie-total">{{ formatearNumero(metricas().totalReactivos) }}</div>
-        </div>
-        <div class="metric-pie-body">
-          <div class="metric-pie" [style.background]="getReactivosPieStyle()"></div>
-          <div class="metric-pie-legend">
-            @if (getReactivosPieSegments(); as segs) {
-              @if (segs.length) {
-                @for (seg of segs; track seg.label) {
-                  <div class="metric-pie-item">
-                    <span class="metric-pie-dot" [style.background]="seg.color"></span>
-                    <span class="metric-pie-label">{{ seg.label }}</span>
-                    <span class="metric-pie-value">{{ formatearNumero(seg.value) }}</span>
-                  </div>
+      <div class="metric-pie-card metric-pie-card--xl metric-pie-card--reactivos metric-pie-card--ghost">
+        <div class="reactivos-grid">
+          <div class="reactivos-col reactivos-col--donut">
+            <div class="metric-pie metric-pie--donut" [style.background]="getReactivosPieStyle()">
+              <div class="metric-pie-center">
+                <div class="metric-pie-center-value">{{ formatearNumero(metricas().totalReactivos) }}</div>
+                <div class="metric-pie-center-label">Total de Reactivos</div>
+              </div>
+            </div>
+            <div class="metric-pie-legend metric-pie-legend--center">
+              @if (getReactivosPieSegments(); as segs) {
+                @if (segs.length) {
+                  @for (seg of segs; track seg.label) {
+                    <div class="metric-pie-item notif-row">
+                      <span class="metric-pie-line" [style.background]="seg.color"></span>
+                      <span class="metric-pie-label-text">{{ seg.label }}</span>
+                      <span class="metric-pie-value">{{ formatearNumero(seg.value) }}</span>
+                    </div>
+                  }
+                } @else {
+                  <div class="metric-pie-empty">Sin datos</div>
                 }
-              } @else {
-                <div class="metric-pie-empty">Sin datos</div>
               }
-            }
+            </div>
           </div>
-        </div>
-        <div class="metric-pie-foot">
-          <div class="metric-foot-item">
-            <span class="metric-foot-label">Vencidos</span>
-            <span class="metric-foot-value">{{ formatearNumero(reactivosVencidos().length) }}</span>
-          </div>
-          <div class="metric-foot-item">
-            <span class="metric-foot-label">Por vencer</span>
-            <span class="metric-foot-value">{{ formatearNumero(reactivosProximosVencer().length) }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="metric-pie-card metric-pie-card--xl">
-        <div class="metric-pie-top">
-          <div class="metric-pie-icon consumo"><i class="fas fa-syringe"></i></div>
-          <div class="metric-pie-title">Consumo de Reactivos</div>
-          <div class="metric-pie-total">{{ formatearNumero(getConsumoTotal()) }}</div>
-        </div>
-        <div class="metric-pie-body">
-          <div class="metric-pie" [style.background]="getConsumoPieStyle()"></div>
-          <div class="metric-pie-legend">
-            @if (getConsumoPieSegments(); as segs) {
-              @if (segs.length) {
-                @for (seg of segs; track seg.label) {
-                  <div class="metric-pie-item">
-                    <span class="metric-pie-dot" [style.background]="seg.color"></span>
-                    <span class="metric-pie-label">{{ seg.label }}</span>
-                    <span class="metric-pie-value">{{ formatearNumero(seg.value) }}</span>
+          <div class="reactivos-col reactivos-col--legend"></div>
+          <div class="reactivos-col reactivos-col--consumo">
+            <div class="metric-pie-top">
+              <div class="metric-pie-icon consumo"><i class="fas fa-syringe"></i></div>
+              <div class="metric-pie-title">Consumo de Reactivos</div>
+              <div class="metric-pie-total">{{ formatearNumero(getConsumoTotal()) }}</div>
+            </div>
+            <div class="consumo-scroll">
+              @if (consumoData(); as consumos) {
+                @if (consumos.length) {
+                  <div class="notif-list consumo-scroll-track">
+                    @for (c of consumos; track $index) {
+                      <div class="notif-row">
+                        <div class="notif-main">
+                          <span class="notif-name" [title]="c.nombre || 'Sin nombre'">{{ c.nombre || 'Sin nombre' }}</span>
+                          <span class="notif-code" [title]="c.codigo || '—'">{{ c.codigo || '—' }}</span>
+                          <span class="notif-lote" [title]="c.lote || '—'">{{ c.lote || '—' }}</span>
+                        </div>
+                        <div class="notif-date">Consumido: {{ formatearNumero(c.cantidad || 0) }} {{ c.unidad_simbolo || c.unidad || '' }}</div>
+                      </div>
+                    }
+                    @for (c of consumos; track $index) {
+                      <div class="notif-row">
+                        <div class="notif-main">
+                          <span class="notif-name" [title]="c.nombre || 'Sin nombre'">{{ c.nombre || 'Sin nombre' }}</span>
+                          <span class="notif-code" [title]="c.codigo || '—'">{{ c.codigo || '—' }}</span>
+                          <span class="notif-lote" [title]="c.lote || '—'">{{ c.lote || '—' }}</span>
+                        </div>
+                        <div class="notif-date">Consumido: {{ formatearNumero(c.cantidad || 0) }} {{ c.unidad_simbolo || c.unidad || '' }}</div>
+                      </div>
+                    }
                   </div>
+                } @else {
+                  <div class="consumo-empty">Sin consumos</div>
                 }
-              } @else {
-                <div class="metric-pie-empty">Sin datos</div>
               }
-            }
-          </div>
-        </div>
-        <div class="metric-pie-foot">
-          <div class="metric-foot-item">
-            <span class="metric-foot-label">Registros</span>
-            <span class="metric-foot-value">{{ formatearNumero(getConsumoTotal()) }}</span>
-          </div>
-          <div class="metric-foot-item">
-            <span class="metric-foot-label">Ultimo</span>
-            <span class="metric-foot-value">
-              @if (getConsumoUltimaFecha(); as fecha) {
-                {{ fecha | date:'dd/MM/yyyy' }}
-              } @else {
-                —
-              }
-            </span>
+            </div>
+            <div class="metric-pie-foot">
+              <div class="metric-foot-item">
+                <span class="metric-foot-label">Registros</span>
+                <span class="metric-foot-value">{{ formatearNumero(getConsumoTotal()) }}</span>
+              </div>
+              <div class="metric-foot-item">
+                <span class="metric-foot-label">Ultimo</span>
+                <span class="metric-foot-value">
+                  @if (getConsumoUltimaFecha(); as fecha) {
+                    {{ fecha | date:'dd/MM/yyyy' }}
+                  } @else {
+                    —
+                  }
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

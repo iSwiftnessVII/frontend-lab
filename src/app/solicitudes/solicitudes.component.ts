@@ -604,6 +604,7 @@ getTomorrowDate(): string {
     try {
       const rows = await this.solicitudesService.listarEstadosSolicitud();
       this.estadosSolicitud = Array.isArray(rows) ? rows : [];
+      this.filtrarSolicitudes();
     } catch (err: any) {
       console.warn('Error cargando estados de solicitud:', err);
       this.estadosSolicitud = [];
@@ -998,6 +999,34 @@ getTomorrowDate(): string {
       const fecha = s?.fecha_solicitud ?? s?.created_at ?? s?.fecha ?? null;
       const nombreSolicitante = s?.nombre_solicitante ?? s?.cliente_nombre ?? s?.nombre_cliente ?? (s?.cliente?.nombre) ?? '';
       const nombreMuestra = s?.nombre_muestra ?? s?.muestra_nombre ?? s?.producto_nombre ?? '';
+      const rawEstado = s?.id_estado ?? null;
+      let idEstado = rawEstado === null || rawEstado === undefined || rawEstado === ''
+        ? null
+        : Number(rawEstado);
+      if (!Number.isFinite(idEstado)) idEstado = null;
+      const estadosList = this.estadosSolicitud || [];
+      if (idEstado !== null && estadosList.length) {
+        const exists = estadosList.some((e: any) => Number(e?.id_estado) === Number(idEstado));
+        if (!exists) idEstado = null;
+      }
+      const estadoNombre = String(s?.nombre_estado ?? '').trim().toLowerCase();
+      if (estadosList.length && estadoNombre) {
+        const match = estadosList.find((e: any) => {
+          const nombre = String(e?.nombre_estado || e?.nombre || '').trim().toLowerCase();
+          return nombre && nombre === estadoNombre;
+        });
+        if (match && Number.isFinite(Number(match?.id_estado))) {
+          const matchId = Number(match.id_estado);
+          if (idEstado === null || Number(idEstado) !== matchId) {
+            idEstado = matchId;
+          }
+        }
+      }
+      const rawAdmin = s?.id_admin ?? null;
+      let idAdmin = rawAdmin === null || rawAdmin === undefined || rawAdmin === ''
+        ? null
+        : Number(rawAdmin);
+      if (!Number.isFinite(idAdmin)) idAdmin = null;
       
       return {
         ...s,
@@ -1006,7 +1035,9 @@ getTomorrowDate(): string {
         tipo_solicitud: tipo,
         fecha_solicitud: fecha,
         nombre_solicitante: nombreSolicitante,
-        nombre_muestra: nombreMuestra
+        nombre_muestra: nombreMuestra,
+        id_estado: idEstado,
+        id_admin: idAdmin
       };
     });
 
@@ -1348,9 +1379,9 @@ private validarCampoSolicitudIndividual(campo: string, valor: any): string {
       const loteStr = (valor ?? '').toString().trim();
       if (!loteStr) return 'El lote del producto es obligatorio';
 
-      // Mismo patrón que la directiva (solo letras básicas, números, guiones)
-      if (!/^[A-Za-z0-9\-]{3,20}$/.test(loteStr))
-        return 'Formato de lote inválido (3-20 caracteres: solo letras, números y guiones)';
+      // Mismo patrón que la directiva (letras básicas, números, espacios y guiones)
+      if (!/^[A-Za-z0-9\- ]{3,20}$/.test(loteStr))
+        return 'Formato de lote inválido (3-20 caracteres: letras, números, espacios y guiones)';
       return '';
 
     case 'fechaSolicitud':
@@ -2207,9 +2238,8 @@ private getValorEncuesta(campo: string): any {
     });
     if (!ok) return;
     
-    if (!this.canDelete()) {
-      const errorMsg = this.utilsService.getDeleteErrorMessage();
-      this.snackbarService.error(`❌ No puedes eliminar solicitudes: ${errorMsg}`);
+    if (!this.canEditOrDeleteSolicitud()) {
+      this.snackbarService.error('❌ No puedes eliminar solicitudes con rol Administrador.');
       return;
     }
 
@@ -2381,6 +2411,28 @@ private getValorEncuesta(campo: string): any {
     return normalized === 'administrador' || normalized === 'superadmin';
   }
 
+  canViewSolicitudSelects(): boolean {
+    const u = this.user();
+    const raw = String((u as any)?.rol_nombre || u?.rol || '').trim().toLowerCase();
+    const normalized = raw.replace(/\s+/g, '');
+    return normalized === 'administrador' || normalized === 'superadmin';
+  }
+
+  canInteractSolicitudSelects(): boolean {
+    const u = this.user();
+    const raw = String((u as any)?.rol_nombre || u?.rol || '').trim().toLowerCase();
+    const normalized = raw.replace(/\s+/g, '');
+    return normalized === 'administrador' || normalized === 'superadmin';
+  }
+
+  setSolicitudEstadoPrev(s: any): void {
+    s._estadoPrev = s?._estadoDraft ?? s?.id_estado ?? null;
+  }
+
+  setSolicitudAsignacionPrev(s: any): void {
+    s._adminPrev = s?._adminDraft ?? s?.id_admin ?? null;
+  }
+
   formatEstadoLabel(value: any): string {
     const raw = String(value || '').trim();
     if (!raw) return '';
@@ -2395,12 +2447,50 @@ private getValorEncuesta(campo: string): any {
     return email.split('@')[0] || email;
   }
 
+  getSolicitudAdminLabel(s: any): string {
+    const email = String(s?.admin_email || '').trim();
+    if (email) return email;
+    const id = s?.id_admin ?? null;
+    if (id && Array.isArray(this.adminUsuarios) && this.adminUsuarios.length) {
+      const admin = this.adminUsuarios.find((u: any) => Number(u?.id_usuario) === Number(id));
+      const label = this.formatAdminLabel(admin);
+      if (label) return label;
+    }
+    return 'Sin asignar';
+  }
+
+  getConceptoFinalLabel(value: any): string {
+    const raw = String(value || '').trim().toUpperCase();
+    if (raw === 'SOLICITUD_VIABLE') return 'Viable';
+    if (raw === 'SOLICITUD_VIABLE_CON_OBSERVACIONES') return 'Viable con observaciones';
+    if (raw === 'SOLICITUD_NO_VIABLE') return 'No viable';
+    return '';
+  }
+
+  getConceptoFinalClass(value: any): string {
+    const raw = String(value || '').trim().toUpperCase();
+    if (raw === 'SOLICITUD_VIABLE') return 'revision-viable';
+    if (raw === 'SOLICITUD_VIABLE_CON_OBSERVACIONES') return 'revision-observaciones';
+    if (raw === 'SOLICITUD_NO_VIABLE') return 'revision-no-viable';
+    return '';
+  }
+
+  getConceptoFinalIcon(value: any): string {
+    const raw = String(value || '').trim().toUpperCase();
+    if (raw === 'SOLICITUD_VIABLE') return 'fa-circle-check';
+    if (raw === 'SOLICITUD_VIABLE_CON_OBSERVACIONES') return 'fa-triangle-exclamation';
+    if (raw === 'SOLICITUD_NO_VIABLE') return 'fa-circle-xmark';
+    return 'fa-circle-info';
+  }
+
+
   getEstadoIcon(label: any): string {
     const raw = String(label || '').trim().toUpperCase().replace(/\s+/g, '').replace(/_/g, '');
     if (!raw) return 'fa-circle-info';
     if (raw.includes('ESPERA')) return 'fa-hourglass-half';
     if (raw.includes('PROCESO')) return 'fa-spinner';
     if (raw.includes('REVISION')) return 'fa-magnifying-glass';
+    if (raw.includes('EVALUAD')) return 'fa-circle-check';
     if (raw.includes('APROB')) return 'fa-circle-check';
     if (raw.includes('RECHAZ')) return 'fa-circle-xmark';
     if (raw.includes('CANCEL')) return 'fa-ban';
@@ -2413,7 +2503,7 @@ private getValorEncuesta(campo: string): any {
     if (!raw) return 'estado-neutral';
     if (raw.includes('ESPERA')) return 'estado-espera';
     if (raw.includes('EVALUACION') || raw.includes('EVALUAR')) return 'estado-evaluacion';
-    if (raw.includes('EVALUADO')) return 'estado-evaluado';
+    if (raw.includes('EVALUAD')) return 'estado-evaluado';
     return 'estado-neutral';
   }
 
@@ -2427,8 +2517,43 @@ private getValorEncuesta(campo: string): any {
     } catch {}
   }
 
+  getEstadoEvaluacionId(): number | null {
+    const estados = this.estadosSolicitud || [];
+    const match = estados.find((e: any) => {
+      const nombre = String(e?.nombre_estado || e?.nombre || '').toUpperCase();
+      return nombre.includes('EVALUACION') || nombre.includes('EVALUAR');
+    });
+    const id = Number(match?.id_estado);
+    return Number.isFinite(id) ? id : null;
+  }
+
+  isSolicitudEnEvaluacion(s: any): boolean {
+    const nombre = String(s?.nombre_estado || '').toUpperCase();
+    if (nombre.includes('EVALUACION') || nombre.includes('EVALUAR')) return true;
+    const idActual = s?.id_estado ?? null;
+    const idEvaluacion = this.getEstadoEvaluacionId();
+    return idEvaluacion !== null && Number(idActual) === idEvaluacion;
+  }
+
+  async setSolicitudEnEvaluacion(s: any): Promise<void> {
+    if (!this.canInteractSolicitudSelects()) return;
+    const idEvaluacion = this.getEstadoEvaluacionId();
+    if (!idEvaluacion) {
+      this.snackbarService.error('Estado "En evaluación" no encontrado');
+      return;
+    }
+    await this.updateSolicitudEstado(s, idEvaluacion);
+  }
+
   canDelete(): boolean {
     return this.utilsService.canDelete();
+  }
+
+  canEditOrDeleteSolicitud(): boolean {
+    const u = this.user();
+    const raw = String((u as any)?.rol_nombre || u?.rol || '').trim().toLowerCase();
+    if (!raw) return false;
+    return raw.replace(/\s+/g, '') !== 'administrador';
   }
 
   toggleClienteDetails(id: number): void {
@@ -2488,32 +2613,39 @@ private getValorEncuesta(campo: string): any {
     this.selectedSolicitud.set(current || null);
   }
 
-  async updateSolicitudEstado(s: any, idEstadoRaw: any, ev?: Event): Promise<void> {
-    try { ev?.stopPropagation(); } catch {}
-    if (!this.canEditSolicitudEstado()) return;
+  async updateSolicitudEstado(s: any, nuevoEstado: any): Promise<void> {
+    if (!this.canInteractSolicitudSelects()) return;
+    const id_estado = nuevoEstado === '' || nuevoEstado === null || nuevoEstado === undefined
+      ? null
+      : Number(nuevoEstado);
     const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
-    const id_estado = Number(idEstadoRaw);
-    if (!sid || !Number.isFinite(id_estado)) return;
+    const prevEstadoId = s?.id_estado ?? null;
+    if (!sid || id_estado === null || !Number.isFinite(id_estado)) return;
+    if (Number(prevEstadoId) === Number(id_estado)) return;
+    const estadoPrevio = (this.estadosSolicitud || []).find((e: any) => Number(e?.id_estado) === Number(prevEstadoId));
+    const estadoNuevo = (this.estadosSolicitud || []).find((e: any) => Number(e?.id_estado) === id_estado);
+    const prevEstadoNombre = estadoPrevio?.nombre_estado || estadoPrevio?.nombre || s?.nombre_estado || null;
+    s.id_estado = id_estado;
+    s.nombre_estado = estadoNuevo?.nombre_estado || estadoNuevo?.nombre || s?.nombre_estado || null;
     try {
       await this.solicitudesService.actualizarEstadoSolicitud(sid, id_estado);
-      const estado = (this.estadosSolicitud || []).find((e: any) => Number(e?.id_estado) === id_estado);
-      s.id_estado = id_estado;
-      s.nombre_estado = estado?.nombre_estado || s.nombre_estado;
       this.snackbarService.success('Estado actualizado');
     } catch (err: any) {
+      s.id_estado = prevEstadoId;
+      s.nombre_estado = prevEstadoNombre;
       this.snackbarService.error(err?.message || 'Error actualizando estado');
     }
   }
 
-  async updateSolicitudAsignacion(s: any, adminRaw: any, ev?: Event): Promise<void> {
-    try { ev?.stopPropagation(); } catch {}
-    if (!this.canEditSolicitudEstado()) return;
+  async updateSolicitudAsignacion(s: any, nuevoAdmin: any): Promise<void> {
+    if (!this.canInteractSolicitudSelects()) return;
+    const id_admin = nuevoAdmin === '' || nuevoAdmin === null || nuevoAdmin === undefined ? null : Number(nuevoAdmin);
     const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
     if (!sid) return;
-    const id_admin = adminRaw === '' || adminRaw === null || adminRaw === undefined ? null : Number(adminRaw);
     if (id_admin !== null && !Number.isFinite(id_admin)) return;
     const prevAdminId = s.id_admin ?? null;
     const prevAdminEmail = s.admin_email ?? null;
+    if (Number(prevAdminId) === Number(id_admin)) return;
     const admin = (this.adminUsuarios || []).find((u: any) => Number(u?.id_usuario) === Number(id_admin));
     s.id_admin = id_admin;
     s.admin_email = admin?.email || s.admin_email || null;
@@ -2685,6 +2817,10 @@ private getValorEncuesta(campo: string): any {
   editSolicitudModalOpen = false;
   // When true the modal is playing the closing animation but remains in DOM
   editSolicitudModalClosing = false;
+  estadoModalOpen = false;
+  estadoModalSolicitud: any = null;
+  asignacionModalOpen = false;
+  asignacionModalSolicitud: any = null;
   editSolicitudId: number | null = null;
   editSolicitudNombreMuestra = '';
   editSolicitudTipo = '';
@@ -2737,6 +2873,10 @@ private getValorEncuesta(campo: string): any {
   editEncuestaSolicitoNueva: any = null;
 
   editSolicitudOpen(s: any): void {
+    if (!this.canEditOrDeleteSolicitud()) {
+      this.snackbarService.error('❌ No puedes editar solicitudes con rol Administrador.');
+      return;
+    }
     const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
     if (!sid) return;
     // If we were in a closing animation, cancel it and open immediately
@@ -2793,6 +2933,28 @@ private getValorEncuesta(campo: string): any {
     this.editEncuestaSolicitoNueva = s?.solicito_nueva_encuesta === null ? null : (s?.solicito_nueva_encuesta ? true : false);
     // set reactive selected solicitud
     this.selectedSolicitud.set(s);
+  }
+
+  openEstadoModal(s: any): void {
+    if (!s) return;
+    this.estadoModalSolicitud = s;
+    this.estadoModalOpen = true;
+  }
+
+  closeEstadoModal(): void {
+    this.estadoModalOpen = false;
+    this.estadoModalSolicitud = null;
+  }
+
+  openAsignacionModal(s: any): void {
+    if (!s) return;
+    this.asignacionModalSolicitud = s;
+    this.asignacionModalOpen = true;
+  }
+
+  closeAsignacionModal(): void {
+    this.asignacionModalOpen = false;
+    this.asignacionModalSolicitud = null;
   }
 
   // When user chooses a client in the create-solicitud select, update selectedCliente signal

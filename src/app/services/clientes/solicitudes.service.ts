@@ -179,6 +179,18 @@ export class SolicitudesService {
       return Number(val) === 1 || val === true;
     };
 
+    const rawEstado = s?.id_estado ?? null;
+    let id_estado = rawEstado === null || rawEstado === undefined || rawEstado === ''
+      ? null
+      : Number(rawEstado);
+    if (!Number.isFinite(id_estado)) id_estado = null;
+
+    const rawAdmin = s?.id_admin ?? null;
+    let id_admin = rawAdmin === null || rawAdmin === undefined || rawAdmin === ''
+      ? null
+      : Number(rawAdmin);
+    if (!Number.isFinite(id_admin)) id_admin = null;
+
     return {
       ...s,
       solicitud_id: id,
@@ -187,9 +199,9 @@ export class SolicitudesService {
       fecha_solicitud: fecha,
       nombre_solicitante: nombreSolicitante,
       nombre_muestra: nombreMuestra,
-      id_estado: s?.id_estado ?? null,
+      id_estado,
       nombre_estado: s?.nombre_estado ?? s?.estado_solicitud ?? null,
-      id_admin: s?.id_admin ?? null,
+      id_admin,
       admin_email: s?.admin_email ?? null,
 
       // Campos básicos de la solicitud

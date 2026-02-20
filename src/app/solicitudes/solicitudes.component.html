@@ -558,12 +558,12 @@
     [(ngModel)]="solicitudLote" 
     name="solicitudLote" 
     required 
-    appAlphaNumeric
+    appAlphaNumericSpaces
     (input)="validarCampoSolicitudEnTiempoReal('lote', $event)"
     (blur)="validarCampoSolicitudEnTiempoReal('lote', $event)"
     [class.error]="solicitudErrors['lote']" 
     placeholder="Ej: L202501" 
-    title="3-20 caracteres: solo letras (A-Z, a-z), números y guiones" />
+    title="3-20 caracteres: letras, números, espacios y guiones" />
   @if (solicitudErrors['lote']) {
     <small class="error-message">
       ⚠️ {{ solicitudErrors['lote'] }}
@@ -1537,17 +1537,42 @@
               <span class="tag"><strong>Código:</strong> {{ s.numero_solicitud_front || '—' }}</span>
               <span class="tag"><strong>ID:</strong> {{ s.solicitud_id }}</span>
               <span class="tag"><strong>Estado:</strong>
-                <span class="estado-badge" [ngClass]="getEstadoClass(s.nombre_estado || s.estado || s.estado_solicitud)">
+                <span class="estado-badge estado-clickable" [ngClass]="getEstadoClass(s.nombre_estado || s.estado || s.estado_solicitud)"
+                  tabindex="0"
+                  role="button"
+                  (click)="$event.stopPropagation(); openEstadoModal(s)"
+                  (keydown.enter)="$event.preventDefault(); openEstadoModal(s)"
+                  (keydown.space)="$event.preventDefault(); openEstadoModal(s)">
                   <i class="fas" [class]="getEstadoIcon(s.nombre_estado || s.estado || s.estado_solicitud)"></i>
                   {{ formatEstadoLabel(s.nombre_estado || s.estado || s.estado_solicitud || '—') }}
                 </span>
               </span>
+              <div class="tag asignado-tag">
+                <strong>Asignado a:</strong>
+                <span class="asignado-text">{{ getSolicitudAdminLabel(s) }}</span>
+                <div class="asignado-btn"
+                  role="button"
+                  tabindex="0"
+                  title="Cambiar asignación"
+                  (click)="$event.stopPropagation(); openAsignacionModal(s)"
+                  (keydown.enter)="$event.preventDefault(); openAsignacionModal(s)"
+                  (keydown.space)="$event.preventDefault(); openAsignacionModal(s)">
+                  <i class="fas fa-user"></i>
+                </div>
+              </div>
               <span class="tag"><strong>Cliente:</strong> {{ s.nombre_solicitante || '—' }}</span>
-              <span class="tag"><strong>Tipo:</strong> {{ s.tipo_solicitud || '—' }}</span>
-              <span class="tag"><strong>Muestra:</strong> {{ s.nombre_muestra || '—' }}</span>
             </div>
             <div class="pdf-actions">
-              @if (canDelete()) {
+              @if (canEditSolicitudEstado()) {
+                <button type="button" class="pdf-btn evaluacion"
+                  title="Poner en evaluación"
+                  aria-label="Poner en evaluación"
+                  [disabled]="isSolicitudEnEvaluacion(s)"
+                  (click)="setSolicitudEnEvaluacion(s); $event.stopPropagation()">
+                  <i class="fas fa-eye" aria-hidden="true"></i>
+                </button>
+              }
+              @if (canEditOrDeleteSolicitud()) {
                 <button type="button" class="pdf-btn edit"
                   title="Editar solicitud"
                   aria-label="Editar solicitud"
@@ -1574,42 +1599,14 @@
               <span class="chip">Cliente: {{ s.nombre_solicitante || '—' }}</span>
               <span class="chip">Tipo: {{ s.tipo_solicitud || '—' }}</span>
             </div>
-            @if (canEditSolicitudEstado()) {
             <div class="card-right-controls" (click)="$event.stopPropagation()">
-              <div class="type-wrap estado-select">
-                <div class="select-stack">
-                  <span class="select-label">Estado actual</span>
-                <select class="estado-select-native"
-                  [ngModel]="s.id_estado"
-                  [ngModelOptions]="{ standalone: true }"
-                  (ngModelChange)="updateSolicitudEstado(s, $event)"
-                  aria-label="Estado solicitud"
-                  title="Estado">
-                  <option [ngValue]="null">Estado</option>
-                  @for (estado of estadosSolicitud; track estado.id_estado) {
-                    <option [ngValue]="estado.id_estado">{{ formatEstadoLabel(estado.nombre_estado || estado.nombre) }}</option>
-                  }
-                </select>
-                </div>
-              </div>
-              <div class="type-wrap asignar-select">
-                <div class="select-stack">
-                  <span class="select-label">Asignado a</span>
-                <select class="asignar-select-native"
-                  [ngModel]="s.id_admin ?? null"
-                  [ngModelOptions]="{ standalone: true }"
-                  (ngModelChange)="updateSolicitudAsignacion(s, $event)"
-                  aria-label="Asignar administradora"
-                  title="Asignar">
-                  <option [ngValue]="null">Asignar</option>
-                  @for (admin of adminUsuarios; track admin.id_usuario) {
-                    <option [ngValue]="admin.id_usuario">{{ formatAdminLabel(admin) || ('ID ' + admin.id_usuario) }}</option>
-                  }
-                </select>
-                </div>
-              </div>
+              @if (s.concepto_final) {
+                <span class="revision-badge" [ngClass]="getConceptoFinalClass(s.concepto_final)">
+                  <i class="fas" [class]="getConceptoFinalIcon(s.concepto_final)"></i>
+                  {{ getConceptoFinalLabel(s.concepto_final) }}
+                </span>
+              }
             </div>
-            }
             <span class="toggle-icon" [class.open]="isSolicitudExpanded(s)" aria-hidden="true">▾</span>
           </div>
           
@@ -2117,6 +2114,56 @@
               </div>
             }
           </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (estadoModalOpen) {
+    <div class="client-edit-backdrop" (click)="closeEstadoModal()">
+      <div class="client-edit-modal" (click)="$event.stopPropagation()">
+        <h3>Estado de solicitud</h3>
+        <div class="form-field" style="margin-top:12px">
+          <label>Estado actual</label>
+          <select [ngModel]="estadoModalSolicitud?.id_estado"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="updateSolicitudEstado(estadoModalSolicitud, $event)"
+            [disabled]="!canInteractSolicitudSelects()"
+            [attr.aria-disabled]="!canInteractSolicitudSelects()"
+            aria-label="Estado solicitud"
+            title="Estado">
+            @for (estado of estadosSolicitud; track estado.id_estado) {
+              <option [value]="estado.id_estado">{{ formatEstadoLabel(estado.nombre_estado || estado.nombre) }}</option>
+            }
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+          <button type="button" (click)="closeEstadoModal()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (asignacionModalOpen) {
+    <div class="client-edit-backdrop" (click)="closeAsignacionModal()">
+      <div class="client-edit-modal" (click)="$event.stopPropagation()">
+        <h3>Asignación de solicitud</h3>
+        <div class="form-field" style="margin-top:12px">
+          <label>Asignado a</label>
+          <select [ngModel]="asignacionModalSolicitud?.id_admin"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="updateSolicitudAsignacion(asignacionModalSolicitud, $event)"
+            [disabled]="!canInteractSolicitudSelects()"
+            [attr.aria-disabled]="!canInteractSolicitudSelects()"
+            aria-label="Asignar administradora"
+            title="Asignar">
+            @for (admin of adminUsuarios; track admin.id_usuario) {
+              <option [value]="admin.id_usuario">{{ formatAdminLabel(admin) || ('ID ' + admin.id_usuario) }}</option>
+            }
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+          <button type="button" (click)="closeAsignacionModal()">Cerrar</button>
         </div>
       </div>
     </div>

@@ -70,7 +70,7 @@
 .card-name .card-right-controls {
   position: absolute;
   top: 50%;
-  right: 12px; /* pull away from the edge */
+  right: 88px; /* pull away from the edge */
   transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
@@ -354,6 +354,86 @@
   font-weight: 600;
   letter-spacing: 0.3px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.estado-badge.estado-clickable {
+  cursor: pointer;
+}
+
+.estado-badge.estado-clickable:focus {
+  outline: 2px solid rgba(15, 23, 42, 0.4);
+  outline-offset: 2px;
+}
+
+.revision-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.32rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+}
+
+.revision-badge i {
+  font-size: 0.78rem;
+}
+
+.revision-viable {
+  background: linear-gradient(135deg, #dcfce7 0%, #86efac 100%);
+  color: #14532d;
+  border-color: rgba(20, 83, 45, 0.25);
+}
+
+.revision-observaciones {
+  background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%);
+  color: #7c2d12;
+  border-color: rgba(124, 45, 18, 0.2);
+}
+
+.revision-no-viable {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #7f1d1d;
+  border-color: rgba(127, 29, 29, 0.25);
+}
+
+.asignado-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.asignado-text {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asignado-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.asignado-btn i {
+  font-size: 0.7rem;
+}
+
+.asignado-btn:focus {
+  outline: 2px solid rgba(15, 23, 42, 0.4);
+  outline-offset: 2px;
 }
 
 .estado-badge i {

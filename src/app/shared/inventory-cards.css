@@ -114,12 +114,14 @@
 }
 .pdf-btn.delete { color: #d11a1a; }
 .pdf-btn.edit { color: #0369a1; }
+.pdf-btn.evaluacion { color: #15803d; }
 .pdf-btn:hover { transform: translateY(-1px); }
 .pdf-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
 /* Hover states show full color */
 .pdf-btn.delete:hover { background: #d11a1a; color: #fff; }
 .pdf-btn.edit:hover { background: #60a5fa; color: #fff; }
+.pdf-btn.evaluacion:hover { background: #22c55e; color: #fff; }
 /* Upload variant: match the turquoise used elsewhere */
 .pdf-btn.upload { color: var(--primary-turquoise); }
 .pdf-btn.upload:hover { background: var(--primary-turquoise); color: #fff; }
@@ -174,6 +176,17 @@
 .solicitudes-page .pdf-btn.delete:hover,
 .card-top .pdf-btn.delete:hover {
   background: #d11a1a !important;
+  color: #fff !important;
+}
+.reactivos-page .pdf-btn.evaluacion:hover,
+.catalog-card .pdf-btn.evaluacion:hover,
+.pdf-group .pdf-btn.evaluacion:hover,
+.equipo-card .pdf-btn.evaluacion:hover,
+.insumo-card .pdf-btn.evaluacion:hover,
+.inventory-card .pdf-btn.evaluacion:hover,
+.solicitudes-page .pdf-btn.evaluacion:hover,
+.card-top .pdf-btn.evaluacion:hover {
+  background: #22c55e !important;
   color: #fff !important;
 }
 .reactivos-page .pdf-btn.upload:hover,
