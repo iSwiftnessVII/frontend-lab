@@ -1244,14 +1244,16 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background: var(--app-surface, #fff);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--app-border, var(--border-gray));
   width: min(900px, 96vw);
   max-height: 90vh;
-  overflow: auto;
   z-index: 6001;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-  padding: 0.75rem 1.2rem 1rem;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .modal-header {
@@ -1271,4 +1273,81 @@
 
 :host-context([data-theme="dark"]) .modal .close-btn {
   color: var(--app-text-strong, #f1f5f9);
+}
+
+.reactivos-page .modal .form-grid {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  margin: 12px 0 0;
+  padding: 0 8px 0 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.reactivos-page .modal .modal-title {
+  margin: 0;
+  color: var(--primary-blue);
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.reactivos-page .modal .form-field,
+.reactivos-page .modal .form-field label {
+  min-width: 0;
+}
+
+.reactivos-page .modal .form-field label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  position: relative;
+  font-weight: 600;
+  color: var(--primary-blue);
+  font-size: 0.9rem;
+  padding-left: 0;
+}
+
+.reactivos-page .modal .form-field label::before {
+  content: none !important;
+  display: none !important;
+}
+
+.reactivos-page .modal .form-field input,
+.reactivos-page .modal .form-field select,
+.reactivos-page .modal .form-field textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--app-border, var(--border-gray));
+  border-radius: 6px;
+  background: var(--app-surface, var(--primary-white));
+  color: var(--app-text, var(--text-gray));
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.reactivos-page .modal .edit-modal-actions {
+  grid-column: 1 / -1;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  position: sticky;
+  bottom: 0;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--app-border, var(--border-gray));
+  background: var(--app-surface, #fff);
+  z-index: 2;
+}
+
+.reactivos-page .modal .edit-modal-actions > button {
+  margin-left: auto;
 }

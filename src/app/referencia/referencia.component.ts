@@ -30,11 +30,11 @@ export class ReferenciaComponent implements OnInit {
   ];
 
   // Control de pestaña activa por material
-  activeTab: { [codigo: string]: string } = {};
+  activeTab: Record<string, string> = {};
 
   // Almacenar historial e intervalo por material
-  historialPorMaterial: { [codigo: string]: any[] } = {};
-  intervaloPorMaterial: { [codigo: string]: any[] } = {};
+  historialPorMaterial: Record<string, any[]> = {};
+  intervaloPorMaterial: Record<string, any[]> = {};
 
   // Control de formularios
   formularioActivo: string | null = null;
@@ -44,25 +44,25 @@ export class ReferenciaComponent implements OnInit {
 
   // Variables para búsqueda y autocompletado
   busquedaMaterial = '';
-  tipoFiltro: string = 'todos';
+  tipoFiltro = 'todos';
   materialesFiltrados: any[] = [];
   materialSeleccionado: any = null;
-  mostrarResultados: boolean = false;
+  mostrarResultados = false;
 
   @ViewChild('refDocTemplateInput') refDocTemplateInput?: ElementRef<HTMLInputElement>;
 
-  refDocFiltroTipo: string = 'todos';
-  refDocBusqueda: string = '';
+  refDocFiltroTipo = 'todos';
+  refDocBusqueda = '';
   refDocResultados: any[] = [];
   refDocSeleccionado: any = null;
   refDocPlantillas = signal<any[]>([]);
   refDocPlantillaId: number | null = null;
-  refDocNombrePlantilla: string = '';
+  refDocNombrePlantilla = '';
   refDocTemplateFile: File | null = null;
-  refDocMsg: string = '';
-  refDocLoading: boolean = false;
+  refDocMsg = '';
+  refDocLoading = false;
   refDocListLoading = signal(false);
-  refDocUploadLoading: boolean = false;
+  refDocUploadLoading = false;
   refDocDeleteLoading: Set<number> = new Set<number>();
 
   // Opciones para el select de filtro
@@ -128,20 +128,21 @@ export class ReferenciaComponent implements OnInit {
   consecutivoIntervaloSig = signal<number | null>(null);
 
   // Control de registros expandidos
-  historialExpandido: { [key: string]: boolean } = {};
-  intervaloExpandido: { [key: string]: boolean } = {};
+  historialExpandido: Record<string, boolean> = {};
+  intervaloExpandido: Record<string, boolean> = {};
 
   // PDF management
-  pdfListByMaterial: { [codigo: string]: Array<{ id?: number; name: string; url: string; categoria?: string; size?: number; mime?: string; fecha_subida?: Date | null; displayName?: string }> } = {};
-  selectedPdfByMaterial: { [codigo: string]: string | null } = {};
-  menuCategoriaPdfVisible: { [codigo: string]: boolean } = {};
+  pdfListByMaterial: Record<string, { id?: number; name: string; url: string; categoria?: string; size?: number; mime?: string; fecha_subida?: Date | null; displayName?: string }[]> = {};
+  selectedPdfByMaterial: Record<string, string | null> = {};
+  menuCategoriaPdfVisible: Record<string, boolean> = {};
 
   // Edit modal state
-  editModalVisible: boolean = false;
-  editModalClosing: boolean = false;
-  editModalActiveTab: string = 'general';
-  editMaterialMode: boolean = false;
+  editModalVisible = false;
+  editModalClosing = false;
+  editModalActiveTab = 'general';
+  editMaterialMode = false;
   editingMaterialCodigo: number | null = null;
+  private editOriginalMaterialPayload: any | null = null;
 
   constructor(
     public snack: SnackbarService, 
@@ -869,7 +870,7 @@ export class ReferenciaComponent implements OnInit {
   }
 
   computePdfDisplayNames(items: any[]) {
-    const groups: { [cat: string]: Array<any> } = {};
+    const groups: Record<string, any[]> = {};
     for (const it of items) {
       const cat = (it.categoria || '').trim();
       if (!cat) continue;
@@ -1041,18 +1042,14 @@ export class ReferenciaComponent implements OnInit {
     
     this.editMaterialMode = true;
     this.editingMaterialCodigo = material.codigo_id;
+    this.editOriginalMaterialPayload = this.buildEditMaterialPayload();
     this.editModalVisible = true;
     this.editModalClosing = false;
     this.editModalActiveTab = 'general';
   }
 
-  async saveAllEditMaterial() {
-    if (!this.editingMaterialCodigo) {
-      this.snack.error('No se ha seleccionado material para editar');
-      return;
-    }
-    
-    const payload: any = {
+  private buildEditMaterialPayload(): any {
+    return {
       codigo_id: this.codigoIdSig(),
       nombre_material: this.nombre_material,
       rango_medicion: this.rango_medicion,
@@ -1061,6 +1058,23 @@ export class ReferenciaComponent implements OnInit {
       error_max_permitido: this.error_max_permitido,
       modelo: this.modelo
     };
+  }
+
+  private hasEditMaterialChanges(payload: any): boolean {
+    return JSON.stringify(payload) !== JSON.stringify(this.editOriginalMaterialPayload);
+  }
+
+  async saveAllEditMaterial() {
+    if (!this.editingMaterialCodigo) {
+      this.snack.error('No se ha seleccionado material para editar');
+      return;
+    }
+    
+    const payload: any = this.buildEditMaterialPayload();
+    if (!this.hasEditMaterialChanges(payload)) {
+      this.snack.warn('No hay campos para actualizar');
+      return;
+    }
 
     try {
       await this.referenciaService.actualizarMaterial(this.editingMaterialCodigo, payload);
@@ -1085,6 +1099,7 @@ export class ReferenciaComponent implements OnInit {
     this.editModalClosing = false;
     this.editMaterialMode = false;
     this.editingMaterialCodigo = null;
+    this.editOriginalMaterialPayload = null;
   }
 
   // --- Edición inline de historial ---

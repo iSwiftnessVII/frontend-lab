@@ -62,6 +62,7 @@ export class PapeleriaComponent implements OnInit {
   editObservaciones = '';
   editImagenFile: File | null = null;
   editImagenPreviewUrl: string | null = null;
+  private editOriginalPapeleriaPayload: PapeleriaUpdateInput | null = null;
 
   cargando = signal(false);
   papeleriaQ = '';
@@ -374,6 +375,7 @@ export class PapeleriaComponent implements OnInit {
     this.editImagenFile = null;
     this.revokePreviewUrl(this.editImagenPreviewUrl);
     this.editImagenPreviewUrl = null;
+    this.editOriginalPapeleriaPayload = this.buildEditPapeleriaPayload();
   }
 
   closeEditPapeleriaModal(): void {
@@ -395,6 +397,7 @@ export class PapeleriaComponent implements OnInit {
       this.editImagenFile = null;
       this.revokePreviewUrl(this.editImagenPreviewUrl);
       this.editImagenPreviewUrl = null;
+      this.editOriginalPapeleriaPayload = null;
     }, 220);
   }
 
@@ -406,12 +409,9 @@ export class PapeleriaComponent implements OnInit {
     this.editImagenPreviewUrl = file ? URL.createObjectURL(file) : null;
   }
 
-  async saveEditPapeleria(): Promise<void> {
-    if (!this.canDelete()) return;
-    if (!this.editPapeleriaId) return;
-
+  private buildEditPapeleriaPayload(): PapeleriaUpdateInput {
     const cantidadExistenteNum = Number(this.editCantidadExistente);
-    const input: PapeleriaUpdateInput = {
+    return {
       nombre: (this.editNombre || '').trim(),
       cantidad_adquirida: Number(this.editCantidadAdquirida),
       cantidad_existente: Number.isFinite(cantidadExistenteNum) ? cantidadExistenteNum : undefined,
@@ -422,6 +422,18 @@ export class PapeleriaComponent implements OnInit {
       ubicacion: (this.editUbicacion || '').trim() || null,
       observaciones: (this.editObservaciones || '').trim() || null
     };
+  }
+
+  private hasEditPapeleriaChanges(input: PapeleriaUpdateInput): boolean {
+    if (this.editImagenFile) return true;
+    return JSON.stringify(input) !== JSON.stringify(this.editOriginalPapeleriaPayload);
+  }
+
+  async saveEditPapeleria(): Promise<void> {
+    if (!this.canDelete()) return;
+    if (!this.editPapeleriaId) return;
+
+    const input: PapeleriaUpdateInput = this.buildEditPapeleriaPayload();
 
     if (!input.nombre) {
       this.snack.warn('El nombre es obligatorio');
@@ -433,6 +445,10 @@ export class PapeleriaComponent implements OnInit {
     }
     if (!input.presentacion) {
       this.snack.warn('La presentación es obligatoria');
+      return;
+    }
+    if (!this.hasEditPapeleriaChanges(input)) {
+      this.snack.warn('No hay campos para actualizar');
       return;
     }
 

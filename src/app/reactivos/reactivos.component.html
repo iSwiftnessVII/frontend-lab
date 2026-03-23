@@ -1,4 +1,4 @@
-﻿﻿﻿<div class="liba-theme container reactivos-page">
+<div class="liba-theme container reactivos-page">
   <div class="dashboard-cards">
     @if (canEditReactivos) {
       <div class="action-card" (click)="toggleFormulario('catalogo')" [class.active]="formularioActivo === 'catalogo'">
@@ -29,30 +29,23 @@
     </div>
   </div>
  @if (formularioActivo === 'catalogo') {
-    <h2>
-      @if (catalogoEditMode) { Editar reactivo en Catálogo }
-      @else { Crear nuevo reactivo en Catálogo }
-    </h2>
+   <h2>Crear nuevo reactivo en Catálogo</h2>
   <section>
     <form class="form-grid" #catalogoForm="ngForm" (ngSubmit)="crearCatalogo($event, catalogoForm)">
       
       <!-- Código (select) -->
       <div *ngIf="canEditReactivos" class="form-field">
         <label for="catCodigo">Código: *</label>
-        @if (catalogoEditMode) {
-          <input id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" disabled />
-        } @else {
-          <select id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" required
-            (change)="validarCampoCatalogoEnTiempoReal('codigo', $event)"
-            (blur)="validarCampoCatalogoEnTiempoReal('codigo', $event)"
-            [class.error]="catalogoErrors['codigo']">
-            <option value="">Seleccionar código</option>
-            <option value="C-001">C-001</option>
-            <option [value]="nextCodigoS">{{ nextCodigoS }}</option>
-            <option [value]="nextCodigoR">{{ nextCodigoR }}</option>
-            <option [value]="nextCodigoM">{{ nextCodigoM }}</option>
-          </select>
-        }
+        <select id="catCodigo" [(ngModel)]="catCodigo" name="catCodigo" required
+          (change)="validarCampoCatalogoEnTiempoReal('codigo', $event)"
+          (blur)="validarCampoCatalogoEnTiempoReal('codigo', $event)"
+          [class.error]="catalogoErrors['codigo']">
+          <option value="">Seleccionar código</option>
+          <option value="C-001">C-001</option>
+          <option [value]="nextCodigoS">{{ nextCodigoS }}</option>
+          <option [value]="nextCodigoR">{{ nextCodigoR }}</option>
+          <option [value]="nextCodigoM">{{ nextCodigoM }}</option>
+        </select>
         @if (catalogoErrors['codigo']) {
           <small class="error-message">⚠️ {{ catalogoErrors['codigo'] }}</small>
         }
@@ -111,10 +104,7 @@
       </div>
 
       <div class="actions" *ngIf="canEditReactivos">
-        <button class="btn-compact" type="submit">{{ catalogoEditMode ? 'Guardar cambios' : 'Agregar al catálogo' }}</button>
-        @if (catalogoEditMode) {
-          <button class="btn-compact" type="button" (click)="cancelEditCatalogo(catalogoForm)">Cancelar</button>
-        }
+        <button class="btn-compact" type="submit">Agregar al catálogo</button>
       </div>
     </form>
 
@@ -233,6 +223,7 @@
             class="select-filtro"
             [(ngModel)]="catalogoFiltroCampo"
             name="catalogoFiltroCampo"
+            [disabled]="!editMode && bloquearCodigoNombreCatalogo"
             (change)="cambiarCatalogoFiltroCampo(catalogoFiltroCampo)"
           >
             <option value="mixto">Todos los campos</option>
@@ -247,10 +238,23 @@
             (focus)="mostrarCatalogoResultados = true"
             (blur)="onCatalogoFocusOut()"
             [placeholder]="getCatalogoPlaceholder()"
+            [disabled]="!editMode && bloquearCodigoNombreCatalogo"
+            [class.error]="reactivoErrors['catalogo']"
             autocomplete="off"
             class="input-combinado"
           />
         </div>
+        @if (!editMode && bloquearCodigoNombreCatalogo) {
+          <div style="margin-top:8px;">
+            <button type="button" class="btn-load-more" (click)="limpiarSeleccionCatalogo()">Cambiar reactivo del catálogo</button>
+          </div>
+        }
+        @if (reactivoErrors['catalogo']) {
+          <small class="error-message">⚠️ {{ reactivoErrors['catalogo'] }}</small>
+        }
+        @if (!editMode && !bloquearCodigoNombreCatalogo) {
+          <small class="error-message">⚠️ Primero selecciona un reactivo del catálogo para habilitar el formulario.</small>
+        }
 
         @if (mostrarCatalogoResultados && catalogoQ.trim()) {
           <div class="lista-resultados">
@@ -295,6 +299,7 @@
         }
       </div>
 
+      <fieldset [disabled]="!editMode && !bloquearCodigoNombreCatalogo" style="display: contents; border:0; padding:0; margin:0; min-inline-size:0;">
       <!-- Lote -->
       <div class="field-sm field-autocomplete form-field">
         <label for="lote">Lote: *</label>
@@ -312,7 +317,7 @@
       <div class="form-field">
         <label for="codigo">Código (catálogo): *</label>
         <input id="codigo" [(ngModel)]="codigo" name="codigo" required appAlphaNumeric
-          [readonly]="bloquearCodigoNombreCatalogo"
+          [disabled]="!editMode && bloquearCodigoNombreCatalogo"
           (input)="validarCampoReactivoEnTiempoReal('codigo', $event)"
           (blur)="validarCampoReactivoEnTiempoReal('codigo', $event)"
           [class.error]="reactivoErrors['codigo']" 
@@ -326,7 +331,7 @@
       <div class="form-field">
         <label for="nombre">Nombre (catálogo): *</label>
         <input id="nombre" [(ngModel)]="nombre" name="nombre" required appAlphaNumeric
-          [readonly]="bloquearCodigoNombreCatalogo"
+          [disabled]="!editMode && bloquearCodigoNombreCatalogo"
           (input)="validarCampoReactivoEnTiempoReal('nombre', $event)"
           (blur)="validarCampoReactivoEnTiempoReal('nombre', $event)"
           [class.error]="reactivoErrors['nombre']" 
@@ -590,6 +595,7 @@
           </button>
         }
       </div>
+      </fieldset>
     </form>
   </section>
 }
@@ -634,7 +640,7 @@
                           <div class="name-line">{{ c.nombre || 'Reactivo' }}</div>
                           <div class="meta-line">
                             <span class="chip">Consumido: {{ c.cantidad }} {{ getUnidadNombre(c.unidad_id) }}</span>
-                            <span class="chip">Residual: {{ (c.residual ?? c.cantidad_total) ?? 'N/D' }} {{ getUnidadNombre(c.unidad_id) }}</span>
+                            <span class="chip">Cantidad existente: {{ (c.residual ?? c.cantidad_total) ?? 'N/D' }} {{ getUnidadNombre(c.unidad_id) }}</span>
                           </div>
                         </div>
                         @if (isConsumoHistorialExpanded(c, $index)) {
@@ -797,15 +803,15 @@
       <div class="filters-row reactivos-filters">
         <div>
           <label for="reactLoteQ">Filtrar por Lote</label>
-          <input id="reactLoteQ" [(ngModel)]="reactivosLoteQ" (input)="filtrarReactivos()" />
+          <input id="reactLoteQ" [(ngModel)]="reactivosLoteQ" (input)="filtrarReactivos()" placeholder="Filtrar por Lote" />
         </div>
         <div>
           <label for="reactCodigoQ">Filtrar por Código</label>
-          <input id="reactCodigoQ" [(ngModel)]="reactivosCodigoQ" (input)="filtrarReactivos()" />
+          <input id="reactCodigoQ" [(ngModel)]="reactivosCodigoQ" (input)="filtrarReactivos()" placeholder="Filtrar por Código" />
         </div>
         <div>
           <label for="reactNombreQ">Filtrar por Nombre</label>
-          <input id="reactNombreQ" [(ngModel)]="reactivosNombreQ" (input)="filtrarReactivos()" />
+          <input id="reactNombreQ" [(ngModel)]="reactivosNombreQ" (input)="filtrarReactivos()" placeholder="Filtrar por Nombre" />
         </div>
         @if (canEditReactivos) {
         <div class="reset-cell">
@@ -971,7 +977,7 @@
 
               <div class="meta-line">
                 <span class="chip">{{ obtenerNombreTipo(r.tipo_id) }}</span>
-                <span class="chip">{{ 'Cantidad Total:' }} {{ r.cantidad_total }} {{ obtenerNombreUnidad(r.unidad_id) }}</span>
+                <span class="chip">{{ 'Cantidad existente:' }} {{ r.cantidad_total }} {{ obtenerNombreUnidad(r.unidad_id) }}</span>
                 <span class="chip">Vence: {{ formatearFecha(r.fecha_vencimiento) }}</span>
               </div>
 
@@ -1067,101 +1073,155 @@
     </section>
   }
 
+  @if (catalogoEditModalOpen && canEditReactivos) {
+  <div class="modal-backdrop" tabindex="0" (click)="closeCatalogoEditModal()" (keydown.enter)="closeCatalogoEditModal()" (keydown.space)="$event.preventDefault(); closeCatalogoEditModal()"></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Editar reactivo en catálogo">
+    <h3 class="modal-title">Editar reactivo en catálogo</h3>
+    <form class="form-grid" #catalogoEditForm="ngForm" (ngSubmit)="guardarCatalogoEdicion(catalogoEditForm)">
+      <div class="field-sm form-field">
+        <label for="edit_cat_codigo">Código
+        <input id="edit_cat_codigo" [(ngModel)]="catalogoEditFormData.codigo" name="edit_cat_codigo" disabled /></label>
+      </div>
+
+      <div class="form-field">
+        <label for="edit_cat_nombre">Nombre
+        <input id="edit_cat_nombre" [(ngModel)]="catalogoEditFormData.nombre" name="edit_cat_nombre" #editCatNombreCtrl="ngModel" required
+          [class.invalid]="editCatNombreCtrl.invalid && (editCatNombreCtrl.touched || catalogoEditSubmitted)" /></label>
+        @if (editCatNombreCtrl.invalid && (editCatNombreCtrl.touched || catalogoEditSubmitted)) {
+        <span class="field-error">Requerido</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="edit_cat_tipo">Tipo reactivo
+        <select id="edit_cat_tipo" [(ngModel)]="catalogoEditFormData.tipo_reactivo" name="edit_cat_tipo" #editCatTipoCtrl="ngModel" required
+          [class.invalid]="editCatTipoCtrl.invalid && (editCatTipoCtrl.touched || catalogoEditSubmitted)">
+          <option [ngValue]="''">Seleccione tipo</option>
+          @for (t of tipos; track t) {
+          <option [value]="t.nombre">{{ t.nombre }}</option>
+          }
+        </select></label>
+        @if (editCatTipoCtrl.invalid && (editCatTipoCtrl.touched || catalogoEditSubmitted)) {
+        <span class="field-error">Requerido</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="edit_cat_clasif">Clasificación SGA
+        <select id="edit_cat_clasif" [(ngModel)]="catalogoEditFormData.clasificacion_sga" name="edit_cat_clasif" #editCatClasifCtrl="ngModel" required
+          [ngStyle]="getSelectStyleForName(catalogoEditFormData.clasificacion_sga)"
+          [class.invalid]="editCatClasifCtrl.invalid && (editCatClasifCtrl.touched || catalogoEditSubmitted)">
+          <option [ngValue]="''">Seleccione clasificación</option>
+          @for (c of clasif; track c) {
+          <option [value]="c.nombre" [style.backgroundColor]="getClasifColorByName(c.nombre)"
+            [style.color]="getClasifTextColor(getClasifColorByName(c.nombre))">{{ c.nombre }}</option>
+          }
+        </select></label>
+        @if (editCatClasifCtrl.invalid && (editCatClasifCtrl.touched || catalogoEditSubmitted)) {
+        <span class="field-error">Requerido</span>
+        }
+      </div>
+
+      <div class="edit-modal-actions">
+        <button type="submit">Guardar</button>
+      </div>
+    </form>
+  </div>
+  }
+
   <!-- Modal de edición de reactivo -->
   @if (editModalOpen && canEditReactivos) {
   <div class="modal-backdrop" (click)="closeEditModal()"></div>
   <div class="modal" role="dialog" aria-modal="true" aria-label="Editar reactivo" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <button type="button" class="close-btn" (click)="closeEditModal()" aria-label="Cerrar">×</button>
-    </div>
+    <h3 class="modal-title">Editar reactivo</h3>
     <form class="form-grid" #editForm="ngForm" (ngSubmit)="guardarEdicion(editForm)">
-      <div class="field-sm">
-        <label for="edit_lote">Lote</label>
+      <div class="field-sm form-field">
+        <label for="edit_lote">Lote
         <input id="edit_lote" [(ngModel)]="editFormData.lote" name="edit_lote" #editLoteCtrl="ngModel" required
-          [class.invalid]="editLoteCtrl.invalid && (editLoteCtrl.touched || editSubmitted)" />
+          [class.invalid]="editLoteCtrl.invalid && (editLoteCtrl.touched || editSubmitted)" /></label>
         @if (editLoteCtrl.invalid && (editLoteCtrl.touched || editSubmitted)) {
         <span class="field-error">Requerido</span>
         }
       </div>
 
-      <div>
-        <label for="edit_codigo">Código (catálogo)</label>
+      <div class="form-field">
+        <label for="edit_codigo">Código (catálogo)
         <input id="edit_codigo" [(ngModel)]="editFormData.codigo" name="edit_codigo" #editCodigoCtrl="ngModel" required
-          [class.invalid]="editCodigoCtrl.invalid && (editCodigoCtrl.touched || editSubmitted)" />
+          [class.invalid]="editCodigoCtrl.invalid && (editCodigoCtrl.touched || editSubmitted)" /></label>
         @if (editCodigoCtrl.invalid && (editCodigoCtrl.touched || editSubmitted)) {
         <span class="field-error">Requerido</span>
         }
       </div>
 
-      <div>
-        <label for="edit_nombre">Nombre (catálogo)</label>
+      <div class="form-field">
+        <label for="edit_nombre">Nombre (catálogo)
         <input id="edit_nombre" [(ngModel)]="editFormData.nombre" name="edit_nombre" #editNombreCtrl="ngModel" required
-          [class.invalid]="editNombreCtrl.invalid && (editNombreCtrl.touched || editSubmitted)" />
+          [class.invalid]="editNombreCtrl.invalid && (editNombreCtrl.touched || editSubmitted)" /></label>
         @if (editNombreCtrl.invalid && (editNombreCtrl.touched || editSubmitted)) {
         <span class="field-error">Requerido</span>
         }
       </div>
 
-      <div>
-        <label for="edit_marca">Marca</label>
-        <input id="edit_marca" [(ngModel)]="editFormData.marca" name="edit_marca" />
+      <div class="form-field">
+        <label for="edit_marca">Marca
+        <input id="edit_marca" [(ngModel)]="editFormData.marca" name="edit_marca" /></label>
       </div>
 
-      <div>
-        <label for="edit_referencia">Referencia</label>
-        <input id="edit_referencia" [(ngModel)]="editFormData.referencia" name="edit_referencia" />
+      <div class="form-field">
+        <label for="edit_referencia">Referencia
+        <input id="edit_referencia" [(ngModel)]="editFormData.referencia" name="edit_referencia" /></label>
       </div>
 
-      <div>
-        <label for="edit_cas">CAS</label>
+      <div class="form-field">
+        <label for="edit_cas">CAS
         <input id="edit_cas" [(ngModel)]="editFormData.cas" name="edit_cas" title="Formato: 64-17-5"
           #editCasCtrl="ngModel" (blur)="onEditCasBlur()"
-          [class.invalid]="editCasCtrl.invalid && (editCasCtrl.touched || editSubmitted)" />
+          [class.invalid]="editCasCtrl.invalid && (editCasCtrl.touched || editSubmitted)" /></label>
         @if (editCasCtrl.errors?.['pattern'] && (editCasCtrl.touched || editSubmitted)) {
         <span class="field-error">Formato CAS inválido</span>
         }
       </div>
 
-      <div class="field-sm">
-        <label for="edit_presentacion">Presentación</label>
+      <div class="field-sm form-field">
+        <label for="edit_presentacion">Presentación
         <input id="edit_presentacion" type="number" [(ngModel)]="editFormData.presentacion" name="edit_presentacion"
-          min="0" step="0.0001" />
+          min="0" step="0.0001" /></label>
       </div>
 
-      <div class="field-sm">
-        <label for="edit_presentacion_cant">Cantidad x presentación</label>
+      <div class="field-sm form-field">
+        <label for="edit_presentacion_cant">Cantidad x presentación
         <input id="edit_presentacion_cant" type="number" [(ngModel)]="editFormData.presentacion_cant"
-          name="edit_presentacion_cant" min="0" step="0.0001" />
+          name="edit_presentacion_cant" min="0" step="0.0001" /></label>
       </div>
 
-      <div class="field-sm">
-        <label for="edit_cantidad_total">Cantidad total</label>
+      <div class="field-sm form-field">
+        <label for="edit_cantidad_total">Cantidad total
         <input id="edit_cantidad_total" type="number" [(ngModel)]="editFormData.cantidad_total"
-          name="edit_cantidad_total" readonly />
+          name="edit_cantidad_total" readonly /></label>
       </div>
 
-      <div>
-        <label for="edit_fecha_adq">Fecha de adquisición</label>
-        <input id="edit_fecha_adq" type="date" [(ngModel)]="editFormData.fecha_adquisicion" name="edit_fecha_adq" />
+      <div class="form-field">
+        <label for="edit_fecha_adq">Fecha de adquisición
+        <input id="edit_fecha_adq" type="date" [(ngModel)]="editFormData.fecha_adquisicion" name="edit_fecha_adq" /></label>
       </div>
 
-      <div>
-        <label for="edit_fecha_venc">Fecha de vencimiento</label>
-        <input id="edit_fecha_venc" type="date" [(ngModel)]="editFormData.fecha_vencimiento" name="edit_fecha_venc" />
+      <div class="form-field">
+        <label for="edit_fecha_venc">Fecha de vencimiento
+        <input id="edit_fecha_venc" type="date" [(ngModel)]="editFormData.fecha_vencimiento" name="edit_fecha_venc" /></label>
       </div>
 
-      <div>
-        <label for="edit_tipo">Tipo reactivo</label>
+      <div class="form-field">
+        <label for="edit_tipo">Tipo reactivo
         <select id="edit_tipo" [(ngModel)]="editFormData.tipo_id" name="edit_tipo">
           <option [ngValue]="''">Seleccione tipo</option>
           @for (t of tipos; track t) {
           <option [value]="t.id">{{ t.nombre }}</option>
           }
-        </select>
+        </select></label>
       </div>
 
-      <div>
-        <label for="edit_clasif">Clasificación SGA</label>
+      <div class="form-field">
+        <label for="edit_clasif">Clasificación SGA
         <select id="edit_clasif" [(ngModel)]="editFormData.clasificacion_id" name="edit_clasif"
           [ngStyle]="getSelectStyleForId(editFormData.clasificacion_id)">
           <option [ngValue]="''">Seleccione clasificación</option>
@@ -1169,56 +1229,56 @@
           <option [value]="c.id" [style.backgroundColor]="getClasifColorByName(c.nombre)"
             [style.color]="getClasifTextColor(getClasifColorByName(c.nombre))">{{ c.nombre }}</option>
           }
-        </select>
+        </select></label>
       </div>
 
-      <div>
-        <label for="edit_unidad">Unidad</label>
+      <div class="form-field">
+        <label for="edit_unidad">Unidad
         <select id="edit_unidad" [(ngModel)]="editFormData.unidad_id" name="edit_unidad">
           <option [ngValue]="''">Seleccione unidad</option>
           @for (u of unidades; track u) {
           <option [value]="u.id">{{ u.nombre }}</option>
           }
-        </select>
+        </select></label>
       </div>
 
-      <div>
-        <label for="edit_estado">Estado</label>
+      <div class="form-field">
+        <label for="edit_estado">Estado
         <select id="edit_estado" [(ngModel)]="editFormData.estado_id" name="edit_estado">
           <option [ngValue]="''">Seleccione estado</option>
           @for (e of estado; track e) {
           <option [value]="e.id">{{ e.nombre }}</option>
           }
-        </select>
+        </select></label>
       </div>
 
-      <div>
-        <label for="edit_recipiente">Recipiente</label>
+      <div class="form-field">
+        <label for="edit_recipiente">Recipiente
         <select id="edit_recipiente" [(ngModel)]="editFormData.tipo_recipiente_id" name="edit_recipiente">
           <option [ngValue]="''">Seleccione recipiente</option>
           @for (rtp of recipiente; track rtp) {
           <option [value]="rtp.id">{{ rtp.nombre }}</option>
           }
-        </select>
+        </select></label>
       </div>
 
-      <div>
-        <label for="edit_almacen">Almacenamiento</label>
+      <div class="form-field">
+        <label for="edit_almacen">Almacenamiento
         <select id="edit_almacen" [(ngModel)]="editFormData.almacenamiento_id" name="edit_almacen">
           <option [ngValue]="''">Seleccione almacenamiento</option>
           @for (a of almacen; track a) {
           <option [value]="a.id">{{ a.nombre }}</option>
           }
-        </select>
+        </select></label>
       </div>
 
-      <div class="full-row">
-        <label for="edit_obs">Observaciones</label>
-        <textarea id="edit_obs" [(ngModel)]="editFormData.observaciones" name="edit_obs" rows="2"></textarea>
+      <div class="full-row form-field">
+        <label for="edit_obs">Observaciones
+        <textarea id="edit_obs" [(ngModel)]="editFormData.observaciones" name="edit_obs" rows="2"></textarea></label>
       </div>
 
-      <div class="actions">
-        <button type="submit">Guardar cambios</button>
+      <div class="edit-modal-actions">
+        <button type="button" (click)="guardarEdicion(editForm)">Guardar</button>
       </div>
     </form>
 

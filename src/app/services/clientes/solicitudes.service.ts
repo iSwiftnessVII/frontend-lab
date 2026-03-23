@@ -1,20 +1,105 @@
 import { Injectable, signal } from '@angular/core';
 import { authService } from '../auth.service';
 
-const API = (window as any).__env?.API_SOLICITUDES || 'http://localhost:4000/api/solicitudes';
-const API_DETALLE_LISTA = (window as any).__env?.API_SOLICITUDES_DETALLE_LISTA || 
+type EntityRef = { nombre?: string; nombre_completo?: string } | null;
+type ProductoRef = { nombre?: string } | null;
+type RevisionRef = { concepto_final?: unknown; conceptoFinal?: unknown } | null;
+
+interface ApiRecord {
+  id?: unknown;
+  solicitud_id?: unknown;
+  id_solicitud?: unknown;
+  solicitudId?: unknown;
+  id_cliente?: unknown;
+  id_estado?: unknown;
+  id_admin?: unknown;
+  id_tipo_af?: unknown;
+  tipo_solicitud?: unknown;
+  tipo?: unknown;
+  fecha_solicitud?: unknown;
+  created_at?: unknown;
+  fecha?: unknown;
+  nombre_solicitante?: unknown;
+  cliente_nombre?: unknown;
+  nombre_cliente?: unknown;
+  cliente?: EntityRef;
+  nombre_muestra?: unknown;
+  muestra_nombre?: unknown;
+  producto_nombre?: unknown;
+  producto?: ProductoRef;
+  nombre_estado?: unknown;
+  estado_solicitud?: unknown;
+  admin_email?: unknown;
+  lote_producto?: unknown;
+  fecha_vencimiento_muestra?: unknown;
+  tipo_muestra?: unknown;
+  tipo_empaque?: unknown;
+  analisis_requerido?: unknown;
+  req_analisis?: unknown;
+  cant_muestras?: unknown;
+  solicitud_recibida?: unknown;
+  fecha_entrega_muestra?: unknown;
+  recibe_personal?: unknown;
+  cargo_personal?: unknown;
+  observaciones?: unknown;
+  genero_cotizacion?: unknown;
+  valor_cotizacion?: unknown;
+  fecha_envio_oferta?: unknown;
+  realizo_seguimiento_oferta?: unknown;
+  observacion_oferta?: unknown;
+  fecha_limite_entrega?: unknown;
+  tipo_muestra_especificado?: unknown;
+  ensayos_requeridos_claros?: unknown;
+  equipos_calibrados?: unknown;
+  personal_competente?: unknown;
+  infraestructura_adecuada?: unknown;
+  insumos_vigentes?: unknown;
+  cumple_tiempos_entrega?: unknown;
+  normas_metodos_especificados?: unknown;
+  metodo_validado_verificado?: unknown;
+  metodo_adecuado?: unknown;
+  observaciones_tecnicas?: unknown;
+  concepto_final?: unknown;
+  conceptoFinal?: unknown;
+  revision?: RevisionRef;
+  revision_oferta?: RevisionRef;
+  revisionOferta?: RevisionRef;
+  servicio_es_viable?: unknown;
+  fecha_encuesta?: unknown;
+  fecha_realizacion_encuesta?: unknown;
+  comentarios?: unknown;
+  recomendaria_servicio?: unknown;
+  cliente_respondio?: unknown;
+  solicito_nueva_encuesta?: unknown;
+  numero_solicitud_front?: unknown;
+  message?: unknown;
+  error?: unknown;
+  rows?: unknown;
+  todos?: unknown;
+  entidad?: unknown;
+}
+type ErrorWithStatus = Error & { status?: number };
+
+const env = (window as unknown as { __env?: Record<string, string | undefined> }).__env;
+
+const API = env?.['API_SOLICITUDES'] || 'http://localhost:4000/api/solicitudes';
+const API_DETALLE_LISTA = env?.['API_SOLICITUDES_DETALLE_LISTA'] || 
                          'http://localhost:4000/api/solicitudes/detalle/lista';
-const API_DETALLE = (window as any).__env?.API_SOLICITUDES_DETALLE || (API + '/detalle');
-const API_ESTADOS = (window as any).__env?.API_SOLICITUDES_ESTADOS || (API + '/estados');
+const API_DETALLE = env?.['API_SOLICITUDES_DETALLE'] || (API + '/detalle');
+const API_ESTADOS = env?.['API_SOLICITUDES_ESTADOS'] || (API + '/estados');
 const API_DOC_PLANTILLAS_BASE = String(
-  (window as any).__env?.API_SOLICITUDES_DOC_PLANTILLAS ?? (API + '/documentos/plantillas')
+  env?.['API_SOLICITUDES_DOC_PLANTILLAS'] ?? (API + '/documentos/plantillas')
 ).replace(/\/+$/g, '');
 let tplDocEndpointMissing = false;
 
 @Injectable({ providedIn: 'root' })
 export class SolicitudesService {
-  private _solicitudes = signal<Array<any>>([]);
+  private _solicitudes = signal<ApiRecord[]>([]);
   solicitudes = this._solicitudes.asReadonly();
+
+  private asObject(value: unknown): ApiRecord | null {
+    return value && typeof value === 'object' ? (value as ApiRecord) : null;
+  }
 
   private getAuthHeaders(): Record<string, string> {
     const token = authService.getToken();
@@ -38,13 +123,17 @@ export class SolicitudesService {
 
   private async readApiError(res: Response, fallback: string): Promise<string> {
     try {
-      const data: any = await res.json();
-      return data?.message || data?.error || fallback;
-    } catch {}
+      const data = this.asObject(await res.json());
+      return String(data?.message ?? data?.error ?? fallback);
+    } catch {
+      void 0;
+    }
     try {
       const text = await res.text();
       return text || fallback;
-    } catch {}
+    } catch {
+      void 0;
+    }
     return fallback;
   }
 
@@ -66,7 +155,7 @@ export class SolicitudesService {
       const raw = Array.isArray(data) ? data : [];
       
       // Normalizar los datos
-      const normalized = raw.map((r: any) => this.normalizeSolicitud(r));
+      const normalized = raw.map((r: unknown) => this.normalizeSolicitud(r));
       this._solicitudes.set(normalized);
       
     } catch (err) {
@@ -78,7 +167,7 @@ export class SolicitudesService {
         if (res2.ok) {
           const data2 = await res2.json();
           const raw2 = Array.isArray(data2) ? data2 : [];
-          const normalized2 = raw2.map((r: any) => this.normalizeSolicitud(r));
+          const normalized2 = raw2.map((r: unknown) => this.normalizeSolicitud(r));
           this._solicitudes.set(normalized2);
           return;
         }
@@ -91,7 +180,7 @@ export class SolicitudesService {
     }
   }
 
-  async getSolicitudDetalleById(id: number): Promise<any> {
+  async getSolicitudDetalleById(id: number): Promise<ApiRecord> {
     const res = await fetch(`${API_DETALLE}/${id}`, {
       headers: this.getAuthHeaders()
     });
@@ -111,13 +200,16 @@ export class SolicitudesService {
       });
       const has = next.some((s) => Number(s?.solicitud_id ?? s?.id_solicitud ?? 0) === Number(id));
       this._solicitudes.set(has ? next : [normalized, ...next]);
-    } catch {}
+    } catch {
+      void 0;
+    }
     return normalized;
   }
 
   // Normalización corregida
-  private normalizeSolicitud(s: any): any {
-    if (!s || typeof s !== 'object') return s;
+  private normalizeSolicitud(input: unknown): ApiRecord {
+    const s = this.asObject(input);
+    if (!s) return {};
     
     const idRaw = s?.solicitud_id ?? s?.id_solicitud ?? s?.solicitudId ?? s?.id ?? null;
     const id = (idRaw === null || idRaw === undefined) ? null : Number(idRaw);
@@ -174,9 +266,19 @@ export class SolicitudesService {
       valor_cotizacion = parsed === null ? null : parsed;
     }
 
-    const toBoolOrNull = (val: any): boolean | null => {
-      if (val === null || val === undefined) return null;
-      return Number(val) === 1 || val === true;
+    const toBoolOrNull = (val: unknown): boolean | null => {
+      if (val === null || val === undefined || val === '') return null;
+      if (typeof val === 'boolean') return val;
+      if (typeof val === 'number') {
+        if (val === 1) return true;
+        if (val === 0) return false;
+        return null;
+      }
+      const s = String(val).trim().toLowerCase();
+      if (!s) return null;
+      if (s === '1' || s === 'true' || s === 't' || s === 'si' || s === 'sí' || s === 'yes' || s === 'y') return true;
+      if (s === '0' || s === 'false' || s === 'f' || s === 'no' || s === 'n') return false;
+      return null;
     };
 
     const rawEstado = s?.id_estado ?? null;
@@ -190,6 +292,17 @@ export class SolicitudesService {
       ? null
       : Number(rawAdmin);
     if (!Number.isFinite(id_admin)) id_admin = null;
+
+    const conceptoFinal =
+      s?.concepto_final ??
+      s?.conceptoFinal ??
+      s?.revision?.concepto_final ??
+      s?.revision?.conceptoFinal ??
+      s?.revision_oferta?.concepto_final ??
+      s?.revision_oferta?.conceptoFinal ??
+      s?.revisionOferta?.concepto_final ??
+      s?.revisionOferta?.conceptoFinal ??
+      null;
 
     return {
       ...s,
@@ -238,9 +351,9 @@ export class SolicitudesService {
       metodo_validado_verificado: toBoolOrNull(s?.metodo_validado_verificado),
       metodo_adecuado: toBoolOrNull(s?.metodo_adecuado),
       observaciones_tecnicas: s?.observaciones_tecnicas ?? null,
-      concepto_final: s?.concepto_final ?? null,
+      concepto_final: conceptoFinal,
       servicio_es_viable: s?.servicio_es_viable === null || s?.servicio_es_viable === undefined
-        ? (s?.concepto_final === 'SOLICITUD_VIABLE' || s?.concepto_final === 'SOLICITUD_VIABLE_CON_OBSERVACIONES')
+        ? (conceptoFinal === 'SOLICITUD_VIABLE' || conceptoFinal === 'SOLICITUD_VIABLE_CON_OBSERVACIONES')
         : (Number(s.servicio_es_viable) === 1 || s.servicio_es_viable === true),
 
       // Encuesta - nombres exactos del JOIN
@@ -253,7 +366,7 @@ export class SolicitudesService {
     };
   }
 
-  async createSolicitud(body: any): Promise<void> {
+  async createSolicitud(body: ApiRecord): Promise<ApiRecord> {
     const res = await fetch(API, {
         method: 'POST',
         headers: this.getAuthHeaders(),
@@ -268,7 +381,7 @@ export class SolicitudesService {
       throw new Error(await res.text());
     }
     
-      const payload = await res.json().catch(() => ({} as any));
+      const payload = this.asObject(await res.json().catch(() => ({}))) || {};
       const newId = payload?.solicitud_id ?? payload?.id ?? body?.solicitud_id ?? null;
       // Optimistic item using canonical fields; oferta/revisión/encuesta null
       const optimisticRaw = {
@@ -293,13 +406,15 @@ export class SolicitudesService {
         const current = this._solicitudes();
         // Prepend so it appears at top (sorted DESC by id)
         this._solicitudes.set([optimistic, ...current]);
-      } catch {}
+      } catch {
+        void 0;
+      }
       // Refresh in background to reconcile with DB (joined data)
       this.loadSolicitudes().catch(err => console.warn('Refresh after create failed', err));
       return optimistic;
   }
 
-  async listarEstadosSolicitud(): Promise<any[]> {
+  async listarEstadosSolicitud(): Promise<unknown[]> {
     const res = await fetch(API_ESTADOS, { headers: this.getAuthHeaders() });
     if (res.status === 401) {
       throw new Error('No autorizado - Token inválido o expirado');
@@ -307,7 +422,8 @@ export class SolicitudesService {
     if (!res.ok) {
       throw new Error(await this.readApiError(res, 'Error cargando estados'));
     }
-    return res.json();
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   }
 
   async actualizarEstadoSolicitud(id: number, id_estado: number): Promise<void> {
@@ -338,7 +454,7 @@ export class SolicitudesService {
     }
   }
 
-  async upsertOferta(id_solicitud: number, body: any): Promise<void> {
+  async upsertOferta(id_solicitud: number, body: ApiRecord): Promise<void> {
     const url = API + '/oferta/' + id_solicitud;
     const res = await fetch(url, {
       method: 'PUT',
@@ -377,10 +493,12 @@ export class SolicitudesService {
         return this.normalizeSolicitud(merged);
       });
       this._solicitudes.set(next);
-    } catch {}
+    } catch {
+      void 0;
+    }
   }
 
-  async upsertRevision(id_solicitud: number, body: any): Promise<void> {
+  async upsertRevision(id_solicitud: number, body: ApiRecord): Promise<void> {
     const url = API + '/revision/' + id_solicitud;
     const res = await fetch(url, {
       method: 'PUT',
@@ -421,10 +539,12 @@ export class SolicitudesService {
         return this.normalizeSolicitud(merged);
       });
       this._solicitudes.set(next);
-    } catch {}
+    } catch {
+      void 0;
+    }
   }
 
-  async upsertSeguimientoEncuesta(id_solicitud: number, body: any): Promise<void> {
+  async upsertSeguimientoEncuesta(id_solicitud: number, body: ApiRecord): Promise<void> {
     const url = API + '/seguimiento-encuesta/' + id_solicitud;
     const res = await fetch(url, {
       method: 'PUT',
@@ -457,10 +577,12 @@ export class SolicitudesService {
         return this.normalizeSolicitud(merged);
       });
       this._solicitudes.set(next);
-    } catch {}
+    } catch {
+      void 0;
+    }
   }
 
-  async updateSolicitud(id: any, body: any): Promise<void> {
+  async updateSolicitud(id: number | string, body: ApiRecord): Promise<void> {
     const res = await fetch(API + '/' + id, {
       method: 'PUT',
       headers: this.getAuthHeaders(),
@@ -495,7 +617,7 @@ export class SolicitudesService {
     await this.loadSolicitudes();
   }
 
-  async createEncuesta(body: any): Promise<void> {
+  async createEncuesta(body: ApiRecord): Promise<void> {
     const res = await fetch(API + '/encuestas', {
       method: 'POST',
       headers: this.getAuthHeaders(),
@@ -513,18 +635,18 @@ export class SolicitudesService {
     await this.loadSolicitudes();
   }
 
-  async suscribirseSolicitudes(email: string): Promise<any> {
+  async suscribirseSolicitudes(email: string): Promise<ApiRecord | null> {
     const res = await fetch(API + '/suscripciones-solicitudes', {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ email })
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: ApiRecord | null = null; try { data = this.asObject(await res.json()); } catch { void 0; }
     if (res.status === 401) {
       throw new Error('No autorizado - Token inválido o expirado');
     }
     if (!res.ok) {
-      throw new Error((data && data.error) || 'Error al suscribirse a solicitudes');
+      throw new Error(String(data?.error ?? 'Error al suscribirse a solicitudes'));
     }
     return data;
   }
@@ -533,43 +655,43 @@ export class SolicitudesService {
     const res = await fetch(API + '/suscripciones-solicitudes/' + encodeURIComponent(email), {
       headers: this.getAuthHeaders()
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: ApiRecord | null = null; try { data = this.asObject(await res.json()); } catch { void 0; }
     if (res.status === 401) {
       throw new Error('No autorizado - Token inválido o expirado');
     }
     if (!res.ok) {
-      throw new Error((data && data.error) || 'Error consultando suscripción de solicitudes');
+      throw new Error(String(data?.error ?? 'Error consultando suscripción de solicitudes'));
     }
     return data as { suscrito: boolean };
   }
 
-  async cancelarSuscripcionSolicitudes(email: string): Promise<any> {
+  async cancelarSuscripcionSolicitudes(email: string): Promise<ApiRecord | null> {
     const res = await fetch(API + '/suscripciones-solicitudes/' + encodeURIComponent(email), {
       method: 'DELETE',
       headers: this.getAuthHeaders()
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: ApiRecord | null = null; try { data = this.asObject(await res.json()); } catch { void 0; }
     if (res.status === 401) {
       throw new Error('No autorizado - Token inválido o expirado');
     }
     if (!res.ok) {
-      throw new Error((data && data.error) || 'Error al cancelar suscripción de solicitudes');
+      throw new Error(String(data?.error ?? 'Error al cancelar suscripción de solicitudes'));
     }
     return data;
   }
 
-  async suscribirseRevision(email: string): Promise<any> {
+  async suscribirseRevision(email: string): Promise<ApiRecord | null> {
     const res = await fetch(API + '/suscripciones-revision', {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ email })
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: ApiRecord | null = null; try { data = this.asObject(await res.json()); } catch { void 0; }
     if (res.status === 401) {
       throw new Error('No autorizado - Token inválido o expirado');
     }
     if (!res.ok) {
-      throw new Error((data && data.error) || 'Error al suscribirse a revisión');
+      throw new Error(String(data?.error ?? 'Error al suscribirse a revisión'));
     }
     return data;
   }
@@ -578,54 +700,59 @@ export class SolicitudesService {
     const res = await fetch(API + '/suscripciones-revision/' + encodeURIComponent(email), {
       headers: this.getAuthHeaders()
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: ApiRecord | null = null; try { data = this.asObject(await res.json()); } catch { void 0; }
     if (res.status === 401) {
       throw new Error('No autorizado - Token inválido o expirado');
     }
     if (!res.ok) {
-      throw new Error((data && data.error) || 'Error consultando suscripción de revisión');
+      throw new Error(String(data?.error ?? 'Error consultando suscripción de revisión'));
     }
     return data as { suscrito: boolean };
   }
 
-  async cancelarSuscripcionRevision(email: string): Promise<any> {
+  async cancelarSuscripcionRevision(email: string): Promise<ApiRecord | null> {
     const res = await fetch(API + '/suscripciones-revision/' + encodeURIComponent(email), {
       method: 'DELETE',
       headers: this.getAuthHeaders()
     });
-    let data: any = null; try { data = await res.json(); } catch {}
+    let data: ApiRecord | null = null; try { data = this.asObject(await res.json()); } catch { void 0; }
     if (res.status === 401) {
       throw new Error('No autorizado - Token inválido o expirado');
     }
     if (!res.ok) {
-      throw new Error((data && data.error) || 'Error al cancelar suscripción de revisión');
+      throw new Error(String(data?.error ?? 'Error al cancelar suscripción de revisión'));
     }
     return data;
   }
 
-  async listarPlantillasDocumentoSolicitud(): Promise<any[]> {
+  async listarPlantillasDocumentoSolicitud(): Promise<unknown[]> {
     if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
     const res = await fetch(API_DOC_PLANTILLAS_BASE, {
       method: 'GET',
       headers: this.getAuthHeaders()
     });
-    let data: any = null;
+    let data: unknown = null;
     try {
       data = await res.json();
-    } catch {}
+    } catch {
+      void 0;
+    }
     if (!res.ok) {
       if (res.status === 404) {
         tplDocEndpointMissing = true;
         throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
       }
-      const err: any = new Error((data && (data.message || data.error)) || 'Error listando plantillas');
+      const dataObj = this.asObject(data);
+      const err: ErrorWithStatus = new Error((dataObj && (dataObj.message || dataObj.error) ? String(dataObj.message || dataObj.error) : '') || 'Error listando plantillas');
       err.status = res.status;
       throw err;
     }
-    return Array.isArray(data) ? data : (data?.rows || []);
+    const dataObj = this.asObject(data);
+    const rows = dataObj?.rows;
+    return Array.isArray(data) ? data : (Array.isArray(rows) ? rows : []);
   }
 
-  async subirPlantillaDocumentoSolicitud(params: { template: File; nombre?: string }): Promise<any> {
+  async subirPlantillaDocumentoSolicitud(params: { template: File; nombre?: string }): Promise<ApiRecord | null> {
     if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
     const template = params?.template;
     if (!template) throw new Error('Debe seleccionar una plantilla');
@@ -640,23 +767,26 @@ export class SolicitudesService {
       headers: this.getAuthHeadersMultipart(),
       body: fd
     });
-    let data: any = null;
+    let data: unknown = null;
     try {
       data = await res.json();
-    } catch {}
+    } catch {
+      void 0;
+    }
     if (!res.ok) {
       if (res.status === 404) {
         tplDocEndpointMissing = true;
         throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
       }
-      const err: any = new Error((data && (data.message || data.error)) || 'Error subiendo plantilla');
+      const dataObj = this.asObject(data);
+      const err: ErrorWithStatus = new Error((dataObj && (dataObj.message || dataObj.error) ? String(dataObj.message || dataObj.error) : '') || 'Error subiendo plantilla');
       err.status = res.status;
       throw err;
     }
-    return data;
+    return this.asObject(data);
   }
 
-  async eliminarPlantillaDocumentoSolicitud(id: number): Promise<any> {
+  async eliminarPlantillaDocumentoSolicitud(id: number): Promise<ApiRecord | null> {
     if (tplDocEndpointMissing) throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
     const tplId = Number(id);
     if (!Number.isFinite(tplId) || tplId <= 0) throw new Error('ID inválido');
@@ -665,20 +795,95 @@ export class SolicitudesService {
       method: 'DELETE',
       headers: this.getAuthHeadersMultipart()
     });
-    let data: any = null;
+    let data: unknown = null;
     try {
       data = await res.json();
-    } catch {}
+    } catch {
+      void 0;
+    }
     if (!res.ok) {
       if (res.status === 404) {
         tplDocEndpointMissing = true;
         throw new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
       }
-      const err: any = new Error((data && (data.message || data.error)) || 'Error eliminando plantilla');
+      const dataObj = this.asObject(data);
+      const err: ErrorWithStatus = new Error((dataObj && (dataObj.message || dataObj.error) ? String(dataObj.message || dataObj.error) : '') || 'Error eliminando plantilla');
       err.status = res.status;
       throw err;
     }
-    return data;
+    return this.asObject(data);
+  }
+
+  async exportarClientesExcel(): Promise<{ blob: Blob; filename: string | null }> {
+    const res = await fetch(API + '/clientes/export/excel', {
+      method: 'GET',
+      headers: this.getAuthHeaders()
+    });
+    if (!res.ok) {
+      const err: ErrorWithStatus = new Error(await this.readApiError(res, 'Error exportando clientes a Excel'));
+      err.status = res.status;
+      throw err;
+    }
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename: string | null = null;
+    const m = /filename\*?=(?:UTF-8''|"?)([^";]+)"?/i.exec(cd);
+    if (m && m[1]) {
+      try {
+        filename = decodeURIComponent(m[1]);
+      } catch {
+        filename = m[1];
+      }
+    }
+    return { blob, filename };
+  }
+
+  async exportarClientesSolicitudesExcel(): Promise<{ blob: Blob; filename: string | null }> {
+    const res = await fetch(API + '/clientes-solicitudes/export/excel', {
+      method: 'GET',
+      headers: this.getAuthHeaders()
+    });
+    if (!res.ok) {
+      const err: ErrorWithStatus = new Error(await this.readApiError(res, 'Error exportando solicitudes y clientes a Excel'));
+      err.status = res.status;
+      throw err;
+    }
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename: string | null = null;
+    const m = /filename\*?=(?:UTF-8''|"?)([^";]+)"?/i.exec(cd);
+    if (m && m[1]) {
+      try {
+        filename = decodeURIComponent(m[1]);
+      } catch {
+        filename = m[1];
+      }
+    }
+    return { blob, filename };
+  }
+
+  async exportarSolicitudesExcel(): Promise<{ blob: Blob; filename: string | null }> {
+    const res = await fetch(API + '/export/excel', {
+      method: 'GET',
+      headers: this.getAuthHeaders()
+    });
+    if (!res.ok) {
+      const err: ErrorWithStatus = new Error(await this.readApiError(res, 'Error exportando solicitudes a Excel'));
+      err.status = res.status;
+      throw err;
+    }
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename: string | null = null;
+    const m = /filename\*?=(?:UTF-8''|"?)([^";]+)"?/i.exec(cd);
+    if (m && m[1]) {
+      try {
+        filename = decodeURIComponent(m[1]);
+      } catch {
+        filename = m[1];
+      }
+    }
+    return { blob, filename };
   }
 
   async generarDocumentoDesdePlantilla(params: {
@@ -699,7 +904,7 @@ export class SolicitudesService {
     // Permitir requests vacías: si la plantilla tiene loops, el backend genera "todos".
     // Si no hay loops, el backend devolverá un 400 con el mensaje correspondiente.
 
-    const body: any = {};
+    const body: ApiRecord = {};
     if (hasSolicitud) body.solicitud_id = solicitud_id;
     if (hasCliente) body.id_cliente = id_cliente;
     if (todos) body.todos = true;
@@ -713,11 +918,11 @@ export class SolicitudesService {
     if (!res.ok) {
       if (res.status === 404) {
         tplDocEndpointMissing = true;
-        const err: any = new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
+        const err: ErrorWithStatus = new Error('El backend no tiene habilitada la ruta de plantillas persistentes');
         err.status = res.status;
         throw err;
       }
-      const err: any = new Error(await this.readApiError(res, 'Error generando documento'));
+      const err: ErrorWithStatus = new Error(await this.readApiError(res, 'Error generando documento'));
       err.status = res.status;
       throw err;
     }
@@ -725,7 +930,7 @@ export class SolicitudesService {
     const blob = await res.blob();
     const cd = res.headers.get('content-disposition') || '';
     let filename: string | null = null;
-    const m = /filename\*?=(?:UTF-8''|\"?)([^\";]+)\"?/i.exec(cd);
+    const m = /filename\*?=(?:UTF-8''|"?)([^";]+)"?/i.exec(cd);
     if (m && m[1]) {
       try {
         filename = decodeURIComponent(m[1]);

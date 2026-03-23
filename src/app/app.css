@@ -587,6 +587,70 @@ body.auth-page .app-header {
 	z-index: 1400;
 }
 
+.update-download-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.45);
+	backdrop-filter: blur(2px);
+	z-index: 1480;
+}
+
+.update-download-modal {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: min(420px, 90vw);
+	background: var(--app-surface, #fff);
+	border: 1px solid var(--app-border, var(--border-gray));
+	border-radius: 14px;
+	box-shadow: 0 24px 60px rgba(2, 6, 23, 0.28);
+	z-index: 1481;
+	padding: 1rem 1.2rem 1.1rem;
+	animation: updatesModalIn 160ms ease;
+}
+
+.update-download-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.update-download-header h3 {
+	margin: 0;
+	font-size: 1rem;
+	color: var(--app-text, #1f2937);
+}
+
+.update-download-percent {
+	font-weight: 600;
+	color: var(--primary-turquoise, #10b981);
+}
+
+.update-download-bar {
+	width: 100%;
+	height: 10px;
+	border-radius: 999px;
+	background: var(--app-hover, #f1f5f9);
+	border: 1px solid var(--app-border, var(--border-gray));
+	overflow: hidden;
+}
+
+.update-download-fill {
+	height: 100%;
+	width: 0%;
+	background: linear-gradient(90deg, #10b981, #22d3ee);
+	transition: width 140ms ease;
+}
+
+.update-download-meta {
+	margin-top: 0.6rem;
+	font-size: 0.85rem;
+	color: var(--app-muted, #64748b);
+}
+
 .updates-modal {
 	position: fixed;
 	top: 50%;
@@ -655,6 +719,24 @@ body.auth-page .app-header {
 @keyframes updatesModalIn {
 	from { opacity: 0; transform: translate(-50%, -48%); }
 	to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+:root[data-theme="dark"] .update-download-modal {
+	background: var(--app-surface, #0f172a);
+	border-color: rgba(148, 163, 184, 0.35);
+}
+
+:root[data-theme="dark"] .update-download-header h3 {
+	color: var(--app-text-strong, #f1f5f9);
+}
+
+:root[data-theme="dark"] .update-download-bar {
+	background: rgba(148, 163, 184, 0.16);
+	border-color: rgba(148, 163, 184, 0.2);
+}
+
+:root[data-theme="dark"] .update-download-meta {
+	color: rgba(226, 232, 240, 0.75);
 }
 
 .updates-modal-header {
@@ -1239,15 +1321,15 @@ body.auth-page .main-content.route-navigating {
    ===================================================== */
 .snackbar {
 	position: fixed;
-	left: 50%;
+	right: 24px;
 	bottom: 24px;
-	transform: translateX(-50%) translateY(18px);
+	transform: translateY(18px);
 	background: #ffffff;
 	color: #0f172a;
 	border-radius: 14px;
 	box-shadow: 0 8px 28px rgba(2,6,23,0.18);
 	padding: 14px 20px 14px;
-	z-index: 5000;
+	z-index: 12000;
 	opacity: 0;
 	pointer-events: none;
 	transition: opacity 180ms ease, transform 180ms ease;
@@ -1259,7 +1341,7 @@ body.auth-page .main-content.route-navigating {
 
 .snackbar.open { 
 	opacity: 1; 
-	transform: translateX(-50%) translateY(0); 
+	transform: translateY(0); 
 	pointer-events: auto; 
 }
 

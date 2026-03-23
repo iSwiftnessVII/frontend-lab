@@ -1,4 +1,4 @@
-import { Component, signal, effect, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
+import { Component, signal, effect, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild, inject } from '@angular/core';
 import { equiposService } from '../services/equipos.service';
 import { logsService } from '../services/logs.service';
 import { SnackbarService } from '../shared/snackbar.service';
@@ -16,6 +16,9 @@ import { authService, authUser } from '../services/auth.service';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class EquiposComponent implements OnInit, OnDestroy {
+  public snack = inject(SnackbarService);
+  private cdr = inject(ChangeDetectorRef);
+  private confirm = inject(ConfirmService);
   @ViewChild('tplEquipoDocTemplateInput') private tplEquipoDocTemplateInput?: ElementRef<HTMLInputElement>;
   public get esAuxiliar(): boolean {
     const user = authUser();
@@ -36,11 +39,11 @@ export class EquiposComponent implements OnInit, OnDestroy {
       ];
 
       // Control de pestaña activa por equipo
-      activeTab: { [codigo: string]: string } = {};
+      activeTab: Record<string, string> = {};
 
       // Almacenar historial e intervalo por equipo
-      historialPorEquipo: { [codigo: string]: any[] } = {};
-      intervaloPorEquipo: { [codigo: string]: any[] } = {};
+      historialPorEquipo: Record<string, any[]> = {};
+      intervaloPorEquipo: Record<string, any[]> = {};
 
       // Modal de imagen (firma)
       firmaModalVisible = false;
@@ -57,23 +60,25 @@ export class EquiposComponent implements OnInit, OnDestroy {
       }
 
       // Edit modal state (tabs + save)
-      editModalVisible: boolean = false;
-      editModalClosing: boolean = false;
-      editModalActiveTab: string = 'hojaVida';
+      editModalVisible = false;
+      editModalClosing = false;
+      editModalActiveTab = 'hojaVida';
+      private editOriginalEquipoPayload: any | null = null;
 
       // Temporary fields for adding a historial/intervalo from modal
-      newHistorialTipo: string = '';
-      newHistorialFecha: string = '';
-      newHistorialObservaciones: string = '';
-      newHistorialRealizo: string = '';
-      newHistorialSuperviso: string = '';
+      newHistorialTipo = '';
+      newHistorialFecha = '';
+      newHistorialObservaciones = '';
+      newHistorialRealizo = '';
+      newHistorialSuperviso = '';
 
-      newIntervaloDescripcion: string = '';
-      newIntervaloFecha: string = '';
+      newIntervaloDescripcion = '';
+      newIntervaloFecha = '';
 
       closeEditEquipoModal() {
         this.editModalVisible = false;
         this.editModalClosing = false;
+        this.editOriginalEquipoPayload = null;
         // clear new entry fields
         this.newHistorialTipo = '';
         this.newHistorialFecha = '';
@@ -84,40 +89,55 @@ export class EquiposComponent implements OnInit, OnDestroy {
         this.newIntervaloFecha = '';
       }
 
+  private buildEditEquipoPayload(): any {
+    return {
+      codigo_identificacion: this.codigo_identificacion,
+      nombre: this.nombre,
+      modelo: this.modelo,
+      marca: this.marca,
+      inventario_sena: this.inventario_sena,
+      ubicacion: this.ubicacion,
+      acreditacion: this.acreditacion,
+      tipo_manual: this.tipo_manual,
+      numero_serie: this.numero_serie,
+      tipo: this.tipo,
+      clasificacion: this.clasificacion,
+      manual_usuario: this.manual_usuario,
+      puesta_en_servicio: this.puesta_en_servicio,
+      fecha_adquisicion: this.fecha_adquisicion,
+      requerimientos_equipo: this.requerimientos_equipo,
+      elementos_electricos: this.elementos_electricos,
+      voltaje: this.voltaje,
+      elementos_mecanicos: this.elementos_mecanicos,
+      frecuencia: this.frecuencia,
+      campo_medicion: this.campo_medicion,
+      exactitud: this.exactitud,
+      sujeto_verificar: this.sujeto_verificar,
+      sujeto_calibracion: this.sujeto_calibracion,
+      resolucion_division: this.resolucion_division,
+      sujeto_calificacion: this.sujeto_calificacion,
+      accesorios: this.accesorios
+    };
+  }
+
+  private hasEditEquipoChanges(payload: any): boolean {
+    const changesInMainForm = JSON.stringify(payload) !== JSON.stringify(this.editOriginalEquipoPayload);
+    const hasNewHistorial = !!(this.newHistorialTipo || this.newHistorialFecha || this.newHistorialObservaciones || this.newHistorialRealizo || this.newHistorialSuperviso);
+    const hasNewIntervalo = !!(this.newIntervaloDescripcion || this.newIntervaloFecha);
+    return changesInMainForm || hasNewHistorial || hasNewIntervalo;
+  }
+
   async saveAllEditEquipo() {
         // Build payload from current form fields
         if (!this.editingEquipoCodigo) {
           this.snack.error('No se ha seleccionado equipo para editar');
           return;
         }
-        const payload: any = {
-          codigo_identificacion: this.codigo_identificacion,
-          nombre: this.nombre,
-          modelo: this.modelo,
-          marca: this.marca,
-          inventario_sena: this.inventario_sena,
-          ubicacion: this.ubicacion,
-          acreditacion: this.acreditacion,
-          tipo_manual: this.tipo_manual,
-          numero_serie: this.numero_serie,
-          tipo: this.tipo,
-          clasificacion: this.clasificacion,
-          manual_usuario: this.manual_usuario,
-          puesta_en_servicio: this.puesta_en_servicio,
-          fecha_adquisicion: this.fecha_adquisicion,
-          requerimientos_equipo: this.requerimientos_equipo,
-          elementos_electricos: this.elementos_electricos,
-          voltaje: this.voltaje,
-          elementos_mecanicos: this.elementos_mecanicos,
-          frecuencia: this.frecuencia,
-          campo_medicion: this.campo_medicion,
-          exactitud: this.exactitud,
-          sujeto_verificar: this.sujeto_verificar,
-          sujeto_calibracion: this.sujeto_calibracion,
-          resolucion_division: this.resolucion_division,
-          sujeto_calificacion: this.sujeto_calificacion,
-          accesorios: this.accesorios
-        };
+        const payload: any = this.buildEditEquipoPayload();
+        if (!this.hasEditEquipoChanges(payload)) {
+          this.snack.warn('No hay campos para actualizar');
+          return;
+        }
 
         try {
           await equiposService.actualizarEquipo(this.editingEquipoCodigo, payload);
@@ -172,7 +192,7 @@ export class EquiposComponent implements OnInit, OnDestroy {
       }
 
       // Edit mode for equipo: open form prefilled
-      editEquipoMode: boolean = false;
+      editEquipoMode = false;
       editingEquipoCodigo: string | null = null;
 
       abrirEditarEquipo(equipo: any, event?: Event) {
@@ -246,6 +266,7 @@ export class EquiposComponent implements OnInit, OnDestroy {
 
         this.editEquipoMode = true;
         this.editingEquipoCodigo = equipo.codigo_identificacion || null;
+        this.editOriginalEquipoPayload = this.buildEditEquipoPayload();
         // Open edit modal with tabs
         this.editModalVisible = true;
         this.editModalClosing = false;
@@ -253,10 +274,10 @@ export class EquiposComponent implements OnInit, OnDestroy {
       }
 
       // Control de registros de historial expandidos
-      historialExpandido: { [key: string]: boolean } = {};
+      historialExpandido: Record<string, boolean> = {};
 
       // Control de registros de intervalo expandidos
-      intervaloExpandido: { [key: string]: boolean } = {};
+      intervaloExpandido: Record<string, boolean> = {};
 
       // Toggle para expandir/contraer registro de historial
       toggleHistorialRegistro(equipoId: string, consecutivo: number) {
@@ -280,8 +301,8 @@ export class EquiposComponent implements OnInit, OnDestroy {
           if (registro.fecha) {
             try {
               registro._edit.fecha = this.formatearFecha(registro.fecha);
-            } catch (e) {
-              // fallback: leave as-is
+            } catch {
+              registro._edit.fecha = '';
             }
           } else {
             registro._edit.fecha = '';
@@ -338,12 +359,20 @@ export class EquiposComponent implements OnInit, OnDestroy {
           registro._edit = { ...registro };
           // Ensure date inputs get a yyyy-MM-dd string so type="date" shows the value
           if (registro.fecha_c1) {
-            try { registro._edit.fecha_c1 = this.formatearFecha(registro.fecha_c1); } catch (e) { }
+            try {
+              registro._edit.fecha_c1 = this.formatearFecha(registro.fecha_c1);
+            } catch {
+              registro._edit.fecha_c1 = '';
+            }
           } else {
             registro._edit.fecha_c1 = '';
           }
           if (registro.fecha_c2) {
-            try { registro._edit.fecha_c2 = this.formatearFecha(registro.fecha_c2); } catch (e) { }
+            try {
+              registro._edit.fecha_c2 = this.formatearFecha(registro.fecha_c2);
+            } catch {
+              registro._edit.fecha_c2 = '';
+            }
           } else {
             registro._edit.fecha_c2 = '';
           }
@@ -376,8 +405,8 @@ export class EquiposComponent implements OnInit, OnDestroy {
             try {
               const data = await equiposService.listarIntervaloPorEquipo(equipoCodigo);
               this.intervaloPorEquipo[equipoCodigo] = data;
-            } catch (e) {
-              // ignore refresh errors
+            } catch {
+              this.intervaloPorEquipo[equipoCodigo] = this.intervaloPorEquipo[equipoCodigo] || [];
             }
           } else {
             // No backend update route available — apply changes locally
@@ -417,9 +446,9 @@ export class EquiposComponent implements OnInit, OnDestroy {
     }
   
     // PDF lists per equipo (map keyed by codigo_identificacion)
-    pdfListByEquipo: { [codigo: string]: Array<{ id?: number; name: string; url: string; categoria?: string; size?: number; mime?: string; fecha_subida?: Date | null; displayName?: string }> } = {};
-    selectedPdfByEquipo: { [codigo: string]: string | null } = {};
-    menuCategoriaPdfVisible: { [codigo: string]: boolean } = {};
+    pdfListByEquipo: Record<string, { id?: number; name: string; url: string; categoria?: string; size?: number; mime?: string; fecha_subida?: Date | null; displayName?: string }[]> = {};
+    selectedPdfByEquipo: Record<string, string | null> = {};
+    menuCategoriaPdfVisible: Record<string, boolean> = {};
 
     mostrarMenuCategoriaPdf(codigo: string, event?: Event) {
       if (event) event.stopPropagation();
@@ -456,7 +485,7 @@ export class EquiposComponent implements OnInit, OnDestroy {
           });
 
           // Assign display names by grouping per category and numbering only when there are multiple
-          const groups: { [cat: string]: Array<any> } = {};
+          const groups: Record<string, any[]> = {};
           for (const it of items) {
             const cat = (it.categoria || '').trim();
             if (!cat) continue;
@@ -581,18 +610,18 @@ export class EquiposComponent implements OnInit, OnDestroy {
   // Variable para controlar el formulario activo
   formularioActivo: string | null = null;
 
-  tplEquipoDocFiltroTipo: string = 'todos';
-  tplEquipoDocBusqueda: string = '';
+  tplEquipoDocFiltroTipo = 'todos';
+  tplEquipoDocBusqueda = '';
   tplEquipoDocResultados: any[] = [];
   tplEquipoDocSeleccionado: any = null;
   tplEquipoDocPlantillas = signal<any[]>([]);
   tplEquipoDocPlantillaId: number | null = null;
-  tplEquipoDocNombrePlantilla: string = '';
+  tplEquipoDocNombrePlantilla = '';
   tplEquipoDocTemplateFile: File | null = null;
-  tplEquipoDocMsg: string = '';
-  tplEquipoDocLoading: boolean = false;
+  tplEquipoDocMsg = '';
+  tplEquipoDocLoading = false;
   tplEquipoDocListLoading = signal(false);
-  tplEquipoDocUploadLoading: boolean = false;
+  tplEquipoDocUploadLoading = false;
   tplEquipoDocDeleteLoading: Set<number> = new Set<number>();
 
   opcionesFiltroDocumentos = [
@@ -610,10 +639,10 @@ export class EquiposComponent implements OnInit, OnDestroy {
 
   // Variables para búsqueda y autocompletado
   busquedaEquipo = '';
-  tipoFiltro: string = 'todos'; // 'todos', 'codigo', 'nombre', 'marca', 'modelo'
+  tipoFiltro = 'todos'; // 'todos', 'codigo', 'nombre', 'marca', 'modelo'
   equiposFiltrados: any[] = [];
   equipoSeleccionado: any = null;
-  mostrarResultados: boolean = false;
+  mostrarResultados = false;
 
   // Opciones para el select de filtro
   opcionesFiltro = [
@@ -683,13 +712,13 @@ export class EquiposComponent implements OnInit, OnDestroy {
 
   // Campos para intervalo_hv
   consecutivo_intervalo: number | null = null;
-  equipo_id_intervalo: string = '';
+  equipo_id_intervalo = '';
   unidad_nominal_g: number | null = null;
-  calibracion_1: string = '';
-  fecha_c1: string = '';
+  calibracion_1 = '';
+  fecha_c1 = '';
   error_c1_g: number | null = null;
-  calibracion_2: string = '';
-  fecha_c2: string = '';
+  calibracion_2 = '';
+  fecha_c2 = '';
   error_c2_g: number | null = null;
   diferencia_dias: number | null = null;
   desviacion: number | null = null;
@@ -700,16 +729,16 @@ export class EquiposComponent implements OnInit, OnDestroy {
 
   // Campos para historial_hv
   consecutivo: number | null = null;
-  equipo_id: string = '';
-  fecha: string = '';
-  tipo_historial: string = '';
-  codigo_registro: string = '';
+  equipo_id = '';
+  fecha = '';
+  tipo_historial = '';
+  codigo_registro = '';
   tolerancia_g: number | null = null;
   tolerancia_error_g: number | null = null;
   incertidumbre_u: number | null = null;
-  realizo: string = '';
-  superviso: string = '';
-  observaciones: string = '';
+  realizo = '';
+  superviso = '';
+  observaciones = '';
 
   // Campos del formulario principal
   codigo_identificacion = '';
@@ -749,7 +778,7 @@ export class EquiposComponent implements OnInit, OnDestroy {
   codigoIntervaloSig = signal<string>('');
   consecutivoIntervaloSig = signal<number | null>(null);
 
-  constructor(public snack: SnackbarService, private cdr: ChangeDetectorRef, private confirm: ConfirmService) {
+  constructor() {
     // Efecto: cuando cambia el código de historial, obtener siguiente consecutivo
     effect(() => {
       const codigo = this.codigoHistorialSig();
@@ -1038,8 +1067,8 @@ export class EquiposComponent implements OnInit, OnDestroy {
       } else {
         details.classList.remove('flip');
       }
-    } catch (err) {
-      // silent
+    } catch {
+      details.classList.remove('flip');
     }
   }
 
@@ -1178,10 +1207,8 @@ export class EquiposComponent implements OnInit, OnDestroy {
     this.tplEquipoDocMsg = '';
     this.tplEquipoDocLoading = false;
     this.tplEquipoDocUploadLoading = false;
-    try {
-      const el = this.tplEquipoDocTemplateInput?.nativeElement;
-      if (el) el.value = '';
-    } catch {}
+    const el = this.tplEquipoDocTemplateInput?.nativeElement;
+    if (el) el.value = '';
   }
 
   onTplEquipoDocTemplateSelected(event: any) {
@@ -1232,10 +1259,8 @@ export class EquiposComponent implements OnInit, OnDestroy {
       if (Number.isFinite(id) && id > 0) this.tplEquipoDocPlantillaId = id;
       this.tplEquipoDocNombrePlantilla = '';
       this.tplEquipoDocTemplateFile = null;
-      try {
-        const el = this.tplEquipoDocTemplateInput?.nativeElement;
-        if (el) el.value = '';
-      } catch {}
+      const el = this.tplEquipoDocTemplateInput?.nativeElement;
+      if (el) el.value = '';
       this.snack.success('Plantilla guardada');
     } catch (err: any) {
       this.tplEquipoDocMsg = err?.message || 'Error subiendo plantilla';
@@ -1337,7 +1362,7 @@ export class EquiposComponent implements OnInit, OnDestroy {
               // Normalize display names/numbering
               this.computePdfDisplayNames(codigo);
               this.selectedPdfByEquipo[codigo] = this.pdfListByEquipo[codigo]?.[0]?.url || null;
-            } catch (err) {
+            } catch {
               this.pdfListByEquipo[codigo] = [];
               this.selectedPdfByEquipo[codigo] = null;
             }
@@ -1434,7 +1459,11 @@ export class EquiposComponent implements OnInit, OnDestroy {
     // Ensure fecha_subida is Date where present
     for (const it of items) {
       if (it.fecha_subida && !(it.fecha_subida instanceof Date)) {
-        try { it.fecha_subida = new Date(it.fecha_subida); } catch { it.fecha_subida = null; }
+      try {
+        it.fecha_subida = new Date(it.fecha_subida);
+      } catch {
+        it.fecha_subida = null;
+      }
       }
     }
 
@@ -1444,7 +1473,7 @@ export class EquiposComponent implements OnInit, OnDestroy {
       return 0; // keep existing order
     });
 
-    const groups: { [cat: string]: any[] } = {};
+    const groups: Record<string, any[]> = {};
     for (const it of items) {
       const cat = (it.categoria || '').toString().trim();
       if (!cat) continue;
@@ -1791,7 +1820,9 @@ export class EquiposComponent implements OnInit, OnDestroy {
           this.snack.error('Ya existe un equipo con este código. Use la opción Editar.');
           return;
         }
-      } catch {}
+      } catch {
+        this.snack.warn('No se pudo validar si el código ya existe');
+      }
 
       const payload = {
         codigo_identificacion: this.codigo_identificacion,
@@ -2038,6 +2069,10 @@ toggleFormulario(tipo: string) {
     this.resetFormIntervalo();
     this.limpiarBusqueda();
     this.limpiarSeleccionEquipoPlantillaDocumento();
+      if (tipo === 'hojaVida') {
+        this.editEquipoMode = false;
+        this.editingEquipoCodigo = null;
+      }
 
     if (tipo === 'historial') {
       this.formularioActivo = tipo;

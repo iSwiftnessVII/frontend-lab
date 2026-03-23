@@ -1384,8 +1384,6 @@ input[readonly] {
   pointer-events: none;
 }
 
-.edit-modal > div:last-child,
-.edit-modal > .form-grid,
 .edit-modal .form-grid,
 .edit-modal .volumetrico-tabs-menu + div {
   overflow: auto;
@@ -1397,8 +1395,21 @@ input[readonly] {
 }
 
 .edit-modal .form-actions,
-.edit-modal > div > div[style*="justify-content:flex-end"] {
+.edit-modal-actions {
   z-index: 2;
+}
+
+.edit-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-gray);
 }
 
 /* PDF field styles */

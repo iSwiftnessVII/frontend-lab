@@ -5,8 +5,8 @@ const API = (window as any).__env?.API_SOLICITUDES || 'http://localhost:42420/ap
 
 @Injectable({ providedIn: 'root' })
 export class LocationsService {
-  private _departamentos = signal<Array<any>>([]);
-  private _ciudades = signal<Array<any>>([]);
+  private _departamentos = signal<any[]>([]);
+  private _ciudades = signal<any[]>([]);
   
   departamentos = this._departamentos.asReadonly();
   ciudades = this._ciudades.asReadonly();

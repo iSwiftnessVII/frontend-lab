@@ -1,7 +1,7 @@
-import { Component, signal, effect, OnDestroy, untracked } from '@angular/core';
+import { Component, signal, effect, OnDestroy, untracked, OnInit, inject } from '@angular/core';
 import { RouterOutlet, Router, RouterModule, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
 import { SnackbarService } from './shared/snackbar.service';
-import { CommonModule, NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { authService, authUser } from './services/auth.service';
 import { reactivosService } from './services/reactivos.service';
@@ -16,7 +16,10 @@ import { notificationsService } from './services/notifications.service';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App implements OnDestroy {
+export class App implements OnDestroy, OnInit {
+  private readonly router = inject(Router);
+  public readonly snack = inject(SnackbarService);
+  public readonly confirm = inject(ConfirmService);
   protected readonly title = signal('app-lab');
   readonly user = authUser;
   readonly isLoggingOut = signal(false);
@@ -46,10 +49,15 @@ export class App implements OnDestroy {
   readonly updatesDetailOpen = signal(false);
   readonly selectedUpdate = signal<{ id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean } | null>(null);
   readonly readUpdateIds = signal<Set<number>>(new Set());
+  readonly updateDownloadOpen = signal(false);
+  readonly updateDownloadPercent = signal<number>(0);
+  readonly updateDownloadTransferred = signal<number>(0);
+  readonly updateDownloadTotal = signal<number>(0);
+  readonly updateDownloadLabel = signal<string>('Descargando actualización...');
   readonly excelModalOpen = signal(false);
   readonly excelBusy = signal<'unlock' | 'lock' | null>(null);
   excelFiles: File[] = [];
-  excelFileName: string = '';
+  excelFileName = '';
   excelPassword = '';
   excelMsg = '';
 
@@ -61,7 +69,15 @@ export class App implements OnDestroy {
     const total = this.excelFiles.reduce((sum, f) => sum + (Number(f?.size) || 0), 0);
     return this.formatBytes(total);
   }
-  readonly updatesNotes = signal<Array<{ id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean }>>([
+  readonly updatesNotes = signal<{ id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean }[]>([
+    {
+      id: 5,
+      date: '2026-03-17',
+      title: 'Actualizacion de emergencia',
+      summary: 'Se consolidaron ajustes clave en modals y auditoria para estabilizar la operacion.',
+      detail: 'Se mejoraron los modals de Actualizaciones y detalle para lectura y marcado de novedades.\nSe integro el modal de Excel para bloqueo y desbloqueo con validaciones y permisos por rol.\nSe reforzaron modals de confirmacion y mensajes de estado para evitar acciones inconsistentes.\nEn auditoria se estabilizo la paginacion de acciones evitando cargas duplicadas y parpadeos de loading global.\nSe oculto la barra de scroll que recortaba la columna Detalle y se ajusto la lista para visualizar 10 acciones completas.',
+      hasNotes: true
+    },
     {
       id: 1,
       date: '2026-02-10',
@@ -105,8 +121,15 @@ export class App implements OnDestroy {
   private handleSelectClickRef = (ev: Event) => this.handleSelectClick(ev);
   private handleSelectFocusOutRef = (ev: FocusEvent) => this.handleSelectFocusOut(ev);
   private handleSelectKeydownRef = (ev: KeyboardEvent) => this.handleSelectKeydown(ev);
+  private updateStatusUnsub?: () => void;
+  private updateDownloadTimer?: any;
+  private reactivosAlertRefreshHandler = () => {
+    if (this.user()) {
+      void this.cargarReactivosAlertas();
+    }
+  };
 
-  constructor(private router: Router, public snack: SnackbarService, public confirm: ConfirmService) {
+  constructor() {
     // Inicializar autenticación con TU sistema
     void this.initAuth();
 
@@ -140,11 +163,14 @@ export class App implements OnDestroy {
     this.constructorEffectSetup();
     document.addEventListener('click', this.handleDocumentClick, true);
     // Global select caret state: toggle data-select-open on parent div to rotate chevron
-    try {
+    if (typeof document !== 'undefined') {
       document.addEventListener('click', this.handleSelectClickRef, true);
       document.addEventListener('focusout', this.handleSelectFocusOutRef, true);
       document.addEventListener('keydown', this.handleSelectKeydownRef, true);
-    } catch {}
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('reactivos-alertas-refresh', this.reactivosAlertRefreshHandler);
+    }
 
     // Route transition animation: toggle navigating flag on router events
     this.routerSub = this.router.events.subscribe(ev => {
@@ -171,6 +197,11 @@ export class App implements OnDestroy {
     this.setupFooterDetection();
 
     this.updatesNotes.set(this.hydrateUpdatesNotes());
+
+    const onUpdateStatus = (window as any)?.__desktop?.onUpdateStatus;
+    if (typeof onUpdateStatus === 'function') {
+      this.updateStatusUnsub = onUpdateStatus((payload: any) => this.handleUpdateStatus(payload));
+    }
   }
 
   hasUpdateNotes(): boolean {
@@ -304,7 +335,7 @@ export class App implements OnDestroy {
     this.updatesDetailOpen.set(true);
   }
 
-  private hydrateUpdatesNotes(): Array<{ id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean }> {
+  private hydrateUpdatesNotes(): { id: number; date: string; title: string; summary: string; detail: string; hasNotes?: boolean }[] {
     const readIds = this.readUpdateIds();
     return this.updatesNotes().map((item) => ({
       ...item,
@@ -365,30 +396,30 @@ export class App implements OnDestroy {
 
   private setTheme(theme: 'dark' | 'light', opts?: { persist?: boolean }): void {
     const persist = opts?.persist !== false;
-    try {
-      this.isDarkMode.set(theme === 'dark');
-    } catch {}
+    this.isDarkMode.set(theme === 'dark');
 
-    try {
-      if (typeof document !== 'undefined') {
-        document.documentElement.setAttribute('data-theme', theme);
-      }
-    } catch {}
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
 
     if (persist) {
-      try { window.localStorage?.setItem('liba.theme', theme); } catch {}
+      try {
+        window.localStorage?.setItem('liba.theme', theme);
+      } catch {
+        void 0;
+      }
     }
   }
 
   toggleTheme(ev?: Event): void {
-    try { ev?.stopPropagation(); } catch {}
+    ev?.stopPropagation();
     const next = this.isDarkMode() ? 'light' : 'dark';
     this.setTheme(next);
   }
 
   // NUEVO: Método para detectar automáticamente las selecciones desde la ruta
   private setSelectionsFromRoute(url: string): void {
-    const inventoryRoutes: { [key: string]: string } = {
+    const inventoryRoutes: Record<string, string> = {
       '/reactivos': 'reactivos',
       '/insumos': 'insumos',
       '/papeleria': 'papeleria',
@@ -420,7 +451,7 @@ export class App implements OnDestroy {
   }
 
   getInventoryIcon(inventory: string): string {
-    const icons: { [key: string]: string } = {
+    const icons: Record<string, string> = {
       'reactivos': 'fa-flask',
       'insumos': 'fa-boxes',
       'papeleria': 'fa-paperclip',
@@ -432,7 +463,7 @@ export class App implements OnDestroy {
   }
 
   getInventoryName(inventory: string): string {
-    const names: { [key: string]: string } = {
+    const names: Record<string, string> = {
       'reactivos': 'Reactivos',
       'insumos': 'Insumos',
       'papeleria': 'Papelería',
@@ -505,7 +536,7 @@ export class App implements OnDestroy {
   }
 
   toggleNotifVencidos(ev?: Event): void {
-    try { ev?.stopPropagation(); } catch {}
+    ev?.stopPropagation();
     this.notifVencidosOpen.set(!this.notifVencidosOpen());
     if (this.notifVencidosOpen()) {
       this.notifPorVencerOpen.set(false);
@@ -513,7 +544,7 @@ export class App implements OnDestroy {
   }
 
   toggleNotifPorVencer(ev?: Event): void {
-    try { ev?.stopPropagation(); } catch {}
+    ev?.stopPropagation();
     this.notifPorVencerOpen.set(!this.notifPorVencerOpen());
     if (this.notifPorVencerOpen()) {
       this.notifVencidosOpen.set(false);
@@ -536,7 +567,7 @@ export class App implements OnDestroy {
   // TUS métodos de roles
   async ngOnInit() {
     // Ya se llama en initAuth(), pero lo dejamos por compatibilidad
-    const user = await authService.checkAuth();
+    await authService.checkAuth();
   }
 
   isSuperadmin(): boolean {
@@ -545,6 +576,13 @@ export class App implements OnDestroy {
 
   isAdminOrAuxiliar(): boolean {
     return authService.isAdmin() || authService.isAuxiliar();
+  }
+
+  canAccessAuditoria(): boolean {
+    const rol = this.user()?.rol;
+    if (rol === 'Superadmin') return true;
+    if (rol !== 'Administrador') return false;
+    return authService.canEditModule('auditoria');
   }
 
   // Métodos del repositorio para UI
@@ -580,7 +618,7 @@ export class App implements OnDestroy {
   }
 
   toggleInventoryMenu(ev?: Event) {
-    try { ev?.stopPropagation(); } catch {}
+    ev?.stopPropagation();
     this.inventoryMenuOpen.set(!this.inventoryMenuOpen());
   }
 
@@ -589,7 +627,7 @@ export class App implements OnDestroy {
   }
 
   goToPerfil() {
-    try { this.menuOpen.set(false); } catch {}
+    this.menuOpen.set(false);
     void this.router.navigate(['/perfil']);
   }
 
@@ -604,7 +642,7 @@ export class App implements OnDestroy {
       if (!email) return '';
       const local = String(email).split('@')[0] || '';
       return local.replace(/[._]/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
-    } catch (e) {
+    } catch {
       return '';
     }
   }
@@ -627,8 +665,8 @@ export class App implements OnDestroy {
       if (target && inv && !inv.contains(target)) {
         this.inventoryMenuOpen.set(false);
       }
-    } catch (e) {
-      // ignore
+    } catch {
+      void 0;
     }
   };
 
@@ -664,15 +702,61 @@ export class App implements OnDestroy {
     }
   }
 
+  private handleUpdateStatus(payload: any): void {
+    const status = payload?.status;
+    if (status === 'downloading') {
+      const progress = payload?.progress || payload;
+      const percent = Number(progress?.percent ?? progress?.percentage ?? 0);
+      const clamped = Math.min(100, Math.max(0, percent || 0));
+      this.updateDownloadPercent.set(clamped);
+      this.updateDownloadTransferred.set(Number(progress?.transferred || 0));
+      this.updateDownloadTotal.set(Number(progress?.total || 0));
+      this.updateDownloadLabel.set('Descargando actualización...');
+      this.updateDownloadOpen.set(true);
+      this.clearUpdateDownloadTimer();
+      return;
+    }
+    if (status === 'downloaded') {
+      this.updateDownloadPercent.set(100);
+      this.updateDownloadLabel.set('Descarga completa');
+      this.updateDownloadOpen.set(true);
+      this.clearUpdateDownloadTimer();
+      this.updateDownloadTimer = setTimeout(() => {
+        this.updateDownloadOpen.set(false);
+      }, 1500);
+      return;
+    }
+    if (status === 'error') {
+      this.clearUpdateDownloadTimer();
+      this.updateDownloadOpen.set(false);
+    }
+  }
+
+  private clearUpdateDownloadTimer(): void {
+    if (this.updateDownloadTimer) {
+      clearTimeout(this.updateDownloadTimer);
+      this.updateDownloadTimer = undefined;
+    }
+  }
+
   ngOnDestroy(): void {
-    try { document.removeEventListener('click', this.handleDocumentClick, true); } catch (e) {}
-    try { document.removeEventListener('click', this.handleSelectClickRef, true); } catch {}
-    try { document.removeEventListener('focusout', this.handleSelectFocusOutRef, true); } catch {}
-    try { document.removeEventListener('keydown', this.handleSelectKeydownRef, true); } catch {}
-    try { this.routerSub?.unsubscribe?.(); } catch {}
-    try { window.removeEventListener('resize', this.resizeHandler!); } catch {}
-    try { (this as any)._footerMutationObserver?.disconnect?.(); } catch {}
-    try { (this as any)._footerRouterSub?.unsubscribe?.(); } catch {}
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('click', this.handleDocumentClick, true);
+      document.removeEventListener('click', this.handleSelectClickRef, true);
+      document.removeEventListener('focusout', this.handleSelectFocusOutRef, true);
+      document.removeEventListener('keydown', this.handleSelectKeydownRef, true);
+    }
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('reactivos-alertas-refresh', this.reactivosAlertRefreshHandler);
+      if (this.resizeHandler) {
+        window.removeEventListener('resize', this.resizeHandler);
+      }
+    }
+    this.routerSub?.unsubscribe?.();
+    (this as any)._footerMutationObserver?.disconnect?.();
+    (this as any)._footerRouterSub?.unsubscribe?.();
+    this.updateStatusUnsub?.();
+    this.clearUpdateDownloadTimer();
   }
   showFooter(): boolean {
     const url = this.router.url || '';
@@ -689,8 +773,8 @@ export class App implements OnDestroy {
           ? (document.body.scrollHeight > window.innerHeight)
           : false;
         this.footerNeeded.set(!!needs);
-      } catch (e) {
-        // ignore
+      } catch {
+        void 0;
       }
     };
 
@@ -715,6 +799,8 @@ export class App implements OnDestroy {
       mo.observe(document.body, { childList: true, subtree: true, attributes: true });
       // store on this for potential cleanup (not strictly necessary)
       (this as any)._footerMutationObserver = mo;
-    } catch (e) {}
+    } catch {
+      void 0;
+    }
   }
 }

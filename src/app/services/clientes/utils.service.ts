@@ -28,7 +28,7 @@ export class UtilsService {
     if (!user) return `No puedes ${operation} - Sesión expirada`;
     
     const role = user.rol;
-    const operationMap: {[key: string]: string} = {
+    const operationMap: Record<string, string> = {
       'crear': 'crear',
       'editar': 'editar', 
       'eliminar': 'eliminar',

@@ -460,17 +460,43 @@ export class PlantillasComponent {
 
   private matchCliente(c: any, filtro: string, q: string): boolean {
     const id = String(c?.id_cliente ?? c?.cliente_id ?? '').toLowerCase();
+    const numero = String(c?.numero ?? '').toLowerCase();
     const nombre = String(c?.nombre_solicitante ?? c?.nombre ?? c?.nombre_cliente ?? '').toLowerCase();
     const razon = String(c?.razon_social ?? '').toLowerCase();
-    const ident = String(c?.identificacion ?? c?.nit ?? '').toLowerCase();
-    const correo = String(c?.correo ?? c?.email ?? '').toLowerCase();
+    const ident = String(c?.numero_identificacion ?? c?.identificacion ?? c?.nit ?? '').toLowerCase();
+    const correo = String(c?.correo_electronico ?? c?.correo ?? c?.email ?? '').toLowerCase();
+    const telefono = String(c?.celular ?? c?.telefono ?? '').toLowerCase();
+    const ciudad = String(c?.ciudad ?? c?.nombre_ciudad ?? '').toLowerCase();
+    const departamento = String(c?.departamento ?? c?.nombre_departamento ?? '').toLowerCase();
+    const direccion = String(c?.direccion ?? '').toLowerCase();
+    const tipoUsuario = String(c?.tipo_usuario ?? '').toLowerCase();
+    const tipoVinculacion = String(c?.tipo_vinculacion ?? '').toLowerCase();
+    const registroRealizadoPor = String(c?.registro_realizado_por ?? '').toLowerCase();
 
+    if (filtro === 'numero') return numero.includes(q);
     if (filtro === 'nombre') return nombre.includes(q);
     if (filtro === 'razon_social') return razon.includes(q);
     if (filtro === 'identificacion') return ident.includes(q);
     if (filtro === 'correo') return correo.includes(q);
+    if (filtro === 'telefono') return telefono.includes(q);
+    if (filtro === 'ciudad') return ciudad.includes(q);
+    if (filtro === 'departamento') return departamento.includes(q);
 
-    return [id, nombre, razon, ident, correo].some((v) => v.includes(q));
+    return [
+      id,
+      numero,
+      nombre,
+      razon,
+      ident,
+      correo,
+      telefono,
+      ciudad,
+      departamento,
+      direccion,
+      tipoUsuario,
+      tipoVinculacion,
+      registroRealizadoPor
+    ].some((v) => v.includes(q));
   }
 
   onTplSolicitudSeleccionadoIdChanged(id: number | null): void {

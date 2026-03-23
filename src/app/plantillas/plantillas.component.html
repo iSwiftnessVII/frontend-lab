@@ -144,10 +144,8 @@
                             <div class="help-item"><code>{{'{{'}}cliente.sexo{{'}}'}}</code><span>Sexo.</span></div>
                             <div class="help-item"><code>{{'{{'}}cliente.tipo_poblacion{{'}}'}}</code><span>Tipo de poblacion.</span></div>
                             <div class="help-item"><code>{{'{{'}}cliente.direccion{{'}}'}}</code><span>Direccion.</span></div>
-                            <div class="help-item"><code>{{'{{'}}cliente.id_ciudad{{'}}'}}</code><span>ID ciudad.</span></div>
-                            <div class="help-item"><code>{{'{{'}}cliente.id_departamento{{'}}'}}</code><span>ID departamento.</span></div>
-                            <div class="help-item"><code>{{'{{'}}cliente.ciudad_codigo{{'}}'}}</code><span>Codigo ciudad.</span></div>
-                            <div class="help-item"><code>{{'{{'}}cliente.departamento_codigo{{'}}'}}</code><span>Codigo departamento.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.id_ciudad{{'}}'}}</code><span>Nombre de la ciudad.</span></div>
+                            <div class="help-item"><code>{{'{{'}}cliente.id_departamento{{'}}'}}</code><span>Nombre del departamento.</span></div>
                             <div class="help-item"><code>{{'{{'}}cliente.ciudad{{'}}'}}</code><span>Ciudad.</span></div>
                             <div class="help-item"><code>{{'{{'}}cliente.departamento{{'}}'}}</code><span>Departamento.</span></div>
                             <div class="help-item"><code>{{'{{'}}cliente.celular{{'}}'}}</code><span>Celular.</span></div>
@@ -185,7 +183,18 @@
                             <div class="help-item"><code>{{'{{'}}revision.id_revision{{'}}'}}</code><span>ID de revision.</span></div>
                             <div class="help-item"><code>{{'{{'}}revision.id_solicitud{{'}}'}}</code><span>ID de solicitud.</span></div>
                             <div class="help-item"><code>{{'{{'}}revision.fecha_limite_entrega{{'}}'}}</code><span>Fecha limite de entrega.</span></div>
-                            <div class="help-item"><code>{{'{{'}}revision.servicio_es_viable{{'}}'}}</code><span>Servicio viable (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.tipo_muestra_especificado{{'}}'}}</code><span>Tipo de muestra especificado.</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.ensayos_requeridos_claros{{'}}'}}</code><span>Ensayos requeridos claros (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.equipos_calibrados{{'}}'}}</code><span>Equipos calibrados (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.personal_competente{{'}}'}}</code><span>Personal competente (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.infraestructura_adecuada{{'}}'}}</code><span>Infraestructura adecuada (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.insumos_vigentes{{'}}'}}</code><span>Insumos vigentes (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.cumple_tiempos_entrega{{'}}'}}</code><span>Cumple tiempos de entrega (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.normas_metodos_especificados{{'}}'}}</code><span>Normas y metodos especificados (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.metodo_validado_verificado{{'}}'}}</code><span>Metodo validado o verificado (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.metodo_adecuado{{'}}'}}</code><span>Metodo adecuado (Si/No).</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.observaciones_tecnicas{{'}}'}}</code><span>Observaciones tecnicas.</span></div>
+                            <div class="help-item"><code>{{'{{'}}revision.concepto_final{{'}}'}}</code><span>Concepto final.</span></div>
                           </div>
                         </div>
                       </div>
@@ -615,10 +624,14 @@ Cantidad: {{'{{'}}reactivo.cantidad_total{{'}}'}} {{'{{'}}reactivo.unidad_simbol
               <div class="campo-combinado campo-combinado-separado">
                 <select class="select-filtro" [(ngModel)]="tplClienteFiltroTipo" (ngModelChange)="filtrarTplClienteResultados()">
                   <option value="todos">Todos</option>
+                  <option value="numero">N° Cliente</option>
                   <option value="nombre">Nombre</option>
                   <option value="razon_social">Razón social</option>
                   <option value="identificacion">Identificación</option>
                   <option value="correo">Correo</option>
+                  <option value="telefono">Teléfono</option>
+                  <option value="ciudad">Ciudad</option>
+                  <option value="departamento">Departamento</option>
                 </select>
 
                 <input
@@ -649,11 +662,17 @@ Cantidad: {{'{{'}}reactivo.cantidad_total{{'}}'}} {{'{{'}}reactivo.unidad_simbol
                         <span class="nombre">{{ c.razon_social || '' }}</span>
                       </div>
                       <div class="info-adicional">
-                        @if (c.identificacion || c.nit) {
-                          <span><i class="fas fa-id-card"></i>{{ c.identificacion || c.nit }}</span>
+                        @if (c.numero_identificacion || c.identificacion || c.nit) {
+                          <span><i class="fas fa-id-card"></i>{{ c.numero_identificacion || c.identificacion || c.nit }}</span>
                         }
-                        @if (c.correo || c.email) {
-                          <span><i class="fas fa-envelope"></i>{{ c.correo || c.email }}</span>
+                        @if (c.correo_electronico || c.correo || c.email) {
+                          <span><i class="fas fa-envelope"></i>{{ c.correo_electronico || c.correo || c.email }}</span>
+                        }
+                        @if (c.ciudad) {
+                          <span><i class="fas fa-city"></i>{{ c.ciudad }}</span>
+                        }
+                        @if (c.departamento) {
+                          <span><i class="fas fa-map"></i>{{ c.departamento }}</span>
                         }
                       </div>
                     </div>
@@ -738,6 +757,11 @@ Cantidad: {{'{{'}}reactivo.cantidad_total{{'}}'}} {{'{{'}}reactivo.unidad_simbol
                   <div class="seleccionado-main">Cliente: {{ tplClienteSeleccionado.nombre_solicitante || tplClienteSeleccionado.nombre || tplClienteSeleccionado.nombre_cliente || 'Cliente' }}</div>
                   @if (tplClienteSeleccionado.razon_social) {
                     <div class="seleccionado-sub">{{ tplClienteSeleccionado.razon_social }}</div>
+                  }
+                  @if (tplClienteSeleccionado.ciudad || tplClienteSeleccionado.departamento) {
+                    <div class="seleccionado-sub">
+                      {{ tplClienteSeleccionado.ciudad || 'Sin ciudad' }}{{ tplClienteSeleccionado.departamento ? (' - ' + tplClienteSeleccionado.departamento) : '' }}
+                    </div>
                   }
                 }
                 @if (tplSolicitudSeleccionado) {

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectorRef, ElementRef, ViewChild, inject } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule, NgIf } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -19,6 +19,10 @@ import { ConfirmService } from '../shared/confirm.service';
 })
 export class ReactivosComponent implements OnInit {
   @ViewChild('tplDocTemplateInput') private tplDocTemplateInput?: ElementRef<HTMLInputElement>;
+  private sanitizer = inject(DomSanitizer);
+  private cdr = inject(ChangeDetectorRef);
+  public snack = inject(SnackbarService);
+  private confirm = inject(ConfirmService);
 
   public get esAuxiliar(): boolean {
     const user = authUser();
@@ -30,9 +34,9 @@ export class ReactivosComponent implements OnInit {
   }
 
   // Signals separadas para catálogo
-  catalogoCompletoSig = signal<Array<any>>([]); // Para códigos consecutivos (siempre todos los reactivos)
-  catalogoBaseSig = signal<Array<any>>([]); // Para filtrado y visualización
-  reactivosSig = signal<Array<any>>([]);
+  catalogoCompletoSig = signal<any[]>([]); // Para códigos consecutivos (siempre todos los reactivos)
+  catalogoBaseSig = signal<any[]>([]); // Para filtrado y visualización
+  reactivosSig = signal<any[]>([]);
 
   nextCodigosSig = signal({ S: 'S-001', R: 'R-001', M: 'M-001' });
 
@@ -73,14 +77,14 @@ export class ReactivosComponent implements OnInit {
   }
 
   // Aux lists
-  tipos: Array<any> = [];
-  clasif: Array<any> = [];
-  unidades: Array<any> = [];
-  estado: Array<any> = [];
-  recipiente: Array<any> = [];
-  almacen: Array<any> = [];
+  tipos: any[] = [];
+  clasif: any[] = [];
+  unidades: any[] = [];
+  estado: any[] = [];
+  recipiente: any[] = [];
+  almacen: any[] = [];
   reactivoSeleccionado: any = null;
-  mostrarDetalles: boolean = false;
+  mostrarDetalles = false;
   private expandedLotes = new Set<string>();
   // Control which form is currently active via dashboard action cards
   formularioActivo: string | null = null;
@@ -102,26 +106,34 @@ export class ReactivosComponent implements OnInit {
   catalogoMsg = '';
   submittedCatalogo = false;
 
-  // Edición de catálogo
-  catalogoEditMode = false;
-  catalogoEditOriginalCodigo: string | null = null;
+  // Edición de catálogo en modal
+  catalogoEditModalOpen = false;
+  catalogoEditSubmitted = false;
+  catalogoEditFormData = {
+    codigo: '',
+    nombre: '',
+    tipo_reactivo: '',
+    clasificacion_sga: ''
+  };
+  private catalogoEditOriginalPayload: any | null = null;
+  catalogoEditErrors: Record<string, string> = {};
 
   // Catálogo búsqueda y selección
   catalogoQ = '';
   // Signals para catálogo
-  catalogoResultadosSig = signal<Array<any>>([]);
-  catalogoSugerenciasSig = signal<Array<any>>([]);
+  catalogoResultadosSig = signal<any[]>([]);
+  catalogoSugerenciasSig = signal<any[]>([]);
   catalogoSeleccionado: any = null;
-  catalogoCargando: boolean = false;
+  catalogoCargando = false;
   // Listas filtradas para selects
-  catalogoCodigoResultados: Array<any> = [];
-  catalogoNombreResultados: Array<any> = [];
-  codigoFiltro: string = '';
-  nombreFiltro: string = '';
+  catalogoCodigoResultados: any[] = [];
+  catalogoNombreResultados: any[] = [];
+  codigoFiltro = '';
+  nombreFiltro = '';
   // Paginación catálogo
-  catalogoVisibleCount: number = 10; // tamaño página frontend respaldo
-  catalogoTotal: number = 0;
-  catalogoOffset: number = 0; // offset usado en backend
+  catalogoVisibleCount = 10; // tamaño página frontend respaldo
+  catalogoTotal = 0;
+  catalogoOffset = 0; // offset usado en backend
   catalogoDeleting = new Set<string>();
   // Paginación del catálogo removida: siempre mostrar todo
 
@@ -141,19 +153,19 @@ export class ReactivosComponent implements OnInit {
 
   tplDocPlantillas: any[] = [];
   tplDocPlantillaId: number | null = null;
-  tplDocNombrePlantilla: string = '';
+  tplDocNombrePlantilla = '';
   tplDocTemplateFile: File | null = null;
-  tplDocMsg: string = '';
-  tplDocLoading: boolean = false;
-  tplDocListLoading: boolean = false;
-  tplDocUploadLoading: boolean = false;
+  tplDocMsg = '';
+  tplDocLoading = false;
+  tplDocListLoading = false;
+  tplDocUploadLoading = false;
   tplDocDeleteLoading = new Set<number>();
 
-  tplDocFiltroTipo: string = 'todos';
-  tplDocBusqueda: string = '';
+  tplDocFiltroTipo = 'todos';
+  tplDocBusqueda = '';
   tplDocResultados: any[] = [];
   tplDocReactivoSeleccionado: any = null;
-  tplDocGenerarTodos: boolean = false;
+  tplDocGenerarTodos = false;
 
   // Reactivo form
   lote = '';
@@ -177,9 +189,9 @@ export class ReactivosComponent implements OnInit {
   tipo_recipiente_id: any = '';
 
   // Bloqueo de campos autocompletados desde catálogo
-  bloquearCodigoNombreCatalogo: boolean = false;
-  bloquearTipoReactivoCatalogo: boolean = false;
-  bloquearClasificacionCatalogo: boolean = false;
+  bloquearCodigoNombreCatalogo = false;
+  bloquearTipoReactivoCatalogo = false;
+  bloquearClasificacionCatalogo = false;
 
   reactivoMsg = '';
   submittedReactivo = false;
@@ -189,6 +201,7 @@ export class ReactivosComponent implements OnInit {
   // Modal de edición
   editModalOpen = false;
   editSubmitted = false;
+  private editOriginalPayload: any | null = null;
   editFormData: any = {
     loteOriginal: '',
     lote: '', codigo: '', nombre: '', marca: '', referencia: '', cas: '',
@@ -200,40 +213,40 @@ export class ReactivosComponent implements OnInit {
   };
 
   // Lista de reactivos (signals para refresco inmediato)
-  reactivosTotal: number = 0; // total real de reactivos en BD
-  allReactivosLoaded: boolean = false; // indica si ya tenemos todo el universo cargado para filtros locales
-  reactivosPageSize: number = 10; // tamaño de página inicial para inventario
-  reactivosLoadingMore: boolean = false;
-  reactivosOffset: number = 0; // offset bruto para paginación (evita trabas por deduplicación)
+  reactivosTotal = 0; // total real de reactivos en BD
+  allReactivosLoaded = false; // indica si ya tenemos todo el universo cargado para filtros locales
+  reactivosPageSize = 10; // tamaño de página inicial para inventario
+  reactivosLoadingMore = false;
+  reactivosOffset = 0; // offset bruto para paginación (evita trabas por deduplicación)
   // Filtros de inventario (3 campos en una fila)
   reactivosLoteQ = '';
   reactivosCodigoQ = '';
   reactivosNombreQ = '';
-  reactivosFiltradosSig = signal<Array<any>>([]);
+  reactivosFiltradosSig = signal<any[]>([]);
   reactivosQ = '';
-  reactivosServerFilterActive: boolean = false;
+  reactivosServerFilterActive = false;
   reactivosFilterParams: { lote: string; codigo: string; nombre: string } = { lote: '', codigo: '', nombre: '' };
 
-  catalogoErrors: { [key: string]: string } = {};
-reactivoErrors: { [key: string]: string } = {};
+  catalogoErrors: Record<string, string> = {};
+reactivoErrors: Record<string, string> = {};
   // Panel de catálogo dentro del formulario (se mantiene para autocompletar)
-  mostrarCatalogoFormPanel: boolean = false; // deprecado visualmente
+  mostrarCatalogoFormPanel = false; // deprecado visualmente
   private catalogoDebounce: any = null;
   catalogoFiltroCampo: 'codigo' | 'nombre' | 'mixto' = 'mixto';
 
   // Crear reactivo: dropdown overlay (estilo Ficha técnica - Equipos)
-  mostrarCatalogoResultados: boolean = false;
-  isCodigoFocused: boolean = false;
-  isNombreFocused: boolean = false;
-  catalogoSugerenciasVisibleCount: number = 20;
-  private catalogoSugerenciasInteracting: boolean = false;
+  mostrarCatalogoResultados = false;
+  isCodigoFocused = false;
+  isNombreFocused = false;
+  catalogoSugerenciasVisibleCount = 20;
+  private catalogoSugerenciasInteracting = false;
 
   // Estado de disponibilidad de PDFs por código (catálogo)
-  pdfStatus: { [codigo: string]: { hoja: boolean | null; cert: boolean | null } } = {};
+  pdfStatus: Record<string, { hoja: boolean | null; cert: boolean | null }> = {};
   // Estado de disponibilidad de PDFs por reactivo (lote) con Signals para refresco inmediato en UI
-  reactivoPdfStatusSig = signal<{ [lote: string]: { hoja: boolean | null; cert: boolean | null } }>({});
+  reactivoPdfStatusSig = signal<Record<string, { hoja: boolean | null; cert: boolean | null }>>({});
   // Toast ephemeral message (used instead of catalogoMsg for uploads)
-  toastMsg: string = '';
+  toastMsg = '';
   private toastTimeout: any = null;
   // Helper para actualizar estado PDF y forzar cambio de referencia
   private setPdfStatus(codigo: string, changes: Partial<{ hoja: boolean | null; cert: boolean | null }>) {
@@ -241,7 +254,7 @@ reactivoErrors: { [key: string]: string } = {};
     this.pdfStatus = { ...this.pdfStatus, [codigo]: { ...prev, ...changes } };
     this.persistPdfStatus();
     // Force change detection so badges update as soon as status changes
-    try { this.cdr.detectChanges(); } catch (e) { /* non-fatal */ }
+    try { this.cdr.detectChanges(); } catch { void 0; }
   }
 
   private setReactivoPdfStatus(lote: string, changes: Partial<{ hoja: boolean | null; cert: boolean | null }>) {
@@ -259,10 +272,10 @@ reactivoErrors: { [key: string]: string } = {};
       this.toastTimeout = null;
     }
     this.toastMsg = msg;
-    try { this.cdr.detectChanges(); } catch (e) {}
+    try { this.cdr.detectChanges(); } catch { void 0; }
     this.toastTimeout = setTimeout(() => {
       this.toastMsg = '';
-      try { this.cdr.detectChanges(); } catch (e) {}
+      try { this.cdr.detectChanges(); } catch { void 0; }
       this.toastTimeout = null;
     }, duration);
   }
@@ -281,8 +294,8 @@ reactivoErrors: { [key: string]: string } = {};
   private consumoHistorialExpanded = new Set<string>();
 
   // Filtro de consumo
-  consumoFiltroTipo: string = 'todos';
-  consumoBusqueda: string = '';
+  consumoFiltroTipo = 'todos';
+  consumoBusqueda = '';
   consumoResultados: any[] = [];
   consumoReactivoSeleccionado: any = null;
 
@@ -360,15 +373,6 @@ reactivoErrors: { [key: string]: string } = {};
       this.consumoHistorialExpanded.add(key);
     }
   }
-
-
-  constructor(
-    private sanitizer: DomSanitizer,
-    private cdr: ChangeDetectorRef,
-    public snack: SnackbarService,
-    private confirm: ConfirmService
-  ) {}
-
   private esActivo(item: any): boolean {
     const v = item?.activo;
     if (v === undefined || v === null) return true;
@@ -485,7 +489,7 @@ reactivoErrors: { [key: string]: string } = {};
       try {
         const el = this.tplDocTemplateInput?.nativeElement;
         if (el) el.value = '';
-      } catch {}
+      } catch { void 0; }
       this.tplDocMsg = 'Plantilla guardada';
       this.snack.success(this.tplDocMsg);
     } catch (e: any) {
@@ -705,7 +709,7 @@ reactivoErrors: { [key: string]: string } = {};
     }
 
     try {
-      const res = await reactivosService.registrarConsumo({
+      await reactivosService.registrarConsumo({
         lote: this.consumoForm.lote,
         cantidad: this.consumoForm.cantidad,
         uso: this.consumoForm.uso
@@ -718,7 +722,7 @@ reactivoErrors: { [key: string]: string } = {};
       this.consumoReactivoSeleccionado = null;
       this.consumoBusqueda = '';
       this.consumoResultados = [];
-      try { form.resetForm(); } catch {}
+      try { form.resetForm(); } catch { void 0; }
       
       // Actualizar listas
       await this.cargarConsumosHistorial();
@@ -742,13 +746,13 @@ reactivoErrors: { [key: string]: string } = {};
         if (cache) {
           this.pdfStatus = JSON.parse(cache);
         }
-      } catch {}
+      } catch { void 0; }
       try {
         const cacheR = sessionStorage.getItem('reactivoPdfStatusCache');
         if (cacheR) {
           this.reactivoPdfStatusSig.set(JSON.parse(cacheR));
         }
-      } catch {}
+      } catch { void 0; }
       // Cargar auxiliares y catálogo en paralelo para reducir tiempo de espera perceptual
       this.catalogoCargando = true;
       await this.loadAux();
@@ -799,7 +803,7 @@ reactivoErrors: { [key: string]: string } = {};
         const dd = String(d.getDate()).padStart(2, '0');
         return `${yyyy}-${mm}-${dd}`;
       }
-    } catch {}
+    } catch { void 0; }
     return '';
   }
 
@@ -888,7 +892,7 @@ reactivoErrors: { [key: string]: string } = {};
       this.aplicarFiltroReactivos();
     }
     // Preload PDF availability for items in inventory (by lote)
-    try { this.preloadDocsForReactivosVisible(this.reactivosSig()); } catch (e) { /* non-fatal */ }
+    try { this.preloadDocsForReactivosVisible(this.reactivosSig()); } catch { void 0; }
 
     // Fallback: si el total coincide artificialmente con el tamaño de página y limit se pidió, obtener total real
     if (!params && limit && limit > 0 && this.reactivosTotal === rows.length) {
@@ -897,7 +901,7 @@ reactivoErrors: { [key: string]: string } = {};
         if (t && typeof t.total === 'number' && t.total >= rows.length) {
           this.reactivosTotal = t.total;
         }
-      } catch (e) {
+      } catch {
         // silencioso: mantener valor existente
       }
     }
@@ -956,7 +960,7 @@ reactivoErrors: { [key: string]: string } = {};
       } else {
         this.aplicarFiltroReactivos();
       }
-      try { this.preloadDocsForReactivosVisible(nuevos); } catch {}
+      try { this.preloadDocsForReactivosVisible(nuevos); } catch { void 0; }
 
       this.reactivosOffset = offset + rows.length;
       if (rows.length === 0) {
@@ -1074,11 +1078,16 @@ validarReactivo(): boolean {
   this.reactivoErrors = {};
   let isValid = true;
 
+  if (!this.editMode && !this.tieneSeleccionCatalogoValida()) {
+    this.reactivoErrors['catalogo'] = 'Debes seleccionar un reactivo desde el filtro del catálogo';
+    isValid = false;
+  }
+
   // Validación de lote (OBLIGATORIO)
   if (!this.lote?.trim()) {
     this.reactivoErrors['lote'] = 'El lote es obligatorio';
     isValid = false;
-  } else if (!/^[A-Z0-9\-]{3,20}$/.test(this.lote)) {
+  } else if (!/^[A-Z0-9-]{3,20}$/.test(this.lote)) {
     this.reactivoErrors['lote'] = 'Formato de lote inválido (3-20 caracteres alfanuméricos)';
     isValid = false;
   }
@@ -1216,8 +1225,17 @@ validarReactivo(): boolean {
   return isValid;
 }
 
+private tieneSeleccionCatalogoValida(): boolean {
+  if (!this.catalogoSeleccionado || this.editMode) return !!this.editMode;
+  const codigoSeleccionado = String(this.catalogoSeleccionado?.codigo || '').trim();
+  const nombreSeleccionado = String(this.catalogoSeleccionado?.nombre || '').trim();
+  if (!codigoSeleccionado || !nombreSeleccionado) return false;
+  return this.codigo.trim() === codigoSeleccionado && this.nombre.trim() === nombreSeleccionado;
+}
+
 // ===== VALIDACIÓN EN TIEMPO REAL PARA CATÁLOGO =====
 validarCampoCatalogoEnTiempoReal(campo: string, event?: Event): void {
+  void event;
   const valor = this.getValorCatalogo(campo);
   this.catalogoErrors[campo] = this.validarCampoCatalogoIndividual(campo, valor);
 }
@@ -1239,10 +1257,12 @@ private validarCampoCatalogoIndividual(campo: string, valor: any): string {
       return '';
       
     case 'nombre':
+    {
       const nombreStr = (valor ?? '').toString().trim();
       if (!nombreStr) return 'El nombre es obligatorio';
       if (nombreStr.length > 100) return 'El nombre no puede exceder 100 caracteres';
       return '';
+    }
       
     case 'tipo':
       if (!valor?.trim()) return 'El tipo de reactivo es obligatorio';
@@ -1263,6 +1283,7 @@ private validarCampoCatalogoIndividual(campo: string, valor: any): string {
 
 // ===== VALIDACIÓN EN TIEMPO REAL PARA REACTIVO =====
 validarCampoReactivoEnTiempoReal(campo: string, event?: Event): void {
+  void event;
   const valor = this.getValorReactivo(campo);
   this.reactivoErrors[campo] = this.validarCampoReactivoIndividual(campo, valor);
 }
@@ -1294,7 +1315,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   switch (campo) {
     case 'lote':
       if (!valor?.trim()) return 'El lote es obligatorio';
-      if (!/^[A-Z0-9\-]{3,20}$/.test(valor)) 
+      if (!/^[A-Z0-9-]{3,20}$/.test(valor))
         return 'Formato de lote inválido (3-20 caracteres alfanuméricos)';
       return '';
       
@@ -1304,10 +1325,12 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       return '';
       
     case 'nombre':
+    {
       const nombreStr = (valor ?? '').toString().trim();
       if (!nombreStr) return 'El nombre es obligatorio';
       if (nombreStr.length > 200) return 'El nombre no puede exceder 200 caracteres';
       return '';
+    }
       
     case 'marca':
       if (!valor?.trim()) return 'La marca es obligatoria';
@@ -1340,6 +1363,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       return '';
       
     case 'fecha_adquisicion':
+    {
       if (!valor) return 'La fecha de adquisición es obligatoria';
       if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) 
         return 'Formato de fecha inválido (AAAA-MM-DD)';
@@ -1350,8 +1374,10 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       
       if (fechaAdqValidacion > hoy) return 'La fecha de adquisición no puede ser futura';
       return '';
+    }
       
     case 'fecha_vencimiento':
+    {
       if (!valor) return 'La fecha de vencimiento es obligatoria';
       
       const fechaVencValidacion = new Date(valor);
@@ -1360,6 +1386,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       if (fechaAdqActual && fechaVencValidacion < fechaAdqActual) 
         return 'La fecha de vencimiento no puede ser anterior a la adquisición';
       return '';
+    }
       
     case 'tipo_id':
       if (!valor) return 'El tipo de reactivo es obligatorio';
@@ -1442,6 +1469,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     this.bloquearCodigoNombreCatalogo = !!(this.codigo && this.nombre);
     this.bloquearTipoReactivoCatalogo = !!this.tipo_id;
     this.bloquearClasificacionCatalogo = !!this.clasificacion_id;
+    delete this.reactivoErrors['catalogo'];
 
     // Avisar si no se pudo mapear (para detectar diferencias entre catálogos y auxiliares)
     if (!this.tipo_id && catalogoItem?.tipo_reactivo) {
@@ -1494,6 +1522,21 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       }
     }, 150);
     this.mostrarCatalogoFormPanel = false;
+  }
+
+  limpiarSeleccionCatalogo(): void {
+    this.catalogoSeleccionado = null;
+    this.catalogoQ = '';
+    this.codigo = '';
+    this.nombre = '';
+    this.tipo_id = '';
+    this.clasificacion_id = '';
+    this.bloquearCodigoNombreCatalogo = false;
+    this.bloquearTipoReactivoCatalogo = false;
+    this.bloquearClasificacionCatalogo = false;
+    this.catalogoSugerenciasSig.set([]);
+    this.mostrarCatalogoResultados = false;
+    delete this.reactivoErrors['catalogo'];
   }
 
   onCatalogoFocusOut(): void {
@@ -1843,7 +1886,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   }
 
   // Estilos para que el <select> se vea coloreado con la opción elegida (por nombre)
-  getSelectStyleForName(nombre: string | null | undefined): {[k: string]: string} {
+  getSelectStyleForName(nombre: string | null | undefined): Record<string, string> {
     if (!nombre) return {};
     const bg = this.getClasifColorByName(nombre);
     const fg = this.getClasifTextColor(bg);
@@ -1851,7 +1894,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   }
 
   // Estilos para que el <select> se vea coloreado con la opción elegida (por id)
-  getSelectStyleForId(id: any): {[k: string]: string} {
+  getSelectStyleForId(id: any): Record<string, string> {
     if (!id && id !== 0) return {};
     const bg = this.getClasifColor(id);
     const fg = this.getClasifTextColor(bg);
@@ -1888,7 +1931,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
         try {
           if (win) win.location.href = url;
           else window.open(url, '_blank');
-        } catch (err) {
+        } catch {
           // Fallback: if assigning location fails, try to open normally
           window.open(url, '_blank');
         }
@@ -1912,7 +1955,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
         try {
           if (win) win.location.href = url;
           else window.open(url, '_blank');
-        } catch (err) {
+        } catch {
           window.open(url, '_blank');
         }
       } else {
@@ -2058,11 +2101,11 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   }
 
   private persistPdfStatus() {
-    try { sessionStorage.setItem('pdfStatusCache', JSON.stringify(this.pdfStatus)); } catch {}
+    try { sessionStorage.setItem('pdfStatusCache', JSON.stringify(this.pdfStatus)); } catch { void 0; }
   }
 
   private persistReactivoPdfStatus() {
-    try { sessionStorage.setItem('reactivoPdfStatusCache', JSON.stringify(this.reactivoPdfStatusSig())); } catch {}
+    try { sessionStorage.setItem('reactivoPdfStatusCache', JSON.stringify(this.reactivoPdfStatusSig())); } catch { void 0; }
   }
 
   async loadDocs(codigo: string) {
@@ -2070,11 +2113,11 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     try {
       const hoja = await reactivosService.obtenerHojaSeguridad(codigo);
       this.hojaUrl = hoja?.url || null;
-    } catch {}
+    } catch { void 0; }
     try {
       const cert = await reactivosService.obtenerCertAnalisis(codigo);
       this.certUrl = cert?.url || null;
-    } catch {}
+    } catch { void 0; }
   }
 
   async loadDocsByLote(lote: string) {
@@ -2082,11 +2125,11 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     try {
       const hoja = await reactivosService.obtenerHojaSeguridadReactivo(lote);
       this.hojaUrl = hoja?.url || null;
-    } catch {}
+    } catch { void 0; }
     try {
       const cert = await reactivosService.obtenerCertAnalisisReactivo(lote);
       this.certUrl = cert?.url || null;
-    } catch {}
+    } catch { void 0; }
   }
 
   onHojaSelected(ev: any) {
@@ -2121,7 +2164,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       this.hojaMsg = 'Hoja de seguridad eliminada';
       const codigo = this.catalogoSeleccionado.codigo;
       this.setPdfStatus(codigo, { hoja: false });
-    } catch (e) {
+    } catch {
       this.hojaMsg = 'Error eliminando hoja';
     }
   }
@@ -2158,7 +2201,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       this.certMsg = 'Certificado de análisis eliminado';
       const codigo = this.catalogoSeleccionado.codigo;
       this.setPdfStatus(codigo, { cert: false });
-    } catch (e) {
+    } catch {
       this.certMsg = 'Error eliminando certificado';
     }
   }
@@ -2190,23 +2233,16 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       clasificacion_sga: safeTrim(this.catClasificacion)
     };
 
-    if (this.catalogoEditMode && this.catalogoEditOriginalCodigo) {
-      await reactivosService.actualizarCatalogo(this.catalogoEditOriginalCodigo, payload);
-      this.snack.success('Catálogo actualizado correctamente');
-    } else {
-      await reactivosService.crearCatalogo(payload);
-      this.snack.success('Catálogo creado correctamente');
-    }
+    await reactivosService.crearCatalogo(payload);
+    this.snack.success('Catálogo creado correctamente');
     
     // Limpiar errores después de éxito
     this.catalogoErrors = {};
     
     // limpiar
     this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = '';
-    this.catalogoEditMode = false;
-    this.catalogoEditOriginalCodigo = null;
     // Resetear estado del formulario para limpiar touched/dirty y evitar resaltar en rojo
-    try { if (form) form.resetForm({ catCodigo:'', catNombre:'', catTipo:'', catClasificacion:'' }); } catch {}
+    try { if (form) form.resetForm({ catCodigo:'', catNombre:'', catTipo:'', catClasificacion:'' }); } catch { void 0; }
     this.submittedCatalogo = false;
     // Recargar base y re-aplicar filtros/búsqueda para que el nuevo elemento aparezca
     await this.cargarCatalogoBase();
@@ -2221,45 +2257,110 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   }
 }
 
-  startEditCatalogo(c: any, ev?: Event, form?: NgForm) {
-    try { ev?.stopPropagation(); } catch {}
+  startEditCatalogo(c: any, ev?: Event) {
+    try { ev?.stopPropagation(); } catch { void 0; }
     if (!this.canDelete()) return;
     const codigo = String(c?.codigo || '').trim();
     if (!codigo) return;
 
-    // Abrir el formulario de catálogo y precargar
-    this.formularioActivo = 'catalogo';
-    this.catalogoEditMode = true;
-    this.catalogoEditOriginalCodigo = codigo;
-    this.submittedCatalogo = false;
-    this.catalogoErrors = {};
-
-    this.catCodigo = codigo;
-    this.catNombre = String(c?.nombre || '');
-    this.catTipo = String(c?.tipo_reactivo || '');
-    this.catClasificacion = String(c?.clasificacion_sga || '');
-
-    // Resetear estado visual del formulario (sin borrar valores)
-    try {
-      form?.resetForm({
-        catCodigo: this.catCodigo,
-        catNombre: this.catNombre,
-        catTipo: this.catTipo,
-        catClasificacion: this.catClasificacion
-      });
-    } catch {}
-
-    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
+    this.catalogoEditFormData = {
+      codigo,
+      nombre: String(c?.nombre || ''),
+      tipo_reactivo: String(c?.tipo_reactivo || ''),
+      clasificacion_sga: String(c?.clasificacion_sga || '')
+    };
+    this.catalogoEditSubmitted = false;
+    this.catalogoEditErrors = {};
+    this.catalogoEditOriginalPayload = this.buildCatalogoEditPayload();
+    this.catalogoEditModalOpen = true;
   }
 
-  cancelEditCatalogo(form?: NgForm) {
-    this.catalogoEditMode = false;
-    this.catalogoEditOriginalCodigo = null;
-    this.submittedCatalogo = false;
-    this.catalogoErrors = {};
-    this.catalogoMsg = '';
-    this.catCodigo = this.catNombre = this.catTipo = this.catClasificacion = '';
-    try { form?.resetForm({ catCodigo:'', catNombre:'', catTipo:'', catClasificacion:'' }); } catch {}
+  closeCatalogoEditModal() {
+    this.catalogoEditModalOpen = false;
+    this.catalogoEditSubmitted = false;
+    this.catalogoEditErrors = {};
+    this.catalogoEditFormData = {
+      codigo: '',
+      nombre: '',
+      tipo_reactivo: '',
+      clasificacion_sga: ''
+    };
+    this.catalogoEditOriginalPayload = null;
+  }
+
+  private validarCatalogoEdit(): boolean {
+    this.catalogoEditErrors = {};
+    let isValid = true;
+
+    if (!this.catalogoEditFormData.nombre?.trim()) {
+      this.catalogoEditErrors['nombre'] = 'El nombre es obligatorio';
+      isValid = false;
+    } else if (this.catalogoEditFormData.nombre.length > 100) {
+      this.catalogoEditErrors['nombre'] = 'El nombre no puede exceder 100 caracteres';
+      isValid = false;
+    }
+
+    if (!this.catalogoEditFormData.tipo_reactivo?.trim()) {
+      this.catalogoEditErrors['tipo'] = 'El tipo de reactivo es obligatorio';
+      isValid = false;
+    }
+
+    if (!this.catalogoEditFormData.clasificacion_sga?.trim()) {
+      this.catalogoEditErrors['clasificacion'] = 'La clasificación SGA es obligatoria';
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  private buildCatalogoEditPayload() {
+    const safeTrim = (v: any): string => typeof v === 'string' ? v.trim() : '';
+    return {
+      codigo: safeTrim(this.catalogoEditFormData.codigo),
+      nombre: safeTrim(this.catalogoEditFormData.nombre),
+      tipo_reactivo: safeTrim(this.catalogoEditFormData.tipo_reactivo),
+      clasificacion_sga: safeTrim(this.catalogoEditFormData.clasificacion_sga)
+    };
+  }
+
+  private hasCatalogoEditChanges(payload: any): boolean {
+    return JSON.stringify(payload) !== JSON.stringify(this.catalogoEditOriginalPayload);
+  }
+
+  async guardarCatalogoEdicion(form?: NgForm) {
+    this.catalogoEditSubmitted = true;
+    if (!this.validarCatalogoEdit()) {
+      this.snack.warn('Por favor corrige los campos resaltados.');
+      return;
+    }
+
+    const codigo = String(this.catalogoEditFormData.codigo || '').trim();
+    if (!codigo) {
+      this.snack.warn('No se pudo identificar el código del catálogo.');
+      return;
+    }
+
+    const payload = this.buildCatalogoEditPayload();
+    if (!this.hasCatalogoEditChanges(payload)) {
+      this.snack.warn('No hay campos para actualizar');
+      return;
+    }
+
+    try {
+      await reactivosService.actualizarCatalogo(codigo, payload);
+      this.snack.success('Catálogo actualizado correctamente');
+      try { form?.resetForm(); } catch { void 0; }
+      this.closeCatalogoEditModal();
+      await this.cargarCatalogoBase();
+      if ((this.codigoFiltro || '').trim() || (this.nombreFiltro || '').trim()) {
+        this.filtrarCatalogoPorCampos();
+      } else {
+        this.catalogoQ = '';
+        await this.buscarCatalogo();
+      }
+    } catch (err: any) {
+      this.snack.error(err?.message || 'Error actualizando catálogo');
+    }
   }
 
   async crearReactivo(e: Event, form?: NgForm) {
@@ -2278,6 +2379,11 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   }
   
   try {
+    if (!this.editMode && !this.tieneSeleccionCatalogoValida()) {
+      this.reactivoErrors['catalogo'] = 'Debes seleccionar un reactivo desde el filtro del catálogo';
+      this.snack.warn('Selecciona un reactivo del catálogo antes de crear.');
+      return;
+    }
     // Validación mínima de campos obligatorios
     if (!this.lote.trim() || !this.codigo.trim() || !this.nombre.trim()) {
       this.snack.warn('Por favor completa Lote, Código y Nombre.');
@@ -2360,7 +2466,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     // Limpiar modelo y restablecer estado visual del formulario (pristine/untouched)
     this.resetReactivoForm();
     this.submittedReactivo = false;
-    try { if (form) form.resetForm(); } catch {}
+    try { if (form) form.resetForm(); } catch { void 0; }
   } catch (err: any) {
     this.snack.error(err?.message || 'Error creando reactivo');
   }
@@ -2378,7 +2484,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   }
 
   async onDeleteCatalogo(c: any, ev?: Event) {
-    try { ev?.stopPropagation(); } catch {}
+    try { ev?.stopPropagation(); } catch { void 0; }
     if (!this.canDelete()) return;
     const codigo = c?.codigo;
     const nombre = c?.nombre || '';
@@ -2432,7 +2538,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
     this.tipo_id = this.clasificacion_id = this.unidad_id = this.estado_id = this.almacenamiento_id = this.tipo_recipiente_id = '';
     this.catalogoSeleccionado = null;
     this.catalogoQ = '';
-    try { this.catalogoSugerenciasSig.set([]); } catch {}
+    try { this.catalogoSugerenciasSig.set([]); } catch { void 0; }
     this.mostrarCatalogoResultados = false;
     this.bloquearCodigoNombreCatalogo = false;
     this.bloquearTipoReactivoCatalogo = false;
@@ -2499,6 +2605,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       tipo_recipiente_id: r.tipo_recipiente_id ?? ''
     };
     this.editSubmitted = false;
+    this.editOriginalPayload = this.buildEditPayload();
     this.editModalOpen = true;
   }
 
@@ -2506,21 +2613,10 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
   closeEditModal() {
     this.editModalOpen = false;
     this.editSubmitted = false;
+    this.editOriginalPayload = null;
   }
 
-  // Guardar cambios desde el modal
-  async guardarEdicion(form?: NgForm) {
-    this.editSubmitted = true;
-    // Normalizar CAS antes de que Angular valide el formulario, por si el usuario no salió del campo
-    {
-      const n = this.normalizeCas(this.editFormData.cas);
-      this.editFormData.cas = n === null ? '' : n;
-    }
-    if (form && form.invalid) {
-      try { form.control.markAllAsTouched(); } catch {}
-      return;
-    }
-    // Normalizar campos antes de construir el payload
+  private buildEditPayload() {
     const toNull = (v: any) => {
       if (v === null || v === undefined) return null;
       if (typeof v === 'string') {
@@ -2529,17 +2625,16 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       }
       return v;
     };
-    // Recalcular cantidad total si aplica
     const cantidad_total = (this.editFormData.presentacion != null && this.editFormData.presentacion_cant != null)
       ? Number((Number(this.editFormData.presentacion) * Number(this.editFormData.presentacion_cant)).toFixed(4))
       : this.editFormData.cantidad_total;
-    const payload = {
+    return {
       lote: String(this.editFormData.lote || '').trim(),
       codigo: String(this.editFormData.codigo || '').trim(),
       nombre: String(this.editFormData.nombre || '').trim(),
       marca: toNull(this.editFormData.marca),
       referencia: toNull(this.editFormData.referencia),
-  cas: this.normalizeCas(this.editFormData.cas),
+      cas: this.normalizeCas(this.editFormData.cas),
       presentacion: this.editFormData.presentacion,
       presentacion_cant: this.editFormData.presentacion_cant,
       cantidad_total,
@@ -2553,9 +2648,32 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       almacenamiento_id: toNull(this.editFormData.almacenamiento_id),
       tipo_recipiente_id: toNull(this.editFormData.tipo_recipiente_id)
     };
+  }
+
+  private hasEditChanges(payload: any): boolean {
+    return JSON.stringify(payload) !== JSON.stringify(this.editOriginalPayload);
+  }
+
+  // Guardar cambios desde el modal
+  async guardarEdicion(form?: NgForm) {
+    this.editSubmitted = true;
+    // Normalizar CAS antes de que Angular valide el formulario, por si el usuario no salió del campo
+    {
+      const n = this.normalizeCas(this.editFormData.cas);
+      this.editFormData.cas = n === null ? '' : n;
+    }
+    if (form && form.invalid) {
+      try { form.control.markAllAsTouched(); } catch { void 0; }
+      return;
+    }
+    const payload = this.buildEditPayload();
     try {
       if (!payload.lote || !payload.codigo || !payload.nombre) {
         this.snack.warn('Por favor completa Lote, Código y Nombre.');
+        return;
+      }
+      if (!this.hasEditChanges(payload)) {
+        this.snack.warn('No hay campos para actualizar');
         return;
       }
       const oldLote = String(this.editFormData.loteOriginal || '').trim();
@@ -2728,13 +2846,14 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       if (typeof this.reactivosTotal === 'number') {
         this.reactivosTotal = Math.max(0, this.reactivosTotal - 1);
       }
+      try { window.dispatchEvent(new Event('reactivos-alertas-refresh')); } catch { void 0; }
       this.snack.success('Reactivo eliminado correctamente');
     } catch (e: any) {
       this.snack.error(e?.message || 'Error eliminando reactivo');
       try {
         this.reactivosSig.set((snapshot || []).filter((r: any) => this.esActivo(r)));
         this.aplicarFiltroReactivos();
-      } catch {}
+      } catch { void 0; }
     } finally {
       this.reactivoDeleting.delete(key);
     }
@@ -2742,9 +2861,9 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
 
   // Eliminación masiva de reactivos actualmente filtrados
   bulkDeletingReactivos = false;
-  bulkDeleteProgress: number = 0; // porcentaje 0-100
-  bulkDeleteTotal: number = 0; // total de items a eliminar en operación actual
-  exportandoExcel: boolean = false;
+  bulkDeleteProgress = 0; // porcentaje 0-100
+  bulkDeleteTotal = 0; // total de items a eliminar en operación actual
+  exportandoExcel = false;
   async eliminarReactivosListado() {
     if (!this.canDelete()) return;
     const filters = this.getReactivosFilters();
@@ -2810,7 +2929,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       }
       // Actualizar progreso después de cada intento (éxito o error)
       this.bulkDeleteProgress = Math.round(((i + 1) / this.bulkDeleteTotal) * 100);
-      try { this.cdr.detectChanges(); } catch {}
+      try { this.cdr.detectChanges(); } catch { void 0; }
     }
     // Actualizar listado local eliminando los exitosos
     if (lotesEliminados.length) {
@@ -2827,6 +2946,9 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
       this.snack.error('No se pudo eliminar ningún reactivo');
     } else {
       this.snack.success(`Eliminados ${lotesEliminados.length} reactivo(s)`);
+    }
+    if (lotesEliminados.length) {
+      try { window.dispatchEvent(new Event('reactivos-alertas-refresh')); } catch { void 0; }
     }
 
     // Actualizar total real tras eliminación usando backend para evitar inconsistencias
@@ -2846,7 +2968,7 @@ private validarCampoReactivoIndividual(campo: string, valor: any): string {
 
     // Si usamos dataset completo, recargar la página inicial para reflejar estado consistente
     if (usedFullDataset) {
-      try { await this.loadReactivos(10, 0); } catch {}
+      try { await this.loadReactivos(10, 0); } catch { void 0; }
     }
     // Reset visual tras terminar
     this.bulkDeleteTotal = 0;

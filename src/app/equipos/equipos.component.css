@@ -1919,7 +1919,10 @@ input[readonly] {
 }
 
 .edit-modal .form-actions,
-.edit-modal > div > div[style*="justify-content:flex-end"] {
+.edit-modal .edit-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
   z-index: 2;
 }
 

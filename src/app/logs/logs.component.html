@@ -26,7 +26,20 @@
     <!-- Tab: Logs de Acciones -->
     @if (activaTab === 'acciones') {
     <section>
-        <h2>Historial de Acciones del Sistema</h2>
+        <div class="acciones-header">
+            <h2>Historial de Acciones del Sistema</h2>
+            <div
+                class="descargar-pdf-card"
+                role="button"
+                tabindex="0"
+                [class.is-disabled]="cargandoAcciones || logsAcciones.length === 0"
+                (click)="(cargandoAcciones || logsAcciones.length === 0) ? null : descargarLogsAccionesPdf()"
+                (keydown.enter)="(cargandoAcciones || logsAcciones.length === 0) ? null : descargarLogsAccionesPdf()"
+                (keydown.space)="(cargandoAcciones || logsAcciones.length === 0) ? null : descargarLogsAccionesPdf()">
+                <i class="fas fa-download"></i>
+                <span>Descargar PDF completo</span>
+            </div>
+        </div>
         
         <!-- Filtros -->
         <div class="filters-grid">
@@ -72,30 +85,27 @@
 </div>
         </div>
 
-        <!-- Tabla de logs -->
-        @if (cargandoAcciones) {
-            <div class="loading-state">
-                <p>Cargando logs...</p>
-            </div>
-        } @else {
-            @if (logsAcciones.length === 0) {
-                <div class="loading-state">
-                    <p>No se encontraron logs con los filtros actuales.</p>
-                </div>
-            }
-
-            <div class="table-container">
-                <table class="logs-table">
-                    <thead>
-                        <tr>
-                            <th>Fecha/Hora</th>
-                            <th>Usuario</th>
-                            <th>Módulo</th>
-                            <th>Acción</th>
-                            <th>Detalles</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+        <div class="table-container acciones-table">
+            <table class="logs-table acciones-list">
+                <thead>
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Usuario</th>
+                        <th>Módulo</th>
+                        <th>Acción</th>
+                        <th>Detalles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (cargandoAcciones) {
+                    <tr class="table-state-row">
+                        <td colspan="5">Cargando logs...</td>
+                    </tr>
+                    } @else if (logsAcciones.length === 0) {
+                    <tr class="table-state-row">
+                        <td colspan="5">No se encontraron logs con los filtros actuales.</td>
+                    </tr>
+                    } @else {
                         @for (log of logsAcciones; track log.id_log_accion) {
                         <tr>
                             <td>{{ formatearFecha(log.fecha) }}</td>
@@ -107,128 +117,36 @@
                                 </span>
                             </td>
                             <td>
-                                <button class="btn-ver-detalles" (click)="verDetallesLog(log)" title="Ver detalles">
-                                    <i class="fas fa-eye"></i>
-                                </button>
+                                <div class="acciones-bloque">
+                                    <button class="btn-ver-detalles" (click)="verDetallesLog(log)" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         }
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Paginación -->
-            @if (paginacionAcciones.pages > 1) {
-            <div class="pagination">
-                <button (click)="cambiarPaginaAcciones(paginacionAcciones.page - 1)" 
-                        [disabled]="paginacionAcciones.page <= 1">
-                    Anterior
-                </button>
-                <span>Página {{ paginacionAcciones.page }} de {{ paginacionAcciones.pages }}</span>
-                <button (click)="cambiarPaginaAcciones(paginacionAcciones.page + 1)" 
-                        [disabled]="paginacionAcciones.page >= paginacionAcciones.pages">
-                    Siguiente
-                </button>
-            </div>
-            }
-        }
-
-        <!-- Modal de Detalles -->
-        @if (logSeleccionado) {
-        <div class="modal-overlay" (click)="cerrarModalDetalles()">
-            <div class="modal-content" (click)="$event.stopPropagation()">
-                <div class="modal-header">
-                    <h3>Detalle de acción</h3>
-                    <button class="close-btn" (click)="cerrarModalDetalles()">&times;</button>
-                </div>
-                    <div class="modal-body">
-                    @let detalle = getDetalleNormalizado(logSeleccionado);
-                    @let cambios = getCambios(detalle);
-                    @let cards = getDetalleCardsModal(logSeleccionado);
-                    @let extras = getDetalleExtrasModal(logSeleccionado);
-
-                    <div class="modal-meta-grid">
-                        <div class="meta-card">
-                            <div class="meta-label">Acción</div>
-                            <div class="meta-value">
-                                <span class="status-badge" [ngClass]="getClaseAccion(logSeleccionado.accion)">
-                                    {{ getAccionLabel(logSeleccionado.accion) }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="meta-card">
-                            <div class="meta-label">Módulo</div>
-                            <div class="meta-value">{{ logSeleccionado.modulo }}</div>
-                        </div>
-                        <div class="meta-card">
-                            <div class="meta-label">Fecha y hora</div>
-                            <div class="meta-value">{{ formatearFecha(logSeleccionado.fecha) }}</div>
-                        </div>
-                        <div class="meta-card">
-                            <div class="meta-label">Usuario</div>
-                            <div class="meta-value">{{ logSeleccionado.usuario_nombre || logSeleccionado.usuario_email || 'N/A' }}</div>
-                        </div>
-                    </div>
-
-                    <div class="detail-card">
-                        <div class="detail-title">Resumen</div>
-                        <div class="detail-text">{{ getAccionDescripcion(logSeleccionado) }}</div>
-                    </div>
-
-                    @if (cambios.length > 0) {
-                        <div class="detail-card">
-                            <div class="detail-title">Cambios realizados</div>
-                            <div class="changes-grid">
-                                <div class="changes-head">
-                                    <div>Campo</div>
-                                    <div>Antes</div>
-                                    <div>Después</div>
-                                </div>
-                                @for (c of cambios; track c.campo) {
-                                    <div class="changes-row">
-                                        <div class="changes-field">{{ c.campo }}</div>
-                                        <div class="changes-before">{{ c.antes }}</div>
-                                        <div class="changes-after">{{ c.despues }}</div>
-                                    </div>
-                                }
-                            </div>
-                        </div>
                     }
+                </tbody>
+            </table>
+        </div>
 
-                    @if (cards.length > 0 || extras.length > 0) {
-                        <div class="detail-card">
-                            <div class="detail-title">Detalles adicionales</div>
-                            @if (cards.length > 0) {
-                                <div class="pairs-grid">
-                                    @for (c of cards; track c.label) {
-                                        <div class="pair-item">
-                                            <div class="pair-label">{{ c.label }}</div>
-                                            <div class="pair-value">{{ c.value }}</div>
-                                        </div>
-                                    }
-                                </div>
-                            }
-                            @if (extras.length > 0) {
-                                @if (cards.length > 0) { <hr /> }
-                                <div class="pairs-grid">
-                                    @for (p of extras; track p.label) {
-                                        <div class="pair-item">
-                                            <div class="pair-label">{{ p.label }}</div>
-                                            <div class="pair-value">{{ p.value }}</div>
-                                        </div>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    }
-
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" (click)="cerrarModalDetalles()">Cerrar</button>
-                </div>
-            </div>
+        <!-- Paginación -->
+        @if (paginacionAcciones.pages > 1) {
+        <div class="pagination">
+            <button type="button"
+                    (click)="cambiarPaginaAcciones(paginacionAcciones.page - 1)" 
+                    [disabled]="paginacionAcciones.page <= 1 || cargandoAcciones">
+                Anterior
+            </button>
+            <span>Página {{ paginacionAcciones.page }} de {{ paginacionAcciones.pages }}</span>
+            <button type="button"
+                    (click)="cambiarPaginaAcciones(paginacionAcciones.page + 1)" 
+                    [disabled]="paginacionAcciones.page >= paginacionAcciones.pages || cargandoAcciones">
+                Siguiente
+            </button>
         </div>
         }
+
     </section>
     }
 
@@ -385,5 +303,46 @@
             </div>
         }
     </section>
+    }
+
+    <!-- Modal de Detalles -->
+    @if (logSeleccionado) {
+    <div class="modal-overlay" (click)="cerrarModalDetalles()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Detalle de acción</h3>
+            </div>
+                <div class="modal-body">
+                <div class="modal-meta-grid">
+                    <div class="meta-card">
+                        <div class="meta-label">Acción</div>
+                        <div class="meta-value">
+                            <span class="status-badge" [ngClass]="getClaseAccion(logSeleccionado.accion)">
+                                {{ getAccionLabel(logSeleccionado.accion) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="meta-card">
+                        <div class="meta-label">Módulo</div>
+                        <div class="meta-value">{{ logSeleccionado.modulo }}</div>
+                    </div>
+                    <div class="meta-card">
+                        <div class="meta-label">Fecha y hora</div>
+                        <div class="meta-value">{{ formatearFecha(logSeleccionado.fecha) }}</div>
+                    </div>
+                    <div class="meta-card">
+                        <div class="meta-label">Usuario</div>
+                        <div class="meta-value">{{ logSeleccionado.usuario_nombre || logSeleccionado.usuario_email || 'N/A' }}</div>
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-title">Descripción</div>
+                    <div class="detail-text">{{ getAccionDescripcion(logSeleccionado) }}</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
     }
 </div>

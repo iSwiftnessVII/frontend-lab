@@ -2,29 +2,30 @@
   <!-- Tarjetas de Dashboard -->
   @if (!esAuxiliar) {
     <div class="dashboard-cards">
-      <div class="action-card" (click)="toggleFormulario('hojaVida')" [class.active]="formularioActivo === 'hojaVida'">
+      <div class="action-card" role="button" tabindex="0" (click)="toggleFormulario('hojaVida')" (keydown.enter)="toggleFormulario('hojaVida')" (keydown.space)="toggleFormulario('hojaVida')" [class.active]="formularioActivo === 'hojaVida'">
         <i class="fas fa-file-medical"></i>
         <span>Registrar Hoja de Vida</span>
       </div>
 
-      <div class="action-card" (click)="toggleFormulario('fichaTecnica')" [class.active]="formularioActivo === 'fichaTecnica'">
+      <div class="action-card" role="button" tabindex="0" (click)="toggleFormulario('fichaTecnica')" (keydown.enter)="toggleFormulario('fichaTecnica')" (keydown.space)="toggleFormulario('fichaTecnica')" [class.active]="formularioActivo === 'fichaTecnica'">
         <i class="fas fa-clipboard-list"></i>
         <span>Registrar Ficha Técnica</span>
       </div>
 
-      <div class="action-card" (click)="toggleFormulario('historial')" [class.active]="formularioActivo === 'historial'">
+      <div class="action-card" role="button" tabindex="0" (click)="toggleFormulario('historial')" (keydown.enter)="toggleFormulario('historial')" (keydown.space)="toggleFormulario('historial')" [class.active]="formularioActivo === 'historial'">
         <i class="fas fa-history"></i>
         <span>Registrar Historial de Equipo</span>
       </div>
 
-      <div class="action-card" (click)="toggleFormulario('intervalo')" [class.active]="formularioActivo === 'intervalo'">
+      <div class="action-card" role="button" tabindex="0" (click)="toggleFormulario('intervalo')" (keydown.enter)="toggleFormulario('intervalo')" (keydown.space)="toggleFormulario('intervalo')" [class.active]="formularioActivo === 'intervalo'">
         <i class="fas fa-calendar-alt"></i>
         <span>Registrar Intervalo de Equipo</span>
       </div>
     </div>
   }
   <!-- Formulario de Hoja de Vida -->
-  <div *ngIf="formularioActivo === 'hojaVida' && !esAuxiliar" class="form-section">
+  @if (formularioActivo === 'hojaVida' && !esAuxiliar) {
+  <div class="form-section">
     <h2>
       <i class="fas fa-file-medical"></i>
       | Registrar Equipo (Hoja de Vida)
@@ -191,9 +192,11 @@
       </form>
     </section>
   </div>
+  }
 
   <!-- Formulario de Ficha Técnica -->
-  <div *ngIf="formularioActivo === 'fichaTecnica' && !esAuxiliar" class="form-section">
+  @if (formularioActivo === 'fichaTecnica' && !esAuxiliar) {
+  <div class="form-section">
     <h2>Registrar Ficha Técnica de Equipo</h2>
     <section>
       <form class="form-grid" (submit)="crearFichaTecnica($event)">
@@ -211,9 +214,11 @@
               name="tipoFiltro"
               (change)="cambiarTipoFiltro(tipoFiltro)"
             >
-              <option *ngFor="let opcion of opcionesFiltro" [value]="opcion.valor">
+              @for (opcion of opcionesFiltro; track opcion.valor) {
+              <option [value]="opcion.valor">
                 {{ opcion.texto }}
               </option>
+              }
             </select>
             <input 
               id="busquedaEquipo" 
@@ -230,45 +235,44 @@
           </div>
           
           <!-- Lista de resultados -->
-          <div *ngIf="mostrarResultados && busquedaEquipo.trim()" class="lista-resultados">
-            <div *ngIf="equiposFiltrados.length === 0" class="sin-resultados">
+          @if (mostrarResultados && busquedaEquipo.trim()) {
+          <div class="lista-resultados">
+            @if (equiposFiltrados.length === 0) {
+            <div class="sin-resultados">
               <i class="fas fa-search"></i>
               <span>No se encontraron equipos</span>
               <small>Intenta con otros términos de búsqueda</small>
             </div>
+            }
             
-            <div 
-              *ngFor="let equipo of equiposFiltrados" 
+            @for (equipo of equiposFiltrados; track equipo.codigo_identificacion) {
+            <div
               class="resultado-item"
               (mousedown)="seleccionarEquipo(equipo)"
             >
               <div class="resultado-header">
                 <strong class="codigo">{{ equipo.codigo_identificacion }}</strong>
                 <span class="nombre">{{ equipo.nombre }}</span>
-
-  <!-- Modal de imagen de firma -->
-  <div *ngIf="firmaModalVisible" class="modal-backdrop" (click)="cerrarFirmaModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <span>Firma</span>
-        <button type="button" class="modal-close" (click)="cerrarFirmaModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <img *ngIf="firmaModalSrc" [src]="firmaModalSrc" alt="Firma" class="firma-full"/>
-      </div>
-    </div>
-  </div>
               </div>
               <div class="info-adicional">
-                <span *ngIf="equipo.marca"><i class="fas fa-tag"></i> {{ equipo.marca }}</span>
-                <span *ngIf="equipo.modelo"><i class="fas fa-cube"></i> {{ equipo.modelo }}</span>
-                <span *ngIf="equipo.ubicacion"><i class="fas fa-map-marker-alt"></i> {{ equipo.ubicacion }}</span>
+                @if (equipo.marca) {
+                <span><i class="fas fa-tag"></i> {{ equipo.marca }}</span>
+                }
+                @if (equipo.modelo) {
+                <span><i class="fas fa-cube"></i> {{ equipo.modelo }}</span>
+                }
+                @if (equipo.ubicacion) {
+                <span><i class="fas fa-map-marker-alt"></i> {{ equipo.ubicacion }}</span>
+                }
               </div>
             </div>
+            }
           </div>
+          }
           
           <!-- Equipo seleccionado -->
-          <div *ngIf="equipoSeleccionado" class="equipo-seleccionado">
+          @if (equipoSeleccionado) {
+          <div class="equipo-seleccionado">
             <div class="seleccionado-info">
               <div class="seleccionado-content">
                 <div class="seleccionado-header">
@@ -278,9 +282,15 @@
                 <div class="seleccionado-details">
                   <span class="codigo-nombre">{{ equipoSeleccionado.codigo_identificacion }} - {{ equipoSeleccionado.nombre }}</span>
                   <div class="detalles-seleccionado">
-                    <span *ngIf="equipoSeleccionado.marca"><strong>Marca:</strong> {{ equipoSeleccionado.marca }}</span>
-                    <span *ngIf="equipoSeleccionado.modelo"><strong>Modelo:</strong> {{ equipoSeleccionado.modelo }}</span>
-                    <span *ngIf="equipoSeleccionado.voltaje"><strong>Voltaje:</strong> {{ equipoSeleccionado.voltaje }}</span>
+                    @if (equipoSeleccionado.marca) {
+                    <span><strong>Marca:</strong> {{ equipoSeleccionado.marca }}</span>
+                    }
+                    @if (equipoSeleccionado.modelo) {
+                    <span><strong>Modelo:</strong> {{ equipoSeleccionado.modelo }}</span>
+                    }
+                    @if (equipoSeleccionado.voltaje) {
+                    <span><strong>Voltaje:</strong> {{ equipoSeleccionado.voltaje }}</span>
+                    }
                   </div>
                 </div>
               </div>
@@ -289,14 +299,17 @@
               </button>
             </div>
           </div>
+          }
 
           <!-- Información de ayuda -->
-          <div *ngIf="!equipoSeleccionado" class="info-ayuda">
+          @if (!equipoSeleccionado) {
+          <div class="info-ayuda">
             <small>
               <i class="fas fa-info-circle"></i>
               Selecciona un equipo existente para autocompletar los campos similares automáticamente
             </small>
           </div>
+          }
         </div>
 
         <!-- Información básica del equipo -->
@@ -516,9 +529,11 @@
       </form>
     </section>
   </div>
+  }
 
   <!-- Formulario de Historial -->
-  <div *ngIf="formularioActivo === 'historial' && !esAuxiliar" class="form-section">
+  @if (formularioActivo === 'historial' && !esAuxiliar) {
+  <div class="form-section">
     <h2>Registrar historial de equipo</h2>
     <section>
       <form class="form-grid" (submit)="crearHistorial($event)">
@@ -527,9 +542,11 @@
           <label for="codigo_identificacion">Equipo *</label>
           <select #selHistorial id="codigo_identificacion" name="codigo_identificacion" [(ngModel)]="codigo_identificacion" (ngModelChange)="onSeleccionEquipoHistorialChange($event)">
             <option value="" disabled selected>Seleccione un equipo</option>
-            <option *ngFor="let equipo of equiposRegistrados" [value]="equipo.codigo_identificacion">
+            @for (equipo of equiposRegistrados; track equipo.codigo_identificacion) {
+            <option [value]="equipo.codigo_identificacion">
               {{ equipo.codigo_identificacion }} - {{ equipo.nombre }}
             </option>
+            }
           </select>
         </div>
         
@@ -581,9 +598,11 @@
       </form>
     </section>
   </div>
+  }
 
   <!-- Formulario de Intervalo -->
-  <div *ngIf="formularioActivo === 'intervalo' && !esAuxiliar" class="form-section">
+  @if (formularioActivo === 'intervalo' && !esAuxiliar) {
+  <div class="form-section">
     <h2>Registrar intervalo de equipo</h2>
     <section>
       <form class="form-grid" (submit)="crearIntervalo($event)">
@@ -592,9 +611,11 @@
           <label for="codigo_identificacion_intervalo">Equipo *</label>
           <select #selIntervalo id="codigo_identificacion_intervalo" name="codigo_identificacion_intervalo" [(ngModel)]="codigo_identificacion_intervalo" (ngModelChange)="onSeleccionEquipoIntervaloChange($event)">
             <option value="" disabled selected>Seleccione un equipo</option>
-            <option *ngFor="let equipo of equiposRegistrados" [value]="equipo.codigo_identificacion">
+            @for (equipo of equiposRegistrados; track equipo.codigo_identificacion) {
+            <option [value]="equipo.codigo_identificacion">
               {{ equipo.codigo_identificacion }} - {{ equipo.nombre }}
             </option>
+            }
           </select>
         </div>
         
@@ -662,6 +683,7 @@
       </form>
     </section>
   </div>
+  }
 
   <!-- Lista de Equipos -->
   <div class="form-section">
@@ -670,21 +692,29 @@
       | Lista de Equipos Registrados
     </h2>
     
-    <div *ngIf="cargandoEquipos" class="sin-equipos">
+    @if (cargandoEquipos) {
+    <div class="sin-equipos">
       <i class="fas fa-spinner fa-spin"></i>
       <p>Cargando equipos...</p>
     </div>
+    }
     
-    <div *ngIf="!cargandoEquipos && equiposRegistrados.length === 0" class="sin-equipos">
+    @if (!cargandoEquipos && equiposRegistrados.length === 0) {
+    <div class="sin-equipos">
       <i class="fas fa-inbox"></i>
       <p>No hay equipos registrados</p>
-      <button class="btn-compact" *ngIf="!esAuxiliar" (click)="toggleFormulario('hojaVida'); $event.stopPropagation()">
+      @if (!esAuxiliar) {
+      <button class="btn-compact" (click)="toggleFormulario('hojaVida'); $event.stopPropagation()">
         <i class="fas fa-plus"></i> Registrar primer equipo
       </button>
+      }
     </div>
+    }
 
-    <div *ngIf="!cargandoEquipos && equiposRegistrados.length > 0" class="equipos-grid">
-      <article *ngFor="let equipo of equiposRegistrados" class="equipo-card" (click)="toggleDetalleEquipo(equipo.codigo_identificacion)">
+    @if (!cargandoEquipos && equiposRegistrados.length > 0) {
+    <div class="equipos-grid">
+      @for (equipo of equiposRegistrados; track equipo.codigo_identificacion) {
+      <article class="equipo-card" role="button" tabindex="0" (click)="toggleDetalleEquipo(equipo.codigo_identificacion)" (keydown.enter)="toggleDetalleEquipo(equipo.codigo_identificacion)" (keydown.space)="toggleDetalleEquipo(equipo.codigo_identificacion)">
         <div class="card-top">
           <div class="tags">
             <span class="tag"><strong>Código:</strong> {{ equipo.codigo_identificacion }}</span>
@@ -693,18 +723,20 @@
             <span class="tag"><strong>Serie:</strong> {{ equipo.numero_serie || '—' }}</span>
             <span class="tag"><strong>Clasificación:</strong> {{ equipo.clasificacion || '—' }}</span>
           </div>
-          <div class="pdf-actions" (click)="$event.stopPropagation()">
-            <button *ngIf="!esAuxiliar" type="button" class="pdf-btn edit" title="Editar equipo" (click)="abrirEditarEquipo(equipo, $event)">
+          <div class="pdf-actions" role="button" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+            @if (!esAuxiliar) {
+            <button type="button" class="pdf-btn edit" title="Editar equipo" (click)="abrirEditarEquipo(equipo, $event)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor" />
                 <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor" />
               </svg>
             </button>
-            <button *ngIf="!esAuxiliar" type="button" class="pdf-btn delete" title="Eliminar equipo" (click)="eliminarEquipo(equipo, $event)">
+            <button type="button" class="pdf-btn delete" title="Eliminar equipo" (click)="eliminarEquipo(equipo, $event)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
               </svg>
             </button>
+            }
           </div>
         </div>
         <div class="card-header-row">
@@ -715,7 +747,7 @@
               <span class="chip">Ubicación: {{ equipo.ubicacion || '—' }}</span>
               <span class="chip">Acreditación: {{ equipo.acreditacion || 'Sin acreditación' }}</span>
             </div>
-            <div class="card-right-controls" (click)="$event.stopPropagation()">
+            <div class="card-right-controls" role="button" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
               <div class="card-controls-inner">
                 <div class="pdf-field">
                   <svg class="pdf-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -726,44 +758,58 @@
 
                   <select class="pdf-select" [(ngModel)]="selectedPdfByEquipo[equipo.codigo_identificacion]" [class.placeholder]="!selectedPdfByEquipo[equipo.codigo_identificacion]">
                     <option [ngValue]="null" disabled>Seleccionar PDF...</option>
-                    <option *ngFor="let pdf of (pdfListByEquipo[equipo.codigo_identificacion] || [])" [value]="pdf.url" [title]="pdf.name">{{ pdf.displayName || pdf.name }}</option>
-                    <option *ngIf="!(pdfListByEquipo[equipo.codigo_identificacion] || []).length" [ngValue]="null" disabled>Sin archivos</option>
+                    @for (pdf of (pdfListByEquipo[equipo.codigo_identificacion] || []); track pdf.url) {
+                    <option [value]="pdf.url" [title]="pdf.name">{{ pdf.displayName || pdf.name }}</option>
+                    }
+                    @if (!(pdfListByEquipo[equipo.codigo_identificacion] || []).length) {
+                    <option [ngValue]="null" disabled>Sin archivos</option>
+                    }
                   </select>
 
                   <button class="btn view pdf-action" (click)="openPdf(equipo.codigo_identificacion, $event)">Ver</button>
-                  <button *ngIf="!esAuxiliar" class="btn delete pdf-action eliminar" (click)="deletePdf(equipo.codigo_identificacion, $event)">Eliminar</button>
-                  <button *ngIf="!esAuxiliar" class="btn add pdf-action" (click)="mostrarMenuCategoriaPdf(equipo.codigo_identificacion, $event)">Añadir</button>
+                  @if (!esAuxiliar) {
+                  <button class="btn delete pdf-action eliminar" (click)="deletePdf(equipo.codigo_identificacion, $event)">Eliminar</button>
+                  <button class="btn add pdf-action" (click)="mostrarMenuCategoriaPdf(equipo.codigo_identificacion, $event)">Añadir</button>
+                  }
                 </div>
 
                 <!-- Menú de categorías de PDF (se muestra al hacer clic en Añadir) -->
-                <ul *ngIf="menuCategoriaPdfVisible[equipo.codigo_identificacion] && !esAuxiliar" class="categoria-pdf-menu" (click)="$event.stopPropagation()">
-                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Manual de usuario', $event)">Manual de usuario</li>
-                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de calificación', $event)">Certificados de calificación</li>
-                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de verificación', $event)">Certificados de verificación</li>
-                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de calibración', $event)">Certificados de calibración</li>
-                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de mantenimiento', $event)">Certificados de mantenimiento</li>
-                  <li (click)="iniciarUpload(equipo.codigo_identificacion, 'Ficha técnica de especificaciones', $event)">Ficha técnica de especificaciones</li>
+                @if (menuCategoriaPdfVisible[equipo.codigo_identificacion] && !esAuxiliar) {
+                <ul class="categoria-pdf-menu" role="button" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+                  <li role="button" tabindex="0" (click)="iniciarUpload(equipo.codigo_identificacion, 'Manual de usuario', $event)" (keydown.enter)="iniciarUpload(equipo.codigo_identificacion, 'Manual de usuario', $event)" (keydown.space)="iniciarUpload(equipo.codigo_identificacion, 'Manual de usuario', $event)">Manual de usuario</li>
+                  <li role="button" tabindex="0" (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de calificación', $event)" (keydown.enter)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de calificación', $event)" (keydown.space)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de calificación', $event)">Certificados de calificación</li>
+                  <li role="button" tabindex="0" (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de verificación', $event)" (keydown.enter)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de verificación', $event)" (keydown.space)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de verificación', $event)">Certificados de verificación</li>
+                  <li role="button" tabindex="0" (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de calibración', $event)" (keydown.enter)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de calibración', $event)" (keydown.space)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de calibración', $event)">Certificados de calibración</li>
+                  <li role="button" tabindex="0" (click)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de mantenimiento', $event)" (keydown.enter)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de mantenimiento', $event)" (keydown.space)="iniciarUpload(equipo.codigo_identificacion, 'Certificados de mantenimiento', $event)">Certificados de mantenimiento</li>
+                  <li role="button" tabindex="0" (click)="iniciarUpload(equipo.codigo_identificacion, 'Ficha técnica de especificaciones', $event)" (keydown.enter)="iniciarUpload(equipo.codigo_identificacion, 'Ficha técnica de especificaciones', $event)" (keydown.space)="iniciarUpload(equipo.codigo_identificacion, 'Ficha técnica de especificaciones', $event)">Ficha técnica de especificaciones</li>
                 </ul>
+                }
             </div>
             </div>
           </div>
         </div>
-        <div *ngIf="equipoExpandido === equipo.codigo_identificacion" class="equipo-detalles">
+        @if (equipoExpandido === equipo.codigo_identificacion) {
+        <div class="equipo-detalles">
           <!-- Menú de pestañas para información del equipo -->
           <div class="equipo-tabs-menu">
-            <button type="button" class="tab-btn" *ngFor="let tab of equipoTabs" [class.active]="activeTab[equipo.codigo_identificacion] === tab.key" (click)="selectTab(equipo.codigo_identificacion, tab.key); $event.stopPropagation()">
+            @for (tab of equipoTabs; track tab.key) {
+            <button type="button" class="tab-btn" [class.active]="activeTab[equipo.codigo_identificacion] === tab.key" (click)="selectTab(equipo.codigo_identificacion, tab.key); $event.stopPropagation()">
               {{ tab.label }}
-              <span *ngIf="tab.key === 'historial' || tab.key === 'intervalo'" class="tab-count" aria-hidden="true">{{ getTabCount(equipo, tab.key) }}</span>
+              @if (tab.key === 'historial' || tab.key === 'intervalo') {
+              <span class="tab-count" aria-hidden="true">{{ getTabCount(equipo, tab.key) }}</span>
+              }
             </button>
+            }
           </div>
-          <div class="equipo-info-card" [attr.aria-labelledby]="'info-equipo-title-' + equipo.codigo_identificacion" (click)="$event.stopPropagation()">
+          <div class="equipo-info-card" role="button" tabindex="0" [attr.aria-labelledby]="'info-equipo-title-' + equipo.codigo_identificacion" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
             <div class="equipo-info-card-header">
               <span class="equipo-info-card-title" [attr.id]="'info-equipo-title-' + equipo.codigo_identificacion">Información del Equipo</span>
             </div>
             <div class="equipo-info-card-body">
               <!-- Contenido de pestañas -->
-              <ng-container [ngSwitch]="activeTab[equipo.codigo_identificacion]">
-                <div *ngSwitchCase="'hojaVida'">
+              @switch (activeTab[equipo.codigo_identificacion]) {
+                @case ('hojaVida') {
+                <div>
                   <!-- Datos Generales -->
                   <div class="seccion-titulo">Datos Generales</div>
                   <div class="detalle-grid-compacto">
@@ -858,8 +904,8 @@
                     <div class="detalle-item">
                       <span class="detalle-label">Cargo y Firma</span>
                       <span class="firma-actions firma-center">
-                        <button 
-                          *ngIf="(equipo.codigo_identificador || equipo.codigo_identificacion)"
+                        @if (equipo.codigo_identificador || equipo.codigo_identificacion) {
+                        <button
                           type="button"
                           class="icon-eye-btn"
                           style="background:none; border:none; padding:0; cursor: pointer;"
@@ -868,26 +914,32 @@
                         >
                           <i class="fas fa-eye icon-eye"></i>
                         </button>
-                        <span *ngIf="!(equipo.codigo_identificador || equipo.codigo_identificacion)">N/A</span>
+                        } @else {
+                        <span>N/A</span>
+                        }
                       </span>
                     </div>
                     <div class="detalle-item"><span class="detalle-label">Fecha</span><span>{{ equipo.fecha ? (equipo.fecha | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
                   </div>
                 </div>
-                <div *ngSwitchCase="'historial'">
-                  <div *ngIf="historialPorEquipo[equipo.codigo_identificacion] && historialPorEquipo[equipo.codigo_identificacion].length > 0; else sinHistorial">
+                }
+                @case ('historial') {
+                <div>
+                  @if (historialPorEquipo[equipo.codigo_identificacion] && historialPorEquipo[equipo.codigo_identificacion].length > 0) {
                     <div class="historial-records-container">
-                      <div *ngFor="let registro of historialPorEquipo[equipo.codigo_identificacion]" class="historial-record-card">
-                        <div class="historial-header" (click)="toggleHistorialRegistro(equipo.codigo_identificacion, registro.consecutivo)">
+                      @for (registro of historialPorEquipo[equipo.codigo_identificacion]; track registro.consecutivo) {
+                      <div class="historial-record-card">
+                        <div class="historial-header" role="button" tabindex="0" (click)="toggleHistorialRegistro(equipo.codigo_identificacion, registro.consecutivo)" (keydown.enter)="toggleHistorialRegistro(equipo.codigo_identificacion, registro.consecutivo)" (keydown.space)="toggleHistorialRegistro(equipo.codigo_identificacion, registro.consecutivo)">
                           <span class="historial-consecutivo">
                             <i class="fas" [ngClass]="historialExpandido[equipo.codigo_identificacion + '_' + registro.consecutivo] ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                             Registro #{{ registro.consecutivo }}
                           </span>
                           <span class="historial-fecha">{{ registro.fecha ? (registro.fecha | date: 'yyyy/MM/dd') : 'N/A' }}</span>
                         </div>
-                        <div class="historial-body" *ngIf="historialExpandido[equipo.codigo_identificacion + '_' + registro.consecutivo]">
+                        @if (historialExpandido[equipo.codigo_identificacion + '_' + registro.consecutivo]) {
+                        <div class="historial-body">
                           <div class="historial-grid">
-                            <ng-container *ngIf="registro._edit && !esAuxiliar; else viewHistorialInline">
+                            @if (registro._edit && !esAuxiliar) {
                               <div class="historial-item"><span class="historial-label">Tipo Historial:</span><input [(ngModel)]="registro._edit.tipo_historial" /></div>
                               <div class="historial-item"><span class="historial-label">Código Registro:</span><input [(ngModel)]="registro._edit.codigo_registro" /></div>
                               <div class="historial-item"><span class="historial-label">Tolerancia (g):</span><input type="number" [(ngModel)]="registro._edit.tolerancia_g" /></div>
@@ -900,8 +952,7 @@
                                 <button class="btn-compact" (click)="saveHistorialEdits(equipo.codigo_identificacion, registro)">Guardar</button>
                                 <button class="btn-compact" (click)="cancelHistorialEdits(registro)">Cancelar</button>
                               </div>
-                            </ng-container>
-                            <ng-template #viewHistorialInline>
+                            } @else {
                               <div class="historial-item"><span class="historial-label">Tipo Historial:</span><span>{{ registro.tipo_historial || 'N/A' }}</span></div>
                               <div class="historial-item"><span class="historial-label">Código Registro:</span><span>{{ registro.codigo_registro || 'N/A' }}</span></div>
                               <div class="historial-item"><span class="historial-label">Tolerancia (g):</span><span>{{ registro.tolerancia_g || 'N/A' }}</span></div>
@@ -909,37 +960,46 @@
                               <div class="historial-item"><span class="historial-label">Incertidumbre (u):</span><span>{{ registro.incertidumbre_u || 'N/A' }}</span></div>
                               <div class="historial-item"><span class="historial-label">Realizó:</span><span>{{ registro.realizo || 'N/A' }}</span></div>
                               <div class="historial-item"><span class="historial-label">Supervisó:</span><span>{{ registro.superviso || 'N/A' }}</span></div>
-                              <div class="historial-item historial-item-full" *ngIf="registro.observaciones"><span class="historial-label">Observaciones:</span><span>{{ registro.observaciones }}</span></div>
-                              <div class="historial-actions" *ngIf="!esAuxiliar">
+                              @if (registro.observaciones) {
+                              <div class="historial-item historial-item-full"><span class="historial-label">Observaciones:</span><span>{{ registro.observaciones }}</span></div>
+                              }
+                              @if (!esAuxiliar) {
+                              <div class="historial-actions">
                                 <button class="btn-compact" (click)="startEditHistorial(registro)">Editar</button>
                               </div>
-                            </ng-template>
+                              }
+                            }
                           </div>
                         </div>
+                        }
                       </div>
+                      }
                     </div>
-                  </div>
-                  <ng-template #sinHistorial>
+                  } @else {
                     <div class="no-historial-message">
                       <i class="fas fa-history"></i>
                       <p>No hay registros de historial para este equipo</p>
                     </div>
-                  </ng-template>
+                  }
                 </div>
-                <div *ngSwitchCase="'intervalo'">
-                  <div *ngIf="intervaloPorEquipo[equipo.codigo_identificacion] && intervaloPorEquipo[equipo.codigo_identificacion].length > 0; else sinIntervalo">
+                }
+                @case ('intervalo') {
+                <div>
+                  @if (intervaloPorEquipo[equipo.codigo_identificacion] && intervaloPorEquipo[equipo.codigo_identificacion].length > 0) {
                     <div class="historial-records-container">
-                      <div *ngFor="let registro of intervaloPorEquipo[equipo.codigo_identificacion]" class="historial-record-card">
-                        <div class="historial-header" (click)="toggleIntervaloRegistro(equipo.codigo_identificacion, registro.consecutivo)">
+                      @for (registro of intervaloPorEquipo[equipo.codigo_identificacion]; track registro.consecutivo) {
+                      <div class="historial-record-card">
+                        <div class="historial-header" role="button" tabindex="0" (click)="toggleIntervaloRegistro(equipo.codigo_identificacion, registro.consecutivo)" (keydown.enter)="toggleIntervaloRegistro(equipo.codigo_identificacion, registro.consecutivo)" (keydown.space)="toggleIntervaloRegistro(equipo.codigo_identificacion, registro.consecutivo)">
                           <span class="historial-consecutivo">
                             <i class="fas" [ngClass]="intervaloExpandido[equipo.codigo_identificacion + '_' + registro.consecutivo] ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                             Registro #{{ registro.consecutivo }}
                           </span>
                           <span class="historial-fecha">Unidad: {{ registro.unidad_nominal_g || 'N/A' }}g</span>
                         </div>
-                        <div class="historial-body" *ngIf="intervaloExpandido[equipo.codigo_identificacion + '_' + registro.consecutivo]">
+                        @if (intervaloExpandido[equipo.codigo_identificacion + '_' + registro.consecutivo]) {
+                        <div class="historial-body">
                           <div class="historial-grid">
-                            <ng-container *ngIf="registro._edit && !esAuxiliar; else viewIntervaloInline">
+                            @if (registro._edit && !esAuxiliar) {
                               <div class="historial-item"><span class="historial-label">Unidad Nominal (g):</span><input type="number" [(ngModel)]="registro._edit.unidad_nominal_g" /></div>
                               <div class="historial-item"><span class="historial-label">Calibración 1:</span><input [(ngModel)]="registro._edit.calibracion_1" /></div>
                               <div class="historial-item"><span class="historial-label">Fecha Cal. 1:</span><input type="date" [(ngModel)]="registro._edit.fecha_c1" /></div>
@@ -957,8 +1017,7 @@
                                 <button class="btn-compact" (click)="saveIntervaloEdits(equipo.codigo_identificacion, registro)">Guardar</button>
                                 <button class="btn-compact" (click)="cancelIntervaloEdits(registro)">Cancelar</button>
                               </div>
-                            </ng-container>
-                            <ng-template #viewIntervaloInline>
+                            } @else {
                               <div class="historial-item"><span class="historial-label">Unidad Nominal (g):</span><span>{{ registro.unidad_nominal_g || 'N/A' }}</span></div>
                               <div class="historial-item"><span class="historial-label">Calibración 1:</span><span>{{ registro.calibracion_1 || 'N/A' }}</span></div>
                               <div class="historial-item"><span class="historial-label">Fecha Cal. 1:</span><span>{{ registro.fecha_c1 ? (registro.fecha_c1 | date: 'yyyy/MM/dd') : 'N/A' }}</span></div>
@@ -972,35 +1031,43 @@
                               <div class="historial-item"><span class="historial-label">Tolerancia (g):</span><span>{{ registro.tolerancia_g || 'N/A' }}</span></div>
                               <div class="historial-item"><span class="historial-label">Intervalo Cal. (días):</span><span>{{ registro.intervalo_calibraciones_dias || 'N/A' }}</span></div>
                               <div class="historial-item"><span class="historial-label">Intervalo Cal. (años):</span><span>{{ registro.intervalo_calibraciones_anios || 'N/A' }}</span></div>
-                              <div class="historial-actions" *ngIf="!esAuxiliar">
+                              @if (!esAuxiliar) {
+                              <div class="historial-actions">
                                 <button class="btn-compact" (click)="startEditIntervalo(registro)">Editar</button>
                               </div>
-                            </ng-template>
+                              }
+                            }
                           </div>
                         </div>
+                        }
                       </div>
+                      }
                     </div>
-                  </div>
-                  <ng-template #sinIntervalo>
+                  } @else {
                     <div class="no-historial-message">
                       <i class="fas fa-calendar-alt"></i>
                       <p>No hay registros de intervalo para este equipo</p>
                     </div>
-                  </ng-template>
+                  }
                 </div>
-                <div *ngSwitchDefault>
+                }
+                @default {
                   <div class="detalle-grid-compacto"><span>Seleccione una pestaña</span></div>
-                </div>
-              </ng-container>
+                }
+              }
             </div>
           </div>
         </div>
+        }
       </article>
+      }
     </div>
+    }
 
     <!-- Edit Equipo Modal (tabs: Hoja de vida, Ficha técnica, Historial, Intervalo) -->
-    <div *ngIf="editModalVisible || editModalClosing" class="modal-overlay" [class.closing]="editModalClosing" (click)="closeEditEquipoModal()">
-      <div class="edit-modal" [class.closing]="editModalClosing" (click)="$event.stopPropagation()">
+    @if (editModalVisible || editModalClosing) {
+    <div class="modal-overlay" role="button" tabindex="0" [class.closing]="editModalClosing" (click)="closeEditEquipoModal()" (keydown.enter)="closeEditEquipoModal()" (keydown.space)="closeEditEquipoModal()">
+      <div class="edit-modal" role="button" tabindex="0" [class.closing]="editModalClosing" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
         <h3>Editar Equipo</h3>
 
         <div class="equipo-tabs-menu">
@@ -1010,38 +1077,38 @@
         </div>
 
         <div style="margin-top:12px" class="edit-modal-body">
-          <div *ngIf="editModalActiveTab === 'hojaVida'">
+          @if (editModalActiveTab === 'hojaVida') {
             <div class="form-grid">
               <div>
-                <label>Código</label>
+                <span>Código</span>
                 <input [(ngModel)]="codigo_identificacion" />
               </div>
               <div>
-                <label>Nombre</label>
+                <span>Nombre</span>
                 <input [(ngModel)]="nombre" />
               </div>
               <div>
-                <label>Marca</label>
+                <span>Marca</span>
                 <input [(ngModel)]="marca" />
               </div>
               <div>
-                <label>Modelo</label>
+                <span>Modelo</span>
                 <input [(ngModel)]="modelo" />
               </div>
               <div>
-                <label>Serie</label>
+                <span>Serie</span>
                 <input [(ngModel)]="numero_serie" />
               </div>
               <div>
-                <label>Inventario SENA</label>
+                <span>Inventario SENA</span>
                 <input [(ngModel)]="inventario_sena" />
               </div>
               <div>
-                <label>Ubicación</label>
+                <span>Ubicación</span>
                 <input [(ngModel)]="ubicacion" />
               </div>
               <div>
-                <label>Acreditación</label>
+                <span>Acreditación</span>
                 <select [(ngModel)]="acreditacion">
                   <option value="">Seleccione</option>
                   <option value="Si">Si</option>
@@ -1052,7 +1119,7 @@
                 </select>
               </div>
               <div>
-                <label>Tipo de manual</label>
+                <span>Tipo de manual</span>
                 <select [(ngModel)]="tipo_manual">
                   <option value="">Seleccione</option>
                   <option value="Fisico">Fisico</option>
@@ -1062,7 +1129,7 @@
                 </select>
               </div>
               <div>
-                <label>Manual de usuario</label>
+                <span>Manual de usuario</span>
                 <select [(ngModel)]="manual_usuario">
                   <option value="">Seleccione</option>
                   <option value="Si">Si</option>
@@ -1072,47 +1139,47 @@
                 </select>
               </div>
               <div>
-                <label>Puesta en servicio</label>
+                <span>Puesta en servicio</span>
                 <input type="date" [(ngModel)]="puesta_en_servicio" />
               </div>
               <div>
-                <label>Fecha adquisición</label>
+                <span>Fecha adquisición</span>
                 <input type="date" [(ngModel)]="fecha_adquisicion" />
               </div>
               <div style="grid-column: 1 / -1;">
-                <label>Requerimientos del equipo</label>
+                <span>Requerimientos del equipo</span>
                 <textarea [(ngModel)]="requerimientos_equipo"></textarea>
               </div>
               <div style="grid-column: 1 / -1;">
-                <label>Accesorios</label>
+                <span>Accesorios</span>
                 <textarea [(ngModel)]="accesorios"></textarea>
               </div>
               <div>
-                <label>Clasificación</label>
+                <span>Clasificación</span>
                 <input [(ngModel)]="clasificacion" />
               </div>
               <div>
-                <label>Tipo</label>
+                <span>Tipo</span>
                 <input [(ngModel)]="tipo" />
               </div>
               <div>
-                <label>Voltaje</label>
+                <span>Voltaje</span>
                 <input [(ngModel)]="voltaje" />
               </div>
               <div>
-                <label>Frecuencia</label>
+                <span>Frecuencia</span>
                 <input [(ngModel)]="frecuencia" />
               </div>
               <div>
-                <label>Campo de medición</label>
+                <span>Campo de medición</span>
                 <input [(ngModel)]="campo_medicion" />
               </div>
               <div>
-                <label>Exactitud</label>
+                <span>Exactitud</span>
                 <input [(ngModel)]="exactitud" />
               </div>
               <div>
-                <label>Elementos eléctricos</label>
+                <span>Elementos eléctricos</span>
                 <select [(ngModel)]="elementos_electricos">
                   <option value="">Seleccione</option>
                   <option value="Si">Si</option>
@@ -1120,7 +1187,7 @@
                 </select>
               </div>
               <div>
-                <label>Elementos mecánicos</label>
+                <span>Elementos mecánicos</span>
                 <select [(ngModel)]="elementos_mecanicos">
                   <option value="">Seleccione</option>
                   <option value="Si">Si</option>
@@ -1128,7 +1195,7 @@
                 </select>
               </div>
               <div>
-                <label>Sujeto a verificar</label>
+                <span>Sujeto a verificar</span>
                 <select [(ngModel)]="sujeto_verificar">
                   <option value="">Seleccione</option>
                   <option value="Si">Si</option>
@@ -1136,7 +1203,7 @@
                 </select>
               </div>
               <div>
-                <label>Sujeto a calibración</label>
+                <span>Sujeto a calibración</span>
                 <select [(ngModel)]="sujeto_calibracion">
                   <option value="">Seleccione</option>
                   <option value="Si">Si</option>
@@ -1144,11 +1211,11 @@
                 </select>
               </div>
               <div>
-                <label>Resolución/división</label>
+                <span>Resolución/división</span>
                 <input [(ngModel)]="resolucion_division" />
               </div>
               <div>
-                <label>Sujeto a calificación</label>
+                <span>Sujeto a calificación</span>
                 <select [(ngModel)]="sujeto_calificacion">
                   <option value="">Seleccione</option>
                   <option value="Si">Si</option>
@@ -1156,35 +1223,35 @@
                 </select>
               </div>
             </div>
-            <div style="display:flex;justify-content:flex-end;margin-top:12px">
-              <button type="button" class="tab-btn" (click)="saveHojaVidaEditEquipo()">Guardar cambios</button>
+            <div class="edit-modal-actions">
+              <button type="button" class="tab-btn" (click)="saveHojaVidaEditEquipo()">Guardar</button>
             </div>
-          </div>
+          }
 
-          <div *ngIf="editModalActiveTab === 'fichaTecnica'">
+          @if (editModalActiveTab === 'fichaTecnica') {
             <div class="form-grid">
               <div>
-                <label>Fabricante</label>
+                <span>Fabricante</span>
                 <input [(ngModel)]="fabricante" />
               </div>
               <div>
-                <label>Fecha adquisición</label>
+                <span>Fecha adquisición</span>
                 <input type="date" [(ngModel)]="fecha_adq" />
               </div>
               <div>
-                <label>Uso</label>
+                <span>Uso</span>
                 <input [(ngModel)]="uso" />
               </div>
               <div>
-                <label>Fecha funcionamiento</label>
+                <span>Fecha funcionamiento</span>
                 <input type="date" [(ngModel)]="fecha_func" />
               </div>
               <div>
-                <label>Precio</label>
+                <span>Precio</span>
                 <input type="number" step="0.01" [(ngModel)]="precio" />
               </div>
               <div>
-                <label>Manual de operación</label>
+                <span>Manual de operación</span>
                 <select [(ngModel)]="manual_ope">
                   <option value="">Seleccione</option>
                   <option value="digital">Digital</option>
@@ -1193,128 +1260,139 @@
                 </select>
               </div>
               <div>
-                <label>Idioma del manual</label>
+                <span>Idioma del manual</span>
                 <input [(ngModel)]="idioma_manual" />
               </div>
               <div>
-                <label>Magnitud</label>
+                <span>Magnitud</span>
                 <input [(ngModel)]="magnitud" />
               </div>
               <div>
-                <label>Resolución</label>
+                <span>Resolución</span>
                 <input [(ngModel)]="resolucion" />
               </div>
               <div>
-                <label>Precisión</label>
+                <span>Precisión</span>
                 <input [(ngModel)]="precision_med" />
               </div>
               <div>
-                <label>Rango de medición</label>
+                <span>Rango de medición</span>
                 <input [(ngModel)]="rango_de_medicion" />
               </div>
               <div>
-                <label>Rango de uso</label>
+                <span>Rango de uso</span>
                 <input [(ngModel)]="rango_de_uso" />
               </div>
               <div>
-                <label>Potencia</label>
+                <span>Potencia</span>
                 <input [(ngModel)]="potencia" />
               </div>
               <div>
-                <label>Amperaje</label>
+                <span>Amperaje</span>
                 <input [(ngModel)]="amperaje" />
               </div>
               <div>
-                <label>Ancho (cm)</label>
+                <span>Ancho (cm)</span>
                 <input type="number" step="0.01" [(ngModel)]="ancho" />
               </div>
               <div>
-                <label>Alto (cm)</label>
+                <span>Alto (cm)</span>
                 <input type="number" step="0.01" [(ngModel)]="alto" />
               </div>
               <div>
-                <label>Profundidad (cm)</label>
+                <span>Profundidad (cm)</span>
                 <input type="number" step="0.01" [(ngModel)]="profundidad" />
               </div>
               <div>
-                <label>Peso (kg)</label>
+                <span>Peso (kg)</span>
                 <input type="number" step="0.01" [(ngModel)]="peso_kg" />
               </div>
               <div>
-                <label>Temperatura (°C)</label>
+                <span>Temperatura (°C)</span>
                 <input type="number" step="0.01" [(ngModel)]="temperatura_c" />
               </div>
               <div>
-                <label>Humedad (%)</label>
+                <span>Humedad (%)</span>
                 <input type="number" step="0.01" [(ngModel)]="humedad_porcentaje" />
               </div>
               <div style="grid-column: 1 / -1;">
-                <label>Limitaciones e interferencias</label>
+                <span>Limitaciones e interferencias</span>
                 <textarea [(ngModel)]="limitaciones_e_interferencias"></textarea>
               </div>
               <div style="grid-column: 1 / -1;">
-                <label>Otros</label>
+                <span>Otros</span>
                 <textarea [(ngModel)]="otros"></textarea>
               </div>
               <div>
-                <label>Proveedor</label>
+                <span>Proveedor</span>
                 <input [(ngModel)]="proveedor" />
               </div>
               <div>
-                <label>Email</label>
+                <span>Email</span>
                 <input type="email" [(ngModel)]="email" />
               </div>
               <div>
-                <label>Teléfono</label>
+                <span>Teléfono</span>
                 <input [(ngModel)]="telefono" />
               </div>
               <div>
-                <label>Fecha de instalación</label>
+                <span>Fecha de instalación</span>
                 <input type="date" [(ngModel)]="fecha_de_instalacion" />
               </div>
               <div>
-                <label>Garantía</label>
+                <span>Garantía</span>
                 <input [(ngModel)]="garantia" />
               </div>
               <div style="grid-column: 1 / -1;">
-                <label>Alcance del servicio</label>
+                <span>Alcance del servicio</span>
                 <textarea [(ngModel)]="alcance_del_servicio"></textarea>
               </div>
               <div style="grid-column: 1 / -1;">
-                <label>Especificaciones de software</label>
+                <span>Especificaciones de software</span>
                 <textarea [(ngModel)]="especificaciones_software"></textarea>
               </div>
               <div>
-                <label>Recibido por</label>
+                <span>Recibido por</span>
                 <input [(ngModel)]="recibido_por" />
               </div>
               <div>
-                <label>Firma (imagen)</label>
+                <span>Firma (imagen)</span>
                 <input type="file" accept="image/*" (change)="onFirmaChange($event)" />
               </div>
             </div>
-            <div style="display:flex;justify-content:flex-end;margin-top:12px">
-              <button type="button" class="tab-btn" (click)="saveFichaTecnicaEditEquipo()">Guardar cambios</button>
+            <div class="edit-modal-actions">
+              <button type="button" class="tab-btn" (click)="saveFichaTecnicaEditEquipo()">Guardar</button>
             </div>
-          </div>
+          }
 
           <!-- Historial e Intervalo han sido removidos del modal -->
         </div>
 
       </div>
     </div>
+    }
 
   <!-- Modal de imagen de firma (Global) -->
-  <div *ngIf="firmaModalVisible" class="modal-backdrop" (click)="cerrarFirmaModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+  @if (firmaModalVisible) {
+  <div
+    class="modal-backdrop"
+    tabindex="0"
+    role="button"
+    (click)="cerrarFirmaModal()"
+    (keydown.enter)="cerrarFirmaModal()"
+    (keydown.space)="cerrarFirmaModal()">
+    <div class="modal-content">
       <div class="modal-header">
         <span>Firma</span>
         <button type="button" class="modal-close" (click)="cerrarFirmaModal()">×</button>
       </div>
       <div class="modal-body">
-        <img *ngIf="firmaModalSrc" [src]="firmaModalSrc" alt="Firma" class="firma-full" oncontextmenu="return false;" style="pointer-events: auto; -webkit-user-drag: none; user-select: none;"/>
+        @if (firmaModalSrc) {
+          <img [src]="firmaModalSrc" alt="Firma" class="firma-full" oncontextmenu="return false;" style="pointer-events: auto; -webkit-user-drag: none; user-select: none;"/>
+        }
       </div>
     </div>
   </div>
+  }
 
     

@@ -1,4 +1,4 @@
-import { Component, signal, effect, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+import { Component, signal, effect, OnInit, ChangeDetectorRef, ViewChild, ElementRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -17,6 +17,10 @@ import { authService, authUser } from '../services/auth.service';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class VolumetricosComponent implements OnInit {
+  public snack = inject(SnackbarService);
+  private cdr = inject(ChangeDetectorRef);
+  public volumetricosService = inject(VolumetricosService);
+  private confirm = inject(ConfirmService);
   public get esAuxiliar(): boolean {
     const user = authUser();
     if (!user || user.rol !== 'Auxiliar') return false;
@@ -33,11 +37,11 @@ export class VolumetricosComponent implements OnInit {
   ];
 
   // Control de pestaña activa por material
-  activeTab: { [codigo: string]: string } = {};
+  activeTab: Record<string, string> = {};
 
   // Almacenar historial e intervalo por material
-  historialPorMaterial: { [codigo: string]: any[] } = {};
-  intervaloPorMaterial: { [codigo: string]: any[] } = {};
+  historialPorMaterial: Record<string, any[]> = {};
+  intervaloPorMaterial: Record<string, any[]> = {};
 
   // Control de formularios
   formularioActivo: string | null = null;
@@ -47,25 +51,25 @@ export class VolumetricosComponent implements OnInit {
 
   // Variables para búsqueda y autocompletado
   busquedaMaterial = '';
-  tipoFiltro: string = 'todos';
+  tipoFiltro = 'todos';
   materialesFiltrados: any[] = [];
   materialSeleccionado: any = null;
-  mostrarResultados: boolean = false;
+  mostrarResultados = false;
 
   @ViewChild('volDocTemplateInput') volDocTemplateInput?: ElementRef<HTMLInputElement>;
 
-  volDocFiltroTipo: string = 'todos';
-  volDocBusqueda: string = '';
+  volDocFiltroTipo = 'todos';
+  volDocBusqueda = '';
   volDocResultados: any[] = [];
   volDocSeleccionado: any = null;
   volDocPlantillas = signal<any[]>([]);
   volDocPlantillaId: number | null = null;
-  volDocNombrePlantilla: string = '';
+  volDocNombrePlantilla = '';
   volDocTemplateFile: File | null = null;
-  volDocMsg: string = '';
-  volDocLoading: boolean = false;
+  volDocMsg = '';
+  volDocLoading = false;
   volDocListLoading = signal(false);
-  volDocUploadLoading: boolean = false;
+  volDocUploadLoading = false;
   volDocDeleteLoading: Set<number> = new Set<number>();
 
   // Opciones para el select de filtro
@@ -129,27 +133,28 @@ export class VolumetricosComponent implements OnInit {
   consecutivoIntervaloSig = signal<number | null>(null);
 
   // Control de registros expandidos
-  historialExpandido: { [key: string]: boolean } = {};
-  intervaloExpandido: { [key: string]: boolean } = {};
+  historialExpandido: Record<string, boolean> = {};
+  intervaloExpandido: Record<string, boolean> = {};
 
   // PDF management
-  pdfListByMaterial: { [codigo: string]: Array<{ id?: number; name: string; url: string; categoria?: string; size?: number; mime?: string; fecha_subida?: Date | null; displayName?: string }> } = {};
-  selectedPdfByMaterial: { [codigo: string]: string | null } = {};
-  menuCategoriaPdfVisible: { [codigo: string]: boolean } = {};
+  pdfListByMaterial: Record<string, { id?: number; name: string; url: string; categoria?: string; size?: number; mime?: string; fecha_subida?: Date | null; displayName?: string }[]> = {};
+  selectedPdfByMaterial: Record<string, string | null> = {};
+  menuCategoriaPdfVisible: Record<string, boolean> = {};
 
   // Edit modal state
-  editModalVisible: boolean = false;
-  editModalClosing: boolean = false;
-  editModalActiveTab: string = 'general';
-  editMaterialMode: boolean = false;
+  editModalVisible = false;
+  editModalClosing = false;
+  editModalActiveTab = 'general';
+  editMaterialMode = false;
   editingMaterialCodigo: number | null = null;
+  private editOriginalMaterialPayload: any | null = null;
 
-  constructor(public snack: SnackbarService, private cdr: ChangeDetectorRef, public volumetricosService: VolumetricosService, private confirm: ConfirmService) {
+  constructor() {
     // Efectos para consecutivos
     effect(() => {
       const codigo = this.codigoHistorialSig();
       if (codigo) {
-        volumetricosService.obtenerNextHistorial(codigo)
+        this.volumetricosService.obtenerNextHistorial(codigo)
           .then((resp: any) => this.consecutivoHistorialSig.set(resp.next))
           .catch(() => this.snack.warn('No se pudo cargar consecutivo historial'));
       } else {
@@ -160,7 +165,7 @@ export class VolumetricosComponent implements OnInit {
     effect(() => {
       const codigo = this.codigoIntervaloSig();
       if (codigo) {
-        volumetricosService.obtenerNextIntervalo(codigo)
+        this.volumetricosService.obtenerNextIntervalo(codigo)
           .then((resp: any) => this.consecutivoIntervaloSig.set(resp.next))
           .catch(() => this.snack.warn('No se pudo cargar consecutivo intervalo'));
       } else {
@@ -647,10 +652,8 @@ export class VolumetricosComponent implements OnInit {
         this.volDocMsg = '';
         this.volDocLoading = false;
         this.volDocUploadLoading = false;
-        try {
-          const el = this.volDocTemplateInput?.nativeElement;
-          if (el) el.value = '';
-        } catch {}
+        const el = this.volDocTemplateInput?.nativeElement;
+        if (el) el.value = '';
         this.cargarPlantillasDocumentoVolumetrico();
       } else {
         this.formularioActivo = tipo;
@@ -701,10 +704,8 @@ export class VolumetricosComponent implements OnInit {
     this.volDocMsg = '';
     this.volDocLoading = false;
     this.volDocUploadLoading = false;
-    try {
-      const el = this.volDocTemplateInput?.nativeElement;
-      if (el) el.value = '';
-    } catch {}
+    const el = this.volDocTemplateInput?.nativeElement;
+    if (el) el.value = '';
   }
 
   onVolDocTemplateSelected(event: any): void {
@@ -755,10 +756,8 @@ export class VolumetricosComponent implements OnInit {
       if (Number.isFinite(id) && id > 0) this.volDocPlantillaId = id;
       this.volDocNombrePlantilla = '';
       this.volDocTemplateFile = null;
-      try {
-        const el = this.volDocTemplateInput?.nativeElement;
-        if (el) el.value = '';
-      } catch {}
+      const el = this.volDocTemplateInput?.nativeElement;
+      if (el) el.value = '';
       this.snack.success('Plantilla guardada');
     } catch (err: any) {
       this.volDocMsg = err?.message || 'Error subiendo plantilla';
@@ -921,7 +920,7 @@ export class VolumetricosComponent implements OnInit {
   }
 
   computePdfDisplayNames(items: any[]) {
-    const groups: { [cat: string]: Array<any> } = {};
+    const groups: Record<string, any[]> = {};
     for (const it of items) {
       const cat = (it.categoria || '').trim();
       if (!cat) continue;
@@ -1096,18 +1095,14 @@ export class VolumetricosComponent implements OnInit {
     
     this.editMaterialMode = true;
     this.editingMaterialCodigo = material.codigo_id;
+    this.editOriginalMaterialPayload = this.buildEditMaterialPayload();
     this.editModalVisible = true;
     this.editModalClosing = false;
     this.editModalActiveTab = 'general';
   }
 
-  async saveAllEditMaterial() {
-    if (!this.editingMaterialCodigo) {
-      this.snack.error('No se ha seleccionado material para editar');
-      return;
-    }
-    
-    const payload: any = {
+  private buildEditMaterialPayload(): any {
+    return {
       codigo_id: this.codigoIdSig(),
       nombre_material: this.nombre_material,
       volumen_nominal: this.volumen_nominal,
@@ -1117,6 +1112,23 @@ export class VolumetricosComponent implements OnInit {
       error_max_permitido: this.error_max_permitido,
       modelo: this.modelo
     };
+  }
+
+  private hasEditMaterialChanges(payload: any): boolean {
+    return JSON.stringify(payload) !== JSON.stringify(this.editOriginalMaterialPayload);
+  }
+
+  async saveAllEditMaterial() {
+    if (!this.editingMaterialCodigo) {
+      this.snack.error('No se ha seleccionado material para editar');
+      return;
+    }
+    
+    const payload: any = this.buildEditMaterialPayload();
+    if (!this.hasEditMaterialChanges(payload)) {
+      this.snack.warn('No hay campos para actualizar');
+      return;
+    }
 
     try {
       await this.volumetricosService.actualizarMaterial(this.editingMaterialCodigo, payload);
@@ -1147,6 +1159,7 @@ export class VolumetricosComponent implements OnInit {
     this.editModalClosing = false;
     this.editMaterialMode = false;
     this.editingMaterialCodigo = null;
+    this.editOriginalMaterialPayload = null;
   }
 
   // --- Edición inline de historial ---

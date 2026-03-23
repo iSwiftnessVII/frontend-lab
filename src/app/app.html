@@ -307,7 +307,7 @@
       </div>
     </div>
 
-@if (user()?.rol === 'Superadmin') {
+@if (canAccessAuditoria()) {
   <a 
     routerLink="/auditoria" 
     routerLinkActive="active" 
@@ -334,6 +334,26 @@
 <main class="main-content liba-theme" [class.route-navigating]="isNavigating()">
   <router-outlet></router-outlet>
 </main>
+
+@if (updateDownloadOpen()) {
+  <div class="update-download-backdrop"></div>
+  <div class="update-download-modal" role="dialog" aria-modal="true" aria-label="Descarga de actualizacion">
+    <div class="update-download-header">
+      <h3>{{ updateDownloadLabel() }}</h3>
+      <span class="update-download-percent">{{ updateDownloadPercent() | number:'1.0-0' }}%</span>
+    </div>
+    <div class="update-download-bar">
+      <div class="update-download-fill" [style.width.%]="updateDownloadPercent()"></div>
+    </div>
+    <div class="update-download-meta">
+      @if (updateDownloadTotal() > 0) {
+        <span>{{ formatBytes(updateDownloadTransferred()) }} de {{ formatBytes(updateDownloadTotal()) }}</span>
+      } @else {
+        <span>Preparando descarga...</span>
+      }
+    </div>
+  </div>
+}
 
 @if (updatesModalOpen()) {
   <div class="updates-modal-backdrop" (click)="closeUpdatesModal()"></div>

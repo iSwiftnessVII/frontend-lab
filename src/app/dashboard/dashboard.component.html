@@ -23,9 +23,9 @@
                 <div class="metric-pie-center-label">Total de Reactivos</div>
               </div>
             </div>
-            <div class="metric-pie-legend metric-pie-legend--center">
-              @if (getReactivosPieSegments(); as segs) {
-                @if (segs.length) {
+            @if (getReactivosPieSegments(); as segs) {
+              @if (segs.length) {
+                <div class="metric-pie-legend-row">
                   @for (seg of segs; track seg.label) {
                     <div class="metric-pie-item notif-row">
                       <span class="metric-pie-line" [style.background]="seg.color"></span>
@@ -33,16 +33,14 @@
                       <span class="metric-pie-value">{{ formatearNumero(seg.value) }}</span>
                     </div>
                   }
-                } @else {
-                  <div class="metric-pie-empty">Sin datos</div>
-                }
+                </div>
+              } @else {
+                <div class="metric-pie-empty">Sin datos</div>
               }
-            </div>
+            }
           </div>
-          <div class="reactivos-col reactivos-col--legend"></div>
           <div class="reactivos-col reactivos-col--consumo">
             <div class="metric-pie-top">
-              <div class="metric-pie-icon consumo"><i class="fas fa-syringe"></i></div>
               <div class="metric-pie-title">Consumo de Reactivos</div>
               <div class="metric-pie-total">{{ formatearNumero(getConsumoTotal()) }}</div>
             </div>
@@ -57,7 +55,16 @@
                           <span class="notif-code" [title]="c.codigo || '—'">{{ c.codigo || '—' }}</span>
                           <span class="notif-lote" [title]="c.lote || '—'">{{ c.lote || '—' }}</span>
                         </div>
-                        <div class="notif-date">Consumido: {{ formatearNumero(c.cantidad || 0) }} {{ c.unidad_simbolo || c.unidad || '' }}</div>
+                        <div class="notif-date">
+                          Consumido: {{ formatearCantidadConsumo(c.cantidad) }} {{ getUnidadConsumo(c) }}
+                          · Fecha:
+                          @if (c.fecha) {
+                            {{ c.fecha | date:'dd/MM/yyyy' }}
+                          } @else {
+                            —
+                          }
+                          · Por: {{ c.usuario || '—' }}
+                        </div>
                       </div>
                     }
                     @for (c of consumos; track $index) {
@@ -67,7 +74,16 @@
                           <span class="notif-code" [title]="c.codigo || '—'">{{ c.codigo || '—' }}</span>
                           <span class="notif-lote" [title]="c.lote || '—'">{{ c.lote || '—' }}</span>
                         </div>
-                        <div class="notif-date">Consumido: {{ formatearNumero(c.cantidad || 0) }} {{ c.unidad_simbolo || c.unidad || '' }}</div>
+                        <div class="notif-date">
+                          Consumido: {{ formatearCantidadConsumo(c.cantidad) }} {{ getUnidadConsumo(c) }}
+                          · Fecha:
+                          @if (c.fecha) {
+                            {{ c.fecha | date:'dd/MM/yyyy' }}
+                          } @else {
+                            —
+                          }
+                          · Por: {{ c.usuario || '—' }}
+                        </div>
                       </div>
                     }
                   </div>
@@ -76,22 +92,6 @@
                 }
               }
             </div>
-            <div class="metric-pie-foot">
-              <div class="metric-foot-item">
-                <span class="metric-foot-label">Registros</span>
-                <span class="metric-foot-value">{{ formatearNumero(getConsumoTotal()) }}</span>
-              </div>
-              <div class="metric-foot-item">
-                <span class="metric-foot-label">Ultimo</span>
-                <span class="metric-foot-value">
-                  @if (getConsumoUltimaFecha(); as fecha) {
-                    {{ fecha | date:'dd/MM/yyyy' }}
-                  } @else {
-                    —
-                  }
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -99,102 +99,54 @@
 
     @if (!esAuxiliar) {
       <section class="submetrics-section">
-        <h2 class="submetrics-title">
-          <i class="fas fa-clipboard-check"></i>
-          Métricas de Solicitudes
-        </h2>
-
-        <div class="solicitudes-charts">
-          <article class="chart-card">
-            <div class="chart-header">
-              <span>Viabilidad</span>
-              <span class="chart-total">{{ formatearNumero(getSolicitudesTotal()) }} total</span>
+        @if (getSolicitudesTipoClienteChart(); as chart) {
+          <div class="submetrics-header">
+            <h2 class="submetrics-title">
+              <i class="fas fa-clipboard-check"></i>
+              Métricas de Solicitudes
+            </h2>
+            <div class="meses-filtros">
+              <div class="mes-btn" [class.active]="!chart.selectedMes" (click)="setSolicitudesMes(null)" role="button" tabindex="0">Todos</div>
+              @for (mes of chart.meses; track mes.key) {
+                <div class="mes-btn" [class.active]="chart.selectedMes === mes.key" (click)="setSolicitudesMes(mes.key)" role="button" tabindex="0">
+                  {{ mes.label }}
+                </div>
+              }
             </div>
-            @if (getSolicitudesTotal() === 0) {
-              <p class="chart-empty">Sin solicitudes para graficar.</p>
-            } @else {
-              <div class="bar-chart">
-                <div class="bar-item">
-                  <div class="bar bar-viable" [style.--bar]="getPctRounded(contarSolicitudesViable()) + '%'">
-                    <span class="bar-value">{{ formatearNumero(contarSolicitudesViable()) }}</span>
-                  </div>
-                  <div class="bar-label">Viables {{ getPctRounded(contarSolicitudesViable()) }}%</div>
-                </div>
-                <div class="bar-item">
-                  <div class="bar bar-no-viable" [style.--bar]="getPctRounded(contarSolicitudesNoViable()) + '%'">
-                    <span class="bar-value">{{ formatearNumero(contarSolicitudesNoViable()) }}</span>
-                  </div>
-                  <div class="bar-label">No viables {{ getPctRounded(contarSolicitudesNoViable()) }}%</div>
-                </div>
-                <div class="bar-item">
-                  <div class="bar bar-revision" [style.--bar]="getPctRounded(contarSolicitudesRevisionPendiente()) + '%'">
-                    <span class="bar-value">{{ formatearNumero(contarSolicitudesRevisionPendiente()) }}</span>
-                  </div>
-                  <div class="bar-label">Revision {{ getPctRounded(contarSolicitudesRevisionPendiente()) }}%</div>
-                </div>
-              </div>
-            }
-          </article>
+          </div>
 
-          <article class="chart-card">
-            <div class="chart-header">
-              <span>Ofertas</span>
-              <span class="chart-total">{{ formatearNumero(getSolicitudesTotal()) }} total</span>
-            </div>
-            @if (getSolicitudesTotal() === 0) {
-              <p class="chart-empty">Sin solicitudes para graficar.</p>
-            } @else {
-              <div class="pie-wrap">
-                <div class="pie-chart" [style.background]="getOfertaPieStyle()"></div>
-                <div class="pie-legend">
-                  <div class="legend-item">
-                    <span class="legend-dot dot-oferta"></span>
-                    Con oferta {{ getPctRounded(contarSolicitudesConOferta()) }}%
-                  </div>
-                  <div class="legend-item">
-                    <span class="legend-dot dot-sin-oferta"></span>
-                    Sin oferta {{ getPctRounded(contarSolicitudesSinOferta()) }}%
-                  </div>
-                  <div class="legend-item">
-                    <span class="legend-dot dot-oferta-pendiente"></span>
-                    Pendiente {{ getPctRounded(contarSolicitudesOfertaPendiente()) }}%
-                  </div>
-                </div>
+          <div class="solicitudes-charts solicitudes-charts--tipo-clientes">
+            <article class="chart-card chart-card--wide">
+              <div class="chart-header">
+                <span>Tipos de clientes</span>
+                <span class="chart-total">{{ formatearNumero(chart.total) }} total</span>
               </div>
-            }
-          </article>
-
-          <article class="chart-card">
-            <div class="chart-header">
-              <span>Avance del proceso</span>
-              <span class="chart-total">{{ formatearNumero(getSolicitudesTotal()) }} total</span>
-            </div>
-            @if (getSolicitudesTotal() === 0) {
-              <p class="chart-empty">Sin solicitudes para graficar.</p>
-            } @else {
-              <div class="bar-chart">
-                <div class="bar-item">
-                  <div class="bar bar-total" [style.--bar]="'100%'">
-                    <span class="bar-value">{{ formatearNumero(getSolicitudesTotal()) }}</span>
+              @if (chart.rows.length === 0) {
+                <p class="chart-empty">Sin solicitudes viables para graficar.</p>
+              } @else {
+                <div class="tipo-clientes-chart" [style.--tipo-columns]="chart.tipos.length">
+                  @for (row of chart.rows; track row.monthKey) {
+                    <div class="tipo-clientes-row">
+                      <div class="tipo-clientes-cell tipo-clientes-cell--rowlabel">{{ row.monthLabel }}</div>
+                      @for (tipo of chart.tipos; track tipo) {
+                        <div class="tipo-clientes-cell tipo-clientes-cell--bar">
+                          <div class="tipo-clientes-bar" [style.--bar]="getTipoClienteBarPct(row.counts[tipo], chart.max) + '%'"></div>
+                          <div class="tipo-clientes-value">{{ formatearNumero(row.counts[tipo] || 0) }}</div>
+                        </div>
+                      }
+                    </div>
+                  }
+                  <div class="tipo-clientes-footer">
+                    <div class="tipo-clientes-cell tipo-clientes-cell--rowlabel"></div>
+                    @for (tipo of chart.tipos; track tipo) {
+                      <div class="tipo-clientes-cell tipo-clientes-cell--head">{{ tipo }}</div>
+                    }
                   </div>
-                  <div class="bar-label">Total 100%</div>
                 </div>
-                <div class="bar-item">
-                  <div class="bar bar-viable" [style.--bar]="getPctRounded(contarSolicitudesViable()) + '%'">
-                    <span class="bar-value">{{ formatearNumero(contarSolicitudesViable()) }}</span>
-                  </div>
-                  <div class="bar-label">Viables {{ getPctRounded(contarSolicitudesViable()) }}%</div>
-                </div>
-                <div class="bar-item">
-                  <div class="bar bar-oferta" [style.--bar]="getPctRounded(contarSolicitudesConOferta()) + '%'">
-                    <span class="bar-value">{{ formatearNumero(contarSolicitudesConOferta()) }}</span>
-                  </div>
-                  <div class="bar-label">Con oferta {{ getPctRounded(contarSolicitudesConOferta()) }}%</div>
-                </div>
-              </div>
-            }
-          </article>
-        </div>
+              }
+            </article>
+          </div>
+        }
       </section>
     }
   }

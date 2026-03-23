@@ -1,4 +1,4 @@
-import { Component, EffectRef, OnDestroy, OnInit, effect, signal } from '@angular/core';
+import { Component, EffectRef, OnDestroy, OnInit, effect, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -15,26 +15,28 @@ import { ConfirmService } from '../shared/confirm.service';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class UsuariosComponent implements OnInit, OnDestroy {
+  public snack = inject(SnackbarService);
+  private confirm = inject(ConfirmService);
   // Estado de carga
-  cargando: boolean = false;
+  cargando = false;
 
   // Formulario crear usuario
-  email: string = '';
-  nombre: string = '';
-  contrasena: string = '';
+  email = '';
+  nombre = '';
+  contrasena = '';
   rol_id: any = '';
-  mensaje: string = '';
+  mensaje = '';
 
   // Roles disponibles
-  roles: Array<any> = [];
+  roles: any[] = [];
 
   // Lista de usuarios
-  usuarios: Array<any> = [];
-  usuariosFiltrados: Array<any> = [];
+  usuarios: any[] = [];
+  usuariosFiltrados: any[] = [];
 
   // Signals para lista (imitando enfoque usado en Reactivos)
-  usuariosSig = signal<Array<any>>([]);
-  usuariosFiltradosSig = signal<Array<any>>([]);
+  usuariosSig = signal<any[]>([]);
+  usuariosFiltradosSig = signal<any[]>([]);
 
   // Getters to expose signals to templates (matching pattern used in Reactivos)
   get usuariosCount() { return this.usuariosSig().length; }
@@ -54,12 +56,12 @@ export class UsuariosComponent implements OnInit, OnDestroy {
 
   private filtrosEffectStop?: EffectRef;
 
-  constructor(public snack: SnackbarService, private confirm: ConfirmService) {
+  constructor() {
     this.filtrosEffectStop = effect(() => {
-      const _ = this.usuariosSig();
-      const __e = this.emailQSig();
-      const __r = this.rolQSig();
-      const __s = this.estadoQSig();
+      this.usuariosSig();
+      this.emailQSig();
+      this.rolQSig();
+      this.estadoQSig();
       this.aplicarFiltros();
     });
   }
@@ -69,29 +71,34 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    try { this.filtrosEffectStop?.destroy(); } catch {}
+    this.filtrosEffectStop?.destroy();
   }
 
   editUserModalOpen = false;
   editUserId: number | null = null;
-  editUserEmail: string = '';
-  editNombre: string = '';
-  editNombreOriginal: string = '';
-  editNuevaContrasena: string = '';
-  editNuevaContrasena2: string = '';
+  editUserEmail = '';
+  editNombre = '';
+  editNombreOriginal = '';
+  editNuevaContrasena = '';
+  editNuevaContrasena2 = '';
   editSubmitted = false;
   auxPermsSig = signal<Record<number, Record<string, boolean>>>({});
   auxPermSavingSig = signal<Record<number, boolean>>({});
   auxPermsExpandedSig = signal<Record<number, boolean>>({});
-  auxPermModules = [
-    { key: 'reactivos', label: 'Reactivos' },
-    { key: 'plantillas', label: 'Plantillas' },
-    { key: 'equipos', label: 'Equipos' },
-    { key: 'referencia', label: 'Materiales referencia' },
-    { key: 'volumetricos', label: 'Materiales volumetricos' },
-    { key: 'insumos', label: 'Insumos' },
-    { key: 'papeleria', label: 'Papeleria' }
-  ];
+  permModulesByRole: Record<string, { key: string; label: string; offLabel: string }[]> = {
+    Auxiliar: [
+      { key: 'reactivos', label: 'Reactivos', offLabel: 'Solo lectura' },
+      { key: 'plantillas', label: 'Plantillas', offLabel: 'Solo lectura' },
+      { key: 'equipos', label: 'Equipos', offLabel: 'Solo lectura' },
+      { key: 'referencia', label: 'Materiales referencia', offLabel: 'Solo lectura' },
+      { key: 'volumetricos', label: 'Materiales volumetricos', offLabel: 'Solo lectura' },
+      { key: 'insumos', label: 'Insumos', offLabel: 'Solo lectura' },
+      { key: 'papeleria', label: 'Papeleria', offLabel: 'Solo lectura' }
+    ],
+    Administrador: [
+      { key: 'auditoria', label: 'Auditoria', offLabel: 'Deshabilitado' }
+    ]
+  };
 
   // ========== CARGAR DATOS ==========
 
@@ -253,7 +260,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   async guardarEdicionUsuario(form?: NgForm) {
     this.editSubmitted = true;
     if (form && form.invalid) {
-      try { form.control.markAllAsTouched(); } catch {}
+      form.control.markAllAsTouched();
       return;
     }
     const nombre = (this.editNombre || '').trim();
@@ -389,16 +396,30 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     return this.canChangeRole();
   }
 
-  private defaultAuxPerms(): Record<string, boolean> {
+  private getModulesForRole(roleName: string): { key: string; label: string; offLabel: string }[] {
+    return this.permModulesByRole[roleName] || [];
+  }
+
+  hasConfigurablePerms(usuario: any): boolean {
+    const roleName = usuario?.rol_nombre || '';
+    return this.getModulesForRole(roleName).length > 0;
+  }
+
+  getPermModulesForUser(usuario: any): { key: string; label: string; offLabel: string }[] {
+    return this.getModulesForRole(usuario?.rol_nombre || '');
+  }
+
+  private defaultAuxPerms(roleName: string): Record<string, boolean> {
     const perms: Record<string, boolean> = {};
-    for (const mod of this.auxPermModules) perms[mod.key] = true;
+    for (const mod of this.getModulesForRole(roleName)) perms[mod.key] = true;
     return perms;
   }
 
-  private normalizeAuxPerms(perms: Record<string, boolean> | null | undefined): Record<string, boolean> {
-    const base = this.defaultAuxPerms();
+  private normalizeAuxPerms(roleName: string, perms: Record<string, boolean> | null | undefined): Record<string, boolean> {
+    const modules = this.getModulesForRole(roleName);
+    const base = this.defaultAuxPerms(roleName);
     if (!perms) return base;
-    for (const mod of this.auxPermModules) {
+    for (const mod of modules) {
       if (Object.prototype.hasOwnProperty.call(perms, mod.key)) {
         base[mod.key] = !!perms[mod.key];
       }
@@ -440,7 +461,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   }
 
   handleAuxCardClick(ev: Event, usuario: any) {
-    if (!usuario || usuario.rol_nombre !== 'Auxiliar' || !this.canEditAuxPerms()) return;
+    if (!usuario || !this.hasConfigurablePerms(usuario) || !this.canEditAuxPerms()) return;
     const target = ev.target as HTMLElement | null;
     if (!target) return;
     if (target.closest('button, a, input, select, textarea, label')) return;
@@ -449,30 +470,37 @@ export class UsuariosComponent implements OnInit, OnDestroy {
 
   private async loadAuxPermsForUsers() {
     if (!this.canEditAuxPerms()) return;
-    const auxUsers = this.usuarios.filter(u => (u.rol_nombre || '').toLowerCase() === 'auxiliar');
-    if (!auxUsers.length) return;
+    const users = this.usuarios.filter(u => this.hasConfigurablePerms(u));
+    if (!users.length) return;
 
     const updates: Record<number, Record<string, boolean>> = { ...this.auxPermsSig() };
-    const ids = auxUsers.map(u => Number(u.id_usuario)).filter(n => Number.isFinite(n));
+    const ids = users.map(u => Number(u.id_usuario)).filter(n => Number.isFinite(n));
+    const roleById: Record<number, string> = {};
+    for (const u of users) {
+      const uid = Number(u.id_usuario);
+      if (!Number.isFinite(uid)) continue;
+      roleById[uid] = u.rol_nombre || '';
+    }
 
     try {
       const batch = await usuariosService.getPermisosAuxiliaresBatch(ids);
       for (const id of ids) {
         const perms = batch[id];
-        updates[id] = this.normalizeAuxPerms(perms);
+        updates[id] = this.normalizeAuxPerms(roleById[id] || '', perms);
       }
       this.auxPermsSig.set(updates);
       return;
-    } catch {
-      // fallback: per-user requests
+    } catch (err) {
+      console.warn('No se pudo cargar permisos auxiliares batch:', err);
     }
 
-    await Promise.all(auxUsers.map(async (u) => {
+    await Promise.all(users.map(async (u) => {
       try {
         const data = await usuariosService.getPermisosAuxiliares(u.id_usuario);
-        updates[u.id_usuario] = this.normalizeAuxPerms(data?.permisos);
+        updates[u.id_usuario] = this.normalizeAuxPerms(u.rol_nombre || '', data?.permisos);
       } catch (err) {
-        updates[u.id_usuario] = this.defaultAuxPerms();
+        console.warn('No se pudo cargar permisos auxiliares por usuario:', err);
+        updates[u.id_usuario] = this.defaultAuxPerms(u.rol_nombre || '');
       }
     }));
     this.auxPermsSig.set(updates);
@@ -483,17 +511,18 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     const input = ev.target as HTMLInputElement | null;
     const checked = !!input?.checked;
     const userId = usuario.id_usuario;
-    const prev = this.normalizeAuxPerms(this.auxPermsSig()[userId]);
+    const roleName = usuario?.rol_nombre || '';
+    const prev = this.normalizeAuxPerms(roleName, this.auxPermsSig()[userId]);
     const next = { ...prev, [key]: checked };
 
     this.setAuxPermsLocal(userId, next);
     this.setAuxPermSaving(userId, true);
     try {
       await usuariosService.setPermisosAuxiliares(userId, next);
-      this.snack.success('Permisos auxiliares actualizados');
+      this.snack.success('Permisos actualizados');
     } catch (err: any) {
       this.setAuxPermsLocal(userId, prev);
-      this.snack.error(err?.message || 'Error actualizando permisos auxiliares');
+      this.snack.error(err?.message || 'Error actualizando permisos');
     } finally {
       this.setAuxPermSaving(userId, false);
     }

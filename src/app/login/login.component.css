@@ -253,6 +253,8 @@ body {
   z-index: 2;
   width: 100%;
   max-width: 450px;
+  transform: scale(0.9);
+  transform-origin: center center;
 }
 
 .login-card {
@@ -588,6 +590,10 @@ body {
   .login-root {
     min-height: 60vh;
   }
+
+  .login-center {
+    transform: scale(0.95);
+  }
 }
 
 @media (max-width: 768px) {
@@ -636,6 +642,10 @@ body {
 
   .login-sub {
     font-size: 0.95rem;
+  }
+
+  .login-center {
+    transform: scale(1);
   }
 }
 

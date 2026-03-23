@@ -707,6 +707,28 @@
   opacity: 1;
 }
 
+.edit-modal-body {
+  margin-top: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 8px;
+}
+
+.edit-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-gray);
+  z-index: 2;
+}
+
 .referencia-page .actions button.btn-compact {
   width: fit-content !important;
   padding: 0.5rem 1.2rem !important;

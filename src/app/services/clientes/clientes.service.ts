@@ -5,7 +5,7 @@ const API = (window as any).__env?.API_SOLICITUDES || 'http://localhost:4000/api
 
 @Injectable({ providedIn: 'root' })
 export class ClientesService {
-  private _clientes = signal<Array<any>>([]);
+  private _clientes = signal<any[]>([]);
   clientes = this._clientes.asReadonly();
 
   private getAuthHeaders(): Record<string, string> {

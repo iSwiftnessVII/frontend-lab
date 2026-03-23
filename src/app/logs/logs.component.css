@@ -382,7 +382,7 @@ section {
 
 .logs-table tbody tr:hover {
     background: linear-gradient(135deg, rgba(0, 184, 181, 0.05) 0%, transparent 100%);
-    transform: translateX(4px);
+    transform: none;
 }
 
 .logs-table tbody tr:last-child {
@@ -604,12 +604,92 @@ section {
 /* === SCROLL PARA TABLAS DE AUDITORÍA === */
 .table-container {
     max-height: 500px; /* Altura máxima para ~15 filas */
+    overflow-x: auto;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--primary-turquoise) var(--app-border, var(--border-gray));
     border: 1px solid var(--app-border, var(--border-gray));
     border-radius: 8px;
     margin-bottom: 1rem;
+}
+
+.table-container.acciones-table {
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scrollbar-gutter: stable;
+}
+
+.table-container.acciones-table::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+.logs-table.acciones-list {
+    table-layout: fixed;
+}
+
+.logs-table.acciones-list th,
+.logs-table.acciones-list td {
+    padding: 0.7rem 0.55rem;
+    font-size: 0.84rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.logs-table.acciones-list th:nth-child(1),
+.logs-table.acciones-list td:nth-child(1) {
+    width: 19%;
+}
+
+.logs-table.acciones-list th:nth-child(2),
+.logs-table.acciones-list td:nth-child(2) {
+    width: 33%;
+}
+
+.logs-table.acciones-list th:nth-child(3),
+.logs-table.acciones-list td:nth-child(3) {
+    width: 14%;
+}
+
+.logs-table.acciones-list th:nth-child(4),
+.logs-table.acciones-list td:nth-child(4) {
+    width: 24%;
+}
+
+.logs-table.acciones-list th:nth-child(5),
+.logs-table.acciones-list td:nth-child(5) {
+    width: 10%;
+}
+
+.table-container.acciones-table .logs-table.acciones-list thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, #003080 100%);
+}
+
+.logs-table.acciones-list td:nth-child(1),
+.logs-table.acciones-list td:nth-child(2),
+.logs-table.acciones-list td:nth-child(3) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.logs-table.acciones-list .status-badge {
+    padding: 0.3rem 0.65rem;
+    font-size: 0.74rem;
+}
+
+.logs-table.acciones-list .table-state-row td {
+    padding: 1rem;
+    text-align: center;
+    font-weight: 600;
+    color: var(--app-muted, var(--text-gray));
 }
 
 /* Estilos para scrollbar en Webkit */
@@ -704,10 +784,9 @@ section {
 /* ===== Modal Styles ===== */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
     display: flex;
@@ -743,6 +822,7 @@ section {
     margin: 0;
     font-size: 1.25rem;
     font-weight: 600;
+    color: white;
 }
 
 .close-btn {
@@ -1019,6 +1099,64 @@ section {
 }
 
 /* Button styles */
+.acciones-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 12px 0;
+    flex-wrap: wrap;
+}
+
+.descargar-pdf-card {
+    border: 2px dotted #ef4444;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%);
+    color: #991b1b;
+    cursor: pointer;
+    padding: 9px 14px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 6px 14px rgba(185, 28, 28, 0.16);
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.descargar-pdf-card:hover:not(.is-disabled) {
+    transform: translateY(-1px) scale(1.01);
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(185, 28, 28, 0.35);
+    border-color: #b91c1c;
+}
+
+.descargar-pdf-card:focus-visible {
+    outline: 3px solid rgba(59, 130, 246, 0.35);
+    outline-offset: 2px;
+}
+
+.descargar-pdf-card.is-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+:host-context([data-theme="dark"]) .descargar-pdf-card {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(185, 28, 28, 0.4) 100%);
+    color: #fecaca;
+    border-color: rgba(248, 113, 113, 0.8);
+}
+
+.acciones-bloque {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+}
+
 .btn-ver-detalles {
     background: none;
     border: none;

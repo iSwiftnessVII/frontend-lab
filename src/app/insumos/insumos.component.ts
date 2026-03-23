@@ -73,6 +73,7 @@ export class InsumosComponent implements OnInit, OnDestroy {
   editObservaciones = '';
   editImagenFile: File | null = null;
   editImagenPreviewUrl: string | null = null;
+  private editOriginalInsumoPayload: InsumoUpdateInput | null = null;
 
   insumosFiltrados = computed(() => {
     const q = (this.insumosQ || '').trim().toLowerCase();
@@ -113,7 +114,11 @@ export class InsumosComponent implements OnInit, OnDestroy {
 
   toggleFormulario(kind: 'crear'): void {
     if (this.esAuxiliar) return;
-    this.formularioActivo = this.formularioActivo === kind ? null : kind;
+    const next = this.formularioActivo === kind ? null : kind;
+    this.formularioActivo = next;
+    if (next === 'crear') {
+      this.resetForm();
+    }
   }
 
   async cargar(): Promise<void> {
@@ -308,6 +313,7 @@ export class InsumosComponent implements OnInit, OnDestroy {
     this.editImagenFile = null;
     this.revokePreviewUrl(this.editImagenPreviewUrl);
     this.editImagenPreviewUrl = null;
+    this.editOriginalInsumoPayload = this.buildEditInsumoPayload();
   }
 
   closeEditInsumoModal(): void {
@@ -330,6 +336,7 @@ export class InsumosComponent implements OnInit, OnDestroy {
       this.editImagenFile = null;
       this.revokePreviewUrl(this.editImagenPreviewUrl);
       this.editImagenPreviewUrl = null;
+      this.editOriginalInsumoPayload = null;
     }, 220);
   }
 
@@ -341,12 +348,9 @@ export class InsumosComponent implements OnInit, OnDestroy {
     this.editImagenPreviewUrl = file ? URL.createObjectURL(file) : null;
   }
 
-  async saveEditInsumo(): Promise<void> {
-    if (!this.canDelete()) return;
-    if (!this.editInsumoId) return;
-
+  private buildEditInsumoPayload(): InsumoUpdateInput {
     const cantidadExistenteNum = Number(this.editCantidadExistente);
-    const input: InsumoUpdateInput = {
+    return {
       nombre: (this.editNombre || '').trim(),
       cantidad_adquirida: Number(this.editCantidadAdquirida),
       cantidad_existente: Number.isFinite(cantidadExistenteNum) ? cantidadExistenteNum : undefined,
@@ -358,6 +362,18 @@ export class InsumosComponent implements OnInit, OnDestroy {
       ubicacion: (this.editUbicacion || '').trim() || null,
       observaciones: (this.editObservaciones || '').trim() || null
     };
+  }
+
+  private hasEditInsumoChanges(input: InsumoUpdateInput): boolean {
+    if (this.editImagenFile) return true;
+    return JSON.stringify(input) !== JSON.stringify(this.editOriginalInsumoPayload);
+  }
+
+  async saveEditInsumo(): Promise<void> {
+    if (!this.canDelete()) return;
+    if (!this.editInsumoId) return;
+
+    const input: InsumoUpdateInput = this.buildEditInsumoPayload();
 
     if (!input.nombre) {
       this.snack.warn('El nombre es obligatorio');
@@ -365,6 +381,10 @@ export class InsumosComponent implements OnInit, OnDestroy {
     }
     if (!Number.isFinite(input.cantidad_adquirida) || input.cantidad_adquirida < 0) {
       this.snack.warn('La cantidad adquirida es obligatoria');
+      return;
+    }
+    if (!this.hasEditInsumoChanges(input)) {
+      this.snack.warn('No hay campos para actualizar');
       return;
     }
 

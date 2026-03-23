@@ -21,6 +21,10 @@ export const authInitializing = signal(false);
 const auxPerms = signal<Record<string, boolean> | null>(null);
 let auxPermsUserId: number | null = null;
 
+function usesManagedPermissions(rol: string): boolean {
+  return rol === 'Auxiliar' || rol === 'Administrador';
+}
+
 function getUsuariosApiBase(): string {
   const apiBase = (window as any).__env?.API_USUARIOS;
   if (typeof apiBase === 'string' && apiBase.trim()) return apiBase.trim();
@@ -43,7 +47,7 @@ export const authService = {
     }
 
     if (!res.ok) {
-      let msg = (data && data.message) || 'Error al iniciar sesión';
+      const msg = (data && data.message) || 'Error al iniciar sesión';
       throw new Error(msg);
     }
 
@@ -177,7 +181,7 @@ export const authService = {
   canEditModule(moduleKey: string): boolean {
     const user = authUser();
     if (!user) return false;
-    if (user.rol !== 'Auxiliar') return true;
+    if (!usesManagedPermissions(user.rol)) return true;
     const perms = auxPerms();
     if (!perms) return true;
     return perms[moduleKey] !== false;
@@ -185,7 +189,7 @@ export const authService = {
 
   async loadAuxPerms(): Promise<void> {
     const user = authUser();
-    if (!user || user.rol !== 'Auxiliar') {
+    if (!user || !usesManagedPermissions(user.rol)) {
       auxPerms.set(null);
       auxPermsUserId = null;
       return;

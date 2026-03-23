@@ -1,21 +1,21 @@
 import { Injectable, signal } from '@angular/core';
 
-export type ConfirmOptions = {
+export interface ConfirmOptions {
   title?: string;
   message: string;
   confirmText?: string;
   cancelText?: string;
   danger?: boolean;
-};
+}
 
-export type ConfirmState = {
+export interface ConfirmState {
   open: boolean;
   title: string;
   message: string;
   confirmText: string;
   cancelText: string;
   danger: boolean;
-};
+}
 
 @Injectable({ providedIn: 'root' })
 export class ConfirmService {

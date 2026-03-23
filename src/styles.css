@@ -765,6 +765,36 @@ select:disabled {
 	certain pages (prevents the green line you mentioned). */
 .liba-theme section::before { display: none !important; }
 
+.liba-theme .modal label::before,
+.liba-theme .edit-modal label::before,
+.liba-theme .client-edit-modal label::before {
+  content: none !important;
+  display: none !important;
+}
+
+.liba-theme .modal input,
+.liba-theme .modal select,
+.liba-theme .modal textarea,
+.liba-theme .edit-modal input,
+.liba-theme .edit-modal select,
+.liba-theme .edit-modal textarea,
+.liba-theme .client-edit-modal input,
+.liba-theme .client-edit-modal select,
+.liba-theme .client-edit-modal textarea {
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.liba-theme .modal textarea,
+.liba-theme .edit-modal textarea,
+.liba-theme .client-edit-modal textarea {
+  min-height: 110px;
+  line-height: 1.4;
+}
+
 
 /* Fallback selector: mark parent wrapper divs with class 'full-row' to span full grid row */
 .form-grid > div.full-row {

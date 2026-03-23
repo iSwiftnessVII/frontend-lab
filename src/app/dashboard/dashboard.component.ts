@@ -48,11 +48,13 @@ export class DashboardComponent implements OnInit {
   volumetricosData = signal<any[]>([]);
   referenciaData = signal<any[]>([]);
   consumoData = signal<any[]>([]);
+  unidadesMap: Record<string, string> = {};
 
   // Reactivos próximos a vencer
   reactivosProximosVencer = signal<any[]>([]);
   // Reactivos vencidos
   reactivosVencidos = signal<any[]>([]);
+  selectedSolicitudesMes = signal<string | null>(null);
 
   // Detectar si el usuario es auxiliar
   get esAuxiliar() {
@@ -88,6 +90,7 @@ export class DashboardComponent implements OnInit {
         this.cargarVolumetricos(),
         this.cargarReferencia(),
         this.cargarClientes(),
+        this.cargarAuxReactivos(),
         this.cargarConsumos()
       ];
 
@@ -218,6 +221,27 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  async cargarAuxReactivos() {
+    try {
+      const data = await reactivosService.aux();
+      const unidades = Array.isArray(data?.unidades) ? data.unidades : [];
+      const map: Record<string, string> = {};
+      for (const u of unidades) {
+        const id = u?.id;
+        const nombre = u?.nombre ?? u?.simbolo ?? u?.unidad;
+        if (id !== null && id !== undefined && String(id).trim()) {
+          if (nombre !== null && nombre !== undefined && String(nombre).trim()) {
+            map[String(id)] = String(nombre).trim();
+          }
+        }
+      }
+      this.unidadesMap = map;
+    } catch (error) {
+      console.error('Error cargando unidades:', error);
+      this.unidadesMap = {};
+    }
+  }
+
   async cargarSolicitudes() {
     try {
       const token = authService.getToken();
@@ -283,7 +307,7 @@ export class DashboardComponent implements OnInit {
     return null;
   }
 
-  private buildEstadoSegments(list: any[]): Array<{ label: string; value: number }> {
+  private buildEstadoSegments(list: any[]): { label: string; value: number }[] {
     let activos = 0;
     let inactivos = 0;
     let otros = 0;
@@ -296,14 +320,14 @@ export class DashboardComponent implements OnInit {
       else otros += 1;
     }
 
-    const segments: Array<{ label: string; value: number }> = [];
+    const segments: { label: string; value: number }[] = [];
     if (activos) segments.push({ label: 'Activos', value: activos });
     if (inactivos) segments.push({ label: 'Inactivos', value: inactivos });
     if (otros) segments.push({ label: 'Otros', value: otros });
     return segments;
   }
 
-  private buildGroupSegments(list: any[], fields: string[], fallbackLabel: string): Array<{ label: string; value: number }> {
+  private buildGroupSegments(list: any[], fields: string[], fallbackLabel: string): { label: string; value: number }[] {
     const counts = new Map<string, number>();
     for (const item of list) {
       let label: string | null = null;
@@ -331,13 +355,13 @@ export class DashboardComponent implements OnInit {
 
   private readonly pieColors = ['#2563eb', '#10b981', '#f59e0b', '#a855f7', '#ef4444', '#64748b'];
 
-  private buildPieSegments(segments: Array<{ label: string; value: number }>): Array<{ label: string; value: number; color: string }> {
+  private buildPieSegments(segments: { label: string; value: number }[]): { label: string; value: number; color: string }[] {
     return segments
       .filter(seg => seg.value > 0)
       .map((seg, idx) => ({ ...seg, color: this.pieColors[idx % this.pieColors.length] }));
   }
 
-  private buildPieStyle(segments: Array<{ label: string; value: number; color: string }>): string {
+  private buildPieStyle(segments: { label: string; value: number; color: string }[]): string {
     const total = segments.reduce((acc, seg) => acc + seg.value, 0);
     if (!total) return 'conic-gradient(#e2e8f0 0 360deg)';
     let start = 0;
@@ -543,6 +567,147 @@ export class DashboardComponent implements OnInit {
     }).length;
   }
 
+  private isSolicitudViableChart(s: any): boolean {
+    const concepto = this.getConceptoFinal((s as any)?.concepto_final);
+    if (concepto === 'SOLICITUD_VIABLE' || concepto === 'SOLICITUD_VIABLE_CON_OBSERVACIONES') return true;
+    if (concepto === 'SOLICITUD_NO_VIABLE') return false;
+    return this.isTruthyFlag((s as any)?.servicio_es_viable);
+  }
+
+  private getSolicitudMonthKey(s: any): { key: string; label: string } | null {
+    const raw = (s as any)?.fecha_solicitud || (s as any)?.fecha || (s as any)?.created_at || (s as any)?.updated_at;
+    if (!raw) return null;
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return null;
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const key = `${year}-${String(month).padStart(2, '0')}`;
+    let label = new Intl.DateTimeFormat('es-CO', { month: 'short', year: 'numeric' }).format(d);
+    label = label.replace('.', '').trim();
+    if (label) label = label.charAt(0).toUpperCase() + label.slice(1);
+    return { key, label };
+  }
+
+  private getTipoClienteLabel(s: any, clientesById: Map<number, any>): string {
+    const direct = (s as any)?.tipo_usuario || (s as any)?.tipo_cliente || (s as any)?.tipo || (s as any)?.categoria;
+    if (direct !== undefined && direct !== null && String(direct).trim()) {
+      return String(direct).trim();
+    }
+    const id = Number((s as any)?.id_cliente);
+    if (Number.isFinite(id) && clientesById.has(id)) {
+      const c = clientesById.get(id);
+      const val = c?.tipo_usuario || c?.tipo_cliente || c?.tipo || c?.categoria;
+      if (val !== undefined && val !== null && String(val).trim()) {
+        return String(val).trim();
+      }
+    }
+    return 'Sin tipo';
+  }
+
+  private getTipoClienteLabelFromCliente(c: any): string {
+    const direct = c?.tipo_usuario || c?.tipo_cliente || c?.tipo || c?.categoria;
+    if (direct !== undefined && direct !== null && String(direct).trim()) {
+      return String(direct).trim();
+    }
+    return 'Sin tipo';
+  }
+
+  private getTiposClienteBase(): string[] {
+    return [
+      'Emprendedor',
+      'Persona Natural',
+      'Persona Jurídica',
+      'Aprendiz SENA',
+      'Instructor SENA',
+      'Centros SENA'
+    ];
+  }
+
+  private buildChartStats(rows: { counts: Record<string, number> }[], tipos: string[]) {
+    let max = 0;
+    let total = 0;
+    for (const row of rows) {
+      for (const tipo of tipos) {
+        const value = row.counts[tipo] ?? 0;
+        total += value;
+        if (value > max) max = value;
+      }
+    }
+    return { max, total };
+  }
+
+  setSolicitudesMes(key: string | null) {
+    this.selectedSolicitudesMes.set(key);
+  }
+
+  getSolicitudesTipoClienteChart() {
+    const solicitudes = this.solicitudesData();
+    if (!solicitudes.length) {
+      return { tipos: [], rows: [], max: 0, total: 0, meses: [], selectedMes: this.selectedSolicitudesMes() };
+    }
+
+    const clientesById = new Map<number, any>();
+    for (const c of this.clientesData()) {
+      const id = Number((c as any)?.id_cliente ?? (c as any)?.cliente_id ?? (c as any)?.id);
+      if (Number.isFinite(id)) clientesById.set(id, c);
+    }
+
+    const monthLabels = new Map<string, string>();
+    const allMonths = new Map<string, string>();
+    const countsByMonth = new Map<string, Map<string, number>>();
+    const tiposSet = new Set<string>(this.getTiposClienteBase());
+    for (const c of this.clientesData()) {
+      tiposSet.add(this.getTipoClienteLabelFromCliente(c));
+    }
+
+    for (const s of solicitudes) {
+      const allMonth = this.getSolicitudMonthKey(s);
+      if (allMonth) {
+        allMonths.set(allMonth.key, allMonth.label);
+      }
+      if (!this.isSolicitudViableChart(s)) continue;
+      const month = this.getSolicitudMonthKey(s);
+      if (!month) continue;
+      const tipo = this.getTipoClienteLabel(s, clientesById);
+      tiposSet.add(tipo);
+      monthLabels.set(month.key, month.label);
+      let map = countsByMonth.get(month.key);
+      if (!map) {
+        map = new Map<string, number>();
+        countsByMonth.set(month.key, map);
+      }
+      const next = (map.get(tipo) ?? 0) + 1;
+      map.set(tipo, next);
+    }
+
+    const tipos = Array.from(tiposSet).sort((a, b) => a.localeCompare(b, 'es'));
+    const meses = Array.from(allMonths.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, label]) => ({ key, label }));
+    const rows = meses.map((mes) => {
+      const map = countsByMonth.get(mes.key) ?? new Map<string, number>();
+      const counts: Record<string, number> = {};
+      for (const tipo of tipos) {
+        counts[tipo] = map.get(tipo) ?? 0;
+      }
+      return {
+        monthKey: mes.key,
+        monthLabel: monthLabels.get(mes.key) || mes.label,
+        counts
+      };
+    });
+
+    const selectedMes = this.selectedSolicitudesMes();
+    const filteredRows = selectedMes ? rows.filter(r => r.monthKey === selectedMes) : rows;
+    const { max, total } = this.buildChartStats(filteredRows, tipos);
+    return { tipos, rows: filteredRows, max, total, meses, selectedMes };
+  }
+
+  getTipoClienteBarPct(value: number, max: number): number {
+    if (!max) return 0;
+    return Math.round((value / max) * 100);
+  }
+
 
   contarClientesPorTipo(tipo: string): number {
     return this.clientesData().filter(c => c.tipo_usuario === tipo).length;
@@ -550,6 +715,28 @@ export class DashboardComponent implements OnInit {
 
   formatearNumero(num: number): string {
     return num.toLocaleString('es-CO');
+  }
+
+  formatearCantidadConsumo(value: unknown): string {
+    const n = typeof value === 'number' ? value : Number(value);
+    if (Number.isFinite(n)) {
+      return new Intl.NumberFormat('es-CO', { maximumFractionDigits: 4 }).format(n);
+    }
+    const s = String(value ?? '').trim();
+    return s || '—';
+  }
+
+  getUnidadConsumo(item: any): string {
+    const simbolo = item?.unidad_simbolo ?? item?.unidad;
+    if (simbolo !== null && simbolo !== undefined && String(simbolo).trim()) {
+      return String(simbolo).trim();
+    }
+    const id = item?.unidad_id ?? item?.unidadId;
+    if (id !== null && id !== undefined) {
+      const mapped = this.unidadesMap[String(id)];
+      if (mapped) return mapped;
+    }
+    return '—';
   }
 
     // Métodos para alternar expansión

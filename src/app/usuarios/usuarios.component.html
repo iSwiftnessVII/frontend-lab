@@ -135,7 +135,7 @@
                         @for (usuario of usuariosFiltradosList; track usuario.id_usuario) {
                             <article class="equipo-card usuario-card"
                                 [class.usuario-inactivo]="usuario.estado === 'INACTIVO'"
-                                [class.aux-card-toggle]="usuario.rol_nombre === 'Auxiliar' && canEditAuxPerms()"
+                                [class.aux-card-toggle]="hasConfigurablePerms(usuario) && canEditAuxPerms()"
                                 (click)="handleAuxCardClick($event, usuario)"
                                 (keydown.enter)="handleAuxCardClick($event, usuario)"
                                 (keydown.space)="$event.preventDefault(); handleAuxCardClick($event, usuario)"
@@ -188,8 +188,11 @@
                                 <div class="card-name">
                                     <div class="name-line">
                                         <i class="fas fa-user-tie" aria-hidden="true"></i>
-                                        <span *ngIf="usuario.nombre; else noNombre">{{ usuario.nombre }}</span>
-                                        <ng-template #noNombre><em>Sin nombre</em></ng-template>
+                                        @if (usuario.nombre) {
+                                            <span>{{ usuario.nombre }}</span>
+                                        } @else {
+                                            <em>Sin nombre</em>
+                                        }
                                     </div>
                                     <div class="name-line email-line">
                                         <i class="fas fa-envelope" aria-hidden="true"></i>
@@ -197,14 +200,14 @@
                                     </div>
                                 </div>
 
-                                @if (usuario.rol_nombre === 'Auxiliar' && canEditAuxPerms() && isAuxPermsExpanded(usuario.id_usuario)) {
+                                @if (hasConfigurablePerms(usuario) && canEditAuxPerms() && isAuxPermsExpanded(usuario.id_usuario)) {
                                     <div class="aux-perms">
                                         @if (isAuxPermSaving(usuario.id_usuario)) {
                                             <div class="aux-saving"><i class="fas fa-spinner fa-spin"></i> Guardando</div>
                                         }
                                         <div class="aux-perms-body">
                                             <div class="aux-perms-grid">
-                                                @for (mod of auxPermModules; track mod.key) {
+                                                @for (mod of getPermModulesForUser(usuario); track mod.key) {
                                                     <label class="aux-toggle">
                                                         <input
                                                             type="checkbox"
@@ -213,7 +216,7 @@
                                                         />
                                                         <span class="aux-label">{{ mod.label }}</span>
                                                         <span class="aux-state">
-                                                            {{ getAuxPermValue(usuario.id_usuario, mod.key) ? 'Activo' : 'Solo lectura' }}
+                                                            {{ getAuxPermValue(usuario.id_usuario, mod.key) ? 'Activo' : mod.offLabel }}
                                                         </span>
                                                     </label>
                                                 }
@@ -237,8 +240,8 @@
     </section>
 
         @if (editUserModalOpen) {
-                <div class="modal-backdrop" (click)="cerrarModalEditar()"></div>
-                <div class="modal modal-lg" role="dialog" aria-modal="true" aria-label="Editar usuario" (click)="$event.stopPropagation()">
+                <div class="modal-backdrop" role="button" tabindex="0" (click)="cerrarModalEditar()" (keydown.enter)="cerrarModalEditar()" (keydown.space)="cerrarModalEditar()"></div>
+                <div class="modal modal-lg" role="dialog" aria-modal="true" aria-label="Editar usuario" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
                     <div class="modal-header">
                         <h3>Editar usuario</h3>
                         <button type="button" class="close-btn" (click)="cerrarModalEditar()" aria-label="Cerrar">×</button>

@@ -36,7 +36,7 @@ export interface InsumoUpdateInput {
 }
 
 export const insumosService = {
-  async listarInsumos(q: string = '', limit?: number, offset?: number): Promise<any[]> {
+  async listarInsumos(q = '', limit?: number, offset?: number): Promise<any[]> {
     const url = new URL(API_BASE);
     if (q) url.searchParams.set('q', q);
     if (limit && limit > 0) {

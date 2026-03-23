@@ -45,7 +45,7 @@ export class PapeleriaService {
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   }
 
-  async listar(q: string = '', limit?: number, offset?: number): Promise<any> {
+  async listar(q = '', limit?: number, offset?: number): Promise<any> {
     const url = new URL(this.API_URL);
     if (q) url.searchParams.set('q', q);
     if (limit && limit > 0) url.searchParams.set('limit', String(limit));
