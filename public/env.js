@@ -1,4 +1,4 @@
-﻿(function(window) {
+(function(window) {
   window.__env = window.__env || {};
 
   // If Electron preload already injected endpoints, do not overwrite them.
@@ -35,5 +35,5 @@
   window.__env.API_HISTORIAL_HV = window.__env.API_HISTORIAL_HV || (window.__env.API_EQUIPOS + '/historial');
   window.__env.API_INTERVALO_HV = window.__env.API_INTERVALO_HV || (window.__env.API_EQUIPOS + '/intervalo');
   window.__env.API_FICHA_TECNICA = window.__env.API_FICHA_TECNICA || (window.__env.API_EQUIPOS + '/ficha-tecnica');
-    window.__env.APP_VERSION = window.__env.APP_VERSION || '1.2.5';
+    window.__env.APP_VERSION = window.__env.APP_VERSION || '1.2.18';
 }(window));

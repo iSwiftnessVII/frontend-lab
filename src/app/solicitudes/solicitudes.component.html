@@ -34,12 +34,10 @@
   @if (formularioActivo === 'cliente') {
   <h2>Agregar cliente</h2>
   
- <!-- SECCIÓN: Agregar cliente -->
-<section>
+  <section>
   <form (submit)="createCliente($event)">
     <div class="form-grid">
 
-      <!-- Nombre -->
       <div class="form-field">
         <label for="clienteNombre">Nombre: *</label>
         <input id="clienteNombre" 
@@ -58,7 +56,6 @@
         }
       </div>
 
-      <!-- Número (readonly pero obligatorio) -->
       <div class="form-field">
         <label for="clienteNumero">Consecutivo: *</label>
         <input id="clienteNumero" 
@@ -81,7 +78,6 @@
         }
       </div>
 
-      <!-- Fecha vinculación -->
       <div class="form-field">
         <label for="clienteFechaVinc">Fecha vinculación: *</label>
         <input id="clienteFechaVinc" 
@@ -100,7 +96,6 @@
         }
       </div>
 
-      <!-- Tipo usuario -->
       <div class="form-field">
         <label for="clienteTipoUsuario">Tipo cliente: *</label>
         <select id="clienteTipoUsuario" 
@@ -122,7 +117,6 @@
         }
       </div>
 
-      <!-- Razón social -->
       <div class="form-field">
         <label for="clienteRazonSocial">Razón social: *</label>
         <input id="clienteRazonSocial" 
@@ -141,7 +135,6 @@
         }
       </div>
 
-      <!-- NIT -->
       <div class="form-field">
         <label for="clienteNit">NIT: *</label>
         <input id="clienteNit" 
@@ -159,7 +152,6 @@
         }
       </div>
 
-      <!-- Tipo identificación -->
       <div class="form-field">
         <label for="clienteTipoId">Tipo identificación: *</label>
         <select id="clienteTipoId" 
@@ -181,7 +173,6 @@
         }
       </div>
 
-      <!-- Número identificación -->
       <div class="form-field">
         <label for="clienteIdNum">Número identificación: *</label>
         <input id="clienteIdNum" 
@@ -200,7 +191,6 @@
         }
       </div>
 
-      <!-- Sexo -->
       <div class="form-field">
         <label for="clienteSexo">Sexo: *</label>
         <select id="clienteSexo" 
@@ -222,7 +212,6 @@
         }
       </div>
 
-      <!-- Tipo de comunidad -->
       <div class="form-field">
         <label for="clienteTipoPobl">Tipo de comunidad: *</label>
         <select id="clienteTipoPobl" 
@@ -261,7 +250,6 @@
         </div>
       }
 
-      <!-- Dirección -->
       <div class="form-field">
         <label for="clienteDireccion">Dirección: *</label>
         <input id="clienteDireccion" 
@@ -279,7 +267,6 @@
         }
       </div>
 
-      <!-- Departamento -->
       <div class="form-field">
         <label for="clienteDepartamento">Departamento: *</label>
         <select id="clienteDepartamento" 
@@ -301,7 +288,6 @@
         }
       </div>
 
-      <!-- Ciudad -->
       <div class="form-field">
         <label for="clienteCiudad">Ciudad: *</label>
         <select id="clienteCiudad" 
@@ -323,7 +309,6 @@
         }
       </div>
 
-      <!-- Celular -->
       <div class="form-field">
         <label for="clienteCelular">Celular: *</label>
         <input id="clienteCelular" 
@@ -342,7 +327,6 @@
         }
       </div>
 
-      <!-- Teléfono (NO obligatorio) -->
       <div class="form-field">
         <label for="clienteTelefono">Teléfono:</label>
         <input id="clienteTelefono" 
@@ -360,7 +344,6 @@
         }
       </div>
 
-      <!-- Correo -->
       <div class="form-field">
         <label for="clienteEmail">Correo: *</label>
         <input id="clienteEmail" 
@@ -378,7 +361,6 @@
         }
       </div>
 
-      <!-- Tipo vinculación -->
       <div class="form-field">
         <label for="clienteTipoVinc">Tipo vinculación: *</label>
         <input id="clienteTipoVinc" 
@@ -397,7 +379,6 @@
         }
       </div>
 
-      <!-- Registro realizado por -->
       <div class="form-field">
         <label for="clienteRegistroPor">Registro realizado por: *</label>
         <input id="clienteRegistroPor" 
@@ -418,7 +399,6 @@
       
     </div>
     
-    <!-- Observaciones (NO obligatorio) -->
     <div class="form-grid">
       <div class="form-field full">
         <label for="clienteObservaciones">Observaciones:</label>
@@ -442,14 +422,12 @@
 </section>
   }
   
-<!-- SECCIÓN: AGREGAR SOLICITUD-->
 @if (formularioActivo === 'solicitud') {
 <h2>Agregar solicitud</h2>
 <section>
   <form (submit)="createSolicitud($event)">
     <div class="form-grid">
 
-      <!-- Consecutivo (obligatorio pero readonly) -->
       <div class="form-field">
         <label for="solicitudConsecutivo">Consecutivo: *</label>
         <input id="solicitudConsecutivo" 
@@ -471,7 +449,6 @@
         }
       </div>
 
-      <!-- Cliente -->
       <div class="form-field">
         <label for="solicitudClienteId">Cliente: *</label>
         <select id="solicitudClienteId" 
@@ -510,7 +487,6 @@
       </div>
       }
 
-      <!-- Tipo de solicitud -->
       <div class="form-field">
         <label for="solicitudTipo">Tipo de solicitud: *</label>
         <select id="solicitudTipo" 
@@ -556,7 +532,6 @@
       </div>
       }
 
-      <!-- Nombre de muestra/producto -->
       <div class="form-field">
         <label for="solicitudNombre">Nombre de la muestra: *</label>
         <input id="solicitudNombre" 
@@ -575,7 +550,6 @@
         }
       </div>
 
-      <!-- Lote -->
       <div class="form-field">
   <label for="solicitudLote">Lote del producto: *</label>
   <input id="solicitudLote" 
@@ -595,7 +569,6 @@
   }
 </div>
 
-      <!-- Fecha de solicitud -->
       <div class="form-field">
         <label for="solicitudFechaSolicitud">Fecha de solicitud: *</label>
         <input id="solicitudFechaSolicitud" 
@@ -613,7 +586,6 @@
         }
       </div>
 
-      <!-- Preview código -->
       <div class="form-field">
         <label for="solicitudNumeroFrontPreview">Código (preview):</label>
         <input id="solicitudNumeroFrontPreview" 
@@ -623,7 +595,6 @@
           aria-readonly="true" />
       </div>
 
-      <!-- Fecha de vencimiento -->
       <div class="form-field">
         <label for="solicitudFechaVenc">Fecha de vencimiento: *</label>
         <input id="solicitudFechaVenc" 
@@ -641,7 +612,6 @@
         }
       </div>
 
-      <!-- Tipo de muestra -->
       <div class="form-field">
         <label for="solicitudTipoMuestra">Tipo de muestra: *</label>
         <input id="solicitudTipoMuestra" 
@@ -660,7 +630,6 @@
         }
       </div>
 
-      <!-- Tipo de empaque -->
       <div class="form-field">
         <label for="solicitudCondEmpaque">Tipo de empaque: *</label>
         <select id="solicitudCondEmpaque" 
@@ -699,7 +668,6 @@
         </div>
       }
 
-      <!-- Tipo de análisis -->
       <div class="form-field">
         <label for="solicitudTipoAnalisis">Tipo de análisis requerido: *</label>
         <select id="solicitudTipoAnalisis" 
@@ -738,7 +706,6 @@
         </div>
       }
 
-      <!-- Cantidad de muestras -->
       <div class="form-field">
         <label for="solicitudCantidad">Cantidad de muestras: *</label>
         <input id="solicitudCantidad" 
@@ -759,7 +726,6 @@
           </small>
         }
       </div>
-<!-- Fecha estimada de entrega -->
 
 <div class="form-field">
   <label for="solicitudFechaEstimada">Fecha estimada de entrega: *</label>
@@ -773,7 +739,7 @@
   </small>
   }
 </div>
-<!-- Requiere varios análisis -->
+
       <div class="form-field">
         <label for="solicitudRequiereVarios">¿Requiere varios análisis? *</label>
         <select id="solicitudRequiereVarios" 
@@ -794,7 +760,6 @@
         }
       </div>
 
-      <!-- Solicitud recibida -->
       <div class="form-field">
         <label for="solicitudRecibida">Solicitud recibida a través de: *</label>
         <input id="solicitudRecibida" 
@@ -815,7 +780,6 @@
         }
       </div>
 
-      <!-- Recibe personal -->
       <div class="form-field">
         <label for="solicitudRecibePersonal">Recibe personal: *</label>
         <input id="solicitudRecibePersonal" 
@@ -834,7 +798,6 @@
         }
       </div>
 
-      <!-- Cargo personal -->
       <div class="form-field">
         <label for="solicitudCargoPersonal">Cargo del personal: *</label>
         <input id="solicitudCargoPersonal" 
@@ -855,7 +818,6 @@
 
     </div>
     
-    <!-- Observaciones (NO obligatorio) -->
     <div class="form-grid">
       <div class="form-field full">
         <label for="solicitudObservaciones">Observaciones:</label>
@@ -879,14 +841,12 @@
 </section>
 }
 
-  <!-- SECCIÓN: AGREGAR OFERTA -->
-@if (formularioActivo === 'oferta') {
+  @if (formularioActivo === 'oferta') {
 <h2>Agregar oferta</h2>
 <section>
   <form (submit)="createOferta($event)">
     <div class="form-grid">
 
-      <!-- Solicitud -->
       <div class="form-field">
         <label for="ofertaSolicitudId">Solicitud: *</label>
         <select id="ofertaSolicitudId" 
@@ -911,7 +871,6 @@
         }
       </div>
 
-      <!-- Valor -->
       <div class="form-field">
         <label for="ofertaValor">Valor: *</label>
         <input id="ofertaValor" 
@@ -937,7 +896,6 @@
         }
       </div>
 
-      <!-- Fecha de envío -->
       <div class="form-field">
         <label for="ofertaFechaEnvio">Fecha de envío de la oferta: *</label>
         <input id="ofertaFechaEnvio" 
@@ -956,7 +914,6 @@
         }
       </div>
 
-      <!-- ¿Se generó cotización? -->
       <div class="form-field">
         <label for="ofertaGeneroCotizacion">¿Se generó cotización? *</label>
         <select id="ofertaGeneroCotizacion" 
@@ -978,7 +935,6 @@
         }
       </div>
 
-      <!-- ¿Se realizó seguimiento? -->
       <div class="form-field">
         <label for="ofertaRealizoSeguimiento">¿Se realizó seguimiento a la oferta? *</label>
         <select id="ofertaRealizoSeguimiento" 
@@ -1001,7 +957,6 @@
       </div>
     </div>
     
-    <!-- Observación (NO obligatorio) -->
     <div class="form-grid">
       <div class="form-field full">
         <label for="ofertaObservacion">Observación:</label>
@@ -1032,14 +987,12 @@
 </section>
 }
 
-  <!-- SECCIÓN: AGREGAR RESULTADOS -->
-@if (formularioActivo === 'revision') {
+  @if (formularioActivo === 'revision') {
 <h2>Revisión de la oferta</h2>
 <section>
   <form (submit)="createResultado($event)">
     <div class="form-grid">
 
-      <!-- Solicitud -->
       <div class="form-field">
         <label for="resultadoSolicitudId">Solicitud: *</label>
         <select id="resultadoSolicitudId" 
@@ -1064,7 +1017,6 @@
         }
       </div>
 
-      <!-- Fecha límite (Solo si es viable) -->
       @if (resultadoConceptoFinal === 'SOLICITUD_VIABLE' || resultadoConceptoFinal === 'SOLICITUD_VIABLE_CON_OBSERVACIONES') {
         <div class="form-field">
           <label for="resultadoFechaLimite">Fecha estimada inicio de análisis: *</label>
@@ -1349,14 +1301,12 @@
 </section>
 }
 
- <!-- SECCIÓN: AGREGAR ENCUESTA -->
-@if (formularioActivo === 'encuesta') {
+  @if (formularioActivo === 'encuesta') {
 <h2>Seguimiento Encuesta</h2>
 <section>
   <form (submit)="createEncuesta($event)">
     <div class="form-grid">
 
-      <!-- Solicitud -->
       <div class="form-field">
         <label for="encuestaSolicitudId">Solicitud: *</label>
         <select id="encuestaSolicitudId" 
@@ -1381,7 +1331,6 @@
         }
       </div>
 
-      <!-- Fecha de encuesta -->
       <div class="form-field">
         <label for="encuestaFecha">Fecha de envio de la encuesta: *</label>
         <input id="encuestaFecha" 
@@ -1400,28 +1349,6 @@
         }
       </div>
 
-      <!-- ¿Recomendaría el servicio?
-      <div class="form-field">
-        <label for="encuestaRecomendaria">Recomendaría el servicio *</label>
-        <select id="encuestaRecomendaria" 
-          [(ngModel)]="encuestaRecomendaria" 
-          name="encuestaRecomendaria" 
-          required
-          (change)="validarCampoEncuestaEnTiempoReal('recomendaria', $event)"
-          (blur)="validarCampoEncuestaEnTiempoReal('recomendaria', $event)"
-          [class.error]="encuestaErrors['recomendaria']">
-          <option value="">Seleccionar opción</option>
-          <option [ngValue]="true">Sí</option>
-          <option [ngValue]="false">No</option>
-        </select>
-        @if (encuestaErrors['recomendaria']) {
-          <small class="error-message">
-            ⚠️ {{ encuestaErrors['recomendaria'] }}
-          </small>
-        }
-      </div> -->
-
-      <!-- ¿El cliente respondió? -->
       <div class="form-field">
         <label for="encuestaClienteRespondio">El cliente respondió la encuesta *</label>
         <select id="encuestaClienteRespondio" 
@@ -1443,7 +1370,6 @@
         }
       </div>
 
-      <!-- NUEVO CAMPO: Fecha realización (solo visible si clienteRespondio = true) -->
       @if (encuestaClienteRespondio === true) {
       <div class="form-field">
         <label for="encuestaFechaRealizacion">Fecha en que se realizó la encuesta: *</label>
@@ -1461,7 +1387,6 @@
       </div>
       }
 
-      <!-- ¿Se solicitó nueva encuesta? -->
       <div class="form-field">
         <label for="encuestaSolicitoNueva">Se solicitó nueva encuesta *</label>
         <select id="encuestaSolicitoNueva" 
@@ -1484,7 +1409,6 @@
       </div>
     </div>
 
-    <!-- Comentarios (NO obligatorio) -->
     <div class="form-grid">
       <div class="form-field full">
         <label for="encuestaComentarios">Comentarios:</label>
@@ -1515,7 +1439,6 @@
 </section>
 }
 
-  <!-- El resto del HTML permanece igual (listas de solicitudes, clientes, modales) -->
   <!-- SECCIÓN: Lista rápida de solicitudes -->
   <div class="clientes-catalogo-header">
     <h2>Catalogo de Solicitudes</h2>
@@ -1555,14 +1478,12 @@
           placeholder="Escribe para buscar..." />
       </div>
 
-      <!-- Mostrar contador de resultados -->
       @if (solicitudesFiltradas().length > 0 || solicitudesQ.trim()) {
         <small class="result-counter">
           Mostrando {{ solicitudesFiltradas().length }} de {{ solicitudes().length }} solicitudes
         </small>
       }
 
-      <!-- Mensaje cuando no hay resultados -->
       @if (solicitudesQ.trim() && solicitudesFiltradas().length === 0) {
         <small class="no-results">
           ⚠️ No se encontraron solicitudes con el término "{{ solicitudesQ }}"
@@ -1580,7 +1501,7 @@
 
       @if (!cargando()) {
         <div class="fade-in">
-        @for (s of solicitudesFiltradas(); track s.solicitud_id) {
+        @for (s of solicitudesFiltradas(); track trackBySolicitudId($index, s)) {
           <article class="equipo-card" 
                  (click)="toggleExpandSolicitud(s)"
                  (keydown.enter)="toggleExpandSolicitud(s)"
@@ -1849,16 +1770,11 @@
                           <div class="detalle-label">Fecha encuesta</div>
                           <span>{{ formatValue(s.fecha_encuesta) }}</span>
                         </div>
-                        <!-- <div class="detalle-item">
-                          <div class="detalle-label">Recomendaría servicio</div>
-                          <span>{{ s.recomendaria_servicio === null || s.recomendaria_servicio === undefined ? '—' : (s.recomendaria_servicio ? 'Sí' : 'No') }}</span>
-                        </div> -->
                         <div class="detalle-item">
                           <div class="detalle-label">Cliente respondió</div>
                           <span>{{ s.cliente_respondio === null || s.cliente_respondio === undefined ? '—' : (s.cliente_respondio ? 'Sí' : 'No')
                             }}</span>
                           </div>
-                          <!-- NUEVO EN TARJETA: Fecha realización -->
                           @if (s.cliente_respondio === 1 || s.cliente_respondio === true) {
                           <div class="detalle-item">
                             <div class="detalle-label">Fecha realización</div>
@@ -1870,7 +1786,8 @@
                             <span>{{ s.solicito_nueva_encuesta === null || s.solicito_nueva_encuesta === undefined ? '—' :
                               (s.solicito_nueva_encuesta ? 'Sí' : 'No') }}</span>
                           </div>
-                          <div class="detalle-item detalle-item-full">        <div class="detalle-label">Comentarios</div>
+                          <div class="detalle-item detalle-item-full">
+                          <div class="detalle-label">Comentarios</div>
                           <span>{{ s.comentarios || '—' }}</span>
                         </div>
                       </div>
@@ -2064,7 +1981,6 @@
             @if (editSolicitudActiveTab === 'revision') {
               <div class="form-grid">
                 <div class="form-field"><label>Fecha estimada inicio de análisis:<input type="date" [(ngModel)]="editRevisionFechaLimite" /></label></div>
-                <!-- Código informe resultados removed per request -->
                 <div class="form-field"><label>Tipo muestra especificado
                   <select [(ngModel)]="editRevisionTipoMuestraEspecificado">
                     <option [ngValue]="null">—</option>
@@ -2151,13 +2067,6 @@
             @if (editSolicitudActiveTab === 'encuesta') {
               <div class="form-grid">
                 <div class="form-field"><label>Fecha encuesta<input type="date" [(ngModel)]="editEncuestaFecha" /></label></div>
-                <!-- <div class="form-field"><label>Recomendaría servicio</label>
-                  <select [(ngModel)]="editEncuestaRecomendaria">
-                    <option [ngValue]="null">—</option>
-                    <option [ngValue]="true">Sí</option>
-                    <option [ngValue]="false">No</option>
-                  </select>
-                </div> -->
                 <div class="form-field"><label>Cliente respondió
                   <select [(ngModel)]="editEncuestaClienteRespondio">
                     <option [ngValue]="null">—</option>
@@ -2166,7 +2075,6 @@
                   </select>
                 </label></div>
                 
-                <!-- NUEVO CAMPO EN MODAL: Fecha realización -->
                 @if (editEncuestaClienteRespondio === true) {
                 <div class="form-field"><label>Fecha realización encuesta<input type="date" [(ngModel)]="editEncuestaFechaRealizacion" /></label></div>
                 }
@@ -2240,8 +2148,9 @@
     </div>
   }
 
-  <!-- SECCIÓN: Lista de clientes -->
-  @if (user()?.rol !== 'Administrador') {
+
+<!-- SECCIÓN: Lista de clientes -->
+@if (user()?.rol !== 'Administrador') {
   <div class="clientes-catalogo-header">
     <h2>Catalogo de Clientes</h2>
     <div
@@ -2267,6 +2176,7 @@
       <span>{{ descargandoClientesSolicitudesExcel ? 'Descargando...' : 'Generar oferta' }}</span>
     </div>
   </div>
+  
   <section>
     <div class="search-container">
       <label for="clientesQ">
@@ -2274,14 +2184,12 @@
       </label>
       <input id="clientesQ" [(ngModel)]="clientesQ" (input)="filtrarClientes()" placeholder="Escribe para buscar..." />
 
-      <!-- Mostrar contador de resultados -->
       @if (clientesFiltrados().length > 0 || clientesQ.trim()) {
         <small class="result-counter">
           👥 Mostrando {{ clientesFiltrados().length }} de {{ clientes().length }} clientes
         </small>
       }
 
-      <!-- Mensaje cuando no hay resultados -->
       @if (clientesQ.trim() && clientesFiltrados().length === 0) {
         <small class="no-results">
           ⚠️ No se encontraron clientes con el término "{{ clientesQ }}"
@@ -2295,128 +2203,120 @@
           <i class="fas fa-spinner fa-spin"></i>
           <p>Cargando clientes...</p>
         </div>
-      }
-
-      @if (!cargando()) {
-        <div class="fade-in">
-        @for (u of clientesFiltrados(); track u.id_cliente) {
-          <article class="equipo-card" 
-                   (click)="toggleClienteDetails(u.id_cliente)"
-                   (keydown.enter)="toggleClienteDetails(u.id_cliente)"
-                   (keydown.space)="toggleClienteDetails(u.id_cliente)"
-                   [attr.aria-expanded]="detallesVisibles[u.id_cliente] ? 'true' : 'false'" 
-                   tabindex="0">
-          <div class="card-top">
-            <div class="tags">
-              <span class="tag"><strong>ID:</strong> {{ u['numero'] || u['numero_cliente'] || u.id_cliente }}</span>
-              <span class="tag"><strong>Identificación:</strong> {{ u.numero_identificacion || '—' }}</span>
-              <span class="tag"><strong>Ciudad:</strong> {{ resolveCiudad(u) }}</span>
-              <span class="tag"><strong>Celular:</strong> {{ u.celular || '—' }}</span>
-            </div>
-            <div class="pdf-actions">
-              @if (canDelete()) {
-                <button type="button" class="pdf-btn edit"
-                        title="Editar cliente"
-                        aria-label="Editar cliente"
-                        (click)="$event.stopPropagation(); editCliente(u)">
-                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z" fill="currentColor" />
-                    <path d="M20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.29a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" fill="currentColor" />
-                  </svg>
-                </button>
-                <button type="button" class="pdf-btn delete" 
-                        title="Eliminar cliente" 
-                        aria-label="Eliminar cliente" 
-                        (click)="$event.stopPropagation(); deleteCliente(u.id_cliente)">
-                  <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-                    <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                  </svg>
-                </button>
-              }
-            </div>
-          </div>
-
-          <div class="card-name">
-            <div class="name-line">{{ u.nombre_solicitante || u.razon_social || ('Cliente ' + (u['numero'] || u['numero_cliente'] || u.id_cliente)) }}</div>
-            <div class="meta-line">
-              <span class="chip">Tipo: {{ u.tipo_usuario || '—' }}</span>
-              <span class="chip">Correo: {{ u.correo_electronico || '—' }}</span>
-            </div>
-            <span class="toggle-icon" [class.open]="detallesVisibles[u.id_cliente]" aria-hidden="true">▾</span>
-          </div>
-
-          @if (detallesVisibles[u.id_cliente]) {
-            <div class="equipo-detalles" role="button" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
-              <div class="detalle-grid-compacto">
-                <div class="detalle-item">
-                  <div class="detalle-label">Nombre</div>
-                  <span>{{ u.nombre_solicitante || '—' }}</span>
-                </div>
-                <div class="detalle-item">
-                  <div class="detalle-label">Razón social</div>
-                  <span>{{ u.razon_social || '—' }}</span>
-                </div>
-                <div class="detalle-item">
-                  <div class="detalle-label">NIT</div>
-                  <span>{{ u.nit || '—' }}</span>
-                </div>
-                <div class="detalle-item">
-                  <div class="detalle-label">Identificación</div>
-                  <span>{{ u.numero_identificacion || '—' }}</span>
-                </div>
-                <div class="detalle-item">
-                  <div class="detalle-label">Departamento</div>
-                  <span>{{ resolveDepartamento(u) }}</span>
-                </div>
-                <div class="detalle-item">
-                  <div class="detalle-label">Ciudad</div>
-                  <span>{{ resolveCiudad(u) }}</span>
-                </div>
-                <div class="detalle-item">
-                  <div class="detalle-label">Dirección</div>
-                  <span>{{ u.direccion || '—' }}</span>
-                </div>
-                <div class="detalle-item">
-                  <div class="detalle-label">Correo</div>
-                  <span>{{ u.correo_electronico || '—' }}</span>
-                </div>
-                <div class="detalle-item">
-                  <div class="detalle-label">Celular</div>
-                  <span>{{ u.celular || '—' }}</span>
-                </div>
-                <div class="detalle-item">
-                  <div class="detalle-label">Teléfono</div>
-                  <span>{{ u.telefono || '—' }}</span>
-                </div>
-                <div class="detalle-item">
-                  <div class="detalle-label">Tipo cliente</div>
-                  <span>{{ u.tipo_usuario || '—' }}</span>
-                </div>
-                <div class="detalle-item">
-                  <div class="detalle-label">Fecha vinculación</div>
-                  <span>{{ limpiarFecha(u.fecha_vinculacion) }}</span>
-                </div>
-                <div class="detalle-item detalle-item-full">
-                  <div class="detalle-label">Observaciones</div>
-                  <span>{{ u.observaciones || '—' }}</span>
-                </div>
-              </div>
-            </div>
-          }
-        </article>
-        }
-
-        @empty {
+      } @else {
+        @if (clientesFiltrados().length === 0) {
           <p class="sin-equipos">No hay clientes para mostrar</p>
+        } @else {
+          <div class="fade-in">
+            @for (u of clientesFiltrados(); track u.id_cliente) {
+              <article class="equipo-card" 
+                       (click)="toggleClienteDetails(u.id_cliente)"
+                       (keydown.enter)="toggleClienteDetails(u.id_cliente)"
+                       (keydown.space)="toggleClienteDetails(u.id_cliente)"
+                       [attr.aria-expanded]="detallesVisibles[u.id_cliente] ? 'true' : 'false'" 
+                       tabindex="0">
+                <div class="card-top">
+                  <div class="tags">
+                    <span class="tag"><strong>ID:</strong> {{ u['numero'] || u['numero_cliente'] || u.id_cliente }}</span>
+                    <span class="tag"><strong>Identificación:</strong> {{ u.numero_identificacion || '—' }}</span>
+                    <span class="tag"><strong>Ciudad:</strong> {{ resolveCiudad(u) }}</span>
+                    <span class="tag"><strong>Celular:</strong> {{ u.celular || '—' }}</span>
+                  </div>
+                  <div class="pdf-actions">
+                    @if (canDelete()) {
+                      <button type="button" class="pdf-btn edit"
+                              title="Editar cliente"
+                              aria-label="Editar cliente"
+                              (click)="$event.stopPropagation(); editCliente(u)">
+                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z" fill="currentColor" />
+                          <path d="M20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.29a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" fill="currentColor" />
+                        </svg>
+                      </button>
+                      <button type="button" class="pdf-btn delete" 
+                              title="Eliminar cliente" 
+                              aria-label="Eliminar cliente" 
+                              (click)="$event.stopPropagation(); deleteCliente(u.id_cliente)">
+                        <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+                          <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <div class="card-name">
+                  <div class="name-line">{{ u.nombre_solicitante || u.razon_social || ('Cliente ' + (u['numero'] || u['numero_cliente'] || u.id_cliente)) }}</div>
+                  <div class="meta-line">
+                    <span class="chip">Tipo: {{ u.tipo_usuario || '—' }}</span>
+                    <span class="chip">Correo: {{ u.correo_electronico || '—' }}</span>
+                  </div>
+                  <span class="toggle-icon" [class.open]="detallesVisibles[u.id_cliente]" aria-hidden="true">▾</span>
+                </div>
+
+                @if (detallesVisibles[u.id_cliente]) {
+                  <div class="equipo-detalles" role="button" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+                    <div class="detalle-grid-compacto">
+                      <div class="detalle-item">
+                        <div class="detalle-label">Nombre</div>
+                        <span>{{ u.nombre_solicitante || '—' }}</span>
+                      </div>
+                      <div class="detalle-item">
+                        <div class="detalle-label">Razón social</div>
+                        <span>{{ u.razon_social || '—' }}</span>
+                      </div>
+                      <div class="detalle-item">
+                        <div class="detalle-label">NIT</div>
+                        <span>{{ u.nit || '—' }}</span>
+                      </div>
+                      <div class="detalle-item">
+                        <div class="detalle-label">Identificación</div>
+                        <span>{{ u.numero_identificacion || '—' }}</span>
+                      </div>
+                      <div class="detalle-item">
+                        <div class="detalle-label">Departamento</div>
+                        <span>{{ resolveDepartamento(u) }}</span>
+                      </div>
+                      <div class="detalle-item">
+                        <div class="detalle-label">Ciudad</div>
+                        <span>{{ resolveCiudad(u) }}</span>
+                      </div>
+                      <div class="detalle-item">
+                        <div class="detalle-label">Dirección</div>
+                        <span>{{ u.direccion || '—' }}</span>
+                      </div>
+                      <div class="detalle-item">
+                        <div class="detalle-label">Correo</div>
+                        <span>{{ u.correo_electronico || '—' }}</span>
+                      </div>
+                      <div class="detalle-item">
+                        <div class="detalle-label">Celular</div>
+                        <span>{{ u.celular || '—' }}</span>
+                      </div>
+                      <div class="detalle-item">
+                        <div class="detalle-label">Teléfono</div>
+                        <span>{{ u.telefono || '—' }}</span>
+                      </div>
+                      <div class="detalle-item">
+                        <div class="detalle-label">Tipo cliente</div>
+                        <span>{{ u.tipo_usuario || '—' }}</span>
+                      </div>
+                      <div class="detalle-item">
+                        <div class="detalle-label">Fecha vinculación</div>
+                        <span>{{ limpiarFecha(u.fecha_vinculacion) }}</span>
+                      </div>
+                      <div class="detalle-item detalle-item-full">
+                        <div class="detalle-label">Observaciones</div>
+                        <span>{{ u.observaciones || '—' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </article>
+            }
+          </div>
         }
-        </div>
       }
     </div>
   </section>
-  }
-</div>
-
-<!-- Global toast -->
-@if (lastCopiedMessage) {
-  <div class="global-toast">{{ lastCopiedMessage }}</div>
 }

@@ -1,6 +1,6 @@
 {
   "name": "app-lab",
-  "version": "1.6.5",
+  "version": "1.2.23",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -9,7 +9,10 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "server": "node server/index.js",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "capture:apartados:setup": "playwright install chromium",
+    "capture:apartados": "node scripts/capture-apartados.mjs",
+    "capture:modulos": "node scripts/capture-modulos.mjs"
   },
   "prettier": {
     "printWidth": 100,
@@ -53,6 +56,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "playwright": "^1.58.2",
     "typescript": "~5.9.2",
     "typescript-eslint": "8.46.4"
   }

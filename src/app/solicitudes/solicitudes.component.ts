@@ -1,4 +1,4 @@
-import { Component, signal, effect, EffectRef, OnDestroy, OnInit, ViewEncapsulation, inject, ElementRef, ViewChild } from '@angular/core';
+import { Component, signal, effect, EffectRef, OnDestroy, OnInit, ViewEncapsulation, inject, ElementRef, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -122,7 +122,8 @@ interface SolicitudLike {
   imports: [CommonModule, FormsModule, RouterModule, NumbersOnlyDirective, LettersOnlyDirective, AlphaNumericDirective, AlphaNumericSpacesDirective],
   templateUrl: './solicitudes.component.html',
   styleUrls: ['./solicitudes.component.css'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SolicitudesComponent implements OnInit, OnDestroy {
   // Inyectar servicios
@@ -132,6 +133,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   private utilsService = inject(UtilsService);
   private snackbarService = inject(SnackbarService);
   private confirm = inject(ConfirmService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Signals desde servicios
   clientes = this.clientesService.clientes;
@@ -157,7 +159,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   @ViewChild('tplSolicitudDocTemplateInput') private tplSolicitudDocTemplateInput?: ElementRef<HTMLInputElement>;
 
   clientesDocumentos: ClienteLike[] = [];
-
   solicitudesDocumentos: SolicitudLike[] = [];
 
   tplSolicitudDocFiltroTipo = 'todos';
@@ -287,7 +288,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   encuestaFechaRealizacion = ''; 
   encuestaPuntuacion: number | null = null;
   encuestaComentarios = '';
-  // encuestaRecomendaria: any = '';
   encuestaClienteRespondio: boolean | null = null;
   encuestaSolicitoNueva: boolean | null = null;
 
@@ -319,6 +319,17 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   // Error message to show under the oferta valor input
   ofertaValorError = '';
 
+  // Debounce para búsquedas
+  private searchDebounceTimer: any;
+  private readonly SEARCH_DEBOUNCE_MS = 300;
+
+  // Caches para mejorar rendimiento
+  private ciudadCache = new Map<string, string>();
+  private departamentoCache = new Map<string, string>();
+  private conceptoFinalCache = new Map<number, string | null>();
+  private lastTipoForPreview = '';
+  private lastFechaForPreview = '';
+
   // Efectos (disponibles para limpiar en ngOnDestroy)
   private clientesEffectStop?: EffectRef;
   private solicitudesEffectStop?: EffectRef;
@@ -334,6 +345,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     this.solicitudesEffectStop = effect(() => {
       this.solicitudes(); // subscribe to signal
       this.filtrarSolicitudes();
+      this.cdr.markForCheck(); 
       try { this.computeNextSolicitudConsecutivo(); } catch (e) { console.warn('computeNextSolicitudConsecutivo effect error', e); }
     });
   }
@@ -462,83 +474,112 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
     console.log('🔴 Solicitudes component: Destruyendo...');
     try { if (this.clientesEffectStop) this.clientesEffectStop.destroy(); } catch { void 0; }
     try { if (this.solicitudesEffectStop) this.solicitudesEffectStop.destroy(); } catch { void 0; }
+    
+    // Limpiar timers
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+    
+    // Limpiar cachés
+    this.clearCaches();
+    this.conceptoFinalCache.clear();
   }
 
-  private async loadInitialData(): Promise<void> {
-    console.log('🔄 Cargando datos iniciales...');
-    try {
-      await this.locationsService.loadDepartamentos();
-      console.log('✅ Departamentos cargados:', this.departamentos().length);
-      await this.loadClientes();
-      console.log('✅ Clientes cargados:', this.clientes().length);
+  private clearCaches(): void {
+    this.ciudadCache.clear();
+    this.departamentoCache.clear();
+  }
 
-      await this.loadEstadosSolicitud();
-      await this.loadAdminUsuarios();
-
-      // If no solicitud cliente selected, default to first cliente for new solicitudes
-      const firstClient = (this.clientes() || [])[0];
-      if (firstClient) {
-        // Keep selectedCliente for autofill helpers, but do NOT preselect the client in the "Agregar solicitud" form.
-        // The placeholder should be shown instead of forcing the first client selection.
-        this.selectedCliente.set(firstClient);
-      }
-
-      // Preload ciudades for all departamentos present among clients
-      const clientesList = this.clientes() || [];
-      const depCodes = Array.from(new Set(
-        clientesList
-          .map(c => c.id_departamento || c.departamento_codigo)
-          .filter(Boolean)
-          .map(x => String(x))
-      ));
-      for (const depCode of depCodes) {
-        try {
-          await this.locationsService.loadCiudades(depCode);
-        } catch (e) {
-          console.warn('No se pudieron cargar ciudades para departamento', depCode, e);
-        }
-      }
-
-      this.computeNextClienteNumero();
-      await this.loadSolicitudes();
-      console.log('✅ Solicitudes cargadas:', this.solicitudes().length);
-
-      // Default selected solicitud when possible
-      const firstSolicitud = (this.solicitudes() || [])[0];
-      if (firstSolicitud) {
-        this.selectedSolicitud.set(firstSolicitud);
-      }
-      this.computeNextSolicitudConsecutivo();
-    } catch (err) {
-      console.error('❌ Error cargando datos iniciales:', err);
-      this.manejarError(err, 'cargar datos iniciales');
-    } finally {
-      // Marcar carga inicial como finalizada (muestra listas o mensajes)
-      try { this.cargando.set(false); } catch { void 0; }
+  private invalidateConceptoFinalCache(solicitudId?: number): void {
+    if (solicitudId) {
+      this.conceptoFinalCache.delete(solicitudId);
+    } else {
+      this.conceptoFinalCache.clear();
     }
   }
 
-  // Método para obtener fecha actual en formato YYYY-MM-DD
-getTodayDate(): string {
-  const hoy = new Date();
-  const año = hoy.getFullYear();
-  const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-  const dia = String(hoy.getDate()).padStart(2, '0');
-  return `${año}-${mes}-${dia}`;
+private async loadInitialData(): Promise<void> {
+  console.log('🔄 Cargando datos iniciales...');
+  try {
+    await this.locationsService.loadDepartamentos();
+    console.log('✅ Departamentos cargados:', this.departamentos().length);
+    await this.loadClientes();
+    console.log('✅ Clientes cargados:', this.clientes().length);
+
+    // 🔴 FORZAR filtrado inmediatamente después de cargar clientes
+    this.clientesFiltrados.set(this.clientes());
+    console.log('🔴 Forzado 1 - clientesFiltrados:', this.clientesFiltrados().length);
+    
+    this.filtrarClientes();
+    console.log('✅ Clientes filtrados después de carga:', this.clientesFiltrados().length);
+
+    await this.loadEstadosSolicitud();
+    await this.loadAdminUsuarios();
+
+    const firstClient = (this.clientes() || [])[0];
+    if (firstClient) {
+      this.selectedCliente.set(firstClient);
+    }
+
+    const clientesList = this.clientes() || [];
+    const depCodes = Array.from(new Set(
+      clientesList
+        .map(c => c.id_departamento || c.departamento_codigo)
+        .filter(Boolean)
+        .map(x => String(x))
+    ));
+    for (const depCode of depCodes) {
+      try {
+        await this.locationsService.loadCiudades(depCode);
+      } catch (e) {
+        console.warn('No se pudieron cargar ciudades para departamento', depCode, e);
+      }
+    }
+
+    this.computeNextClienteNumero();
+    await this.loadSolicitudes();
+    console.log('✅ Solicitudes cargadas:', this.solicitudes().length);
+
+    const firstSolicitud = (this.solicitudes() || [])[0];
+    if (firstSolicitud) {
+      this.selectedSolicitud.set(firstSolicitud);
+    }
+    this.computeNextSolicitudConsecutivo();
+
+    // 🔴 FORZAR filtrado nuevamente al final
+    this.clientesFiltrados.set(this.clientes());
+    this.filtrarClientes();
+    console.log('🔴 Forzado final - clientesFiltrados:', this.clientesFiltrados().length);
+    
+    // 🔴 Forzar detección de cambios después de todo
+    this.cdr.detectChanges();
+    
+  } catch (err) {
+    console.error('❌ Error cargando datos iniciales:', err);
+    this.manejarError(err, 'cargar datos iniciales');
+  } finally {
+    try { this.cargando.set(false); } catch { void 0; }
+    this.cdr.markForCheck();
+  }
 }
 
-// Método para obtener fecha de mañana en formato YYYY-MM-DD
-getTomorrowDate(): string {
-  const mañana = new Date();
-  mañana.setDate(mañana.getDate() + 1); // Sumar 1 día
-  
-  const año = mañana.getFullYear();
-  const mes = String(mañana.getMonth() + 1).padStart(2, '0');
-  const dia = String(mañana.getDate()).padStart(2, '0');
-  return `${año}-${mes}-${dia}`;
-}
+  getTodayDate(): string {
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    return `${año}-${mes}-${dia}`;
+  }
 
-  // Calcula el siguiente consecutivo para solicitud
+  getTomorrowDate(): string {
+    const mañana = new Date();
+    mañana.setDate(mañana.getDate() + 1);
+    const año = mañana.getFullYear();
+    const mes = String(mañana.getMonth() + 1).padStart(2, '0');
+    const dia = String(mañana.getDate()).padStart(2, '0');
+    return `${año}-${mes}-${dia}`;
+  }
+
   computeNextSolicitudConsecutivo(): void {
     try {
       const items = this.solicitudes() || [];
@@ -548,15 +589,13 @@ getTomorrowDate(): string {
         if (!isNaN(n) && n > maxId) maxId = n;
       }
       const siguiente = maxId + 1;
-      // Siempre actualizar el consecutivo para reflejar el estado actual de la base de datos.
-      // Esto evita que el contador se quede en un valor anterior cuando se borran todas las solicitudes.
       this.solicitudConsecutivo = siguiente;
+      this.cdr.markForCheck();
     } catch (err) {
       console.warn('computeNextSolicitudConsecutivo error', err);
     }
   }
 
-  // Calcula el siguiente valor para el campo "Consecutivo" del cliente
   computeNextClienteNumero(): void {
     try {
       const clientes = this.clientes() || [];
@@ -569,12 +608,12 @@ getTomorrowDate(): string {
       if (!this.clienteNumero || Number(this.clienteNumero) < siguiente) {
         this.clienteNumero = siguiente;
       }
+      this.cdr.markForCheck();
     } catch (err) {
       console.warn('computeNextClienteNumero error', err);
     }
   }
 
-  // Maneja el cambio del select de tipo de población / comunidad
   handleTipoPoblChange(value: string): void {
     if (value === 'Otras') {
       this.modalTipoPoblText = '';
@@ -607,7 +646,6 @@ getTomorrowDate(): string {
     this.clienteTipoPobl = '';
   }
 
-  // Maneja el cambio del select de Tipo de análisis
   handleTipoAnalisisChange(value: string): void {
     if (value === 'Otro') {
       this.modalTipoAnalisisText = '';
@@ -618,7 +656,6 @@ getTomorrowDate(): string {
     }
   }
 
-  // Maneja el cambio del select de Tipo de empaque
   handleTipoEmpaqueChange(value: string): void {
     if (value === 'Otras') {
       this.modalTipoEmpaqueText = '';
@@ -685,19 +722,27 @@ getTomorrowDate(): string {
     this.solicitudTipoAnalisis = '';
   }
 
-  // Recalcula el preview del código tipo-año-consecutivo
   computeNumeroFrontPreview(): void {
     const tipo = (this.solicitudTipo || '').trim();
+    const fecha = this.solicitudFechaSolicitud;
+    
+    if (tipo === this.lastTipoForPreview && fecha === this.lastFechaForPreview) {
+      return;
+    }
+    
+    this.lastTipoForPreview = tipo;
+    this.lastFechaForPreview = fecha;
+    
     if (!tipo) { 
       this.solicitudNumeroFrontPreview = ''; 
       return; 
     }
     
-    const fecha = this.solicitudFechaSolicitud ? new Date(this.solicitudFechaSolicitud) : new Date();
-    const year = fecha.getFullYear();
+    const year = fecha ? new Date(fecha).getFullYear() : new Date().getFullYear();
     let count = 0;
     
-    for (const s of (this.solicitudes() || [])) {
+    const solicitudes = this.solicitudes();
+    for (const s of solicitudes) {
       const t = String(s?.tipo_solicitud ?? '').trim();
       const y = s?.fecha_solicitud ? new Date(String(s.fecha_solicitud)).getFullYear() : new Date().getFullYear();
       if (t === tipo && y === year) count++;
@@ -706,19 +751,31 @@ getTomorrowDate(): string {
     const next = count + 1;
     const cc = String(next).padStart(2, '0');
     this.solicitudNumeroFrontPreview = `${tipo}-${year}-${cc}`;
+    this.cdr.markForCheck();
   }
 
-  // ========== MÉTODOS DE CARGA ==========
-  async loadClientes(): Promise<void> {
-    try {
-      await this.clientesService.loadClientes();
-      this.filtrarClientes();
-    } catch (err: any) {
-      this.manejarError(err, 'cargar clientes');
-    }
+async loadClientes(): Promise<void> {
+  this.clearCaches();
+  try {
+    await this.clientesService.loadClientes();
+    console.log('✅ Clientes cargados en servicio:', this.clientes().length);
+    
+    // 🔴 FUERZA la actualización de clientesFiltrados
+    this.clientesFiltrados.set(this.clientes());
+    console.log('✅ clientesFiltrados forzado a:', this.clientesFiltrados().length);
+    
+    this.filtrarClientes();
+    console.log('✅ Después de filtrarClientes:', this.clientesFiltrados().length);
+    
+    this.cdr.detectChanges(); // Usa detectChanges en lugar de markForCheck para prueba
+  } catch (err: any) {
+    console.error('❌ Error cargando clientes:', err);
+    this.manejarError(err, 'cargar clientes');
   }
+}
 
   async loadSolicitudes(): Promise<void> {
+    this.clearCaches();
     try {
       await this.solicitudesService.loadSolicitudes();
       this.filtrarSolicitudes();
@@ -733,6 +790,7 @@ getTomorrowDate(): string {
       const rows = await this.solicitudesService.listarEstadosSolicitud();
       this.estadosSolicitud = Array.isArray(rows) ? (rows as EstadoLike[]) : [];
       this.filtrarSolicitudes();
+      this.cdr.markForCheck();
     } catch (err: any) {
       console.warn('Error cargando estados de solicitud:', err);
       this.estadosSolicitud = [];
@@ -750,6 +808,7 @@ getTomorrowDate(): string {
         const rol = String(u?.rol_nombre || u?.rol || '').toLowerCase();
         return rol === 'administrador' || rol === 'superadmin';
       });
+      this.cdr.markForCheck();
     } catch (err: any) {
       console.warn('Error cargando administradores:', err);
       this.adminUsuarios = [];
@@ -778,40 +837,47 @@ getTomorrowDate(): string {
         if (count === 0) {
           this.snackbarService.warn('No se encontraron ciudades para el departamento seleccionado');
         }
+        this.cdr.markForCheck();
       } catch {
         this.snackbarService.error('Error cargando ciudades. Verifica la conexión.');
       }
     })();
   }
 
-  // ========== FILTRADO ==========
-  filtrarClientes(): void {
-    const clientes = this.clientes();
-    
-    if (!this.clientesQ.trim()) {
-      this.clientesFiltrados.set(clientes);
-      return;
-    }
-    
-    const filtro = this.clientesQ.toLowerCase().trim();
-    const clientesFiltrados = clientes.filter(cliente => {
-      const nombre = (cliente.nombre_solicitante || '').toLowerCase();
-      const correo = (cliente.correo_electronico || '').toLowerCase();
-      const identificacion = (cliente.numero_identificacion || '').toLowerCase();
-      const ciudad = (this.resolveCiudad(cliente) || '').toLowerCase();
-      const departamento = (this.resolveDepartamento(cliente) || '').toLowerCase();
-      const celular = (cliente.celular || '').toLowerCase();
-      const telefono = (cliente.telefono || '').toLowerCase();
-      const tipoUsuario = (cliente.tipo_usuario || '').toLowerCase();
-      
-      return nombre.includes(filtro) || correo.includes(filtro) ||
-             identificacion.includes(filtro) || ciudad.includes(filtro) ||
-             departamento.includes(filtro) || celular.includes(filtro) ||
-             telefono.includes(filtro) || tipoUsuario.includes(filtro);
-    });
-    
-    this.clientesFiltrados.set(clientesFiltrados);
+// Reemplaza toda la función filtrarClientes() con esta versión
+filtrarClientes(): void {
+  const clientes = this.clientes();
+  console.log('🔍 filtrarClientes ejecutándose - clientes.length:', clientes.length);
+  
+  if (!this.clientesQ.trim()) {
+    console.log('✅ Sin filtro, asignando todos los clientes');
+    this.clientesFiltrados.set(clientes);
+    console.log('✅ clientesFiltrados ahora tiene:', this.clientesFiltrados().length);
+    this.cdr.markForCheck();
+    return;
   }
+  
+  const filtro = this.clientesQ.toLowerCase().trim();
+  const clientesFiltrados = clientes.filter(cliente => {
+    const nombre = (cliente.nombre_solicitante || '').toLowerCase();
+    const correo = (cliente.correo_electronico || '').toLowerCase();
+    const identificacion = (cliente.numero_identificacion || '').toLowerCase();
+    const ciudad = (this.resolveCiudad(cliente) || '').toLowerCase();
+    const departamento = (this.resolveDepartamento(cliente) || '').toLowerCase();
+    const celular = (cliente.celular || '').toLowerCase();
+    const telefono = (cliente.telefono || '').toLowerCase();
+    const tipoUsuario = (cliente.tipo_usuario || '').toLowerCase();
+    
+    return nombre.includes(filtro) || correo.includes(filtro) ||
+           identificacion.includes(filtro) || ciudad.includes(filtro) ||
+           departamento.includes(filtro) || celular.includes(filtro) ||
+           telefono.includes(filtro) || tipoUsuario.includes(filtro);
+  });
+  
+  console.log('✅ Con filtro, clientesFiltrados:', clientesFiltrados.length);
+  this.clientesFiltrados.set(clientesFiltrados);
+  this.cdr.markForCheck();
+}
 
   async descargarClientesExcel(): Promise<void> {
     if (this.descargandoClientesExcel) return;
@@ -892,6 +958,7 @@ getTomorrowDate(): string {
       }
       const rows = this.clientes() || [];
       this.clientesDocumentos = rows.filter((c: any) => this.esActivoCliente(c));
+      this.cdr.markForCheck();
     } catch (e) {
       console.error('Error cargando clientes para documentos', e);
       this.clientesDocumentos = [];
@@ -904,6 +971,7 @@ getTomorrowDate(): string {
         await this.solicitudesService.loadSolicitudes();
       }
       this.solicitudesDocumentos = this.solicitudes() || [];
+      this.cdr.markForCheck();
     } catch (e) {
       console.error('Error cargando solicitudes para documentos', e);
       this.solicitudesDocumentos = [];
@@ -1055,6 +1123,7 @@ getTomorrowDate(): string {
         );
         if (!exists) this.tplSolicitudDocPlantillaId = null;
       }
+      this.cdr.markForCheck();
     } catch (err: any) {
       this.tplSolicitudDocMsg = err?.message || 'Error listando plantillas';
       this.snackbarService.error(this.tplSolicitudDocMsg);
@@ -1168,756 +1237,767 @@ getTomorrowDate(): string {
       a.remove();
       URL.revokeObjectURL(url);
       this.snackbarService.success('Documento generado');
-      } catch (err: any) {
-        this.tplSolicitudDocMsg = err?.message || 'No se pudo generar el documento';
-        this.snackbarService.error(this.tplSolicitudDocMsg);
-      } finally {
-        this.tplSolicitudDocLoading = false;
-      }
+    } catch (err: any) {
+      this.tplSolicitudDocMsg = err?.message || 'No se pudo generar el documento';
+      this.snackbarService.error(this.tplSolicitudDocMsg);
+    } finally {
+      this.tplSolicitudDocLoading = false;
+    }
   }
 
   filtrarSolicitudes(): void {
-    const base = [...this.solicitudes()];
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
     
-    // Ordenar por fecha y luego por id
-    const arr = base.sort((a, b) => {
+    this.searchDebounceTimer = setTimeout(() => {
+      const base = [...this.solicitudes()];
+      
+      const arr = base.sort((a, b) => {
+        const da = a?.fecha_solicitud ? new Date(String(a.fecha_solicitud)).getTime() : 0;
+        const db = b?.fecha_solicitud ? new Date(String(b.fecha_solicitud)).getTime() : 0;
+        if (da !== db) return da - db;
+        return Number(a?.solicitud_id ?? a?.id_solicitud ?? 0) - Number(b?.solicitud_id ?? b?.id_solicitud ?? 0);
+      });
+
+      const normalized = arr.map((s) => {
+        const id = s?.solicitud_id ?? s?.id_solicitud ?? s?.solicitudId ?? null;
+        const tipo = (s?.tipo_solicitud ?? s?.tipo ?? '').toString().trim();
+        const fecha = s?.fecha_solicitud ?? s?.created_at ?? s?.fecha ?? null;
+        const nombreSolicitante = s?.nombre_solicitante ?? s?.cliente_nombre ?? s?.nombre_cliente ?? (s?.cliente?.nombre) ?? '';
+        const nombreMuestra = s?.nombre_muestra ?? s?.muestra_nombre ?? s?.producto_nombre ?? '';
+        const rawEstado = s?.id_estado ?? null;
+        let idEstado = rawEstado === null || rawEstado === undefined || rawEstado === ''
+          ? null
+          : Number(rawEstado);
+        if (!Number.isFinite(idEstado)) idEstado = null;
+        const estadosList = this.estadosSolicitud || [];
+        if (idEstado !== null && estadosList.length) {
+          const exists = estadosList.some((e: any) => Number(e?.id_estado) === Number(idEstado));
+          if (!exists) idEstado = null;
+        }
+        const estadoNombre = String(s?.nombre_estado ?? '').trim().toLowerCase();
+        if (estadosList.length && estadoNombre) {
+          const match = estadosList.find((e: any) => {
+            const nombre = String(e?.nombre_estado || e?.nombre || '').trim().toLowerCase();
+            return nombre && nombre === estadoNombre;
+          });
+          if (match && Number.isFinite(Number(match?.id_estado))) {
+            const matchId = Number(match.id_estado);
+            if (idEstado === null || Number(idEstado) !== matchId) {
+              idEstado = matchId;
+            }
+          }
+        }
+        const rawAdmin = s?.id_admin ?? null;
+        let idAdmin = rawAdmin === null || rawAdmin === undefined || rawAdmin === ''
+          ? null
+          : Number(rawAdmin);
+        if (!Number.isFinite(idAdmin)) idAdmin = null;
+        
+        return {
+          ...s,
+          id_solicitud: id,
+          solicitud_id: id,
+          tipo_solicitud: tipo,
+          fecha_solicitud: fecha,
+          nombre_solicitante: nombreSolicitante,
+          nombre_muestra: nombreMuestra,
+          id_estado: idEstado,
+          id_admin: idAdmin
+        };
+      });
+
+      let solicitudesFiltradas = normalized;
+      
+      if (this.solicitudesFiltroViabilidad !== 'todos') {
+        solicitudesFiltradas = solicitudesFiltradas.filter((s) => {
+          const concepto = this.getConceptoFinalValue(s);
+          if (!concepto) return false;
+          if (this.solicitudesFiltroViabilidad === 'viable') return concepto === 'SOLICITUD_VIABLE';
+          if (this.solicitudesFiltroViabilidad === 'viable_observaciones')
+            return concepto === 'SOLICITUD_VIABLE_CON_OBSERVACIONES';
+          if (this.solicitudesFiltroViabilidad === 'no_viable') return concepto === 'SOLICITUD_NO_VIABLE';
+          return true;
+        });
+      }
+
+      if (this.solicitudesFiltroEstado !== 'todos') {
+        solicitudesFiltradas = solicitudesFiltradas.filter((s) => {
+          return this.getEstadoFiltroValue(s) === this.solicitudesFiltroEstado;
+        });
+      }
+
+      if (this.solicitudesQ.trim()) {
+        const filtro = this.solicitudesQ.toLowerCase().trim();
+        solicitudesFiltradas = solicitudesFiltradas.filter(solicitud => {
+          const id = String(solicitud?.solicitud_id ?? solicitud?.id_solicitud ?? '');
+          const tipo = String(solicitud?.tipo_solicitud ?? '').toLowerCase();
+          const numeroFront = String(solicitud?.numero_solicitud_front ?? '').toLowerCase();
+          const nombreSolicitante = String(solicitud?.nombre_solicitante ?? '').toLowerCase();
+          const nombreMuestra = String(solicitud?.nombre_muestra ?? '').toLowerCase();
+          const tipoMuestra = String(solicitud?.tipo_muestra ?? '').toLowerCase();
+          const tipoAnalisis = String(solicitud?.analisis_requerido ?? '').toLowerCase();
+          const lote = String(solicitud?.lote_producto ?? '').toLowerCase();
+          
+          return id.includes(filtro) || tipo.includes(filtro) ||
+                 numeroFront.includes(filtro) || nombreSolicitante.includes(filtro) ||
+                 nombreMuestra.includes(filtro) || tipoMuestra.includes(filtro) ||
+                 tipoAnalisis.includes(filtro) || lote.includes(filtro);
+        });
+      }
+
+      this.solicitudesFiltradas.set(solicitudesFiltradas);
+      this.cdr.markForCheck();
+    }, this.SEARCH_DEBOUNCE_MS);
+  }
+
+  private buildNumeroSolicitudesMap(items: any[]): Map<number, string> {
+    const sorted = [...(items || [])].sort((a, b) => {
       const da = a?.fecha_solicitud ? new Date(String(a.fecha_solicitud)).getTime() : 0;
       const db = b?.fecha_solicitud ? new Date(String(b.fecha_solicitud)).getTime() : 0;
       if (da !== db) return da - db;
       return Number(a?.solicitud_id ?? a?.id_solicitud ?? 0) - Number(b?.solicitud_id ?? b?.id_solicitud ?? 0);
     });
 
-    // Normalizar campos
-    const normalized = arr.map((s) => {
-      const id = s?.solicitud_id ?? s?.id_solicitud ?? s?.solicitudId ?? null;
-      const tipo = (s?.tipo_solicitud ?? s?.tipo ?? '').toString().trim();
+    const counters = new Map<string, number>();
+    const result = new Map<number, string>();
+
+    for (const s of sorted) {
+      const tipoVal = String(s?.tipo_solicitud ?? s?.tipo ?? '').trim();
+      if (!tipoVal) continue;
+
       const fecha = s?.fecha_solicitud ?? s?.created_at ?? s?.fecha ?? null;
-      const nombreSolicitante = s?.nombre_solicitante ?? s?.cliente_nombre ?? s?.nombre_cliente ?? (s?.cliente?.nombre) ?? '';
-      const nombreMuestra = s?.nombre_muestra ?? s?.muestra_nombre ?? s?.producto_nombre ?? '';
-      const rawEstado = s?.id_estado ?? null;
-      let idEstado = rawEstado === null || rawEstado === undefined || rawEstado === ''
-        ? null
-        : Number(rawEstado);
-      if (!Number.isFinite(idEstado)) idEstado = null;
-      const estadosList = this.estadosSolicitud || [];
-      if (idEstado !== null && estadosList.length) {
-        const exists = estadosList.some((e: any) => Number(e?.id_estado) === Number(idEstado));
-        if (!exists) idEstado = null;
-      }
-      const estadoNombre = String(s?.nombre_estado ?? '').trim().toLowerCase();
-      if (estadosList.length && estadoNombre) {
-        const match = estadosList.find((e: any) => {
-          const nombre = String(e?.nombre_estado || e?.nombre || '').trim().toLowerCase();
-          return nombre && nombre === estadoNombre;
-        });
-        if (match && Number.isFinite(Number(match?.id_estado))) {
-          const matchId = Number(match.id_estado);
-          if (idEstado === null || Number(idEstado) !== matchId) {
-            idEstado = matchId;
-          }
-        }
-      }
-      const rawAdmin = s?.id_admin ?? null;
-      let idAdmin = rawAdmin === null || rawAdmin === undefined || rawAdmin === ''
-        ? null
-        : Number(rawAdmin);
-      if (!Number.isFinite(idAdmin)) idAdmin = null;
-      
-      return {
-        ...s,
-        id_solicitud: id,
-        solicitud_id: id,
-        tipo_solicitud: tipo,
-        fecha_solicitud: fecha,
-        nombre_solicitante: nombreSolicitante,
-        nombre_muestra: nombreMuestra,
-        id_estado: idEstado,
-        id_admin: idAdmin
-      };
-    });
+      let fechaDate = fecha ? new Date(fecha) : new Date();
+      if (isNaN(fechaDate.getTime())) fechaDate = new Date();
+      const year = fechaDate.getFullYear();
 
-    const solicitudes = normalized.map((s) => {
-      return {
-        ...s,
-        numero_solicitud_front: this.getNumeroSolicitudFrontValue(s)
-      };
-    });
+      const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? s?.id);
+      if (!Number.isFinite(sid) || sid <= 0) continue;
 
-    let solicitudesFiltradas = solicitudes;
-    if (this.solicitudesFiltroViabilidad !== 'todos') {
-      solicitudesFiltradas = solicitudesFiltradas.filter((s) => {
-        const concepto = this.getConceptoFinalValue(s);
-        if (!concepto) return false;
-        if (this.solicitudesFiltroViabilidad === 'viable') return concepto === 'SOLICITUD_VIABLE';
-        if (this.solicitudesFiltroViabilidad === 'viable_observaciones')
-          return concepto === 'SOLICITUD_VIABLE_CON_OBSERVACIONES';
-        if (this.solicitudesFiltroViabilidad === 'no_viable') return concepto === 'SOLICITUD_NO_VIABLE';
-        return true;
-      });
+      const key = `${tipoVal.toUpperCase()}|${year}`;
+      const next = (counters.get(key) || 0) + 1;
+      counters.set(key, next);
+
+      result.set(sid, `${tipoVal}-${year}-${String(next).padStart(2, '0')}`);
     }
 
-    if (this.solicitudesFiltroEstado !== 'todos') {
-      solicitudesFiltradas = solicitudesFiltradas.filter((s) => {
-        return this.getEstadoFiltroValue(s) === this.solicitudesFiltroEstado;
-      });
-    }
-
-    if (!this.solicitudesQ.trim()) {
-      this.solicitudesFiltradas.set(solicitudesFiltradas);
-      return;
-    }
-
-    const filtro = this.solicitudesQ.toLowerCase().trim();
-    solicitudesFiltradas = solicitudesFiltradas.filter(solicitud => {
-      const id = String(solicitud?.solicitud_id ?? solicitud?.id_solicitud ?? '');
-      const tipo = String(solicitud?.tipo_solicitud ?? '').toLowerCase();
-      const numeroFront = String(solicitud?.numero_solicitud_front ?? '').toLowerCase();
-      const nombreSolicitante = String(solicitud?.nombre_solicitante ?? '').toLowerCase();
-      const nombreMuestra = String(solicitud?.nombre_muestra ?? '').toLowerCase();
-      const tipoMuestra = String(solicitud?.tipo_muestra ?? '').toLowerCase();
-      const tipoAnalisis = String(solicitud?.analisis_requerido ?? '').toLowerCase();
-      const lote = String(solicitud?.lote_producto ?? '').toLowerCase();
-      
-      return id.includes(filtro) || tipo.includes(filtro) ||
-             numeroFront.includes(filtro) || nombreSolicitante.includes(filtro) ||
-             nombreMuestra.includes(filtro) || tipoMuestra.includes(filtro) ||
-             tipoAnalisis.includes(filtro) || lote.includes(filtro);
-    });
-
-    this.solicitudesFiltradas.set(solicitudesFiltradas);
+    return result;
   }
 
-  getNumeroSolicitudFrontValue(s: any): string {
+  getNumeroSolicitudFrontValue(s: any, numeroMap?: Map<number, string>): string {
     const existing = String(s?.numero_solicitud_front ?? s?.numero_solicitud ?? s?.numero ?? '').trim();
     if (existing) return existing;
+
+    const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? s?.id);
+    if (numeroMap && Number.isFinite(sid) && sid > 0 && numeroMap.has(sid)) {
+      return String(numeroMap.get(sid));
+    }
+
     const tipoVal = String(s?.tipo_solicitud ?? s?.tipo ?? '').trim();
     if (!tipoVal) return 'N/A';
     const fecha = s?.fecha_solicitud ?? s?.created_at ?? s?.fecha ?? null;
     let fechaDate = fecha ? new Date(fecha) : new Date();
     if (isNaN(fechaDate.getTime())) fechaDate = new Date();
     const year = fechaDate.getFullYear();
-    const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? s?.id);
     if (!Number.isFinite(sid) || sid <= 0) {
-      return `${tipoVal}-${year}-00`;
+      return `${tipoVal}-${year}-01`;
     }
     return `${tipoVal}-${year}-${String(sid).padStart(2, '0')}`;
   }
 
-  // ========== VALIDACIONES ==========
- validarCliente(): boolean {
-  // Validar todos los campos dinámicamente
-  this.validarCampoClienteEnTiempoReal('nombre');
-  this.validarCampoClienteEnTiempoReal('numero');
-  this.validarCampoClienteEnTiempoReal('fechaVinc');
-  this.validarCampoClienteEnTiempoReal('tipoUsuario');
-  this.validarCampoClienteEnTiempoReal('razonSocial');
-  this.validarCampoClienteEnTiempoReal('nit');
-  this.validarCampoClienteEnTiempoReal('tipoId');
-  this.validarCampoClienteEnTiempoReal('idNum');
-  this.validarCampoClienteEnTiempoReal('sexo');
-  this.validarCampoClienteEnTiempoReal('tipoPobl');
-  this.validarCampoClienteEnTiempoReal('direccion');
-  this.validarCampoClienteEnTiempoReal('departamento');
-  this.validarCampoClienteEnTiempoReal('ciudad');
-  this.validarCampoClienteEnTiempoReal('celular');
-  this.validarCampoClienteEnTiempoReal('telefono');
-  this.validarCampoClienteEnTiempoReal('email');
-  this.validarCampoClienteEnTiempoReal('tipoVinc');
-  this.validarCampoClienteEnTiempoReal('registroPor');
-  this.validarCampoClienteEnTiempoReal('observaciones');
-  
-  // Verificar si hay errores
-  return Object.values(this.clienteErrors).every(error => !error);
-}
+  validarCliente(): boolean {
+    this.validarCampoClienteEnTiempoReal('nombre');
+    this.validarCampoClienteEnTiempoReal('numero');
+    this.validarCampoClienteEnTiempoReal('fechaVinc');
+    this.validarCampoClienteEnTiempoReal('tipoUsuario');
+    this.validarCampoClienteEnTiempoReal('razonSocial');
+    this.validarCampoClienteEnTiempoReal('nit');
+    this.validarCampoClienteEnTiempoReal('tipoId');
+    this.validarCampoClienteEnTiempoReal('idNum');
+    this.validarCampoClienteEnTiempoReal('sexo');
+    this.validarCampoClienteEnTiempoReal('tipoPobl');
+    this.validarCampoClienteEnTiempoReal('direccion');
+    this.validarCampoClienteEnTiempoReal('departamento');
+    this.validarCampoClienteEnTiempoReal('ciudad');
+    this.validarCampoClienteEnTiempoReal('celular');
+    this.validarCampoClienteEnTiempoReal('telefono');
+    this.validarCampoClienteEnTiempoReal('email');
+    this.validarCampoClienteEnTiempoReal('tipoVinc');
+    this.validarCampoClienteEnTiempoReal('registroPor');
+    this.validarCampoClienteEnTiempoReal('observaciones');
+    
+    return Object.values(this.clienteErrors).every(error => !error);
+  }
 
   validarSolicitud(): boolean {
-  // Validar todos los campos dinámicamente
-  this.validarCampoSolicitudEnTiempoReal('consecutivo');
-  this.validarCampoSolicitudEnTiempoReal('clienteId');
-  this.validarCampoSolicitudEnTiempoReal('tipo');
-  this.validarCampoSolicitudEnTiempoReal('nombre');
-  this.validarCampoSolicitudEnTiempoReal('lote');
-  this.validarCampoSolicitudEnTiempoReal('fechaSolicitud');
-  this.validarCampoSolicitudEnTiempoReal('fechaVenc');
-  this.validarCampoSolicitudEnTiempoReal('tipoMuestra');
-  this.validarCampoSolicitudEnTiempoReal('condEmpaque');
-  this.validarCampoSolicitudEnTiempoReal('tipoAnalisis');
-  this.validarCampoSolicitudEnTiempoReal('cantidad');
-  this.validarCampoSolicitudEnTiempoReal('fechaEstimada');
-  this.validarCampoSolicitudEnTiempoReal('requiereVarios');
-  this.validarCampoSolicitudEnTiempoReal('solicitudRecibida');
-  this.validarCampoSolicitudEnTiempoReal('recibePersonal');
-  this.validarCampoSolicitudEnTiempoReal('cargoPersonal');
-  this.validarCampoSolicitudEnTiempoReal('observaciones');
-  if ((this.solicitudTipo || '').trim() === 'AF') {
-    this.validarCampoSolicitudEnTiempoReal('tipoAF');
-  } else {
-    this.solicitudErrors['tipoAF'] = '';
+    this.validarCampoSolicitudEnTiempoReal('consecutivo');
+    this.validarCampoSolicitudEnTiempoReal('clienteId');
+    this.validarCampoSolicitudEnTiempoReal('tipo');
+    this.validarCampoSolicitudEnTiempoReal('nombre');
+    this.validarCampoSolicitudEnTiempoReal('lote');
+    this.validarCampoSolicitudEnTiempoReal('fechaSolicitud');
+    this.validarCampoSolicitudEnTiempoReal('fechaVenc');
+    this.validarCampoSolicitudEnTiempoReal('tipoMuestra');
+    this.validarCampoSolicitudEnTiempoReal('condEmpaque');
+    this.validarCampoSolicitudEnTiempoReal('tipoAnalisis');
+    this.validarCampoSolicitudEnTiempoReal('cantidad');
+    this.validarCampoSolicitudEnTiempoReal('fechaEstimada');
+    this.validarCampoSolicitudEnTiempoReal('requiereVarios');
+    this.validarCampoSolicitudEnTiempoReal('solicitudRecibida');
+    this.validarCampoSolicitudEnTiempoReal('recibePersonal');
+    this.validarCampoSolicitudEnTiempoReal('cargoPersonal');
+    this.validarCampoSolicitudEnTiempoReal('observaciones');
+    if ((this.solicitudTipo || '').trim() === 'AF') {
+      this.validarCampoSolicitudEnTiempoReal('tipoAF');
+    } else {
+      this.solicitudErrors['tipoAF'] = '';
+    }
+    
+    return Object.values(this.solicitudErrors).every(error => !error);
   }
-  
-  // Verificar si hay errores
-  return Object.values(this.solicitudErrors).every(error => !error);
-}
 
- validarOferta(): boolean {
-  // Validar todos los campos dinámicamente
-  this.validarCampoOfertaEnTiempoReal('solicitudId');
-  this.validarCampoOfertaEnTiempoReal('valor');
-  this.validarCampoOfertaEnTiempoReal('fechaEnvio');
-  this.validarCampoOfertaEnTiempoReal('generoCotizacion');
-  this.validarCampoOfertaEnTiempoReal('realizoSeguimiento');
-  this.validarCampoOfertaEnTiempoReal('observacion');
-  
-  // Verificar si hay errores
-  return Object.values(this.ofertaErrors).every(error => !error);
-}
+  validarOferta(): boolean {
+    this.validarCampoOfertaEnTiempoReal('solicitudId');
+    this.validarCampoOfertaEnTiempoReal('valor');
+    this.validarCampoOfertaEnTiempoReal('fechaEnvio');
+    this.validarCampoOfertaEnTiempoReal('generoCotizacion');
+    this.validarCampoOfertaEnTiempoReal('realizoSeguimiento');
+    this.validarCampoOfertaEnTiempoReal('observacion');
+    
+    return Object.values(this.ofertaErrors).every(error => !error);
+  }
 
- validarResultado(): boolean {
-  // Validar todos los campos dinámicamente
-  this.validarCampoResultadoEnTiempoReal('solicitudId');
+  validarResultado(): boolean {
+    this.validarCampoResultadoEnTiempoReal('solicitudId');
     this.validarCampoResultadoEnTiempoReal('fechaLimite');
-  
-  // Verificar si hay errores
-  return Object.values(this.resultadoErrors).every(error => !error);
-}
-
-validarEncuesta(): boolean {
-  // Validar todos los campos dinámicamente
-  this.validarCampoEncuestaEnTiempoReal('solicitudId');
-  this.validarCampoEncuestaEnTiempoReal('fecha');
-  this.validarCampoEncuestaEnTiempoReal('clienteRespondio');
-  
-  // Validar fechaRealizacion solo si clienteRespondio es true
-  if (this.encuestaClienteRespondio === true) {
-    this.validarCampoEncuestaEnTiempoReal('fechaRealizacion');
+    
+    return Object.values(this.resultadoErrors).every(error => !error);
   }
-  
-  this.validarCampoEncuestaEnTiempoReal('solicitoNueva');
-  this.validarCampoEncuestaEnTiempoReal('comentarios');
-  
-  // Verificar si hay errores
-  return Object.values(this.encuestaErrors).every(error => !error);
-}
 
-// ===== VALIDACIÓN DINÁMICA PARA CLIENTE =====
-validarCampoClienteEnTiempoReal(campo: string, event?: Event): void {
-  void event;
-  const valor = this.getValorCliente(campo);
-  this.clienteErrors[campo] = this.validarCampoClienteIndividual(campo, valor);
-}
-
-private getValorCliente(campo: string): any {
-  switch (campo) {
-    case 'nombre': return this.clienteNombre;
-    case 'numero': return this.clienteNumero;
-    case 'fechaVinc': return this.clienteFechaVinc;
-    case 'tipoUsuario': return this.clienteTipoUsuario;
-    case 'razonSocial': return this.clienteRazonSocial;
-    case 'nit': return this.clienteNit;
-    case 'tipoId': return this.clienteTipoId;
-    case 'idNum': return this.clienteIdNum;
-    case 'sexo': return this.clienteSexo;
-    case 'tipoPobl': return this.clienteTipoPobl;
-    case 'direccion': return this.clienteDireccion;
-    case 'departamento': return this.clienteIdDepartamento;
-    case 'ciudad': return this.clienteIdCiudad;
-    case 'celular': return this.clienteCelular;
-    case 'telefono': return this.clienteTelefono;
-    case 'email': return this.clienteEmail;
-    case 'tipoVinc': return this.clienteTipoVinc;
-    case 'registroPor': return this.clienteRegistroPor;
-    case 'observaciones': return this.clienteObservaciones;
-    default: return '';
+  validarEncuesta(): boolean {
+    this.validarCampoEncuestaEnTiempoReal('solicitudId');
+    this.validarCampoEncuestaEnTiempoReal('fecha');
+    this.validarCampoEncuestaEnTiempoReal('clienteRespondio');
+    
+    if (this.encuestaClienteRespondio === true) {
+      this.validarCampoEncuestaEnTiempoReal('fechaRealizacion');
+    }
+    
+    this.validarCampoEncuestaEnTiempoReal('solicitoNueva');
+    this.validarCampoEncuestaEnTiempoReal('comentarios');
+    
+    return Object.values(this.encuestaErrors).every(error => !error);
   }
-}
 
-private validarCampoClienteIndividual(campo: string, valor: any): string {
-  switch (campo) {
-    case 'nombre': {
-      const nombreStr = (valor ?? '').toString().trim();
-      if (!nombreStr) return 'El nombre del solicitante es obligatorio';
-      if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s.-]{2,100}$/.test(nombreStr))
-        return 'El nombre debe contener solo letras, espacios y puntos (2-100 caracteres)';
-      return '';
-    }
-      
-    case 'numero':
-      if (!valor) return 'El número consecutivo es obligatorio';
-      if (Number(valor) < 1 || Number(valor) > 9999)
-        return 'El consecutivo debe estar entre 1 y 9999';
-      return '';
-      
-    case 'fechaVinc': {
-      if (!valor) return 'La fecha de vinculación es obligatoria';
-      const fecha = new Date(valor);
-      const hoy = new Date();
-      hoy.setHours(23, 59, 59, 999);
-      if (fecha > hoy) return 'La fecha de vinculación no puede ser futura';
-      return '';
-    }
-      
-    case 'tipoUsuario':
-      if (!valor) return 'Debe seleccionar el tipo de cliente';
-      return '';
-      
-    case 'razonSocial': {
-      const razonSocialStr = (valor ?? '').toString().trim();
-      if (!razonSocialStr) return 'La razón social es obligatoria';
-      if (razonSocialStr.length > 200) return 'La razón social no puede exceder 200 caracteres';
-      return '';
-    }
-      
-    case 'nit': {
-      // Permitir digitar el NIT sin restringir formato durante la creación.
-      // Solo validamos que exista y que no sea excesivamente largo.
-      const nitStr = (valor ?? '').toString().trim();
-      if (!nitStr) return 'El NIT es obligatorio';
-      if (nitStr.length > 60) return 'El NIT no puede exceder 60 caracteres';
-      return '';
-    }
-      
-    case 'tipoId':
-      if (!valor) return 'Debe seleccionar el tipo de identificación';
-      return '';
-      
-    case 'idNum': {
-      const idNumStr = (valor ?? '').toString().trim();
-      if (!idNumStr) return 'El número de identificación es obligatorio';
-      if (!/^[0-9A-Za-z]{5,20}$/.test(idNumStr))
-        return 'Número de identificación inválido (5-20 caracteres alfanuméricos)';
-      return '';
-    }
-      
-    case 'sexo':
-      if (!valor) return 'Debe seleccionar el sexo';
-      if (!['M', 'F', 'Otro'].includes(valor))
-        return 'Seleccione una opción válida para sexo';
-      return '';
-      
-    case 'tipoPobl': {
-      const tipoPoblStr = (valor ?? '').toString().trim();
-      if (!tipoPoblStr) return 'El tipo de comunidad es obligatorio';
-      if (tipoPoblStr.length > 50) return 'El tipo de comunidad no puede exceder 50 caracteres';
-      return '';
-    }
-      
-    case 'direccion': {
-      const direccionStr = (valor ?? '').toString().trim();
-      if (!direccionStr) return 'La dirección es obligatoria';
-      if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#.,-]{5,200}$/.test(direccionStr))
-        return 'La dirección contiene caracteres inválidos (máx 200 caracteres)';
-      return '';
-    }
-      
-    case 'departamento':
-      if (!valor) return 'Debe seleccionar un departamento';
-      return '';
-      
-    case 'ciudad':
-      if (!valor) return 'Debe seleccionar una ciudad';
-      return '';
-      
-    case 'celular': {
-      const celularStr = (valor ?? '').toString().trim();
-      if (!celularStr) return 'El celular es obligatorio';
-      if (!/^3[0-9]{9}$/.test(celularStr.replace(/\s/g, '')))
-        return 'Formato de celular inválido (ej: 3001234567)';
-      return '';
-    }
-      
-    case 'telefono':
-      if (valor && !/^[0-9]{7,15}$/.test(valor.toString().replace(/\s/g, '')))
-        return 'Formato de teléfono inválido (7-15 dígitos)';
-      return '';
-      
-    case 'email': {
-      const emailStr = (valor ?? '').toString().trim();
-      if (!emailStr) return 'El correo electrónico es obligatorio';
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr))
-        return 'Formato de correo electrónico inválido';
-      return '';
-    }
-      
-    case 'tipoVinc': {
-      const tipoVincStr = (valor ?? '').toString().trim();
-      if (!tipoVincStr) return 'El tipo de vinculación es obligatorio';
-      if (tipoVincStr.length > 50) return 'El tipo de vinculación no puede exceder 50 caracteres';
-      return '';
-    }
-      
-    case 'registroPor': {
-      const registroPorStr = (valor ?? '').toString().trim();
-      if (!registroPorStr) return 'El registro realizado por es obligatorio';
-      if (registroPorStr.length > 100) return 'El registro realizado por no puede exceder 100 caracteres';
-      return '';
-    }
-      
-    case 'observaciones':
-      if (valor && !/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#.,()-]{0,500}$/.test(valor.toString()))
-        return 'Las observaciones exceden el límite de 500 caracteres';
-      return '';
-      
-    default:
-      return '';
+  validarCampoClienteEnTiempoReal(campo: string, event?: Event): void {
+    void event;
+    const valor = this.getValorCliente(campo);
+    this.clienteErrors[campo] = this.validarCampoClienteIndividual(campo, valor);
   }
-}
 
-// ===== VALIDACIÓN DINÁMICA PARA SOLICITUD =====
-validarCampoSolicitudEnTiempoReal(campo: string, event?: Event): void {
-  void event;
-  const valor = this.getValorSolicitud(campo);
-  this.solicitudErrors[campo] = this.validarCampoSolicitudIndividual(campo, valor);
-}
-
-private getValorSolicitud(campo: string): any {
-  switch (campo) {
-    case 'consecutivo': return this.solicitudConsecutivo;
-    case 'clienteId': return this.solicitudClienteId;
-    case 'tipo': return this.solicitudTipo;
-    case 'tipoAF': return this.solicitudTipoAfId;
-    case 'nombre': return this.solicitudNombre;
-    case 'lote': return this.solicitudLote;
-    case 'fechaSolicitud': return this.solicitudFechaSolicitud;
-    case 'fechaVenc': return this.solicitudFechaVenc;
-    case 'tipoMuestra': return this.solicitudTipoMuestra;
-    case 'condEmpaque': return this.solicitudCondEmpaque;
-    case 'tipoAnalisis': return this.solicitudTipoAnalisis;
-    case 'cantidad': return this.solicitudCantidad;
-    case 'fechaEstimada': return this.solicitudFechaEstimada;
-    case 'requiereVarios': return this.solicitudRequiereVarios;
-    case 'solicitudRecibida': return this.solicitudRecibida;
-    case 'recibePersonal': return this.solicitudRecibePersonal;
-    case 'cargoPersonal': return this.solicitudCargoPersonal;
-    case 'observaciones': return this.solicitudObservaciones;
-    default: return '';
+  private getValorCliente(campo: string): any {
+    switch (campo) {
+      case 'nombre': return this.clienteNombre;
+      case 'numero': return this.clienteNumero;
+      case 'fechaVinc': return this.clienteFechaVinc;
+      case 'tipoUsuario': return this.clienteTipoUsuario;
+      case 'razonSocial': return this.clienteRazonSocial;
+      case 'nit': return this.clienteNit;
+      case 'tipoId': return this.clienteTipoId;
+      case 'idNum': return this.clienteIdNum;
+      case 'sexo': return this.clienteSexo;
+      case 'tipoPobl': return this.clienteTipoPobl;
+      case 'direccion': return this.clienteDireccion;
+      case 'departamento': return this.clienteIdDepartamento;
+      case 'ciudad': return this.clienteIdCiudad;
+      case 'celular': return this.clienteCelular;
+      case 'telefono': return this.clienteTelefono;
+      case 'email': return this.clienteEmail;
+      case 'tipoVinc': return this.clienteTipoVinc;
+      case 'registroPor': return this.clienteRegistroPor;
+      case 'observaciones': return this.clienteObservaciones;
+      default: return '';
+    }
   }
-}
 
-private validarCampoSolicitudIndividual(campo: string, valor: any): string {
-  switch (campo) {
-    case 'consecutivo':
-      if (!valor) return 'El consecutivo es obligatorio';
-      return '';
-      
-    case 'clienteId':
-      if (!valor) return 'Debe seleccionar un cliente';
-      return '';
-      
-    case 'tipo':
-      if (!valor) return 'Debe seleccionar el tipo de solicitud';
-      return '';
-
-    case 'tipoAF':
-      if ((this.solicitudTipo || '').trim() !== 'AF') return '';
-      if (!valor) return 'Debe seleccionar el tipo AF';
-      return '';
-
-    case 'nombre': {
-      const nombreStr = (valor ?? '').toString().trim();
-      if (!nombreStr) return 'El nombre de la muestra es obligatorio';
-      if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s.-]{2,100}$/.test(nombreStr))
-        return 'Nombre de muestra inválido (2-100 caracteres alfanuméricos)';
-      return '';
-    }
-
-    case 'lote': {
-      const loteStr = (valor ?? '').toString().trim();
-      if (!loteStr) return 'El lote del producto es obligatorio';
-
-      // Mismo patrón que la directiva (letras básicas, números, espacios y guiones)
-      if (!/^[A-Za-z0-9 -]{3,20}$/.test(loteStr))
-        return 'Formato de lote inválido (3-20 caracteres: letras, números, espacios y guiones)';
-      return '';
-    }
-
-    case 'fechaSolicitud': {
-      if (!valor) return 'La fecha de solicitud es obligatoria';
-      const fechaSolicitud = new Date(valor);
-      if (isNaN(fechaSolicitud.getTime())) return 'Fecha de solicitud inválida';
-      const hoySolicitud = new Date();
-      hoySolicitud.setHours(23, 59, 59, 999);
-      if (fechaSolicitud > hoySolicitud) return 'La fecha de solicitud no puede ser futura';
-      return '';
-    }
-
-    case 'fechaVenc': {
-      if (!valor) return 'La fecha de vencimiento es obligatoria';
-      const fechaVenc = new Date(valor);
-      const hoyVenc = new Date();
-      hoyVenc.setHours(0, 0, 0, 0);
-      fechaVenc.setHours(0, 0, 0, 0);
-      if (fechaVenc < hoyVenc) return 'La fecha de vencimiento no puede ser una fecha pasada';
-      return '';
-    }
-
-    case 'tipoMuestra': {
-      const tipoMuestraStr = (valor ?? '').toString().trim();
-      if (!tipoMuestraStr) return 'El tipo de muestra es obligatorio';
-      if (tipoMuestraStr.length > 50) return 'El tipo de muestra no puede exceder 50 caracteres';
-      return '';
-    }
-
-    case 'condEmpaque': {
-      const condEmpaqueStr = (valor ?? '').toString().trim();
-      if (!condEmpaqueStr) return 'El tipo de empaque es obligatorio';
-      if (condEmpaqueStr.length > 100) return 'El tipo de empaque no puede exceder 100 caracteres';
-      return '';
-    }
-      
-    case 'tipoAnalisis': {
-      const tipoAnalisisStr = (valor ?? '').toString().trim();
-      if (!tipoAnalisisStr) return 'El tipo de análisis requerido es obligatorio';
-      if (tipoAnalisisStr.length > 100) return 'El tipo de análisis no puede exceder 100 caracteres';
-      return '';
-    }
-      
-    case 'cantidad':
-      if (!valor && valor !== 0) return 'La cantidad de muestras es obligatoria';
-      if (Number(valor) < 1 || Number(valor) > 1000)
-        return 'La cantidad debe estar entre 1 y 1000 muestras';
-      return '';
-
-    case 'fechaEstimada': {
-      if (!valor) return 'La fecha estimada de entrega es obligatoria';
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
-        return 'Formato de fecha inválido (AAAA-MM-DD)';
+  private validarCampoClienteIndividual(campo: string, valor: any): string {
+    switch (campo) {
+      case 'nombre': {
+        const nombreStr = (valor ?? '').toString().trim();
+        if (!nombreStr) return 'El nombre del solicitante es obligatorio';
+        if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s.-]{2,100}$/.test(nombreStr))
+          return 'El nombre debe contener solo letras, espacios y puntos (2-100 caracteres)';
+        return '';
       }
-      const partes = valor.split('-');
-      const añoEstimado = parseInt(partes[0], 10);
-      const mesEstimado = parseInt(partes[1], 10) - 1;
-      const diaEstimado = parseInt(partes[2], 10);
-      const fechaEstimada = new Date(añoEstimado, mesEstimado, diaEstimado);
-      const hoy = new Date();
-      const añoHoy = hoy.getFullYear();
-      const mesHoy = hoy.getMonth();
-      const diaHoy = hoy.getDate();
-      const hoyMedianoche = new Date(añoHoy, mesHoy, diaHoy);
-      if (fechaEstimada.getTime() < hoyMedianoche.getTime()) {
-        return 'La fecha estimada no puede ser anterior a hoy';
+        
+      case 'numero':
+        if (!valor) return 'El número consecutivo es obligatorio';
+        if (Number(valor) < 1 || Number(valor) > 9999)
+          return 'El consecutivo debe estar entre 1 y 9999';
+        return '';
+        
+      case 'fechaVinc': {
+        if (!valor) return 'La fecha de vinculación es obligatoria';
+        const fecha = new Date(valor);
+        const hoy = new Date();
+        hoy.setHours(23, 59, 59, 999);
+        if (fecha > hoy) return 'La fecha de vinculación no puede ser futura';
+        return '';
       }
-      const maxFecha = new Date(añoHoy + 1, mesHoy, diaHoy);
-      if (fechaEstimada.getTime() > maxFecha.getTime()) {
-        return 'La fecha estimada no puede ser mayor a 1 año';
+        
+      case 'tipoUsuario':
+        if (!valor) return 'Debe seleccionar el tipo de cliente';
+        return '';
+        
+      case 'razonSocial': {
+        const razonSocialStr = (valor ?? '').toString().trim();
+        if (!razonSocialStr) return 'La razón social es obligatoria';
+        if (razonSocialStr.length > 200) return 'La razón social no puede exceder 200 caracteres';
+        return '';
       }
-      return '';
+        
+      case 'nit': {
+        const nitStr = (valor ?? '').toString().trim();
+        if (!nitStr) return 'El NIT es obligatorio';
+        if (nitStr.length > 60) return 'El NIT no puede exceder 60 caracteres';
+        return '';
+      }
+        
+      case 'tipoId':
+        if (!valor) return 'Debe seleccionar el tipo de identificación';
+        return '';
+        
+      case 'idNum': {
+        const idNumStr = (valor ?? '').toString().trim();
+        if (!idNumStr) return 'El número de identificación es obligatorio';
+        if (!/^[0-9A-Za-z]{5,20}$/.test(idNumStr))
+          return 'Número de identificación inválido (5-20 caracteres alfanuméricos)';
+        return '';
+      }
+        
+      case 'sexo':
+        if (!valor) return 'Debe seleccionar el sexo';
+        if (!['M', 'F', 'Otro'].includes(valor))
+          return 'Seleccione una opción válida para sexo';
+        return '';
+        
+      case 'tipoPobl': {
+        const tipoPoblStr = (valor ?? '').toString().trim();
+        if (!tipoPoblStr) return 'El tipo de comunidad es obligatorio';
+        if (tipoPoblStr.length > 50) return 'El tipo de comunidad no puede exceder 50 caracteres';
+        return '';
+      }
+        
+      case 'direccion': {
+        const direccionStr = (valor ?? '').toString().trim();
+        if (!direccionStr) return 'La dirección es obligatoria';
+        if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#.,-]{5,200}$/.test(direccionStr))
+          return 'La dirección contiene caracteres inválidos (máx 200 caracteres)';
+        return '';
+      }
+        
+      case 'departamento':
+        if (!valor) return 'Debe seleccionar un departamento';
+        return '';
+        
+      case 'ciudad':
+        if (!valor) return 'Debe seleccionar una ciudad';
+        return '';
+        
+      case 'celular': {
+        const celularStr = (valor ?? '').toString().trim();
+        if (!celularStr) return 'El celular es obligatorio';
+        if (!/^3[0-9]{9}$/.test(celularStr.replace(/\s/g, '')))
+          return 'Formato de celular inválido (ej: 3001234567)';
+        return '';
+      }
+        
+      case 'telefono':
+        if (valor && !/^[0-9]{7,15}$/.test(valor.toString().replace(/\s/g, '')))
+          return 'Formato de teléfono inválido (7-15 dígitos)';
+        return '';
+        
+      case 'email': {
+        const emailStr = (valor ?? '').toString().trim();
+        if (!emailStr) return 'El correo electrónico es obligatorio';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr))
+          return 'Formato de correo electrónico inválido';
+        return '';
+      }
+        
+      case 'tipoVinc': {
+        const tipoVincStr = (valor ?? '').toString().trim();
+        if (!tipoVincStr) return 'El tipo de vinculación es obligatorio';
+        if (tipoVincStr.length > 50) return 'El tipo de vinculación no puede exceder 50 caracteres';
+        return '';
+      }
+        
+      case 'registroPor': {
+        const registroPorStr = (valor ?? '').toString().trim();
+        if (!registroPorStr) return 'El registro realizado por es obligatorio';
+        if (registroPorStr.length > 100) return 'El registro realizado por no puede exceder 100 caracteres';
+        return '';
+      }
+        
+      case 'observaciones':
+        if (valor && !/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#.,()-]{0,500}$/.test(valor.toString()))
+          return 'Las observaciones exceden el límite de 500 caracteres';
+        return '';
+        
+      default:
+        return '';
     }
-      
-    case 'requiereVarios':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si requiere varios análisis';
-      return '';
-      
-    case 'solicitudRecibida': {
-      const solicitudRecibidaStr = (valor ?? '').toString().trim();
-      if (!solicitudRecibidaStr) return 'Debe indicar cómo se recibió la solicitud';
-      if (solicitudRecibidaStr.length > 255) return 'Máximo 255 caracteres';
-      return '';
-    }
-      
-    case 'recibePersonal': {
-      const recibePersonalStr = (valor ?? '').toString().trim();
-      if (!recibePersonalStr) return 'Debe indicar quién recibe la solicitud';
-      if (recibePersonalStr.length > 255) return 'Máximo 255 caracteres';
-      return '';
-    }
-      
-    case 'cargoPersonal': {
-      const cargoPersonalStr = (valor ?? '').toString().trim();
-      if (!cargoPersonalStr) return 'Debe indicar el cargo del personal';
-      if (cargoPersonalStr.length > 100) return 'Máximo 100 caracteres';
-      return '';
-    }
-      
-    case 'observaciones':
-      if (valor && valor.toString().length > 5000)
-        return 'Observaciones demasiado largas';
-      return '';
-      
-    default:
-      return '';
   }
-}
 
-// ===== VALIDACIÓN DINÁMICA PARA OFERTA =====
-validarCampoOfertaEnTiempoReal(campo: string, event?: Event): void {
-  void event;
-  const valor = this.getValorOferta(campo);
-  this.ofertaErrors[campo] = this.validarCampoOfertaIndividual(campo, valor);
-}
-
-private getValorOferta(campo: string): any {
-  switch (campo) {
-    case 'solicitudId': return this.ofertaSolicitudId;
-    case 'valor': return this.ofertaValor;
-    case 'fechaEnvio': return this.ofertaFechaEnvio;
-    case 'generoCotizacion': return this.ofertaGeneroCotizacion;
-    case 'realizoSeguimiento': return this.ofertaRealizoSeguimiento;
-    case 'observacion': return this.ofertaObservacion;
-    default: return '';
+  validarCampoSolicitudEnTiempoReal(campo: string, event?: Event): void {
+    void event;
+    const valor = this.getValorSolicitud(campo);
+    this.solicitudErrors[campo] = this.validarCampoSolicitudIndividual(campo, valor);
   }
-}
 
-private validarCampoOfertaIndividual(campo: string, valor: any): string {
-  switch (campo) {
-    case 'solicitudId':
-      if (!valor) return 'Debe seleccionar una solicitud';
-      return '';
-      
-    case 'valor':
-      if (!valor && valor !== 0) return 'El valor de la oferta es obligatorio';
-      if (Number(valor) <= 0) return 'El valor debe ser mayor a 0';
-      if (Number(valor) > 1000000000) return 'El valor no puede exceder $1.000.000.000';
-      return '';
-      
-    case 'fechaEnvio': {
-      if (!valor) return 'La fecha de envío es obligatoria';
-      const fechaEnvio = new Date(valor);
-      const hoyEnvio = new Date();
-      hoyEnvio.setHours(0, 0, 0, 0);
-      if (fechaEnvio > hoyEnvio) return 'La fecha de envío no puede ser futura';
-      return '';
+  private getValorSolicitud(campo: string): any {
+    switch (campo) {
+      case 'consecutivo': return this.solicitudConsecutivo;
+      case 'clienteId': return this.solicitudClienteId;
+      case 'tipo': return this.solicitudTipo;
+      case 'tipoAF': return this.solicitudTipoAfId;
+      case 'nombre': return this.solicitudNombre;
+      case 'lote': return this.solicitudLote;
+      case 'fechaSolicitud': return this.solicitudFechaSolicitud;
+      case 'fechaVenc': return this.solicitudFechaVenc;
+      case 'tipoMuestra': return this.solicitudTipoMuestra;
+      case 'condEmpaque': return this.solicitudCondEmpaque;
+      case 'tipoAnalisis': return this.solicitudTipoAnalisis;
+      case 'cantidad': return this.solicitudCantidad;
+      case 'fechaEstimada': return this.solicitudFechaEstimada;
+      case 'requiereVarios': return this.solicitudRequiereVarios;
+      case 'solicitudRecibida': return this.solicitudRecibida;
+      case 'recibePersonal': return this.solicitudRecibePersonal;
+      case 'cargoPersonal': return this.solicitudCargoPersonal;
+      case 'observaciones': return this.solicitudObservaciones;
+      default: return '';
     }
-      
-    case 'generoCotizacion':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si se generó cotización';
-      return '';
-      
-    case 'realizoSeguimiento':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si se realizó seguimiento';
-      return '';
-      
-    case 'observacion':
-      if (valor && valor.toString().length > 200)
-        return 'La observación no puede exceder 200 caracteres';
-      return '';
-      
-    default:
-      return '';
   }
-}
 
-// ===== VALIDACIÓN DINÁMICA PARA RESULTADO/REVISIÓN =====
+  private validarCampoSolicitudIndividual(campo: string, valor: any): string {
+    switch (campo) {
+      case 'consecutivo':
+        if (!valor) return 'El consecutivo es obligatorio';
+        return '';
+        
+      case 'clienteId':
+        if (!valor) return 'Debe seleccionar un cliente';
+        return '';
+        
+      case 'tipo':
+        if (!valor) return 'Debe seleccionar el tipo de solicitud';
+        return '';
+
+      case 'tipoAF':
+        if ((this.solicitudTipo || '').trim() !== 'AF') return '';
+        if (!valor) return 'Debe seleccionar el tipo AF';
+        return '';
+
+      case 'nombre': {
+        const nombreStr = (valor ?? '').toString().trim();
+        if (!nombreStr) return 'El nombre de la muestra es obligatorio';
+        if (!/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s.-]{2,100}$/.test(nombreStr))
+          return 'Nombre de muestra inválido (2-100 caracteres alfanuméricos)';
+        return '';
+      }
+
+      case 'lote': {
+        const loteStr = (valor ?? '').toString().trim();
+        if (!loteStr) return 'El lote del producto es obligatorio';
+        if (!/^[A-Za-z0-9 -]{3,20}$/.test(loteStr))
+          return 'Formato de lote inválido (3-20 caracteres: letras, números, espacios y guiones)';
+        return '';
+      }
+
+      case 'fechaSolicitud': {
+        if (!valor) return 'La fecha de solicitud es obligatoria';
+        const fechaSolicitud = new Date(valor);
+        if (isNaN(fechaSolicitud.getTime())) return 'Fecha de solicitud inválida';
+        const hoySolicitud = new Date();
+        hoySolicitud.setHours(23, 59, 59, 999);
+        if (fechaSolicitud > hoySolicitud) return 'La fecha de solicitud no puede ser futura';
+        return '';
+      }
+
+      case 'fechaVenc': {
+        if (!valor) return 'La fecha de vencimiento es obligatoria';
+        const fechaVenc = new Date(valor);
+        const hoyVenc = new Date();
+        hoyVenc.setHours(0, 0, 0, 0);
+        fechaVenc.setHours(0, 0, 0, 0);
+        if (fechaVenc < hoyVenc) return 'La fecha de vencimiento no puede ser una fecha pasada';
+        return '';
+      }
+
+      case 'tipoMuestra': {
+        const tipoMuestraStr = (valor ?? '').toString().trim();
+        if (!tipoMuestraStr) return 'El tipo de muestra es obligatorio';
+        if (tipoMuestraStr.length > 50) return 'El tipo de muestra no puede exceder 50 caracteres';
+        return '';
+      }
+
+      case 'condEmpaque': {
+        const condEmpaqueStr = (valor ?? '').toString().trim();
+        if (!condEmpaqueStr) return 'El tipo de empaque es obligatorio';
+        if (condEmpaqueStr.length > 100) return 'El tipo de empaque no puede exceder 100 caracteres';
+        return '';
+      }
+        
+      case 'tipoAnalisis': {
+        const tipoAnalisisStr = (valor ?? '').toString().trim();
+        if (!tipoAnalisisStr) return 'El tipo de análisis requerido es obligatorio';
+        if (tipoAnalisisStr.length > 100) return 'El tipo de análisis no puede exceder 100 caracteres';
+        return '';
+      }
+        
+      case 'cantidad':
+        if (!valor && valor !== 0) return 'La cantidad de muestras es obligatoria';
+        if (Number(valor) < 1 || Number(valor) > 1000)
+          return 'La cantidad debe estar entre 1 y 1000 muestras';
+        return '';
+
+      case 'fechaEstimada': {
+        if (!valor) return 'La fecha estimada de entrega es obligatoria';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+          return 'Formato de fecha inválido (AAAA-MM-DD)';
+        }
+        const partes = valor.split('-');
+        const añoEstimado = parseInt(partes[0], 10);
+        const mesEstimado = parseInt(partes[1], 10) - 1;
+        const diaEstimado = parseInt(partes[2], 10);
+        const fechaEstimada = new Date(añoEstimado, mesEstimado, diaEstimado);
+        const hoy = new Date();
+        const añoHoy = hoy.getFullYear();
+        const mesHoy = hoy.getMonth();
+        const diaHoy = hoy.getDate();
+        const hoyMedianoche = new Date(añoHoy, mesHoy, diaHoy);
+        if (fechaEstimada.getTime() < hoyMedianoche.getTime()) {
+          return 'La fecha estimada no puede ser anterior a hoy';
+        }
+        const maxFecha = new Date(añoHoy + 1, mesHoy, diaHoy);
+        if (fechaEstimada.getTime() > maxFecha.getTime()) {
+          return 'La fecha estimada no puede ser mayor a 1 año';
+        }
+        return '';
+      }
+        
+      case 'requiereVarios':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si requiere varios análisis';
+        return '';
+        
+      case 'solicitudRecibida': {
+        const solicitudRecibidaStr = (valor ?? '').toString().trim();
+        if (!solicitudRecibidaStr) return 'Debe indicar cómo se recibió la solicitud';
+        if (solicitudRecibidaStr.length > 255) return 'Máximo 255 caracteres';
+        return '';
+      }
+        
+      case 'recibePersonal': {
+        const recibePersonalStr = (valor ?? '').toString().trim();
+        if (!recibePersonalStr) return 'Debe indicar quién recibe la solicitud';
+        if (recibePersonalStr.length > 255) return 'Máximo 255 caracteres';
+        return '';
+      }
+        
+      case 'cargoPersonal': {
+        const cargoPersonalStr = (valor ?? '').toString().trim();
+        if (!cargoPersonalStr) return 'Debe indicar el cargo del personal';
+        if (cargoPersonalStr.length > 100) return 'Máximo 100 caracteres';
+        return '';
+      }
+        
+      case 'observaciones':
+        if (valor && valor.toString().length > 5000)
+          return 'Observaciones demasiado largas';
+        return '';
+        
+      default:
+        return '';
+    }
+  }
+
+  validarCampoOfertaEnTiempoReal(campo: string, event?: Event): void {
+    void event;
+    const valor = this.getValorOferta(campo);
+    this.ofertaErrors[campo] = this.validarCampoOfertaIndividual(campo, valor);
+  }
+
+  private getValorOferta(campo: string): any {
+    switch (campo) {
+      case 'solicitudId': return this.ofertaSolicitudId;
+      case 'valor': return this.ofertaValor;
+      case 'fechaEnvio': return this.ofertaFechaEnvio;
+      case 'generoCotizacion': return this.ofertaGeneroCotizacion;
+      case 'realizoSeguimiento': return this.ofertaRealizoSeguimiento;
+      case 'observacion': return this.ofertaObservacion;
+      default: return '';
+    }
+  }
+
+  private validarCampoOfertaIndividual(campo: string, valor: any): string {
+    switch (campo) {
+      case 'solicitudId':
+        if (!valor) return 'Debe seleccionar una solicitud';
+        return '';
+        
+      case 'valor':
+        if (!valor && valor !== 0) return 'El valor de la oferta es obligatorio';
+        if (Number(valor) <= 0) return 'El valor debe ser mayor a 0';
+        if (Number(valor) > 1000000000) return 'El valor no puede exceder $1.000.000.000';
+        return '';
+        
+      case 'fechaEnvio': {
+        if (!valor) return 'La fecha de envío es obligatoria';
+        const fechaEnvio = new Date(valor);
+        const hoyEnvio = new Date();
+        hoyEnvio.setHours(0, 0, 0, 0);
+        if (fechaEnvio > hoyEnvio) return 'La fecha de envío no puede ser futura';
+        return '';
+      }
+        
+      case 'generoCotizacion':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si se generó cotización';
+        return '';
+        
+      case 'realizoSeguimiento':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si se realizó seguimiento';
+        return '';
+        
+      case 'observacion':
+        if (valor && valor.toString().length > 200)
+          return 'La observación no puede exceder 200 caracteres';
+        return '';
+        
+      default:
+        return '';
+    }
+  }
+
   validarCampoResultadoEnTiempoReal(campo: string, event?: Event): void {
     void event;
     const valor = this.getValorResultado(campo);
     this.resultadoErrors[campo] = this.validarCampoResultadoIndividual(campo, valor);
   }
 
-private getValorResultado(campo: string): any {
-  switch (campo) {
-    case 'solicitudId': return this.resultadoSolicitudId;
-    case 'fechaLimite': return this.resultadoFechaLimite;
-    case 'tipoMuestraEspecificado': return this.resultadoTipoMuestraEspecificado;
-    case 'ensayosClaros': return this.resultadoEnsayosClaros;
-    case 'equiposCalibrados': return this.resultadoEquiposCalibrados;
-    case 'personalCompetente': return this.resultadoPersonalCompetente;
-    case 'infraestructuraAdecuada': return this.resultadoInfraestructuraAdecuada;
-    case 'insumosVigentes': return this.resultadoInsumosVigentes;
-    case 'cumpleTiempos': return this.resultadoCumpleTiempos;
-    case 'normasMetodos': return this.resultadoNormasMetodos;
-    case 'metodoValidado': return this.resultadoMetodoValidado;
-    case 'metodoAdecuado': return this.resultadoMetodoAdecuado;
-    case 'observacionesTecnicas': return this.resultadoObservacionesTecnicas;
-    case 'conceptoFinal': return this.resultadoConceptoFinal;
-    default: return '';
-  }
-}
-
-private validarCampoResultadoIndividual(campo: string, valor: any): string {
-  switch (campo) {
-    case 'solicitudId':
-      if (!valor) return 'Debe seleccionar una solicitud';
-      return '';
-      
-    case 'fechaLimite': {
-      // Solo es obligatoria si la solicitud es viable
-      if (this.resultadoConceptoFinal !== 'SOLICITUD_VIABLE' && this.resultadoConceptoFinal !== 'SOLICITUD_VIABLE_CON_OBSERVACIONES') return '';
-      
-      if (!valor) return 'La fecha límite es obligatoria';
-      const fechaLimite = new Date(valor);
-      const hoyLimite = new Date();
-      hoyLimite.setHours(0, 0, 0, 0);
-      if (fechaLimite < hoyLimite) return 'La fecha límite no puede ser anterior a hoy';
-      return '';
+  private getValorResultado(campo: string): any {
+    switch (campo) {
+      case 'solicitudId': return this.resultadoSolicitudId;
+      case 'fechaLimite': return this.resultadoFechaLimite;
+      case 'tipoMuestraEspecificado': return this.resultadoTipoMuestraEspecificado;
+      case 'ensayosClaros': return this.resultadoEnsayosClaros;
+      case 'equiposCalibrados': return this.resultadoEquiposCalibrados;
+      case 'personalCompetente': return this.resultadoPersonalCompetente;
+      case 'infraestructuraAdecuada': return this.resultadoInfraestructuraAdecuada;
+      case 'insumosVigentes': return this.resultadoInsumosVigentes;
+      case 'cumpleTiempos': return this.resultadoCumpleTiempos;
+      case 'normasMetodos': return this.resultadoNormasMetodos;
+      case 'metodoValidado': return this.resultadoMetodoValidado;
+      case 'metodoAdecuado': return this.resultadoMetodoAdecuado;
+      case 'observacionesTecnicas': return this.resultadoObservacionesTecnicas;
+      case 'conceptoFinal': return this.resultadoConceptoFinal;
+      default: return '';
     }
-      
-    case 'tipoMuestraEspecificado':
-      if (!valor) return 'Debe indicar si el tipo de muestra fue especificado';
-      return '';
-
-    case 'ensayosClaros':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si los ensayos requeridos son claros';
-      return '';
-
-    case 'equiposCalibrados':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si los equipos están calibrados';
-      return '';
-
-    case 'personalCompetente':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si el personal es competente';
-      return '';
-
-    case 'infraestructuraAdecuada':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si la infraestructura es adecuada';
-      return '';
-
-    case 'insumosVigentes':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si los insumos están vigentes';
-      return '';
-
-    case 'cumpleTiempos':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si se cumplen los tiempos de entrega';
-      return '';
-
-    case 'normasMetodos':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si las normas y métodos están especificados';
-      return '';
-
-    case 'metodoValidado':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si el método fue validado/verificado';
-      return '';
-
-    case 'metodoAdecuado':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si el método es adecuado';
-      return '';
-
-    case 'observacionesTecnicas':
-      if (valor && valor.toString().length > 1000)
-        return 'Las observaciones no pueden exceder 1000 caracteres';
-      return '';
-
-    case 'conceptoFinal':
-      if (!valor) return 'Debe seleccionar el concepto final';
-      return '';
-      
-    default:
-      return '';
   }
-}
 
-// ===== VALIDACIÓN DINÁMICA PARA ENCUESTA =====
-validarCampoEncuestaEnTiempoReal(campo: string, event?: Event): void {
-  void event;
-  const valor = this.getValorEncuesta(campo);
-  this.encuestaErrors[campo] = this.validarCampoEncuestaIndividual(campo, valor);
-}
+  private validarCampoResultadoIndividual(campo: string, valor: any): string {
+    switch (campo) {
+      case 'solicitudId':
+        if (!valor) return 'Debe seleccionar una solicitud';
+        return '';
+        
+      case 'fechaLimite': {
+        if (this.resultadoConceptoFinal !== 'SOLICITUD_VIABLE' && this.resultadoConceptoFinal !== 'SOLICITUD_VIABLE_CON_OBSERVACIONES') return '';
+        
+        if (!valor) return 'La fecha límite es obligatoria';
+        const fechaLimite = new Date(valor);
+        const hoyLimite = new Date();
+        hoyLimite.setHours(0, 0, 0, 0);
+        if (fechaLimite < hoyLimite) return 'La fecha límite no puede ser anterior a hoy';
+        return '';
+      }
+        
+      case 'tipoMuestraEspecificado':
+        if (!valor) return 'Debe indicar si el tipo de muestra fue especificado';
+        return '';
 
-private getValorEncuesta(campo: string): any {
+      case 'ensayosClaros':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si los ensayos requeridos son claros';
+        return '';
+
+      case 'equiposCalibrados':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si los equipos están calibrados';
+        return '';
+
+      case 'personalCompetente':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si el personal es competente';
+        return '';
+
+      case 'infraestructuraAdecuada':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si la infraestructura es adecuada';
+        return '';
+
+      case 'insumosVigentes':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si los insumos están vigentes';
+        return '';
+
+      case 'cumpleTiempos':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si se cumplen los tiempos de entrega';
+        return '';
+
+      case 'normasMetodos':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si las normas y métodos están especificados';
+        return '';
+
+      case 'metodoValidado':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si el método fue validado/verificado';
+        return '';
+
+      case 'metodoAdecuado':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si el método es adecuado';
+        return '';
+
+      case 'observacionesTecnicas':
+        if (valor && valor.toString().length > 1000)
+          return 'Las observaciones no pueden exceder 1000 caracteres';
+        return '';
+
+      case 'conceptoFinal':
+        if (!valor) return 'Debe seleccionar el concepto final';
+        return '';
+        
+      default:
+        return '';
+    }
+  }
+
+  validarCampoEncuestaEnTiempoReal(campo: string, event?: Event): void {
+    void event;
+    const valor = this.getValorEncuesta(campo);
+    this.encuestaErrors[campo] = this.validarCampoEncuestaIndividual(campo, valor);
+  }
+
+  private getValorEncuesta(campo: string): any {
     switch (campo) {
       case 'solicitudId': return this.encuestaSolicitudId;
       case 'fecha': return this.encuestaFecha;
-      // case 'recomendaria': return this.encuestaRecomendaria;
       case 'fechaRealizacion': return this.encuestaFechaRealizacion;
       case 'clienteRespondio': return this.encuestaClienteRespondio;
       case 'solicitoNueva': return this.encuestaSolicitoNueva;
@@ -1928,88 +2008,59 @@ private getValorEncuesta(campo: string): any {
 
   private validarCampoEncuestaIndividual(campo: string, valor: any): string {
     switch (campo) {
-
       case 'fechaRealizacion': {
-        // Solo obligatorio si clienteRespondio es true
         if (this.encuestaClienteRespondio !== true) {
-          return ''; // No es obligatorio si el cliente no respondió
+          return '';
         }
-
         if (!valor) {
           return 'La fecha de realización es obligatoria cuando el cliente respondió';
         }
-
-        // Validar formato básico
         if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
           return 'Formato de fecha inválido (AAAA-MM-DD)';
         }
-
-        // Validar que sea una fecha válida
         const fechaRealizacion = new Date(valor);
         if (isNaN(fechaRealizacion.getTime())) {
           return 'Fecha inválida';
         }
-
         return '';
       }
-
-
       case 'solicitudId':
         if (!valor) return 'Debe seleccionar una solicitud';
         return '';
-
       case 'fecha': {
         if (!valor) return 'La fecha de la encuesta es obligatoria';
-
-  // Validar formato
         if (!/^\d{4}-\d{2}-\d{2}$/.test(valor))
           return 'Formato de fecha inválido (AAAA-MM-DD)';
-
         const fechaEncuesta = new Date(valor);
         const mañana = new Date();
         mañana.setDate(mañana.getDate() + 1);
         mañana.setHours(0, 0, 0, 0);
-
         fechaEncuesta.setHours(0, 0, 0, 0);
-
         if (isNaN(fechaEncuesta.getTime())) {
           return 'Fecha inválida';
         }
-
-        // DEBE SER FUTURA: fecha >= mañana (no hoy, no pasadas)
         if (fechaEncuesta < mañana) {
           return 'La fecha de envío debe ser futura (mañana en adelante)';
         }
-
         return '';
       }
-
-    // case 'recomendaria':
-    //   if (valor === '' || valor === null || valor === undefined)
-    //     return 'Debe indicar si recomendaría el servicio';
-    //   return '';
-      
-    case 'clienteRespondio':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si el cliente respondió';
-      return '';
-      
-    case 'solicitoNueva':
-      if (valor === '' || valor === null || valor === undefined)
-        return 'Debe indicar si se solicitó nueva encuesta';
-      return '';
-      
-    case 'comentarios':
-      if (valor && valor.toString().length > 1000)
-        return 'Los comentarios no pueden exceder 1000 caracteres';
-      return '';
-      
-    default:
-      return '';
+      case 'clienteRespondio':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si el cliente respondió';
+        return '';
+      case 'solicitoNueva':
+        if (valor === '' || valor === null || valor === undefined)
+          return 'Debe indicar si se solicitó nueva encuesta';
+        return '';
+      case 'comentarios':
+        if (valor && valor.toString().length > 1000)
+          return 'Los comentarios no pueden exceder 1000 caracteres';
+        return '';
+      default:
+        return '';
+    }
   }
-}
 
-  // ========== OPERACIONES CRUD ==========
   private findClienteById(id: any): any | null {
     const nid = Number(id);
     if (!Number.isFinite(nid) || nid <= 0) return null;
@@ -2116,6 +2167,7 @@ private getValorEncuesta(campo: string): any {
 
       this.limpiarFormularioCliente();
       this.computeNextClienteNumero();
+      this.cdr.markForCheck();
 
     } catch (err: any) {
       console.error('Error creating cliente:', err);
@@ -2167,11 +2219,9 @@ private getValorEncuesta(campo: string): any {
 
       this.limpiarFormularioSolicitud();
 
-      // Reload solicitudes from server to get canonical IDs and joined data
       await this.loadSolicitudes();
-      // Ensure consecutivo is recalculated after the fresh data is loaded
       try { this.computeNextSolicitudConsecutivo(); } catch (e) { console.warn('Error computing consecutivo after createSolicitud load', e); }
-      // Try to locate the created solicitud. Prefer ID from response, otherwise match by client + nombre_muestra + fecha_solicitud
+      
       let created = null;
       const nidFromResp = Number(nuevo?.solicitud_id ?? nuevo?.id_solicitud ?? nuevo?.id ?? nuevo?.insertId ?? 0);
       if (nidFromResp) {
@@ -2183,12 +2233,10 @@ private getValorEncuesta(campo: string): any {
                  (String(s?.nombre_muestra ?? '').trim() === String(body?.nombre_muestra ?? '').trim());
         });
         if (candidates.length) {
-          // pick the one with highest solicitud_id
           created = candidates.reduce((a, b) => (Number(a.solicitud_id || 0) > Number(b.solicitud_id || 0) ? a : b));
         }
       }
 
-      // Update filtered list and expand created card
       this.filtrarSolicitudes();
       if (created) {
         const nid = Number(created.solicitud_id || created.id_solicitud || 0);
@@ -2207,6 +2255,8 @@ private getValorEncuesta(campo: string): any {
         descripcion: `Creación de solicitud: ${detalle?.id ?? ''}`.trim(),
         detalle
       }).catch(console.error);
+      
+      this.cdr.markForCheck();
 
     } catch (err: any) {
       console.error('Error creating solicitud:', err);
@@ -2260,7 +2310,6 @@ private getValorEncuesta(campo: string): any {
 
       this.limpiarFormularioOferta();
 
-      // Refresh the single solicitud from DB so the card updates immediately
       let updated: any = null;
       try {
         updated = await this.solicitudesService.getSolicitudDetalleById(ofertaId);
@@ -2277,6 +2326,8 @@ private getValorEncuesta(campo: string): any {
           this.selectedSolicitud.set(created);
         }
       }
+      
+      this.cdr.markForCheck();
 
     } catch (err: any) {
       console.error('Error creating oferta:', err);
@@ -2336,9 +2387,9 @@ private getValorEncuesta(campo: string): any {
         target.metodo_adecuado = body.metodo_adecuado === null ? null : Boolean(body.metodo_adecuado);
         target.observaciones_tecnicas = body.observaciones_tecnicas || null;
         target.concepto_final = body.concepto_final || null;
+        this.invalidateConceptoFinalCache(sid);
       }
 
-      // Optimistic: marcar estado como EVALUADA cuando se completa la revision
       const evaluada = (this.estadosSolicitud || []).find((e: any) =>
         String(e?.nombre_estado || e?.nombre || '').toUpperCase().includes('EVALUAD')
       );
@@ -2360,7 +2411,6 @@ private getValorEncuesta(campo: string): any {
         detalle
       }).catch(console.error);
 
-      // Keep card state stable after submit (avoid temporary overwrite with partial payloads)
       if (sid) {
         this.activeSolicitudTab[sid] = 'revision';
         this.solicitudExpandida = sid;
@@ -2371,6 +2421,7 @@ private getValorEncuesta(campo: string): any {
 
       this.revisionLocked = true;
       this.limpiarFormularioResultado();
+      this.cdr.markForCheck();
 
     } catch (err: any) {
       console.error('Error creating resultado:', err);
@@ -2396,7 +2447,6 @@ private getValorEncuesta(campo: string): any {
       const body = {
         fecha_encuesta: this.encuestaFecha,
         comentarios: this.encuestaComentarios || null,
-        // recomendaria_servicio: this.encuestaRecomendaria,
         fecha_realizacion_encuesta: this.encuestaFechaRealizacion || null,
         cliente_respondio: this.encuestaClienteRespondio,
         solicito_nueva_encuesta: this.encuestaSolicitoNueva
@@ -2418,7 +2468,6 @@ private getValorEncuesta(campo: string): any {
         detalle
       }).catch(console.error);
 
-      // Refresh the single solicitud so tabs show updated data
       let updated: any = null;
       try {
         updated = await this.solicitudesService.getSolicitudDetalleById(sid);
@@ -2434,6 +2483,7 @@ private getValorEncuesta(campo: string): any {
       }
 
       this.limpiarFormularioEncuesta();
+      this.cdr.markForCheck();
 
     } catch (err: any) {
       console.error('Error creating encuesta:', err);
@@ -2472,6 +2522,7 @@ private getValorEncuesta(campo: string): any {
         const next = this.clientesFiltrados().filter(c => Number(c.id_cliente || c.id || c.cliente_id) !== Number(id));
         this.clientesFiltrados.set(next);
       } catch (e) { console.warn('Error actualizando clientesFiltrados tras deleteCliente', e); }
+      this.cdr.markForCheck();
     } catch (err: any) {
       console.error('deleteCliente', err);
       this.manejarError(err, 'eliminar cliente');
@@ -2510,13 +2561,13 @@ private getValorEncuesta(campo: string): any {
         this.solicitudesFiltradas.set(next);
       } catch (e) { console.warn('Error actualizando solicitudesFiltradas tras deleteSolicitud', e); }
       try { this.computeNextSolicitudConsecutivo(); } catch (e) { console.warn('Error computing consecutivo after delete', e); }
+      this.cdr.markForCheck();
     } catch (err: any) {
       console.error('deleteSolicitud', err);
       this.manejarError(err, 'eliminar solicitud');
     }
   }
 
-  // ========== MÉTODOS AUXILIARES PARA MANEJO DE ERRORES ==========
   private manejarError(err: any, operacion: string): void {
     const errorMessage = err.message || err.toString();
     
@@ -2569,7 +2620,6 @@ private getValorEncuesta(campo: string): any {
     return mensaje.length > 100 ? 'Error del sistema. Contacta al administrador.' : mensaje;
   }
 
-  // ========== MÉTODOS PARA LIMPIAR FORMULARIOS ==========
   private limpiarFormularioCliente(): void {
     this.clienteNombre = this.clienteIdNum = this.clienteEmail = '';
     this.clienteNumero = null;
@@ -2591,7 +2641,6 @@ private getValorEncuesta(campo: string): any {
   }
 
   private limpiarFormularioSolicitud(): void {
-    // Reset to empty string so the <select> shows the placeholder option (value="").
     this.solicitudClienteId = '';
     this.solicitudNombre = '';
     this.solicitudTipo = '';
@@ -2648,13 +2697,11 @@ private getValorEncuesta(campo: string): any {
     this.encuestaFecha = '';
     this.encuestaPuntuacion = null;
     this.encuestaComentarios = '';
-    // this.encuestaRecomendaria = false;
     this.encuestaFechaRealizacion = '';
     this.encuestaClienteRespondio = null;
     this.encuestaSolicitoNueva = null;
   }
 
-  // ========== MÉTODOS UI ==========
   canEditSolicitudEstado(): boolean {
     const u = this.user();
     const raw = String((u as any)?.rol_nombre || u?.rol || '').trim().toLowerCase();
@@ -2727,6 +2774,11 @@ private getValorEncuesta(campo: string): any {
   }
 
   getConceptoFinalValue(s: any): string | null {
+    const id = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
+    if (id && this.conceptoFinalCache.has(id)) {
+      return this.conceptoFinalCache.get(id)!;
+    }
+    
     const rawConcepto =
       s?.concepto_final ??
       s?.conceptoFinal ??
@@ -2737,9 +2789,12 @@ private getValorEncuesta(campo: string): any {
       s?.revisionOferta?.concepto_final ??
       s?.revisionOferta?.conceptoFinal ??
       null;
-    const fromConcepto = this.normalizeConceptoFinalValue(rawConcepto);
-    if (fromConcepto) return fromConcepto;
-    return null;
+    const result = this.normalizeConceptoFinalValue(rawConcepto);
+    
+    if (id) {
+      this.conceptoFinalCache.set(id, result);
+    }
+    return result;
   }
 
   getEstadoFiltroValue(s: any): 'espera' | 'evaluacion' | 'evaluada' | null {
@@ -2777,7 +2832,6 @@ private getValorEncuesta(campo: string): any {
     if (normalized === 'PENDIENTE') return 'fa-circle-question';
     return 'fa-circle-info';
   }
-
 
   getEstadoIcon(label: any): string {
     const raw = String(label || '').trim().toUpperCase().replace(/\s+/g, '').replace(/_/g, '');
@@ -2871,6 +2925,7 @@ private getValorEncuesta(campo: string): any {
       const c = (this.clientes() || []).find(x => Number(x.id_cliente) === Number(id));
       if (c) this.selectedCliente.set(c);
     }
+    this.cdr.markForCheck();
   }
 
   async toggleExpandSolicitud(s: any): Promise<void> {
@@ -2893,33 +2948,8 @@ private getValorEncuesta(campo: string): any {
       }
     }
 
-    // Debug para verificar datos
-    console.log('=== DEBUG Solicitud Expandida ===');
-    console.log('ID:', key);
-    console.log('Datos completos:', current);
-    console.log('Campos de oferta:', {
-      genero_cotizacion: current?.genero_cotizacion,
-      valor_cotizacion: current?.valor_cotizacion,
-      fecha_envio_oferta: current?.fecha_envio_oferta,
-      realizo_seguimiento_oferta: current?.realizo_seguimiento_oferta,
-      observacion_oferta: current?.observacion_oferta
-    });
-    console.log('Campos de revisión:', {
-      fecha_limite_entrega: current?.fecha_limite_entrega,
-      concepto_final: current?.concepto_final
-    });
-    console.log('Campos de encuesta:', {
-      fecha_encuesta: current?.fecha_encuesta,
-      comentarios: current?.comentarios,
-      recomendaria_servicio: current?.recomendaria_servicio,
-      cliente_respondio: current?.cliente_respondio,
-      solicito_nueva_encuesta: current?.solicito_nueva_encuesta,
-      fecha_realizacion_encuesta: current?.fecha_realizacion_encuesta
-    });
-    console.log('=== FIN DEBUG ===');
-
-    // set selected solicitud for reactive forms/cards
     this.selectedSolicitud.set(current || null);
+    this.cdr.markForCheck();
   }
 
   async updateSolicitudEstado(s: any, nuevoEstado: any): Promise<void> {
@@ -2936,6 +2966,9 @@ private getValorEncuesta(campo: string): any {
     const prevEstadoNombre = estadoPrevio?.nombre_estado || estadoPrevio?.nombre || s?.nombre_estado || null;
     s.id_estado = id_estado;
     s.nombre_estado = estadoNuevo?.nombre_estado || estadoNuevo?.nombre || s?.nombre_estado || null;
+    
+    this.invalidateConceptoFinalCache(sid);
+    
     try {
       await this.solicitudesService.actualizarEstadoSolicitud(sid, id_estado);
       this.snackbarService.success('Estado actualizado');
@@ -2944,6 +2977,7 @@ private getValorEncuesta(campo: string): any {
       s.nombre_estado = prevEstadoNombre;
       this.snackbarService.error(err?.message || 'Error actualizando estado');
     }
+    this.cdr.markForCheck();
   }
 
   async updateSolicitudAsignacion(s: any, nuevoAdmin: any): Promise<void> {
@@ -2966,6 +3000,7 @@ private getValorEncuesta(campo: string): any {
       s.admin_email = prevAdminEmail;
       this.snackbarService.error(err?.message || 'Error actualizando asignación');
     }
+    this.cdr.markForCheck();
   }
 
   isSolicitudExpanded(s: any): boolean {
@@ -2975,9 +3010,9 @@ private getValorEncuesta(campo: string): any {
 
   selectSolicitudTab(id: number, tabKey: string): void {
     this.activeSolicitudTab[id] = tabKey;
+    this.cdr.markForCheck();
   }
 
-  // ========== EDITAR TARJETAS ==========
   editSolicitud(s: any): void {
     const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
     if (!sid) return;
@@ -2989,10 +3024,8 @@ private getValorEncuesta(campo: string): any {
   editCliente(u: any): void {
     const cid = Number(u?.id_cliente ?? 0);
     if (!cid) return;
-    // Toggle details open for inline editing in the card grid
     this.detallesVisibles[cid] = true;
     this.snackbarService.info('Edita los campos del cliente en el panel');
-    // Open modal with prefilled data
     this.editClienteModalOpen = true;
     this.editClienteId = cid;
     this.editClienteNombre = u?.nombre_solicitante || '';
@@ -3013,15 +3046,13 @@ private getValorEncuesta(campo: string): any {
     this.editClienteTipoVinculacion = u?.tipo_vinculacion || '';
     this.editClienteRegistroPor = u?.registro_realizado_por || '';
     this.editClienteObservaciones = u?.observaciones || '';
-    // set reactive selected cliente
     this.selectedCliente.set(u);
+    this.cdr.markForCheck();
   }
 
-  // Normaliza valores de fecha a formato input date (YYYY-MM-DD)
   private toDateInput(v: any): string {
     if (!v) return '';
     try {
-      // Si viene como Date o timestamp
       if (v instanceof Date) {
         const yyyy = v.getFullYear();
         const mm = String(v.getMonth() + 1).padStart(2, '0');
@@ -3029,11 +3060,9 @@ private getValorEncuesta(campo: string): any {
         return `${yyyy}-${mm}-${dd}`;
       }
       const s = String(v);
-      // Si viene como ISO, tomar primeros 10 caracteres
       if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
         return s.slice(0, 10);
       }
-      // Intentar parsear
       const d = new Date(s);
       if (!isNaN(d.getTime())) {
         const yyyy = d.getFullYear();
@@ -3091,7 +3120,7 @@ private getValorEncuesta(campo: string): any {
     );
   }
 
-  // ======= Estado modal de edición de cliente =======
+  // Estado modal de edición de cliente
   editClienteModalOpen = false;
   editClienteId: number | null = null;
   editClienteNombre = '';
@@ -3116,6 +3145,7 @@ private getValorEncuesta(campo: string): any {
   closeEditClienteModal(): void {
     this.editClienteModalOpen = false;
     this.editClienteId = null;
+    this.cdr.markForCheck();
   }
 
   async onEditDepChange(): Promise<void> {
@@ -3184,15 +3214,15 @@ private getValorEncuesta(campo: string): any {
         detalle
       }).catch(console.error);
       this.closeEditClienteModal();
+      this.cdr.markForCheck();
     } catch (err: any) {
       console.error('saveEditCliente', err);
       this.manejarError(err, 'actualizar cliente');
     }
   }
 
-  // ======= Estado modal de edición de solicitud =======
+  // Estado modal de edición de solicitud
   editSolicitudModalOpen = false;
-  // When true the modal is playing the closing animation but remains in DOM
   editSolicitudModalClosing = false;
   estadoModalOpen = false;
   estadoModalSolicitud: any = null;
@@ -3204,7 +3234,6 @@ private getValorEncuesta(campo: string): any {
   editSolicitudTipoAfId: number | null = null;
   editSolicitudFechaSolicitud = '';
   editSolicitudFechaVenc = '';
-  // Additional solicitud fields
   editSolicitudLote = '';
   editSolicitudTipoMuestra = '';
   editSolicitudTipoEmpaque = '';
@@ -3216,17 +3245,14 @@ private getValorEncuesta(campo: string): any {
   editSolicitudRecibePersonal = '';
   editSolicitudCargoPersonal = '';
   editSolicitudObservaciones = '';
-  // Tabs state for solicitud edit modal
   editSolicitudActiveTab: 'solicitud' | 'oferta' | 'revision' | 'encuesta' = 'solicitud';
 
-  // Oferta fields
   editOfertaGeneroCotizacion: any = null;
   editOfertaValorCotizacion: any = null;
   editOfertaFechaEnvio = '';
   editOfertaRealizoSeguimiento: any = null;
   editOfertaObservacion = '';
 
-  // Revision fields
   editRevisionFechaLimite = '';
   editRevisionServicioViable: any = null;
   editRevisionTipoMuestraEspecificado: string | null = null;
@@ -3242,10 +3268,8 @@ private getValorEncuesta(campo: string): any {
   editRevisionObservacionesTecnicas = '';
   editRevisionConceptoFinal: string | null = null;
 
-  // Encuesta fields
   editEncuestaFecha = '';
   editEncuestaComentarios = '';
-  // editEncuestaRecomendaria: any = null;
   editEncuestaFechaRealizacion = '';
   editEncuestaClienteRespondio: any = null;
   editEncuestaSolicitoNueva: any = null;
@@ -3257,7 +3281,6 @@ private getValorEncuesta(campo: string): any {
     }
     const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? 0);
     if (!sid) return;
-    // If we were in a closing animation, cancel it and open immediately
     this.editSolicitudModalClosing = false;
     this.editSolicitudModalOpen = true;
     this.editSolicitudId = sid;
@@ -3266,7 +3289,6 @@ private getValorEncuesta(campo: string): any {
     this.editSolicitudTipoAfId = s?.id_tipo_af === null || s?.id_tipo_af === undefined || s?.id_tipo_af === '' ? null : Number(s?.id_tipo_af);
     this.editSolicitudFechaSolicitud = this.toDateInput(s?.fecha_solicitud);
     this.editSolicitudFechaVenc = this.toDateInput(s?.fecha_vencimiento_muestra);
-    // additional solicitud prefill
     this.editSolicitudLote = s?.lote_producto || '';
     this.editSolicitudTipoMuestra = s?.tipo_muestra || '';
     this.editSolicitudTipoEmpaque = s?.tipo_empaque || '';
@@ -3278,17 +3300,14 @@ private getValorEncuesta(campo: string): any {
     this.editSolicitudRecibePersonal = s?.recibe_personal || '';
     this.editSolicitudCargoPersonal = s?.cargo_personal || '';
     this.editSolicitudObservaciones = s?.observaciones || '';
-    // reset tab
     this.editSolicitudActiveTab = 'solicitud';
 
-    // Prefill oferta
     this.editOfertaGeneroCotizacion = this.toNullableBool(s?.genero_cotizacion);
     this.editOfertaValorCotizacion = s?.valor_cotizacion ?? null;
     this.editOfertaFechaEnvio = this.toDateInput(s?.fecha_envio_oferta);
     this.editOfertaRealizoSeguimiento = this.toNullableBool(s?.realizo_seguimiento_oferta);
     this.editOfertaObservacion = s?.observacion_oferta || '';
 
-    // Prefill revision
     this.editRevisionFechaLimite = this.toDateInput(s?.fecha_limite_entrega);
     this.editRevisionTipoMuestraEspecificado = s?.tipo_muestra_especificado || null;
     this.editRevisionEnsayosClaros = this.toNullableBool(s?.ensayos_requeridos_claros);
@@ -3303,40 +3322,41 @@ private getValorEncuesta(campo: string): any {
     this.editRevisionObservacionesTecnicas = s?.observaciones_tecnicas || '';
     this.editRevisionConceptoFinal = s?.concepto_final || null;
 
-    // Prefill encuesta
     this.editEncuestaFecha = this.toDateInput(s?.fecha_encuesta);
     this.editEncuestaComentarios = s?.comentarios || '';
-    // this.editEncuestaRecomendaria = s?.recomendaria_servicio === null ? null : (s?.recomendaria_servicio ? true : false);
     this.editEncuestaFechaRealizacion = this.toDateInput(s?.fecha_realizacion_encuesta);
     this.editEncuestaClienteRespondio = this.toNullableBool(s?.cliente_respondio);
     this.editEncuestaSolicitoNueva = this.toNullableBool(s?.solicito_nueva_encuesta);
-    // set reactive selected solicitud
     this.selectedSolicitud.set(s);
+    this.cdr.markForCheck();
   }
 
   openEstadoModal(s: any): void {
     if (!s) return;
     this.estadoModalSolicitud = s;
     this.estadoModalOpen = true;
+    this.cdr.markForCheck();
   }
 
   closeEstadoModal(): void {
     this.estadoModalOpen = false;
     this.estadoModalSolicitud = null;
+    this.cdr.markForCheck();
   }
 
   openAsignacionModal(s: any): void {
     if (!s) return;
     this.asignacionModalSolicitud = s;
     this.asignacionModalOpen = true;
+    this.cdr.markForCheck();
   }
 
   closeAsignacionModal(): void {
     this.asignacionModalOpen = false;
     this.asignacionModalSolicitud = null;
+    this.cdr.markForCheck();
   }
 
-  // When user chooses a client in the create-solicitud select, update selectedCliente signal
   onSelectSolicitudCliente(value: any): void {
     try {
       const id = Number(value);
@@ -3347,12 +3367,10 @@ private getValorEncuesta(campo: string): any {
     }
   }
 
-  // Estado de bloqueo de formularios (si ya existen datos)
   ofertaLocked = false;
   revisionLocked = false;
   encuestaLocked = false;
 
-  // When user chooses a solicitud in oferta/result/encuesta selects, update selectedSolicitud signal
   onSelectSolicitudOferta(value: any): void {
     try {
       const id = Number(value);
@@ -3360,9 +3378,6 @@ private getValorEncuesta(campo: string): any {
       
       if (found) {
         this.selectedSolicitud.set(found);
-        
-        // Verificar si ya tiene oferta registrada
-        // Si genero_cotizacion tiene valor (0 o 1), asumimos que existe
         this.ofertaLocked = (found.genero_cotizacion !== null && found.genero_cotizacion !== undefined);
         
         if (this.ofertaLocked) {
@@ -3373,7 +3388,6 @@ private getValorEncuesta(campo: string): any {
           this.ofertaFechaEnvio = this.toDateInput(found.fecha_envio_oferta);
           this.ofertaObservacion = String(found?.observacion_oferta ?? '');
         } else {
-          // Limpiar campos excepto ID
           this.ofertaValor = null;
           this.ofertaValorDisplay = '';
           this.ofertaGeneroCotizacion = null;
@@ -3385,6 +3399,7 @@ private getValorEncuesta(campo: string): any {
       } else {
         this.ofertaLocked = false;
       }
+      this.cdr.markForCheck();
     } catch {
       void 0;
     }
@@ -3407,6 +3422,7 @@ private getValorEncuesta(campo: string): any {
       this.resultadoMetodoAdecuado = null;
       this.resultadoObservacionesTecnicas = '';
       this.resultadoConceptoFinal = null;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -3419,8 +3435,6 @@ private getValorEncuesta(campo: string): any {
 
     if (found) {
       this.selectedSolicitud.set(found);
-
-      // Verificar si ya tiene revisión (concepto_final no nulo)
       this.revisionLocked = (found.concepto_final !== null && found.concepto_final !== undefined);
 
       if (this.revisionLocked) {
@@ -3456,6 +3470,7 @@ private getValorEncuesta(campo: string): any {
     } else {
       this.revisionLocked = false;
     }
+    this.cdr.markForCheck();
   }
 
   onSelectSolicitudEncuesta(value: any): void {
@@ -3465,8 +3480,6 @@ private getValorEncuesta(campo: string): any {
       
       if (found) {
         this.selectedSolicitud.set(found);
-        
-        // Verificar si ya tiene encuesta (cliente_respondio no nulo)
         this.encuestaLocked = (found.cliente_respondio !== null && found.cliente_respondio !== undefined);
         
         if (this.encuestaLocked) {
@@ -3486,23 +3499,22 @@ private getValorEncuesta(campo: string): any {
       } else {
         this.encuestaLocked = false;
       }
+      this.cdr.markForCheck();
     } catch {
       void 0;
     }
   }
 
   closeEditSolicitudModal(): void {
-    // Play a smooth close animation before actually removing modal from DOM.
     if (!this.editSolicitudModalOpen || this.editSolicitudModalClosing) {
-      // already closed or closing
       return;
     }
     this.editSolicitudModalClosing = true;
-    // Delay should match CSS transition duration (200ms)
     setTimeout(() => {
       this.editSolicitudModalClosing = false;
       this.editSolicitudModalOpen = false;
       this.editSolicitudId = null;
+      this.cdr.markForCheck();
     }, 220);
   }
 
@@ -3562,13 +3574,13 @@ private getValorEncuesta(campo: string): any {
       }).catch(console.error);
       this.closeEditSolicitudModal();
       await this.loadSolicitudes();
+      this.cdr.markForCheck();
     } catch (err: unknown) {
       console.error('saveEditSolicitud', err);
       this.manejarError(err, 'actualizar solicitud');
     }
   }
 
-  // Save oferta tab
   async saveEditOferta(): Promise<void> {
     if (!this.editSolicitudId) return;
     const solicitudBefore = this.findSolicitudById(this.editSolicitudId);
@@ -3601,17 +3613,16 @@ private getValorEncuesta(campo: string): any {
         descripcion: `Actualización de oferta de solicitud: ${this.editSolicitudId}`,
         detalle
       }).catch(console.error);
-      // refresh local prefill
       await this.loadSolicitudes();
       const updated = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === Number(this.editSolicitudId));
       if (updated) this.editSolicitudOpen(updated);
+      this.cdr.markForCheck();
     } catch (err: unknown) {
       console.error('saveEditOferta', err);
       this.manejarError(err, 'actualizar oferta');
     }
   }
 
-  // Save revision tab
   async saveEditRevision(): Promise<void> {
     if (!this.editSolicitudId) return;
     const solicitudBefore = this.findSolicitudById(this.editSolicitudId);
@@ -3672,13 +3683,13 @@ private getValorEncuesta(campo: string): any {
       await this.loadSolicitudes();
       const updated = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === Number(this.editSolicitudId));
       if (updated) this.editSolicitudOpen(updated);
+      this.cdr.markForCheck();
     } catch (err: unknown) {
       console.error('saveEditRevision', err);
       this.manejarError(err, 'actualizar revisión');
     }
   }
 
-  // Save encuesta tab
   async saveEditEncuesta(): Promise<void> {
     if (!this.editSolicitudId) return;
     const solicitudBefore = this.findSolicitudById(this.editSolicitudId);
@@ -3686,7 +3697,6 @@ private getValorEncuesta(campo: string): any {
     const body: Record<string, unknown> = {
       fecha_encuesta: this.editEncuestaFecha || null,
       comentarios: this.editEncuestaComentarios || null,
-      // recomendaria_servicio: this.editEncuestaRecomendaria === null ? null : (this.editEncuestaRecomendaria ? 1 : 0),
       fecha_realizacion_encuesta: this.editEncuestaFechaRealizacion || null,
       cliente_respondio: this.toTinyIntOrNull(this.editEncuestaClienteRespondio),
       solicito_nueva_encuesta: this.toTinyIntOrNull(this.editEncuestaSolicitoNueva)
@@ -3715,13 +3725,13 @@ private getValorEncuesta(campo: string): any {
       await this.loadSolicitudes();
       const updated = (this.solicitudes() || []).find(s => Number(s.solicitud_id) === Number(this.editSolicitudId));
       if (updated) this.editSolicitudOpen(updated);
+      this.cdr.markForCheck();
     } catch (err: unknown) {
       console.error('saveEditEncuesta', err);
       this.manejarError(err, 'actualizar encuesta');
     }
   }
 
-  // Save current tab only (avoid overwriting other tabs with nulls)
   async saveAllEditSolicitud(): Promise<void> {
     switch (this.editSolicitudActiveTab) {
       case 'oferta':
@@ -3740,34 +3750,45 @@ private getValorEncuesta(campo: string): any {
     }
   }
 
-  // Helpers: resolve display names for departamento/ciudad from IDs or codes
   resolveDepartamento(cliente: any): string {
-    const depList = this.departamentos();
-    const raw = cliente?.departamento;
-    const codigo = cliente?.id_departamento || cliente?.departamento_codigo || raw;
-    if (codigo && Array.isArray(depList) && depList.length) {
-      const found = depList.find(d => String(d.codigo) === String(codigo));
-      if (found?.nombre) return this.formatValue(found.nombre);
+    const codigo = cliente?.id_departamento || cliente?.departamento_codigo;
+    if (!codigo) return '—';
+    
+    const cacheKey = String(codigo);
+    if (this.departamentoCache.has(cacheKey)) {
+      return this.departamentoCache.get(cacheKey)!;
     }
-    if (raw) return this.formatValue(raw);
+    
+    const depList = this.departamentos();
+    if (depList.length) {
+      const found = depList.find(d => String(d.codigo) === cacheKey);
+      if (found?.nombre) {
+        const value = this.formatValue(found.nombre);
+        this.departamentoCache.set(cacheKey, value);
+        return value;
+      }
+    }
     return '—';
   }
 
   resolveCiudad(cliente: any): string {
-    // Try common name keys first
-    const raw = cliente?.ciudad
-      || cliente?.ciudad_nombre
-      || cliente?.nombre_ciudad
-      || cliente?.municipio
-      || cliente?.municipio_nombre;
-    // Try to resolve by code if we have cities loaded
-    const codigo = cliente?.id_ciudad || cliente?.ciudad_codigo || cliente?.codigo_ciudad || raw;
-    const cityList = this.ciudades();
-    if (codigo && Array.isArray(cityList) && cityList.length) {
-      const found = cityList.find(c => String(c.codigo) === String(codigo));
-      if (found?.nombre) return this.formatValue(found.nombre);
+    const codigo = cliente?.id_ciudad || cliente?.ciudad_codigo;
+    if (!codigo) return '—';
+    
+    const cacheKey = String(codigo);
+    if (this.ciudadCache.has(cacheKey)) {
+      return this.ciudadCache.get(cacheKey)!;
     }
-    if (raw) return this.formatValue(raw);
+    
+    const cityList = this.ciudades();
+    if (cityList.length) {
+      const found = cityList.find(c => String(c.codigo) === cacheKey);
+      if (found?.nombre) {
+        const value = this.formatValue(found.nombre);
+        this.ciudadCache.set(cacheKey, value);
+        return value;
+      }
+    }
     return '—';
   }
 
@@ -3867,34 +3888,18 @@ private getValorEncuesta(campo: string): any {
     return '—';
   }
 
-  // Indica si la pestaña para una solicitud ya tiene datos completados
-  hasTabCompleted(
-    solicitud: {
-      realizo_seguimiento_oferta?: unknown;
-      concepto_final?: unknown;
-      fecha_encuesta?: unknown;
-      comentarios?: unknown;
-      recomendaria_servicio?: unknown;
-      cliente_respondio?: unknown;
-      solicito_nueva_encuesta?: unknown;
-    } | null,
-    tabKey: string
-  ): boolean {
+  hasTabCompleted(solicitud: any | null, tabKey: string): boolean {
     if (!solicitud) return false;
     switch ((tabKey || '').toString()) {
       case 'oferta': {
-        // Chulo solo cuando el usuario elige SÍ en seguimiento oferta
         return solicitud.realizo_seguimiento_oferta === 1 || solicitud.realizo_seguimiento_oferta === true;
       }
       case 'revision': {
-        // Chulo cuando ya existe concepto_final
         return !!solicitud.concepto_final;
       }
       case 'encuesta': {
-        // Mantener la lógica existente para encuesta
         if (solicitud.fecha_encuesta) return true;
         if (solicitud.comentarios) return true;
-        if (solicitud.recomendaria_servicio === 1 || solicitud.recomendaria_servicio === true) return true;
         if (solicitud.cliente_respondio === 1 || solicitud.cliente_respondio === true) return true;
         if (solicitud.solicito_nueva_encuesta === 1 || solicitud.solicito_nueva_encuesta === true) return true;
         return false;
@@ -3905,7 +3910,6 @@ private getValorEncuesta(campo: string): any {
   }
 
   onOfertaValorInput(value: string): void {
-    // Reject letters immediately: if user types letters, restore previous and show error
     if (/[A-Za-zÀ-ÖØ-öø-ÿ]/.test(String(value || ''))) {
       this.ofertaValorError = 'Solo se permiten números y separador decimal';
       this.ofertaValorDisplay = this.ofertaValorPrevDisplay;
@@ -3914,11 +3918,8 @@ private getValorEncuesta(campo: string): any {
 
     this.ofertaValorError = '';
 
-    // Keep user's raw input in the display while typing to avoid cursor jumps,
-    // but enforce a maximum of 13 integer digits and up to 2 decimal digits.
     const rawInput = String(value || '').replace(/[^0-9,.,-]/g, '').trim();
 
-    // Decide decimal separator based on input style
     let intPart = '';
     let decPart = '';
     const hasComma = rawInput.includes(',');
@@ -3927,7 +3928,6 @@ private getValorEncuesta(campo: string): any {
     const lastComma = rawInput.lastIndexOf(',');
 
     if (hasComma && (!hasDot || lastComma > lastDot)) {
-      // Comma is the decimal separator; dots are thousands
       const normalized = rawInput.replace(/\./g, '').replace(/,/g, '.');
       const parts = normalized.split('.');
       intPart = parts[0] || '';
@@ -3935,7 +3935,6 @@ private getValorEncuesta(campo: string): any {
     } else if (hasDot) {
       const digitsAfterDot = rawInput.length - lastDot - 1;
       if (digitsAfterDot > 2) {
-        // Treat dots as thousands separators
         intPart = rawInput.replace(/\./g, '');
       } else {
         intPart = rawInput.slice(0, lastDot).replace(/\./g, '');
@@ -3945,18 +3944,14 @@ private getValorEncuesta(campo: string): any {
       intPart = rawInput;
     }
 
-    // Enforce limits: if exceeded, reject the new input and restore previous valid display
     if (intPart.length > 13 || decPart.length > 2) {
-      // Restore previous valid entry (prevent typing extra digits)
       this.ofertaValorError = 'Máx. 13 enteros y 2 decimales';
       this.ofertaValorDisplay = this.ofertaValorPrevDisplay;
       return;
     }
 
-    // Reconstruct normalized value without thousands separators to keep typing stable
     const normalized = decPart ? `${intPart}.${decPart}` : intPart;
 
-    // Update internal numeric value
     if (normalized === '' || normalized === '.') {
       this.ofertaValor = null;
       this.ofertaValorDisplay = '';
@@ -3965,39 +3960,34 @@ private getValorEncuesta(campo: string): any {
     } else {
       const num = Number(normalized);
       this.ofertaValor = isNaN(num) ? null : num;
-      // Show unformatted numeric string while typing to avoid cursor jumps
       this.ofertaValorDisplay = decPart ? `${intPart}.${decPart}` : intPart;
       this.ofertaValorPrevDisplay = this.ofertaValorDisplay;
       this.ofertaValorError = '';
     }
+    this.cdr.markForCheck();
   }
 
   onOfertaValorFocus(): void {
-    // When focusing, show the raw numeric value (no formatting) to allow smooth editing
     if (this.ofertaValor !== null && this.ofertaValor !== undefined) {
-      // Use plain number string without thousands separators
       this.ofertaValorDisplay = String(this.ofertaValor);
     }
   }
 
   onOfertaValorBlur(): void {
-    // When leaving the field, show formatted currency for clarity
     if (this.ofertaValor !== null && this.ofertaValor !== undefined && !isNaN(Number(this.ofertaValor))) {
       this.ofertaValorDisplay = this.formatCurrency(this.ofertaValor);
     } else {
       this.ofertaValorDisplay = '';
     }
+    this.cdr.markForCheck();
   }
 
-  // Control de formularios (mostrar/ocultar desde las tarjetas de acción)
   formularioActivo: string | null = null;
 
-  // Mostrar/ocultar formularios al pulsar las tarjetas de acción
   async toggleFormulario(tipo: string) {
     if (this.formularioActivo === tipo) {
       this.formularioActivo = null;
     } else {
-      // cerrar cualquiera abierto y abrir el solicitado
       this.formularioActivo = tipo;
       if (this.formularioActivo === 'solicitud-documentos-plantilla') {
         this.tplSolicitudDocEntidad = 'solicitud';
@@ -4022,21 +4012,29 @@ private getValorEncuesta(campo: string): any {
         await this.cargarPlantillasDocumentoSolicitud();
       }
     }
+    this.cdr.markForCheck();
   }
 
-  // Auto-resize handler for modal textareas: expand height as user types, up to a limit
   autoResizeTextarea(e: Event): void {
     try {
       const el = e.target as HTMLTextAreaElement | null;
       if (!el) return;
-      // reset to auto to correctly measure scrollHeight
       el.style.height = 'auto';
       const scroll = el.scrollHeight;
-      const viewportMax = Math.floor(window.innerHeight * 0.6); // up to 60% of viewport
+      const viewportMax = Math.floor(window.innerHeight * 0.6);
       const newHeight = Math.min(scroll, viewportMax);
       el.style.height = `${newHeight}px`;
     } catch {
       void 0;
     }
+  }
+
+  // TrackBy functions para las listas
+  trackBySolicitudId(index: number, solicitud: any): number {
+    return solicitud?.solicitud_id ?? solicitud?.id_solicitud ?? index;
+  }
+
+  trackByClienteId(index: number, cliente: any): number {
+    return cliente?.id_cliente ?? index;
   }
 }

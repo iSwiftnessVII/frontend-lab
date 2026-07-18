@@ -62,6 +62,7 @@ export class PlantillasComponent {
 
   // ====== Solicitudes / Clientes ======
   @ViewChild('tplSolicitudTemplateInput') private tplSolicitudTemplateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('tplSolicitudQuickInput') private tplSolicitudQuickInput?: ElementRef<HTMLInputElement>;
   @ViewChild('helpDetails') private helpDetails?: ElementRef<HTMLDetailsElement>;
 
   // Selección (Solicitud)
@@ -70,6 +71,7 @@ export class PlantillasComponent {
   tplSolicitudResultados: any[] = [];
   tplSolicitudSeleccionadoId: number | null = null;
   tplSolicitudSeleccionado: any = null;
+  private solicitudCodigoMap = new Map<number, string>();
 
   // Selección (Cliente)
   showClienteDropdown = false;
@@ -92,6 +94,7 @@ export class PlantillasComponent {
 
   // ====== Reactivos ======
   @ViewChild('tplReactivoTemplateInput') private tplReactivoTemplateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('tplReactivoQuickInput') private tplReactivoQuickInput?: ElementRef<HTMLInputElement>;
 
   tplReactivoFiltroTipo = 'todos';
   tplReactivoBusqueda = '';
@@ -99,6 +102,10 @@ export class PlantillasComponent {
   tplReactivoSeleccionadoLote: string | null = null;
   tplReactivoSeleccionado: any = null;
   private tplReactivoSearchSeq = 0;
+  private tplReactivoSearchTimer?: ReturnType<typeof setTimeout>;
+  private tplReactivosAll: any[] = [];
+  private tplReactivosAllLoaded = false;
+  private tplReactivosAllLoading = false;
 
   tplReactivoPlantillas = signal<any[]>([]);
   tplReactivoPlantillaId: number | null = null;
@@ -112,6 +119,7 @@ export class PlantillasComponent {
 
   // ====== Equipos ======
   @ViewChild('tplEquipoTemplateInput') private tplEquipoTemplateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('tplEquipoQuickInput') private tplEquipoQuickInput?: ElementRef<HTMLInputElement>;
 
   tplEquipoFiltroTipo = 'todos';
   tplEquipoBusqueda = '';
@@ -132,6 +140,7 @@ export class PlantillasComponent {
 
   // ====== Volumétricos ======
   @ViewChild('tplVolTemplateInput') private tplVolTemplateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('tplVolQuickInput') private tplVolQuickInput?: ElementRef<HTMLInputElement>;
 
   tplVolFiltroTipo = 'todos';
   tplVolBusqueda = '';
@@ -152,6 +161,7 @@ export class PlantillasComponent {
 
   // ====== Referencia ======
   @ViewChild('tplRefTemplateInput') private tplRefTemplateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('tplRefQuickInput') private tplRefQuickInput?: ElementRef<HTMLInputElement>;
 
   tplRefFiltroTipo = 'todos';
   tplRefBusqueda = '';
@@ -169,6 +179,9 @@ export class PlantillasComponent {
   tplRefListLoading = signal(false);
   tplRefUploadLoading = false;
   tplRefDeleteLoading: Set<number> = new Set<number>();
+
+  templateModalOpen = false;
+  templateModalSection: PlantillasSeccion | null = null;
 
   constructor(
     private snack: SnackbarService,
@@ -211,6 +224,174 @@ export class PlantillasComponent {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  }
+
+  openTemplateModal(section: PlantillasSeccion, templateId: number): void {
+    if (section === 'solicitudes') this.tplSolicitudPlantillaId = templateId;
+    if (section === 'reactivos') this.tplReactivoPlantillaId = templateId;
+    if (section === 'equipos') this.tplEquipoPlantillaId = templateId;
+    if (section === 'volumetricos') this.tplVolPlantillaId = templateId;
+    if (section === 'referencia') this.tplRefPlantillaId = templateId;
+    this.templateModalSection = section;
+    this.templateModalOpen = true;
+  }
+
+  private normalizeSearchValue(value: any): string {
+    return String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private tokenizeSearch(query: string): string[] {
+    const q = this.normalizeSearchValue(query);
+    return q ? q.split(' ').filter(Boolean) : [];
+  }
+
+  private matchesAllTokens(text: string, tokens: string[]): boolean {
+    const normalized = this.normalizeSearchValue(text);
+    if (!tokens.length) return true;
+    return tokens.every((t) => normalized.includes(t));
+  }
+
+  closeTemplateModal(): void {
+    this.templateModalOpen = false;
+    this.templateModalSection = null;
+  }
+
+  getModalSectionTitle(): string {
+    if (this.templateModalSection === 'solicitudes') return 'Plantilla de Solicitudes';
+    if (this.templateModalSection === 'reactivos') return 'Plantilla de Reactivos';
+    if (this.templateModalSection === 'equipos') return 'Plantilla de Equipos';
+    if (this.templateModalSection === 'volumetricos') return 'Plantilla de Volumétricos';
+    if (this.templateModalSection === 'referencia') return 'Plantilla de Referencia';
+    return 'Plantilla';
+  }
+
+  getTemplateDisplayName(tpl: any): string {
+    return String(tpl?.nombre || tpl?.nombre_archivo || `Plantilla ${tpl?.id ?? ''}`).trim();
+  }
+
+  getTemplateExt(tpl: any): string {
+    const raw = String(tpl?.nombre_archivo || '').trim().toLowerCase();
+    if (!raw.includes('.')) return '—';
+    const ext = raw.slice(raw.lastIndexOf('.') + 1);
+    return ext ? ext.toUpperCase() : '—';
+  }
+
+  formatTemplateSize(bytesLike: any): string {
+    const bytes = Number(bytesLike);
+    if (!Number.isFinite(bytes) || bytes <= 0) return '—';
+    if (bytes < 1024) return `${bytes} B`;
+    const kb = bytes / 1024;
+    if (kb < 1024) return `${kb.toFixed(1)} KB`;
+    const mb = kb / 1024;
+    return `${mb.toFixed(2)} MB`;
+  }
+
+  isTemplateSelected(section: PlantillasSeccion, tpl: any): boolean {
+    const id = Number(tpl?.id);
+    if (!Number.isFinite(id) || id <= 0) return false;
+    if (section === 'solicitudes') return Number(this.tplSolicitudPlantillaId) === id;
+    if (section === 'reactivos') return Number(this.tplReactivoPlantillaId) === id;
+    if (section === 'equipos') return Number(this.tplEquipoPlantillaId) === id;
+    if (section === 'volumetricos') return Number(this.tplVolPlantillaId) === id;
+    return Number(this.tplRefPlantillaId) === id;
+  }
+
+  async eliminarPlantillaDesdeTarjeta(section: PlantillasSeccion, tpl: any, event?: Event): Promise<void> {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    if (!this.canEditPlantillas()) return;
+    const id = Number(tpl?.id);
+    if (!Number.isFinite(id) || id <= 0) return;
+    if (section === 'solicitudes') {
+      this.tplSolicitudPlantillaId = id;
+      await this.eliminarPlantillaSolicitud();
+    }
+    if (section === 'reactivos') {
+      this.tplReactivoPlantillaId = id;
+      await this.eliminarPlantillaReactivo();
+    }
+    if (section === 'equipos') {
+      this.tplEquipoPlantillaId = id;
+      await this.eliminarPlantillaEquipo();
+    }
+    if (section === 'volumetricos') {
+      this.tplVolPlantillaId = id;
+      await this.eliminarPlantillaVolumetrico();
+    }
+    if (section === 'referencia') {
+      this.tplRefPlantillaId = id;
+      await this.eliminarPlantillaReferencia();
+    }
+  }
+
+  triggerQuickUpload(section: PlantillasSeccion): void {
+    if (!this.canEditPlantillas()) return;
+    if (section === 'solicitudes') this.tplSolicitudQuickInput?.nativeElement?.click();
+    if (section === 'reactivos') this.tplReactivoQuickInput?.nativeElement?.click();
+    if (section === 'equipos') this.tplEquipoQuickInput?.nativeElement?.click();
+    if (section === 'volumetricos') this.tplVolQuickInput?.nativeElement?.click();
+    if (section === 'referencia') this.tplRefQuickInput?.nativeElement?.click();
+  }
+
+  async onQuickTemplateSelected(section: PlantillasSeccion, event: any): Promise<void> {
+    const f = event?.target?.files?.[0] as File | undefined;
+    if (!f) return;
+    if (section === 'solicitudes') {
+      this.tplSolicitudTemplateFile = f;
+      await this.subirPlantillaSolicitud();
+    }
+    if (section === 'reactivos') {
+      this.tplReactivoTemplateFile = f;
+      await this.subirPlantillaReactivo();
+    }
+    if (section === 'equipos') {
+      this.tplEquipoTemplateFile = f;
+      await this.subirPlantillaEquipo();
+    }
+    if (section === 'volumetricos') {
+      this.tplVolTemplateFile = f;
+      await this.subirPlantillaVolumetrico();
+    }
+    if (section === 'referencia') {
+      this.tplRefTemplateFile = f;
+      await this.subirPlantillaReferencia();
+    }
+    try {
+      if (event?.target) event.target.value = '';
+    } catch {
+      void 0;
+    }
+  }
+
+  async generarDesdeModal(): Promise<void> {
+    if (this.templateModalSection === 'solicitudes') await this.generarDocumentoSolicitud();
+    if (this.templateModalSection === 'reactivos') await this.generarDocumentoReactivo();
+    if (this.templateModalSection === 'equipos') await this.generarDocumentoEquipo();
+    if (this.templateModalSection === 'volumetricos') await this.generarDocumentoVolumetrico();
+    if (this.templateModalSection === 'referencia') await this.generarDocumentoReferencia();
+  }
+
+  async generarLoopDesdeModal(): Promise<void> {
+    if (this.templateModalSection === 'solicitudes') await this.generarDocumentoSolicitudLoop();
+    if (this.templateModalSection === 'reactivos') await this.generarDocumentoReactivoLoop();
+    if (this.templateModalSection === 'equipos') await this.generarDocumentoEquipoLoop();
+    if (this.templateModalSection === 'volumetricos') await this.generarDocumentoVolumetricoLoop();
+    if (this.templateModalSection === 'referencia') await this.generarDocumentoReferenciaLoop();
+  }
+
+  async eliminarPlantillaDesdeModal(): Promise<void> {
+    if (this.templateModalSection === 'solicitudes') await this.eliminarPlantillaSolicitud();
+    if (this.templateModalSection === 'reactivos') await this.eliminarPlantillaReactivo();
+    if (this.templateModalSection === 'equipos') await this.eliminarPlantillaEquipo();
+    if (this.templateModalSection === 'volumetricos') await this.eliminarPlantillaVolumetrico();
+    if (this.templateModalSection === 'referencia') await this.eliminarPlantillaReferencia();
   }
 
   private resetMsgs(): void {
@@ -343,11 +524,14 @@ export class PlantillasComponent {
     } catch {
       // ignore
     }
+
+    this.refreshSolicitudCodigoMap();
   }
 
   onTplSolicitudSearchFocus(): void {
     this.showSolicitudDropdown = true;
     if (this.solicitudBlurTimer) clearTimeout(this.solicitudBlurTimer);
+    void this.ensureSolicitudesDataLoaded().then(() => this.filtrarTplSolicitudResultados());
   }
 
   onTplSolicitudSearchBlur(): void {
@@ -374,11 +558,65 @@ export class PlantillasComponent {
 
   private formatSolicitudSelectedLabel(item: any): string {
     if (!item) return '';
-    const numero = String(item?.numero ?? '').trim();
+    const numero = this.getSolicitudCodigo(item);
     const sid = String(item?.solicitud_id ?? item?.id_solicitud ?? '').trim();
     const solicitante = String(item?.nombre_solicitante ?? '').trim();
     const left = numero || (sid ? `Solicitud ${sid}` : 'Solicitud');
     return solicitante ? `${left} - ${solicitante}` : left;
+  }
+
+  getSolicitudCodigo(item: any): string {
+    if (!item) return '';
+    const codigo = String(
+      item?._codigoSolicitud ??
+      item?.numero_solicitud_front ??
+      item?.codigo_solicitud ??
+      item?.numero_solicitud ??
+      item?.numero ??
+      ''
+    ).trim();
+    if (codigo) return codigo;
+
+    const sid = Number(item?.solicitud_id ?? item?.id_solicitud ?? item?.id);
+    if (Number.isFinite(sid) && sid > 0 && this.solicitudCodigoMap.has(sid)) {
+      return String(this.solicitudCodigoMap.get(sid));
+    }
+
+    return '';
+  }
+
+  private refreshSolicitudCodigoMap(): void {
+    const src = this.solicitudesService.solicitudes?.() || [];
+    const sorted = [...src].sort((a: any, b: any) => {
+      const da = a?.fecha_solicitud ? new Date(String(a.fecha_solicitud)).getTime() : 0;
+      const db = b?.fecha_solicitud ? new Date(String(b.fecha_solicitud)).getTime() : 0;
+      if (da !== db) return da - db;
+      return Number(a?.solicitud_id ?? a?.id_solicitud ?? 0) - Number(b?.solicitud_id ?? b?.id_solicitud ?? 0);
+    });
+
+    const counters = new Map<string, number>();
+    const map = new Map<number, string>();
+
+    for (const s of sorted) {
+      const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? s?.id);
+      if (!Number.isFinite(sid) || sid <= 0) continue;
+
+      const tipoVal = String(s?.tipo_solicitud ?? s?.tipo ?? '').trim();
+      if (!tipoVal) continue;
+
+      const fecha = s?.fecha_solicitud ?? s?.created_at ?? s?.fecha ?? null;
+      const fechaValue = typeof fecha === 'string' || typeof fecha === 'number' ? fecha : String(fecha ?? '');
+      let fechaDate = fechaValue ? new Date(fechaValue) : new Date();
+      if (isNaN(fechaDate.getTime())) fechaDate = new Date();
+      const year = fechaDate.getFullYear();
+
+      const key = `${tipoVal.toUpperCase()}|${year}`;
+      const next = (counters.get(key) || 0) + 1;
+      counters.set(key, next);
+      map.set(sid, `${tipoVal}-${year}-${String(next).padStart(2, '0')}`);
+    }
+
+    this.solicitudCodigoMap = map;
   }
 
   private formatClienteSelectedLabel(item: any): string {
@@ -388,21 +626,46 @@ export class PlantillasComponent {
     return razon ? `${nombre} - ${razon}` : nombre;
   }
 
+  private getTplSolicitudSeleccionada(): any | null {
+    const id = Number(this.tplSolicitudPlantillaId);
+    if (!Number.isFinite(id) || id <= 0) return null;
+    return this.tplSolicitudPlantillas().find((t) => Number(t?.id) === id) || null;
+  }
+
+  shouldShowTplSolicitudClienteFilter(): boolean {
+    const tpl = this.getTplSolicitudSeleccionada();
+    if (!tpl) return false;
+
+    const loopEntity = String(tpl?.loop_entity || '').toLowerCase();
+    const hasSolicitudesData =
+      Boolean(tpl?.has_solicitudes_data) || loopEntity === 'solicitud' || loopEntity === 'ambos';
+    const hasClientesData =
+      Boolean(tpl?.has_clientes_data) || loopEntity === 'cliente' || loopEntity === 'ambos';
+
+    return hasSolicitudesData && hasClientesData;
+  }
+
   filtrarTplSolicitudResultados(): void {
-    const q = (this.tplSolicitudBusqueda || '').toLowerCase().trim();
-    if (!q) {
-      this.tplSolicitudResultados = [];
+    const tokens = this.tokenizeSearch(this.tplSolicitudBusqueda || '');
+    const filtro = this.tplSolicitudFiltroTipo;
+    this.refreshSolicitudCodigoMap();
+    const src = this.solicitudesService.solicitudes?.() || [];
+    const withCode = src.map((s: any) => {
+      const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? s?.id);
+      const fallbackCode = Number.isFinite(sid) && sid > 0 ? this.solicitudCodigoMap.get(sid) : '';
+      return { ...s, _codigoSolicitud: this.getSolicitudCodigo(s) || fallbackCode || '' };
+    });
+    if (!tokens.length) {
+      this.tplSolicitudResultados = withCode.slice(0, 30);
       return;
     }
-
-    const filtro = this.tplSolicitudFiltroTipo;
-    const src = this.solicitudesService.solicitudes?.() || [];
-    this.tplSolicitudResultados = src.filter((s: any) => this.matchSolicitud(s, filtro, q)).slice(0, 50);
+    this.tplSolicitudResultados = withCode.filter((s: any) => this.matchSolicitud(s, filtro, tokens)).slice(0, 60);
   }
 
   onTplClienteSearchFocus(): void {
     this.showClienteDropdown = true;
     if (this.clienteBlurTimer) clearTimeout(this.clienteBlurTimer);
+    this.filtrarTplClienteResultados();
   }
 
   onTplClienteSearchBlur(): void {
@@ -428,59 +691,57 @@ export class PlantillasComponent {
   }
 
   filtrarTplClienteResultados(): void {
-    const q = (this.tplClienteBusqueda || '').toLowerCase().trim();
-    if (!q) {
-      this.tplClienteResultados = [];
-      return;
-    }
-
+    const tokens = this.tokenizeSearch(this.tplClienteBusqueda || '');
     const filtro = this.tplClienteFiltroTipo;
     const src = this.clientesService.clientes?.() || [];
-    this.tplClienteResultados = src.filter((c: any) => this.matchCliente(c, filtro, q)).slice(0, 50);
+    if (!tokens.length) {
+      this.tplClienteResultados = src.slice(0, 30);
+      return;
+    }
+    this.tplClienteResultados = src.filter((c: any) => this.matchCliente(c, filtro, tokens)).slice(0, 60);
   }
 
-  private matchSolicitud(s: any, filtro: string, q: string): boolean {
-    const sid = String(s?.solicitud_id ?? s?.id_solicitud ?? '').toLowerCase();
-    const numero = String(s?.numero ?? '').toLowerCase();
-    const solicitante = String(s?.nombre_solicitante ?? '').toLowerCase();
-    const muestra = String(s?.nombre_muestra ?? '').toLowerCase();
-    const analisis = String(s?.analisis_requerido ?? s?.req_analisis ?? '').toLowerCase();
-    const lote = String(s?.lote_producto ?? '').toLowerCase();
+  private matchSolicitud(s: any, filtro: string, tokens: string[]): boolean {
+    const sid = String(s?.solicitud_id ?? s?.id_solicitud ?? '');
+    const numero = String(this.getSolicitudCodigo(s) || '');
+    const solicitante = String(s?.nombre_solicitante ?? '');
+    const muestra = String(s?.nombre_muestra ?? '');
+    const analisis = String(s?.analisis_requerido ?? s?.req_analisis ?? '');
+    const lote = String(s?.lote_producto ?? '');
 
-    if (filtro === 'id') return sid.includes(q);
-    if (filtro === 'numero_front') return numero.includes(q);
-    if (filtro === 'solicitante') return solicitante.includes(q);
-    if (filtro === 'muestra') return muestra.includes(q);
-    if (filtro === 'analisis') return analisis.includes(q);
-    if (filtro === 'lote') return lote.includes(q);
+    if (filtro === 'id') return this.matchesAllTokens(sid, tokens);
+    if (filtro === 'numero_front') return this.matchesAllTokens(numero, tokens);
+    if (filtro === 'solicitante') return this.matchesAllTokens(solicitante, tokens);
+    if (filtro === 'muestra') return this.matchesAllTokens(muestra, tokens);
+    if (filtro === 'analisis') return this.matchesAllTokens(analisis, tokens);
+    if (filtro === 'lote') return this.matchesAllTokens(lote, tokens);
 
-    // todos
-    return [sid, numero, solicitante, muestra, analisis, lote].some((v) => v.includes(q));
+    return [sid, numero, solicitante, muestra, analisis, lote].some((v) => this.matchesAllTokens(v, tokens));
   }
 
-  private matchCliente(c: any, filtro: string, q: string): boolean {
-    const id = String(c?.id_cliente ?? c?.cliente_id ?? '').toLowerCase();
-    const numero = String(c?.numero ?? '').toLowerCase();
-    const nombre = String(c?.nombre_solicitante ?? c?.nombre ?? c?.nombre_cliente ?? '').toLowerCase();
-    const razon = String(c?.razon_social ?? '').toLowerCase();
-    const ident = String(c?.numero_identificacion ?? c?.identificacion ?? c?.nit ?? '').toLowerCase();
-    const correo = String(c?.correo_electronico ?? c?.correo ?? c?.email ?? '').toLowerCase();
-    const telefono = String(c?.celular ?? c?.telefono ?? '').toLowerCase();
-    const ciudad = String(c?.ciudad ?? c?.nombre_ciudad ?? '').toLowerCase();
-    const departamento = String(c?.departamento ?? c?.nombre_departamento ?? '').toLowerCase();
-    const direccion = String(c?.direccion ?? '').toLowerCase();
-    const tipoUsuario = String(c?.tipo_usuario ?? '').toLowerCase();
-    const tipoVinculacion = String(c?.tipo_vinculacion ?? '').toLowerCase();
-    const registroRealizadoPor = String(c?.registro_realizado_por ?? '').toLowerCase();
+  private matchCliente(c: any, filtro: string, tokens: string[]): boolean {
+    const id = String(c?.id_cliente ?? c?.cliente_id ?? '');
+    const numero = String(c?.numero ?? '');
+    const nombre = String(c?.nombre_solicitante ?? c?.nombre ?? c?.nombre_cliente ?? '');
+    const razon = String(c?.razon_social ?? '');
+    const ident = String(c?.numero_identificacion ?? c?.identificacion ?? c?.nit ?? '');
+    const correo = String(c?.correo_electronico ?? c?.correo ?? c?.email ?? '');
+    const telefono = String(c?.celular ?? c?.telefono ?? '');
+    const ciudad = String(c?.ciudad ?? c?.nombre_ciudad ?? '');
+    const departamento = String(c?.departamento ?? c?.nombre_departamento ?? '');
+    const direccion = String(c?.direccion ?? '');
+    const tipoUsuario = String(c?.tipo_usuario ?? '');
+    const tipoVinculacion = String(c?.tipo_vinculacion ?? '');
+    const registroRealizadoPor = String(c?.registro_realizado_por ?? '');
 
-    if (filtro === 'numero') return numero.includes(q);
-    if (filtro === 'nombre') return nombre.includes(q);
-    if (filtro === 'razon_social') return razon.includes(q);
-    if (filtro === 'identificacion') return ident.includes(q);
-    if (filtro === 'correo') return correo.includes(q);
-    if (filtro === 'telefono') return telefono.includes(q);
-    if (filtro === 'ciudad') return ciudad.includes(q);
-    if (filtro === 'departamento') return departamento.includes(q);
+    if (filtro === 'numero') return this.matchesAllTokens(numero, tokens);
+    if (filtro === 'nombre') return this.matchesAllTokens(nombre, tokens);
+    if (filtro === 'razon_social') return this.matchesAllTokens(razon, tokens);
+    if (filtro === 'identificacion') return this.matchesAllTokens(ident, tokens);
+    if (filtro === 'correo') return this.matchesAllTokens(correo, tokens);
+    if (filtro === 'telefono') return this.matchesAllTokens(telefono, tokens);
+    if (filtro === 'ciudad') return this.matchesAllTokens(ciudad, tokens);
+    if (filtro === 'departamento') return this.matchesAllTokens(departamento, tokens);
 
     return [
       id,
@@ -496,7 +757,7 @@ export class PlantillasComponent {
       tipoUsuario,
       tipoVinculacion,
       registroRealizadoPor
-    ].some((v) => v.includes(q));
+    ].some((v) => this.matchesAllTokens(v, tokens));
   }
 
   onTplSolicitudSeleccionadoIdChanged(id: number | null): void {
@@ -505,9 +766,16 @@ export class PlantillasComponent {
       return;
     }
 
-    const src = this.solicitudesService.solicitudes?.() || [];
-    const selected = src.find((x: any) => Number(x?.solicitud_id ?? x?.id_solicitud) === Number(id));
-    this.tplSolicitudSeleccionado = selected || null;
+    const selectedFromResults = this.tplSolicitudResultados.find(
+      (x: any) => Number(x?.solicitud_id ?? x?.id_solicitud) === Number(id)
+    );
+    if (selectedFromResults) {
+      this.tplSolicitudSeleccionado = selectedFromResults;
+    } else {
+      const src = this.solicitudesService.solicitudes?.() || [];
+      const selected = src.find((x: any) => Number(x?.solicitud_id ?? x?.id_solicitud) === Number(id));
+      this.tplSolicitudSeleccionado = selected || null;
+    }
     this.tplSolicitudResultados = [];
     this.showSolicitudDropdown = false;
   }
@@ -626,9 +894,11 @@ export class PlantillasComponent {
     const solicitudN = Number(solicitudRaw);
     if (Number.isFinite(solicitudN) && solicitudN > 0) solicitud_id = solicitudN;
 
-    const clienteRaw = this.tplClienteSeleccionado?.id_cliente ?? this.tplClienteSeleccionado?.cliente_id;
-    const clienteN = Number(clienteRaw);
-    if (Number.isFinite(clienteN) && clienteN > 0) id_cliente = clienteN;
+    if (this.shouldShowTplSolicitudClienteFilter()) {
+      const clienteRaw = this.tplClienteSeleccionado?.id_cliente ?? this.tplClienteSeleccionado?.cliente_id;
+      const clienteN = Number(clienteRaw);
+      if (Number.isFinite(clienteN) && clienteN > 0) id_cliente = clienteN;
+    }
 
     const entidad = solicitud_id ? 'solicitud' : (id_cliente ? 'cliente' : 'solicitud');
 
@@ -689,40 +959,70 @@ export class PlantillasComponent {
   // Reactivos section
   // ================================
 
-  async filtrarTplReactivoResultados(): Promise<void> {
-    const q = (this.tplReactivoBusqueda || '').trim();
-    if (!q || q.length < 2) {
-      this.tplReactivoResultados = [];
-      return;
+  private async ensureTplReactivosLoaded(): Promise<void> {
+    if (this.tplReactivosAllLoaded || this.tplReactivosAllLoading) return;
+    this.tplReactivosAllLoading = true;
+    try {
+      const res: any = await reactivosService.listarReactivos({ q: '' }, 0, 0);
+      const rows = Array.isArray(res) ? res : (Array.isArray(res?.rows) ? res.rows : []);
+      this.tplReactivosAll = Array.isArray(rows) ? rows : [];
+      this.tplReactivosAllLoaded = true;
+    } catch {
+      this.tplReactivosAll = [];
+    } finally {
+      this.tplReactivosAllLoading = false;
     }
+  }
 
+  async filtrarTplReactivoResultados(): Promise<void> {
+    const qRaw = (this.tplReactivoBusqueda || '').trim();
     const seq = ++this.tplReactivoSearchSeq;
+    await this.ensureTplReactivosLoaded();
+    if (seq !== this.tplReactivoSearchSeq) return;
 
     try {
-      const res: any = await reactivosService.listarReactivos(q, 50, 0);
-      if (seq !== this.tplReactivoSearchSeq) return;
-
-      const rows = Array.isArray(res) ? res : (Array.isArray(res?.rows) ? res.rows : []);
       const filtro = (this.tplReactivoFiltroTipo || 'todos').toLowerCase();
-      const ql = q.toLowerCase();
+      const q = this.normalizeSearchValue(qRaw);
+      const source = this.tplReactivosAll;
+      if (!q) {
+        this.tplReactivoResultados = source.slice(0, 60);
+        return;
+      }
 
-      const filtered = rows.filter((r: any) => {
-        const codigo = String(r?.codigo ?? '').toLowerCase();
-        const nombre = String(r?.nombre ?? '').toLowerCase();
-        const lote = String(r?.lote ?? '').toLowerCase();
-        const cas = String(r?.cas ?? '').toLowerCase();
-        if (filtro === 'codigo') return codigo.includes(ql);
-        if (filtro === 'nombre') return nombre.includes(ql);
-        if (filtro === 'lote') return lote.includes(ql);
-        if (filtro === 'cas') return cas.includes(ql);
-        return [codigo, nombre, lote, cas].some((v) => v.includes(ql));
+      const tokens = this.tokenizeSearch(q);
+
+      let filtered = source.filter((r: any) => {
+        const codigo = String(r?.codigo ?? '');
+        const nombre = String(r?.nombre ?? '');
+        const lote = String(r?.lote ?? '');
+        const cas = String(r?.cas ?? '');
+        if (filtro === 'codigo') return this.matchesAllTokens(codigo, tokens);
+        if (filtro === 'nombre') return this.matchesAllTokens(nombre, tokens);
+        if (filtro === 'lote') return this.matchesAllTokens(lote, tokens);
+        if (filtro === 'cas') return this.matchesAllTokens(cas, tokens);
+        return [codigo, nombre, lote, cas].some((v) => this.matchesAllTokens(v, tokens));
       });
 
-      this.tplReactivoResultados = filtered.slice(0, 50);
-    } catch (err: any) {
+      if (!filtered.length) {
+        const res: any = await reactivosService.listarReactivos({ q: qRaw }, 120, 0);
+        if (seq !== this.tplReactivoSearchSeq) return;
+        const rows = Array.isArray(res) ? res : (Array.isArray(res?.rows) ? res.rows : []);
+        filtered = (Array.isArray(rows) ? rows : []).filter((r: any) => {
+          const codigo = String(r?.codigo ?? '');
+          const nombre = String(r?.nombre ?? '');
+          const lote = String(r?.lote ?? '');
+          const cas = String(r?.cas ?? '');
+          if (filtro === 'codigo') return this.matchesAllTokens(codigo, tokens);
+          if (filtro === 'nombre') return this.matchesAllTokens(nombre, tokens);
+          if (filtro === 'lote') return this.matchesAllTokens(lote, tokens);
+          if (filtro === 'cas') return this.matchesAllTokens(cas, tokens);
+          return [codigo, nombre, lote, cas].some((v) => this.matchesAllTokens(v, tokens));
+        });
+      }
+
+      this.tplReactivoResultados = filtered.slice(0, 60);
+    } catch {
       if (seq !== this.tplReactivoSearchSeq) return;
-      this.tplReactivoMsg = err?.message || 'Error buscando reactivos';
-      this.snack.error(this.tplReactivoMsg);
       this.tplReactivoResultados = [];
     }
   }
@@ -730,6 +1030,7 @@ export class PlantillasComponent {
   onTplReactivoSearchFocus(): void {
     this.showReactivoDropdown = true;
     if (this.reactivoBlurTimer) clearTimeout(this.reactivoBlurTimer);
+    void this.filtrarTplReactivoResultados();
   }
 
   onTplReactivoSearchBlur(): void {
@@ -741,7 +1042,10 @@ export class PlantillasComponent {
 
   onTplReactivoSearchInput(): void {
     this.showReactivoDropdown = true;
-    void this.filtrarTplReactivoResultados();
+    if (this.tplReactivoSearchTimer) clearTimeout(this.tplReactivoSearchTimer);
+    this.tplReactivoSearchTimer = setTimeout(() => {
+      void this.filtrarTplReactivoResultados();
+    }, 220);
   }
 
   selectTplReactivo(item: any): void {
@@ -946,32 +1250,32 @@ export class PlantillasComponent {
   }
 
   filtrarTplEquipoResultados(): void {
-    const q = (this.tplEquipoBusqueda || '').toLowerCase().trim();
-    if (!q) {
-      this.tplEquipoResultados = [];
+    const tokens = this.tokenizeSearch(this.tplEquipoBusqueda || '');
+    const filtro = (this.tplEquipoFiltroTipo || 'todos').toLowerCase();
+    if (!tokens.length) {
+      this.tplEquipoResultados = this.equiposAll.slice(0, 30);
       return;
     }
-
-    const filtro = (this.tplEquipoFiltroTipo || 'todos').toLowerCase();
     const filtered = this.equiposAll.filter((e: any) => {
-      const codigo = String(e?.codigo_identificacion ?? '').toLowerCase();
-      const nombre = String(e?.nombre ?? '').toLowerCase();
-      const marca = String(e?.marca ?? '').toLowerCase();
-      const modelo = String(e?.modelo ?? '').toLowerCase();
+      const codigo = String(e?.codigo_identificacion ?? '');
+      const nombre = String(e?.nombre ?? '');
+      const marca = String(e?.marca ?? '');
+      const modelo = String(e?.modelo ?? '');
 
-      if (filtro === 'codigo') return codigo.includes(q);
-      if (filtro === 'nombre') return nombre.includes(q);
-      if (filtro === 'marca') return marca.includes(q);
-      if (filtro === 'modelo') return modelo.includes(q);
-      return [codigo, nombre, marca, modelo].some((v) => v.includes(q));
+      if (filtro === 'codigo') return this.matchesAllTokens(codigo, tokens);
+      if (filtro === 'nombre') return this.matchesAllTokens(nombre, tokens);
+      if (filtro === 'marca') return this.matchesAllTokens(marca, tokens);
+      if (filtro === 'modelo') return this.matchesAllTokens(modelo, tokens);
+      return [codigo, nombre, marca, modelo].some((v) => this.matchesAllTokens(v, tokens));
     });
 
-    this.tplEquipoResultados = filtered.slice(0, 50);
+    this.tplEquipoResultados = filtered.slice(0, 60);
   }
 
   onTplEquipoSearchFocus(): void {
     this.showEquipoDropdown = true;
     if (this.equipoBlurTimer) clearTimeout(this.equipoBlurTimer);
+    void this.ensureEquiposLoaded().then(() => this.filtrarTplEquipoResultados());
   }
 
   onTplEquipoSearchBlur(): void {
@@ -1164,32 +1468,32 @@ export class PlantillasComponent {
   }
 
   filtrarTplVolResultados(): void {
-    const q = (this.tplVolBusqueda || '').toLowerCase().trim();
-    if (!q) {
-      this.tplVolResultados = [];
+    const tokens = this.tokenizeSearch(this.tplVolBusqueda || '');
+    const filtro = (this.tplVolFiltroTipo || 'todos').toLowerCase();
+    if (!tokens.length) {
+      this.tplVolResultados = this.volAll.slice(0, 30);
       return;
     }
-
-    const filtro = (this.tplVolFiltroTipo || 'todos').toLowerCase();
     const filtered = this.volAll.filter((m: any) => {
-      const codigo = String(m?.codigo_id ?? '').toLowerCase();
-      const nombre = String(m?.nombre_material ?? '').toLowerCase();
-      const marca = String(m?.marca ?? '').toLowerCase();
-      const modelo = String(m?.modelo ?? '').toLowerCase();
+      const codigo = String(m?.codigo_id ?? '');
+      const nombre = String(m?.nombre_material ?? '');
+      const marca = String(m?.marca ?? '');
+      const modelo = String(m?.modelo ?? '');
 
-      if (filtro === 'codigo') return codigo.includes(q);
-      if (filtro === 'nombre') return nombre.includes(q);
-      if (filtro === 'marca') return marca.includes(q);
-      if (filtro === 'modelo') return modelo.includes(q);
-      return [codigo, nombre, marca, modelo].some((v) => v.includes(q));
+      if (filtro === 'codigo') return this.matchesAllTokens(codigo, tokens);
+      if (filtro === 'nombre') return this.matchesAllTokens(nombre, tokens);
+      if (filtro === 'marca') return this.matchesAllTokens(marca, tokens);
+      if (filtro === 'modelo') return this.matchesAllTokens(modelo, tokens);
+      return [codigo, nombre, marca, modelo].some((v) => this.matchesAllTokens(v, tokens));
     });
 
-    this.tplVolResultados = filtered.slice(0, 50);
+    this.tplVolResultados = filtered.slice(0, 60);
   }
 
   onTplVolSearchFocus(): void {
     this.showVolDropdown = true;
     if (this.volBlurTimer) clearTimeout(this.volBlurTimer);
+    void this.ensureVolumetricosLoaded().then(() => this.filtrarTplVolResultados());
   }
 
   onTplVolSearchBlur(): void {
@@ -1382,32 +1686,32 @@ export class PlantillasComponent {
   }
 
   filtrarTplRefResultados(): void {
-    const q = (this.tplRefBusqueda || '').toLowerCase().trim();
-    if (!q) {
-      this.tplRefResultados = [];
+    const tokens = this.tokenizeSearch(this.tplRefBusqueda || '');
+    const filtro = (this.tplRefFiltroTipo || 'todos').toLowerCase();
+    if (!tokens.length) {
+      this.tplRefResultados = this.refAll.slice(0, 30);
       return;
     }
-
-    const filtro = (this.tplRefFiltroTipo || 'todos').toLowerCase();
     const filtered = this.refAll.filter((m: any) => {
-      const codigo = String(m?.codigo_id ?? '').toLowerCase();
-      const nombre = String(m?.nombre_material ?? '').toLowerCase();
-      const marca = String(m?.marca ?? '').toLowerCase();
-      const serie = String(m?.serie ?? '').toLowerCase();
+      const codigo = String(m?.codigo_id ?? '');
+      const nombre = String(m?.nombre_material ?? '');
+      const marca = String(m?.marca ?? '');
+      const serie = String(m?.serie ?? '');
 
-      if (filtro === 'codigo') return codigo.includes(q);
-      if (filtro === 'nombre') return nombre.includes(q);
-      if (filtro === 'marca') return marca.includes(q);
-      if (filtro === 'serie') return serie.includes(q);
-      return [codigo, nombre, marca, serie].some((v) => v.includes(q));
+      if (filtro === 'codigo') return this.matchesAllTokens(codigo, tokens);
+      if (filtro === 'nombre') return this.matchesAllTokens(nombre, tokens);
+      if (filtro === 'marca') return this.matchesAllTokens(marca, tokens);
+      if (filtro === 'serie') return this.matchesAllTokens(serie, tokens);
+      return [codigo, nombre, marca, serie].some((v) => this.matchesAllTokens(v, tokens));
     });
 
-    this.tplRefResultados = filtered.slice(0, 50);
+    this.tplRefResultados = filtered.slice(0, 60);
   }
 
   onTplRefSearchFocus(): void {
     this.showRefDropdown = true;
     if (this.refBlurTimer) clearTimeout(this.refBlurTimer);
+    void this.ensureReferenciaLoaded().then(() => this.filtrarTplRefResultados());
   }
 
   onTplRefSearchBlur(): void {

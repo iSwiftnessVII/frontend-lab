@@ -72,6 +72,8 @@ interface ApiRecord {
   cliente_respondio?: unknown;
   solicito_nueva_encuesta?: unknown;
   numero_solicitud_front?: unknown;
+  numero_solicitud?: unknown;
+  numero?: unknown;
   message?: unknown;
   error?: unknown;
   rows?: unknown;
@@ -96,10 +98,73 @@ let tplDocEndpointMissing = false;
 export class SolicitudesService {
   private _solicitudes = signal<ApiRecord[]>([]);
   solicitudes = this._solicitudes.asReadonly();
+  private numeroSolicitudCache = new Map<number, string>();
+
+  private buildNumeroSolicitudesMap(items: ApiRecord[]): Map<number, string> {
+    const sorted = [...(items || [])].sort((a, b) => {
+      const da = a?.fecha_solicitud ? new Date(String(a.fecha_solicitud)).getTime() : 0;
+      const db = b?.fecha_solicitud ? new Date(String(b.fecha_solicitud)).getTime() : 0;
+      if (da !== db) return da - db;
+      return Number(a?.solicitud_id ?? a?.id_solicitud ?? 0) - Number(b?.solicitud_id ?? b?.id_solicitud ?? 0);
+    });
+
+    const counters = new Map<string, number>();
+    const result = new Map<number, string>();
+
+    for (const s of sorted) {
+      const tipo = String(s?.tipo_solicitud ?? s?.tipo ?? '').trim();
+      if (!tipo) continue;
+
+      const fecha = s?.fecha_solicitud ?? s?.created_at ?? s?.fecha ?? null;
+      let fechaDate = fecha ? new Date(String(fecha)) : new Date();
+      if (isNaN(fechaDate.getTime())) fechaDate = new Date();
+      const year = fechaDate.getFullYear();
+
+      const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? s?.id);
+      if (!Number.isFinite(sid) || sid <= 0) continue;
+
+      const key = `${tipo.toUpperCase()}|${year}`;
+      const next = (counters.get(key) || 0) + 1;
+      counters.set(key, next);
+
+      result.set(sid, `${tipo}-${year}-${String(next).padStart(2, '0')}`);
+    }
+
+    return result;
+  }
+
+  private withNumeroSolicitudFront(items: ApiRecord[]): ApiRecord[] {
+    if (!items?.length) return items || [];
+    const numeroMap = this.buildNumeroSolicitudesMap(items);
+
+    return (items || []).map((s) => {
+      const existing = String(s?.numero_solicitud_front ?? s?.numero_solicitud ?? s?.numero ?? '').trim();
+      const sid = Number(s?.solicitud_id ?? s?.id_solicitud ?? s?.id);
+      if (existing) {
+        if (Number.isFinite(sid) && sid > 0) {
+          this.numeroSolicitudCache.set(sid, existing);
+        }
+        return s;
+      }
+
+      if (Number.isFinite(sid) && sid > 0 && this.numeroSolicitudCache.has(sid)) {
+        return { ...s, numero_solicitud_front: String(this.numeroSolicitudCache.get(sid)) };
+      }
+
+      if (Number.isFinite(sid) && sid > 0 && numeroMap.has(sid)) {
+        const nextValue = String(numeroMap.get(sid));
+        this.numeroSolicitudCache.set(sid, nextValue);
+        return { ...s, numero_solicitud_front: nextValue };
+      }
+
+      return s;
+    });
+  }
 
   private asObject(value: unknown): ApiRecord | null {
     return value && typeof value === 'object' ? (value as ApiRecord) : null;
   }
+  
 
   private getAuthHeaders(): Record<string, string> {
     const token = authService.getToken();
@@ -156,7 +221,7 @@ export class SolicitudesService {
       
       // Normalizar los datos
       const normalized = raw.map((r: unknown) => this.normalizeSolicitud(r));
-      this._solicitudes.set(normalized);
+      this._solicitudes.set(this.withNumeroSolicitudFront(normalized));
       
     } catch (err) {
       console.error('Error cargando solicitudes detalladas:', err);
@@ -168,7 +233,7 @@ export class SolicitudesService {
           const data2 = await res2.json();
           const raw2 = Array.isArray(data2) ? data2 : [];
           const normalized2 = raw2.map((r: unknown) => this.normalizeSolicitud(r));
-          this._solicitudes.set(normalized2);
+          this._solicitudes.set(this.withNumeroSolicitudFront(normalized2));
           return;
         }
       } catch (e2) {
@@ -199,7 +264,8 @@ export class SolicitudesService {
         return sid === Number(id) ? normalized : s;
       });
       const has = next.some((s) => Number(s?.solicitud_id ?? s?.id_solicitud ?? 0) === Number(id));
-      this._solicitudes.set(has ? next : [normalized, ...next]);
+      const merged = has ? next : [normalized, ...next];
+      this._solicitudes.set(this.withNumeroSolicitudFront(merged));
     } catch {
       void 0;
     }
@@ -405,7 +471,7 @@ export class SolicitudesService {
       try {
         const current = this._solicitudes();
         // Prepend so it appears at top (sorted DESC by id)
-        this._solicitudes.set([optimistic, ...current]);
+        this._solicitudes.set(this.withNumeroSolicitudFront([optimistic, ...current]));
       } catch {
         void 0;
       }
@@ -492,7 +558,7 @@ export class SolicitudesService {
         };
         return this.normalizeSolicitud(merged);
       });
-      this._solicitudes.set(next);
+      this._solicitudes.set(this.withNumeroSolicitudFront(next));
     } catch {
       void 0;
     }
@@ -538,7 +604,7 @@ export class SolicitudesService {
         };
         return this.normalizeSolicitud(merged);
       });
-      this._solicitudes.set(next);
+      this._solicitudes.set(this.withNumeroSolicitudFront(next));
     } catch {
       void 0;
     }
@@ -576,7 +642,7 @@ export class SolicitudesService {
         };
         return this.normalizeSolicitud(merged);
       });
-      this._solicitudes.set(next);
+      this._solicitudes.set(this.withNumeroSolicitudFront(next));
     } catch {
       void 0;
     }
@@ -941,4 +1007,5 @@ export class SolicitudesService {
 
     return { blob, filename };
   }
+
 }

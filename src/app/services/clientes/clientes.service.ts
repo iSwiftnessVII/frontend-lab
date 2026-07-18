@@ -116,4 +116,9 @@ export class ClientesService {
 
     await this.loadClientes();
   }
+
+  trackByClienteId(index: number, cliente: any): number {
+  return cliente?.id_cliente ?? index;
+}
+
 }
